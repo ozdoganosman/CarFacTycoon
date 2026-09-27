@@ -19,7 +19,10 @@ export interface TestDef {
   name: string;
   year: number;
   desc: string;
-  costPerWeek: number; // 1900 dollars
+  /** Crew, fuel and test bench per week (1900 dollars). */
+  costPerWeek: number;
+  /** Prototype wear per week as a share of the car's unit cost (crash tests use up whole cars). */
+  protoShare: number;
   rates: Partial<Record<DefectArea, number>>;
   criticalBoost: number;
 }
@@ -30,6 +33,7 @@ export const TESTS: TestDef[] = [
     name: 'Dinamometre',
     year: 1900,
     desc: 'Motor ve şanzıman test standında saatlerce tam yükte çalıştırılır.',
+    protoShare: 0.2,
     costPerWeek: 30,
     rates: { engine: 0.14, gearbox: 0.09 },
     criticalBoost: 1,
@@ -39,6 +43,7 @@ export const TESTS: TestDef[] = [
     name: 'Yol testi',
     year: 1900,
     desc: 'Prototip her türlü yolda binlerce kilometre sürülür.',
+    protoShare: 0.35,
     costPerWeek: 50,
     rates: { chassis: 0.09, gearbox: 0.06, electrics: 0.08, brakes: 0.08, body: 0.05, engine: 0.04 },
     criticalBoost: 1,
@@ -48,6 +53,7 @@ export const TESTS: TestDef[] = [
     name: 'Çarpışma testi',
     year: 1934,
     desc: 'Prototipler duvara çarptırılır; gövde, şasi ve frenler incelenir.',
+    protoShare: 1.2,
     costPerWeek: 150,
     rates: { body: 0.16, chassis: 0.1, brakes: 0.05 },
     criticalBoost: 1.3,
@@ -57,6 +63,7 @@ export const TESTS: TestDef[] = [
     name: 'Dayanıklılık',
     year: 1900,
     desc: 'Prototip gece gündüz aylarca yorulur. Yavaş ama sinsi arızaları bulur.',
+    protoShare: 0.3,
     costPerWeek: 40,
     rates: { engine: 0.045, gearbox: 0.045, chassis: 0.045, electrics: 0.045, brakes: 0.045, body: 0.045 },
     criticalBoost: 1.8,
@@ -109,6 +116,14 @@ function pickWeighted<K extends string>(rng: Rng, weights: Record<K, number>): K
   return keys[keys.length - 1];
 }
 
+/**
+ * Some flaws only show after tens of thousands of kilometres in every kind of
+ * weather and hand: prototypes almost never meet them, so even the longest
+ * test programme lets a few through.
+ */
+export const STUBBORN_SHARE = 0.15;
+const STUBBORN_VISIBILITY = 0.12;
+
 export function generateDefects(lambda: number, rng: Rng, idPrefix: string): Defect[] {
   const n = poisson(rng, lambda);
   const out: Defect[] = [];
@@ -118,15 +133,21 @@ export function generateDefects(lambda: number, rng: Rng, idPrefix: string): Def
       area: pickWeighted(rng, AREA_SHARE),
       severity: pickWeighted(rng, SEVERITY_SHARE),
       found: false,
+      stubborn: rng() < STUBBORN_SHARE || undefined,
     });
   }
   return out;
 }
 
-export function detectionChance(test: TestDef, area: DefectArea, severity: Severity): number {
+export function detectionChance(test: TestDef, area: DefectArea, severity: Severity, stubborn = false): number {
   const base = test.rates[area] ?? 0;
   const sev = SEVERITY_VISIBILITY[severity] * (severity === 'critical' ? test.criticalBoost : 1);
-  return Math.min(0.9, base * sev);
+  return Math.min(0.9, base * sev) * (stubborn ? STUBBORN_VISIBILITY : 1);
+}
+
+/** What a week of a test costs for a car with this unit cost (1900 dollars). */
+export function testWeekCost(test: TestDef, unitCost1900: number, year: number): number {
+  return (test.costPerWeek + test.protoShare * unitCost1900) * costIndex(year);
 }
 
 /** Expected number of defects still hidden, given only the prior and the test plan (no peeking). */
@@ -134,9 +155,11 @@ export function expectedRemaining(prior: number, weeks: Record<TestId, number>):
   let total = 0;
   for (const area of Object.keys(AREA_SHARE) as DefectArea[]) {
     for (const sev of Object.keys(SEVERITY_SHARE) as Severity[]) {
-      let survive = 1;
-      for (const t of TESTS) survive *= Math.pow(1 - detectionChance(t, area, sev), weeks[t.id] ?? 0);
-      total += prior * AREA_SHARE[area] * SEVERITY_SHARE[sev] * survive;
+      for (const stubborn of [false, true]) {
+        let survive = 1;
+        for (const t of TESTS) survive *= Math.pow(1 - detectionChance(t, area, sev, stubborn), weeks[t.id] ?? 0);
+        total += prior * AREA_SHARE[area] * SEVERITY_SHARE[sev] * (stubborn ? STUBBORN_SHARE : 1 - STUBBORN_SHARE) * survive;
+      }
     }
   }
   return total;

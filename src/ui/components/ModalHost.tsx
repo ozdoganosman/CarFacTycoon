@@ -7,8 +7,6 @@ import { segmentDef } from '../../data/segments';
 import { companyAssets } from '../../core/game';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { allTech } from '../../core/techtree';
-import { costIndex } from '../../data/economy';
-import { yearFloat } from '../../core/time';
 import { isBlockingModal } from '../../core/util';
 import type { GameState, ModalItem } from '../../core/types';
 import { store, useGameState } from '../store';
@@ -95,8 +93,7 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
       if (!model || !d) {
         return <Modal title="Kusur" actions={<Button onClick={close}>Tamam</Button>}>Kayıt bulunamadı.</Modal>;
       }
-      const perCar = (d.severity === 'critical' ? 25 : 10) * costIndex(yearFloat(s.week));
-      const cost = model.unitsSold * perCar;
+      const cost = A.recallCost(s, model.id, d.id);
       const critical = m.kind === 'recall';
       return (
         <Modal

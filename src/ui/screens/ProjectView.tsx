@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import * as A from '../../core/actions';
-import { gates, materialUnitCost } from '../../core/game';
-import { lineReport, lineUpkeep } from '../../core/factory';
+import { gates, materialUnitCost, protoUnitCost } from '../../core/game';
+import { lineReport, lineUpkeep, turnkeyLineCost } from '../../core/factory';
 import { consumerPrice, demandAtPrice, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
-import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, defectRange, defectText, expectedRemaining, riskLabel, testTuning, type Tuning } from '../../core/testing';
+import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, defectRange, defectText, expectedRemaining, riskLabel, testTuning, testWeekCost, type Tuning } from '../../core/testing';
 import { yearFloat } from '../../core/time';
 import { DEALER_COMMISSION, costIndex, engineerSalary, shopCost } from '../../data/economy';
 import { MARKETS } from '../../data/markets';
-import { ATTRS, segmentDef } from '../../data/segments';
-import type { ComponentKey, MarketId, Project, ProjectPhase, TestId } from '../../core/types';
+import { ATTRS, ATTR_NAMES, segmentDef } from '../../data/segments';
+import { STAGES } from '../../data/stations';
+import { TOOLING, toolingDef } from '../../data/tooling';
+import type { ComponentKey, MarketId, Project, ProjectPhase, TestId, ToolingTier } from '../../core/types';
 import { store, useGameState } from '../store';
 import { money } from '../format';
 import { inYear } from '../format';
@@ -193,7 +195,8 @@ function Testing({ p }: { p: Project }) {
   const exp = expectedRemaining(p.defectPrior, planned);
   const startRange = defectRange(p.defectPrior);
   // What the plan costs in time and money, and what its last weeks buy.
-  const weekCost = (t: (typeof TESTS)[number]) => t.costPerWeek * costIndex(yf) * (0.6 + 0.4 * p.design.size + (0.2 * p.design.engine.cylinders) / 4);
+  const unit1900 = protoUnitCost(p, yf);
+  const weekCost = (t: (typeof TESTS)[number]) => testWeekCost(t, unit1900, yf);
   const weeksLeft = Math.max(0, ...TESTS.map((t) => p.tests[t.id].planned - p.tests[t.id].done));
   const testCostLeft = TESTS.reduce((a, t) => a + Math.max(0, p.tests[t.id].planned - p.tests[t.id].done) * weekCost(t), 0);
   // While the car is in testing its engineers are paid whether or not they have anything else to do.
@@ -205,10 +208,7 @@ function Testing({ p }: { p: Project }) {
   const risk = riskLabel(exp);
   const found = p.defects.filter((d) => d.found);
   const running = TESTS.some((t) => p.tests[t.id].done < p.tests[t.id].planned);
-  const weeklyCost = TESTS.filter((t) => p.tests[t.id].done < p.tests[t.id].planned).reduce(
-    (a, t) => a + t.costPerWeek * costIndex(yf) * (0.6 + 0.4 * p.design.size + (0.2 * p.design.engine.cylinders) / 4),
-    0,
-  );
+  const weeklyCost = TESTS.filter((t) => p.tests[t.id].done < p.tests[t.id].planned).reduce((a, t) => a + weekCost(t), 0);
   return (
     <div className="grid-2 wide-left">
       <Panel title="Test programı">
@@ -220,7 +220,7 @@ function Testing({ p }: { p: Project }) {
             <div key={t.id} className={`test-row ${locked ? 'is-locked' : ''}`}>
               <div className="test-head">
                 <b>{t.name}</b>
-                <span className="muted small">{locked ? `${inYear(t.year)} gelir` : `${money(t.costPerWeek * costIndex(yf))}+/hafta`}</span>
+                <span className="muted small">{locked ? `${inYear(t.year)} gelir` : `${money(weekCost(t))}/hafta`}</span>
               </div>
               <p className="muted small">{t.desc}</p>
               <Slider
@@ -258,7 +258,8 @@ function Testing({ p }: { p: Project }) {
           </div>
           <p className="muted small">
             Kaç kusur olduğunu kimse kesin bilmez. {s.company.modelsLaunched < 2 ? 'Ekibin ilk arabalarında çok hata yapar; ' : ''}Kalan her kusur sahada
-            arıza, garanti masrafı ve geri çağırma demektir.
+            arıza, garanti masrafı ve geri çağırma demektir. Bazı kusurlar ancak binlerce müşterinin elinde, yıllarca kullanımda ortaya çıkar: en uzun test programı
+            bile hepsini yakalayamaz.
           </p>
           <p>
             Bulunan ve giderilen: <b>{found.length}</b>
@@ -332,76 +333,136 @@ function Production({ p }: { p: Project }) {
   const st = useCarStats(p.design, yf, p.bonus);
   const g = gates(s);
   const [lineId, setLineId] = useState(p.lineId ?? s.lines.find((l) => !l.modelId)?.id ?? s.lines[0]?.id);
+  const [tier, setTier] = useState<ToolingTier>(p.tooling ?? 'standard');
   const started = p.productionReadyWeek !== undefined;
   if (started) {
     const left = Math.max(0, (p.productionReadyWeek ?? 0) - s.week);
     return (
       <Panel title="Üretim hazırlığı">
         <p>
-          Kalıplar ve ilk parçalar hazırlanıyor ({s.lines.find((l) => l.id === p.lineId)?.name}). Kalan: <b>{left} hafta</b>.
+          {toolingDef(p.tooling).name} ve ilk parçalar hazırlanıyor ({s.lines.find((l) => l.id === p.lineId)?.name}). Kalan: <b>{left} hafta</b>.
         </p>
         <Progress value={1 - left / 12} />
         <p className="muted small">Bu sürede hat mevcut modeli üretmeye devam eder. Lansmanda yeni model hattı devralır.</p>
       </Panel>
     );
   }
-  const unitNow = materialUnitCost(s, { stats: st, suppliers: p.suppliers, unitsBuilt: 0 });
-  const quote = lineId ? A.toolingQuote(s, p, lineId) : null;
+  const unitNow = materialUnitCost(s, { stats: st, suppliers: p.suppliers, unitsBuilt: 0, tooling: tier });
+  const quote = lineId ? A.toolingQuote(s, p, lineId, tier) : null;
+  const line = s.lines.find((l) => l.id === lineId);
+  const report = line ? lineReport(s, line, st.complexity) : null;
+  const readyWeeks = quote ? Math.max(quote.weeks, quote.leadWeeks) : 0;
+  const turnkey = turnkeyLineCost(s.week, false);
+  const quoteFor = (x: ToolingTier) => (lineId ? A.toolingQuote(s, p, lineId, x) : null);
   return (
-    <div className="grid-2">
-      <Panel title="Yap ya da satın al">
-        {!g.suppliers ? (
-          <p className="muted">İlk modelinde parçaları güvenilir tedarikçilerden alıyorsun. Bu karar ikinci modelinle açılacak.</p>
-        ) : (
-          (Object.keys(COMPONENT_NAMES) as ComponentKey[]).map((k) => (
-            <div key={k} className="supplier-row">
-              <div className="test-head">
-                <b>{COMPONENT_NAMES[k]}</b>
-                <span className="muted small">parça bedeli {money(st.componentCost[k] * costIndex(yf))}</span>
-              </div>
-              <Choice
-                value={p.suppliers[k]}
-                onChange={(v) => store.try((st2) => A.setSupplier(st2, p.id, k, v))}
-                options={SUPPLIERS.map((x) => ({
-                  value: x.id,
-                  label: x.name,
-                  disabled: x.id === 'inhouse' && !s.company.shops[k],
-                  sub: `${x.costMult < 1 ? '−' : '+'}%${Math.round(Math.abs(1 - x.costMult) * 100)} · ${x.leadWeeks ? `${x.leadWeeks} hf teslim` : 'hemen'} · ${x.desc}`,
-                }))}
-              />
-              {!s.company.shops[k] && (
-                <Button small kind="ghost" onClick={() => store.try((st2) => A.buildShop(st2, k), 'Atölye kuruldu')}>
-                  {COMPONENT_NAMES[k]} atölyesi kur ({money(shopCost(yf))})
-                </Button>
-              )}
-            </div>
-          ))
-        )}
-        <p>
-          Birim malzeme maliyeti: <b>{money(unitNow)}</b>
-        </p>
-      </Panel>
-      <Panel title="Üretim hattı">
-        <p className="muted small">Bir hat aynı anda tek model üretir. Başka modelin hattını seçersen, lansmanda o model bu hattı kaybeder.</p>
-        <div className="line-pick">
-          {s.lines.map((l) => {
-            const r = lineReport(s, l, st.complexity);
-            const occupant = s.models.find((m) => m.id === l.modelId && m.status === 'active');
-            return (
-              <label key={l.id} className={`line-option ${lineId === l.id ? 'is-on' : ''}`}>
-                <input type="radio" name="line" checked={lineId === l.id} onChange={() => setLineId(l.id)} />
-                <span>
-                  <b>{l.name}</b> · {r.throughput.toFixed(1)} araç/hafta
-                  <br />
-                  <span className="muted small">{occupant ? `Şu an: ${occupant.name}` : 'Boş'}</span>
-                </span>
-              </label>
-            );
-          })}
+    <>
+      <div className="howto prod-howto">
+        <div>
+          <p>
+            <b>Üretim hazırlığı: araba çizimden fabrikaya geçiyor.</b> Üç karar var; hepsi birim maliyeti, işçilik kalitesini ve lansman tarihini etkiler.
+          </p>
+          <ol>
+            <li>
+              <b>Parçalar:</b> motoru, şanzımanı ve elektriği kim yapacak? Tedarikçi fiyatı, kaliteyi ve teslim süresini belirler.
+            </li>
+            <li>
+              <b>Hat:</b> arabayı hangi hat üretecek? Hattın en yavaş bölümü (darboğaz) haftada kaç araba çıkacağını belirler.
+            </li>
+            <li>
+              <b>Kalıplar:</b> gövde panellerini basan kalıplar ve montaj fikstürleri. Parasını şimdi ödersin; kalitesi arabanın işçiliğini ve firesini belirler.
+            </li>
+          </ol>
         </div>
-        <Button small kind="ghost" onClick={() => store.try((st2) => A.buyLine(st2), 'Yeni hat kuruldu. Fabrika ekranından istasyon ekle.')}>
-          + Yeni hat kur
-        </Button>
+      </div>
+      <div className="grid-2">
+        <Panel title="1 · Parçalar: yap ya da al">
+          {!g.suppliers ? (
+            <p className="muted">
+              İlk modelinde parçaları güvenilir tedarikçilerden alıyorsun: pahalı ama sağlam. Kimden alacağına (ya da kendin üretmeye) ikinci modelinde sen karar
+              vereceksin.
+            </p>
+          ) : (
+            (Object.keys(COMPONENT_NAMES) as ComponentKey[]).map((k) => (
+              <div key={k} className="supplier-row">
+                <div className="test-head">
+                  <b>{COMPONENT_NAMES[k]}</b>
+                  <span className="muted small">parça bedeli {money(st.componentCost[k] * costIndex(yf))}</span>
+                </div>
+                <Choice
+                  value={p.suppliers[k]}
+                  onChange={(v) => store.try((st2) => A.setSupplier(st2, p.id, k, v))}
+                  options={SUPPLIERS.map((x) => ({
+                    value: x.id,
+                    label: x.name,
+                    disabled: x.id === 'inhouse' && !s.company.shops[k],
+                    sub: `${x.costMult < 1 ? '−' : '+'}%${Math.round(Math.abs(1 - x.costMult) * 100)} · ${x.leadWeeks ? `${x.leadWeeks} hf teslim` : 'hemen'} · ${x.desc}`,
+                  }))}
+                />
+                {!s.company.shops[k] && (
+                  <Button small kind="ghost" onClick={() => store.try((st2) => A.buildShop(st2, k), 'Atölye kuruldu')}>
+                    {COMPONENT_NAMES[k]} atölyesi kur ({money(shopCost(yf))})
+                  </Button>
+                )}
+              </div>
+            ))
+          )}
+          <p>
+            Birim malzeme maliyeti: <b>{money(unitNow)}</b>
+          </p>
+        </Panel>
+        <Panel title="2 · Hangi hat üretecek?">
+          <p className="muted small">
+            Bir hat aynı anda tek model üretir. Başka bir modelin hattını seçersen o model lansmanda hattını kaybeder. Kapasite, bu arabanın üretim zorluğuna göre
+            hesaplandı.
+          </p>
+          <div className="line-pick">
+            {s.lines.map((l) => {
+              const r = lineReport(s, l, st.complexity);
+              const occupant = s.models.find((m) => m.id === l.modelId && m.status === 'active');
+              return (
+                <label key={l.id} className={`line-option ${lineId === l.id ? 'is-on' : ''}`}>
+                  <input type="radio" name="line" checked={lineId === l.id} onChange={() => setLineId(l.id)} />
+                  <span>
+                    <b>{l.name}</b> · {r.throughput.toFixed(1)} araç/hafta
+                    <br />
+                    <span className="muted small">
+                      {occupant ? `Şu an: ${occupant.name}` : 'Boş'} · darboğaz: {STAGES.find((x) => x.id === r.bottleneck)?.name}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          <Button small kind="ghost" disabled={s.company.cash < turnkey} onClick={() => store.try((st2) => A.buildTurnkeyLines(st2, 1, undefined, false), 'Yeni hat kuruldu')}>
+            + Dengeli yeni hat kur ({money(turnkey)})
+          </Button>
+          <p className="muted small">Kapasiteyi sonra Fabrika ekranından büyütebilir ya da “talebi otomatik karşıla” ile fabrikaya bırakabilirsin.</p>
+        </Panel>
+      </div>
+      <Panel title="3 · Kalıplar">
+        <Choice
+          value={tier}
+          onChange={setTier}
+          options={TOOLING.map((x) => {
+            const q = quoteFor(x.id);
+            const eff = Object.entries(x.scores)
+              .map(([k, v]) => `${ATTR_NAMES[k as keyof typeof ATTR_NAMES].toLowerCase()} ${v > 0 ? '+' : '−'}${Math.abs(v)}`)
+              .join(', ');
+            return {
+              value: x.id,
+              label: x.name,
+              sub: (
+                <>
+                  {q ? `${money(q.cost)} · ${Math.max(q.weeks, q.leadWeeks)} hafta · ` : ''}
+                  {x.materialMult !== 1 ? `birim maliyet ${x.materialMult > 1 ? '+' : '−'}%${Math.round(Math.abs(x.materialMult - 1) * 100)}` : 'olağan fire'}
+                  {eff ? ` · ${eff}` : ''}
+                  <br />
+                  {x.desc}
+                </>
+              ),
+            };
+          })}
+        />
         {quote && (
           <div className="quote">
             <div>
@@ -409,12 +470,21 @@ function Production({ p }: { p: Project }) {
               <b>{money(quote.cost)}</b>
             </div>
             <div>
-              <span>Hazırlık süresi</span>
-              <b>{Math.max(quote.weeks, quote.leadWeeks)} hafta</b>
+              <span>Üretime hazır</span>
+              <b>{readyWeeks} hafta sonra</b>
+            </div>
+            <div>
+              <span>Birim malzeme</span>
+              <b>{money(unitNow)}</b>
+            </div>
+            <div>
+              <span>Hat kapasitesi</span>
+              <b>{report ? `${report.throughput.toFixed(1)} araç/hf` : '—'}</b>
             </div>
             {quote.sharedPlatform && <Badge tone="good">Aynı platform: kalıplar büyük ölçüde ortak</Badge>}
           </div>
         )}
+        {quote && quote.leadWeeks > quote.weeks && <p className="muted small">Hazırlık süresini parça tedarikçisinin teslimi belirliyor ({quote.leadWeeks} hafta).</p>}
         <Toggle
           checked={p.autoCapacity ?? true}
           onChange={(v) => store.act((st2) => A.setProjectAutoCapacity(st2, p.id, v))}
@@ -422,12 +492,12 @@ function Production({ p }: { p: Project }) {
           sub="Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır. Sonradan Model ve Fabrika ekranlarından değiştirebilirsin."
         />
         <div className="row-end">
-          <Button kind="primary" disabled={!lineId} onClick={() => lineId && store.try((st2) => A.startTooling(st2, p.id, lineId))}>
-            Kalıpları sipariş et
+          <Button kind="primary" disabled={!lineId || (quote ? s.company.cash < quote.cost : true)} onClick={() => lineId && store.try((st2) => A.startTooling(st2, p.id, lineId, tier))}>
+            {toolingDef(tier).name}: sipariş et{quote ? ` (${money(quote.cost)})` : ''}
           </Button>
         </div>
       </Panel>
-    </div>
+    </>
   );
 }
 

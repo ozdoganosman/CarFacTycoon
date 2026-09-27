@@ -70,10 +70,17 @@ export function normalizeFocus(f: Record<FocusKey, number>): Record<FocusKey, nu
 /** A rival's usual test programme: its cars are tuned as well as developed. */
 const AI_TESTS = { dyno: { done: 8 }, road: { done: 10 }, crash: { done: 4 }, durability: { done: 10 } };
 
+/**
+ * Development work behind an established maker's car, relative to a project's
+ * requirement: big, practised engineering departments put far more hours into
+ * each car than a new company's handful of engineers can.
+ */
+export const aiDevPoints = (skill: number) => 1 + skill / 150;
+
 /** Bonus for an AI rival: a fully developed and tested car with focus spread by the given weights. */
 export function aiBonus(focus: Record<FocusKey, number>, skill: number): DevBonus {
   const f = normalizeFocus(focus);
   const points = {} as Record<FocusKey, number>;
-  for (const k of FOCUS_KEYS) points[k] = f[k] * 1.1;
+  for (const k of FOCUS_KEYS) points[k] = f[k] * aiDevPoints(skill);
   return withTuning(bonusFromPoints(points, 1, 1.1, skill), AI_TESTS);
 }

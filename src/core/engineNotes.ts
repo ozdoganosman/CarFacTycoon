@@ -1,6 +1,8 @@
+import { GEARBOX_TYPES, SUSPENSIONS, byId } from '../data/tech';
 import { referenceDesigns } from './ai';
 import { computeEngine } from './engine';
-import type { EngineDesign, EngineStats, SegmentId } from './types';
+import type { CarDesign, CarStats, DevBonus, EngineDesign, EngineStats, SegmentId } from './types';
+import { computeCarStats } from './vehicle';
 
 // Plain-language pros and cons of an engine, measured against the typical
 // engine of the same class in the same year (the yardstick the stats panel
@@ -116,4 +118,85 @@ export function engineNotes(e: EngineDesign, year: number, segment: SegmentId): 
     cons.push('Dizel: ağır, gürültülü ve düşük devirli; alıcılar prestijli bulmaz.');
   }
   return { typical: t.label, pros, cons };
+}
+
+// ---------- Gearbox and suspension ----------
+
+export interface PartNotes {
+  pros: string[];
+  cons: string[];
+}
+
+function refDesigns(year: number, segment: SegmentId): CarDesign[] {
+  const y = Math.floor(year);
+  const seg: SegmentId = (segment === 'pickup' && y < 1913) || (segment === 'suv' && y < 1946) ? 'family' : segment;
+  return referenceDesigns(y, seg);
+}
+
+/** The same car with each typical design's part swapped in. */
+function withTypical(d: CarDesign, refs: CarDesign[], year: number, bonus: DevBonus | undefined, patch: (ref: CarDesign) => Partial<CarDesign>): CarStats[] {
+  return refs.map((ref) => computeCarStats({ ...d, ...patch(ref) }, year, bonus));
+}
+const avgOf = (xs: CarStats[], f: (s: CarStats) => number) => xs.reduce((a, s) => a + f(s), 0) / xs.length;
+const amount = (x: number, small: number) => (Math.abs(x) < small ? 'biraz' : 'belirgin biçimde');
+
+/**
+ * What this gearbox does for this car compared with the class's usual gearbox
+ * fitted to the same car: acceleration, top speed, fuel, and whether the
+ * ratios suit the engine.
+ */
+export function gearboxNotes(d: CarDesign, year: number, segment: SegmentId, bonus?: DevBonus): PartNotes {
+  const pros: string[] = [];
+  const cons: string[] = [];
+  const refs = refDesigns(year, segment);
+  const mine = computeCarStats(d, year, bonus);
+  const typ = withTypical(d, refs, year, bonus, (ref) => ({ gearbox: ref.gearbox }));
+  const accel = mine.accel50 - avgOf(typ, (s) => s.accel50);
+  if (accel <= -0.3) pros.push(`Tipik şanzımanla aynı arabadan ${Math.abs(accel).toFixed(1)} sn daha çabuk hızlanıyor (0-50 km/s).`);
+  else if (accel >= 0.3) cons.push(`Tipik şanzımanla aynı arabadan ${accel.toFixed(1)} sn daha yavaş hızlanıyor (0-50 km/s).`);
+  const top = mine.topSpeed - avgOf(typ, (s) => s.topSpeed);
+  if (top >= 2) pros.push(`Son hızı ${Math.round(top)} km/s daha yüksek.`);
+  else if (top <= -2) cons.push(`Son hızı ${Math.round(-top)} km/s daha düşük.`);
+  const fuel = mine.fuel / avgOf(typ, (s) => s.fuel);
+  if (fuel <= 0.97) pros.push(`%${Math.round((1 - fuel) * 100)} daha az yakıyor: uzun vitesler motoru düşük devirde tutuyor.`);
+  else if (fuel >= 1.03) cons.push(`%${Math.round((fuel - 1) * 100)} daha çok yakıyor: kısa vitesler motoru yüksek devirde döndürüyor.`);
+  // Do the ratios suit the engine? Try them a little longer and shorter.
+  const g = d.gearbox;
+  const longer = computeCarStats({ ...d, gearbox: { ...g, spread: Math.min(1, g.spread + 0.15) } }, year, bonus).topSpeed;
+  const shorter = computeCarStats({ ...d, gearbox: { ...g, spread: Math.max(0, g.spread - 0.15) } }, year, bonus).topSpeed;
+  if (g.spread < 1 && longer > mine.topSpeed + 1.5) cons.push('Son vites kısa: son hızda motor devir sınırına dayanıyor. Oranları uzatırsan hem daha hızlı gider hem az yakar.');
+  else if (g.spread > 0 && shorter > mine.topSpeed + 1.5) cons.push('Son vites fazla uzun: motor son viteste gücünün tepesine çıkamıyor. Oranları biraz kısaltırsan son hız artar.');
+  const refGears = refs.reduce((a, r) => a + r.gearbox.gears, 0) / refs.length;
+  if (g.gears > refGears + 0.5) cons.push('Tipikten fazla vites: şanzıman pahalı ve ağır.');
+  else if (g.gears < refGears - 0.5) cons.push('Tipikten az vites: vitesler arası boşluk büyük, motor güçlü olduğu devirden sık düşer.');
+  const gb = byId(GEARBOX_TYPES, g.type);
+  const refType = byId(GEARBOX_TYPES, refs[0].gearbox.type);
+  if (gb.id !== refType.id) {
+    if (gb.comfort + gb.practicality > refType.comfort + refType.practicality) pros.push(`${gb.name}: vites değiştirmek kolay; konfor ve pratiklik artar.`);
+    if (gb.cost > refType.cost) cons.push(`${gb.name} tipik şanzımandan pahalı${gb.mass > refType.mass ? ' ve ağır' : ''}.`);
+    if (gb.efficiency < refType.efficiency) cons.push('Aktarmada daha çok güç kaybediyor.');
+    if (gb.year > year - 4) cons.push('Yeni bir teknoloji: ilk yıllarında arıza riski yüksek.');
+  }
+  return { pros, cons };
+}
+
+/** What this suspension does for this car compared with the class's usual set-up on the same car. */
+export function suspensionNotes(d: CarDesign, year: number, segment: SegmentId, bonus?: DevBonus): PartNotes {
+  const pros: string[] = [];
+  const cons: string[] = [];
+  const mine = computeCarStats(d, year, bonus);
+  const typ = withTypical(d, refDesigns(year, segment), year, bonus, (ref) => ({ suspension: ref.suspension, suspBalance: ref.suspBalance }));
+  const comfort = mine.comfort - avgOf(typ, (s) => s.comfort);
+  if (comfort >= 1.5) pros.push(`Tipik süspansiyondan ${amount(comfort, 5)} daha konforlu.`);
+  else if (comfort <= -1.5) cons.push(`Tipik süspansiyondan ${amount(comfort, 5)} daha sert: konfor düşük.`);
+  const handling = mine.handling - avgOf(typ, (s) => s.handling);
+  if (handling >= 1.5) pros.push(`Yol tutuşu ${amount(handling, 5)} daha iyi.`);
+  else if (handling <= -1.5) cons.push(`Yol tutuşu ${amount(handling, 5)} daha zayıf.`);
+  const cost = mine.unitCost / avgOf(typ, (s) => s.unitCost);
+  if (cost >= 1.02) cons.push(`Aracın birim maliyetini %${Math.round((cost - 1) * 100)} artırıyor.`);
+  const rel = mine.reliability - avgOf(typ, (s) => s.reliability);
+  if (rel <= -1) cons.push('Yeni ya da karmaşık bir sistem: arıza riski daha yüksek.');
+  const susp = byId(SUSPENSIONS, d.suspension);
+  if (susp.year > year - 4 && susp.immaturity > 0) cons.push('Teknoloji yeni: ilk yıllarında sorun çıkarabilir.');
+  return { pros, cons };
 }

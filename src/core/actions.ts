@@ -4,6 +4,7 @@ import { MARKETS, marketScale, MAX_DEALER_LEVEL } from '../data/markets';
 import { segmentDef } from '../data/segments';
 import { STAGES, stationDef } from '../data/stations';
 import { CHASSIS, byId } from '../data/tech';
+import { toolingDef } from '../data/tooling';
 import { aiDesign } from './ai';
 import { FOCUS_KEYS, bonusFromPoints, evenFocus, normalizeFocus } from './development';
 import { displacementCc } from './engine';
@@ -36,6 +37,7 @@ import type {
   StageId,
   SupplierChoice,
   TestId,
+  ToolingTier,
 } from './types';
 import { NO_BONUS, computeCarStats } from './vehicle';
 import { clamp, decide, earn, log, money, newId, shiftModal, spend } from './util';
@@ -254,6 +256,7 @@ export function finishDevelopment(s: GameState, pid: string): ActionResult {
     if (p.platformId) lambda *= 0.85;
   }
   p.defectPrior = lambda;
+  p.protoUnitCost = stats.unitCost;
   p.defects = generateDefects(lambda, stateRng(s), p.id);
   const protoCost = (p.kind === 'facelift' ? 1 : 3) * materialUnitCost(s, { stats, suppliers: p.suppliers, unitsBuilt: 0 });
   spend(s, protoCost, 'rnd');
@@ -307,7 +310,7 @@ export interface ToolingQuote {
   sharedPlatform: boolean;
 }
 
-export function toolingQuote(s: GameState, p: Project, lineId: string): ToolingQuote {
+export function toolingQuote(s: GameState, p: Project, lineId: string, tier: ToolingTier = p.tooling ?? 'standard'): ToolingQuote {
   const yf = yearFloat(s.week);
   const stats = computeCarStats(p.design, yf, p.bonus ?? NO_BONUS);
   const line = s.lines.find((l) => l.id === lineId);
@@ -320,24 +323,26 @@ export function toolingQuote(s: GameState, p: Project, lineId: string): ToolingQ
     factor = 0.4;
     shared = true;
   } else if (p.platformId) factor = 0.7;
-  const cost = toolingMultiple(yf) * stats.unitCost * costIndex(yf) * chassis.tooling * factor;
-  const weeks = p.kind === 'facelift' ? 3 : Math.round((5 + 4 * stats.complexity) * (factor < 1 ? 0.6 : 1));
+  const def = toolingDef(p.kind === 'facelift' ? 'standard' : tier);
+  const cost = toolingMultiple(yf) * stats.unitCost * costIndex(yf) * chassis.tooling * factor * def.costMult;
+  const weeks = p.kind === 'facelift' ? 3 : Math.max(2, Math.round((5 + 4 * stats.complexity) * (factor < 1 ? 0.6 : 1) * def.weeksMult));
   const leadWeeks = Math.max(...(Object.keys(p.suppliers) as ComponentKey[]).map((k) => SUPPLIERS.find((x) => x.id === p.suppliers[k])!.leadWeeks));
   return { cost, weeks, leadWeeks, sharedPlatform: shared };
 }
 
-export function startTooling(s: GameState, pid: string, lineId: string): ActionResult {
+export function startTooling(s: GameState, pid: string, lineId: string, tier: ToolingTier = 'standard'): ActionResult {
   const p = project(s, pid);
   if (p.phase !== 'production') return fail('Proje üretim hazırlığında değil.');
   if (p.productionReadyWeek !== undefined) return fail('Kalıp hazırlığı zaten başladı.');
-  const q = toolingQuote(s, p, lineId);
+  const q = toolingQuote(s, p, lineId, tier);
   if (s.company.cash < q.cost) return fail(`Kalıplar için ${money(q.cost)} gerekiyor.`);
   spend(s, q.cost, 'investment');
   p.lineId = lineId;
+  p.tooling = tier;
   p.toolingCost = q.cost;
   p.productionReadyWeek = s.week + Math.max(q.weeks, q.leadWeeks);
   log(s, `${p.name}: kalıplar sipariş edildi (${money(q.cost)}); ${Math.max(q.weeks, q.leadWeeks)} hafta sonra üretime hazır.`);
-  decide(s, 'tooling:' + pid, `${p.name}: kalıplar ${money(q.cost)}, ${Math.max(q.weeks, q.leadWeeks)} hafta`);
+  decide(s, 'tooling:' + pid, `${p.name}: ${toolingDef(tier).name.toLowerCase()} ${money(q.cost)}, ${Math.max(q.weeks, q.leadWeeks)} hafta`);
   return ok;
 }
 
@@ -458,6 +463,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
     markets,
     productionRate: 1,
     autoCapacity: p.autoCapacity ?? true,
+    tooling: p.tooling,
     inventory: 0,
     suppliers: p.suppliers,
     defects: p.defects,
@@ -510,7 +516,9 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
   const reviews = writeReviews(s, m, rng);
   m.reviews = reviews;
   m.reviewScore = reviews.reduce((a, r) => a + r.score, 0) / reviews.length;
-  m.hype = Math.max(0, 3 + (m.reviewScore - 5) * 1.2 + (o.autoShow ? 3 : 0));
+  // An unknown maker's launch draws smaller crowds than a famous one's.
+  const fame = 0.4 + 0.6 * s.markets[s.company.hq].awareness;
+  m.hype = Math.max(0, 3 + (m.reviewScore - 5) * 1.2 + (o.autoShow ? 3 : 0)) * fame;
   m.priceCeiling = o.price / costIndex(yf);
   s.company.modelsLaunched += 1;
   s.company.skill = clamp(s.company.skill + (100 - s.company.skill) * 0.06, 0, 100);
@@ -828,14 +836,19 @@ export function chooseEventOption(s: GameState, eventId: string, choiceId: strin
   shiftModal(s);
 }
 
+/** What recalling every car sold with this defect would cost. */
+export function recallCost(s: GameState, modelId: string, defectId: string): number {
+  const m = model(s, modelId);
+  const d = m.defects.find((x) => x.id === defectId);
+  return d ? m.unitsSold * (d.severity === 'critical' ? 25 : 10) * costIndex(yearFloat(s.week)) : 0;
+}
+
 export function recallDecision(s: GameState, modelId: string, defectId: string, decision: 'recall' | 'ignore') {
   const m = model(s, modelId);
   const d = m.defects.find((x) => x.id === defectId);
-  const yf = yearFloat(s.week);
   if (d) {
     if (decision === 'recall') {
-      const perCar = (d.severity === 'critical' ? 25 : 10) * costIndex(yf);
-      const cost = m.unitsSold * perCar;
+      const cost = recallCost(s, modelId, defectId);
       spend(s, cost, 'warranty');
       d.fixed = true;
       s.company.reputation = clamp(s.company.reputation - (d.severity === 'critical' ? 3 : 1), 0, 100);
@@ -890,6 +903,7 @@ export function previewModel(s: GameState, p: Project, price: number, markets: M
     indexPrice: true,
     markets,
     productionRate: 1,
+    tooling: p.tooling,
     inventory: 0,
     suppliers: p.suppliers,
     defects: [],

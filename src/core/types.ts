@@ -1,5 +1,8 @@
 // Shared types for the CarFacTycoon simulation core.
 // Everything stored in GameState must stay JSON-serializable (save games).
+import type { ToolingTier } from '../data/tooling';
+
+export type { ToolingTier };
 
 export type SegmentId = 'city' | 'family' | 'sport' | 'pickup' | 'luxury' | 'suv';
 export type MarketId = 'usa' | 'europe';
@@ -149,6 +152,8 @@ export interface Defect {
   area: DefectArea;
   severity: Severity;
   found: boolean;
+  /** Only shows after long use in customers' hands: tests rarely catch it. */
+  stubborn?: boolean;
   /** Set when the defect became public in the field (recall/service campaign). */
   surfaced?: boolean;
   fixed?: boolean;
@@ -209,6 +214,10 @@ export interface Project {
   defects: Defect[];
   /** Expected number of defects at the start of testing (drives the risk estimate). */
   defectPrior: number;
+  /** The prototype's unit cost in 1900 dollars (sets what a test week costs). */
+  protoUnitCost?: number;
+  /** Body dies and fixtures ordered for production. */
+  tooling?: ToolingTier;
   tests: Record<TestId, { planned: number; done: number }>;
   testWeeks: number;
   suppliers: Record<ComponentKey, SupplierChoice>;
@@ -260,6 +269,8 @@ export interface CarModel {
   /** Highest price (in 1900 dollars) the press has accepted; a big jump above it soon after launch is punished. */
   priceCeiling?: number;
   /** Let the factory follow demand: add capacity while buyers wait, give it back when they don't. */
+  /** Body dies and fixtures it is built with (older saves: standard). */
+  tooling?: ToolingTier;
   autoCapacity?: boolean;
   lowDemandMonths?: number;
   inventory: number;

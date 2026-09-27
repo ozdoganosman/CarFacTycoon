@@ -28,7 +28,11 @@ export function botStep(s: GameState, o: BotOptions = {}) {
       const ev = eventDef(m.eventId);
       if (ev?.choices?.length) A.chooseEventOption(s, m.eventId, ev.choices[0].id);
       else A.dismissModal(s);
-    } else if (m.kind === 'recall' || m.kind === 'service') A.recallDecision(s, m.modelId, m.defectId, 'recall');
+    } else if (m.kind === 'recall' || m.kind === 'service') {
+      // Recall when the company can pay for it; a company on the edge keeps quiet and hopes.
+      const affordable = s.company.cash + (credit(s).limit - s.company.loan) > 1.5 * A.recallCost(s, m.modelId, m.defectId);
+      A.recallDecision(s, m.modelId, m.defectId, affordable ? 'recall' : 'ignore');
+    }
     else if (m.kind === 'gameOver') return;
     else A.dismissModal(s);
   }

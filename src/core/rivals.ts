@@ -73,7 +73,9 @@ export function launchRivalModel(
 ): RivalModel {
   const yf = yearFloat(week);
   const year = Math.floor(yf);
-  const { design, bonus } = aiDesign(seg, year, { style: def.style, skill: Math.min(95, def.skill + skillBonus), market: def.home }, rng);
+  // Leading makers put new technology into their cars a year or two before it is common knowledge.
+  const lead = def.skill >= 64 ? 2 : def.skill >= 57 ? 1 : 0;
+  const { design, bonus } = aiDesign(seg, year + lead, { style: def.style, skill: Math.min(95, def.skill + skillBonus), market: def.home }, rng);
   const stats = computeCarStats(design, yf, bonus);
   const labour = def.massProduction && yf >= def.massProduction ? Math.min(0.2, labourShare(yf)) : labourShare(yf);
   const price = stats.unitCost * costIndex(yf) * (1 + labour) * priceMarkup(yf) * STYLE_MARKUP[def.style] * (special?.priceMult ?? 1) * (0.95 + rng() * 0.1);

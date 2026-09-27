@@ -162,8 +162,9 @@ function makeFor(market: MarketId, majors: RivalDef[], seed: number): RivalDef[]
         if (rng() < 0.25) segments.push({ seg: second, from: Math.max(founded + 1 + Math.floor(rng() * 3), OPENS[second]) });
         const start = 0.04 + rng() * 0.05;
         const peak = 0.06 + rng() * 0.09;
+        // Firms already selling when the game starts are established: they begin close to their peak.
         const size: [number, number][] = [
-          [founded, start],
+          [founded, y === 1900 ? Math.max(start, 0.9 * peak) : start],
           [founded + 4, peak],
         ];
         if (closes) size.push([Math.max(closes, founded + 4.5), start * 0.6]);

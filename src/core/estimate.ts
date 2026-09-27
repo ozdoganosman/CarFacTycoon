@@ -44,7 +44,9 @@ const TEST_NARROW: Record<TestId, Partial<Record<AttrKey, number>>> = {
 export function experienceFactor(s: GameState): number {
   const launched = s.company.modelsLaunched ?? 0;
   const greenness = Math.min(1, Math.max(0.2, (80 - s.company.skill) / 50));
-  return 1 + 1.3 * Math.exp(-launched / 2) * greenness;
+  // A bigger department has specialists for each part and checks its own sums.
+  const team = 1.15 - 0.15 * Math.min(1, s.company.engineers / 20);
+  return (1 + 1.3 * Math.exp(-launched / 2) * greenness) * team;
 }
 
 export function newEstimate(rng: Rng, experience = 1): Estimate {
@@ -91,4 +93,27 @@ export function estimateRange(est: Estimate, k: AttrKey, trueScore: number): { l
   // The centre wanders by up to 60% of the width, so a wide range is genuinely uncertain.
   const mid = trueScore + est.offsets[k] * w * 0.6;
   return { lo: Math.max(0, mid - w), hi: Math.min(100, mid + w), mid: Math.max(0, Math.min(100, mid)) };
+}
+
+export type FactKey = 'power' | 'mass' | 'cost' | 'complexity';
+
+/**
+ * The engineers' figure for a quantity on paper (power, weight, cost,
+ * production difficulty) as a range. A green team is far off; the dynamometer
+ * pins down power and road testing the weight; cost is only settled when
+ * suppliers quote in production preparation.
+ */
+export function factRange(est: Estimate, k: FactKey, value: number): [number, number] {
+  const exp = est.experience ?? 1;
+  const rel =
+    k === 'power'
+      ? 0.02 + 0.1 * (est.width.accel / INITIAL_WIDTH.accel)
+      : k === 'mass'
+        ? 0.02 + 0.06 * (est.width.handling / INITIAL_WIDTH.handling)
+        : k === 'cost'
+          ? 0.03 + 0.08 * exp
+          : 0.04 + 0.08 * exp;
+  const offset = { power: est.offsets.accel, mass: est.offsets.handling, cost: est.offsets.practicality, complexity: est.offsets.reliability }[k];
+  const shift = offset * 0.6 * rel;
+  return [value * Math.exp(shift - rel), value * Math.exp(shift + rel)];
 }

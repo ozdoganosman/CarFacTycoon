@@ -29,7 +29,7 @@ test('generate a first project and a 1940 project', () => {
   writeFileSync(`${OUT}/save-novice.json`, serialize(s));
   // The same company in 1940, with a pickup project where diesel is on offer.
   const t = newGame({ companyName: 'Öncü Motor', hq: 'europe', seed: 8 });
-  runBot(t, 52 * 40, { segments: ['family', 'city'] });
+  runBot(t, 52 * 40, { segments: ['family', 'city'], smart: true });
   t.modals = [];
   t.projects = [];
   const q = A.startProject(t, { name: 'Yük 40', segment: 'pickup', targetPrice: 0 });

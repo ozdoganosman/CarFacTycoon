@@ -11,12 +11,13 @@ import {
 } from '../data/markets';
 import { RIVALS } from '../data/rivals';
 import { stationDef } from '../data/stations';
+import { toolingDef } from '../data/tooling';
 import { SEGMENTS, segmentDef } from '../data/segments';
 import { interp } from '../data/tech';
 import { appeal, eraMods, eraReference, scoreStats } from './scoring';
 import { INDUSTRY_RESIDUAL_DEFECTS } from './testing';
 import { yearFloat } from './time';
-import type { CarModel, CarStats, GameState, MarketId, RivalModel, Scores, SegmentId } from './types';
+import type { AttrKey, CarModel, CarStats, GameState, MarketId, RivalModel, Scores, SegmentId } from './types';
 
 export const TAU = 7;
 /**
@@ -129,10 +130,19 @@ export function applyWorkshopPenalty(scores: Scores, pen: number): Scores {
   return scores;
 }
 
+/** Fit and finish from the body dies the car is built with. */
+export function applyTooling(scores: Scores, tier: CarModel['tooling']): Scores {
+  for (const [k, v] of Object.entries(toolingDef(tier).scores) as [AttrKey, number][]) scores[k] = Math.max(0, scores[k] + v);
+  return scores;
+}
+
 export function modelScores(state: GameState, model: CarModel): { scores: Scores; appeal: Record<MarketId, number> } {
   if (model.cache && state.week - model.cache.week < 4) return model.cache;
   const yf = yearFloat(state.week);
-  const scores = applyWorkshopPenalty(scoreStats(model.stats, yf, model.segment, model.perceivedReliability), workshopPenalty(state));
+  const scores = applyTooling(
+    applyWorkshopPenalty(scoreStats(model.stats, yf, model.segment, model.perceivedReliability), workshopPenalty(state)),
+    model.tooling,
+  );
   // Platform over-sharing ("they are all the same car") hurts prestige.
   const siblings = state.models.filter((m) => m.status === 'active' && m.platformId === model.platformId).length;
   if (siblings > 3) scores.prestige = Math.max(0, scores.prestige - 6 * (siblings - 3));

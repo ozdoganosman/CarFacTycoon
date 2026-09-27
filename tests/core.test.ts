@@ -3,12 +3,12 @@ import * as A from '../src/core/actions';
 import { aiDesign, referenceBonus, referenceDesigns } from '../src/core/ai';
 import { computeEngine, displacementCc, racHp } from '../src/core/engine';
 import { lineReport } from '../src/core/factory';
-import { newGame, tick } from '../src/core/game';
+import { materialUnitCost, newGame, tick } from '../src/core/game';
 import { datedPenalty, modelAgeYears, priceNow, segmentMarket } from '../src/core/market';
 import { makeRng } from '../src/core/rng';
 import { deserialize, serialize } from '../src/core/save';
 import { eraReference, scoreStats } from '../src/core/scoring';
-import { expectedRemaining } from '../src/core/testing';
+import { TESTS, expectedRemaining, testWeekCost } from '../src/core/testing';
 import { isBlockingModal } from '../src/core/util';
 import { computeCarStats } from '../src/core/vehicle';
 import type { CarDesign } from '../src/core/types';
@@ -18,7 +18,7 @@ import { inYear } from '../src/ui/format';
 import { FOCUS_KEYS, bonusFromPoints } from '../src/core/development';
 import { experienceFactor } from '../src/core/estimate';
 import { autoCapacity } from '../src/core/autocap';
-import { engineNotes } from '../src/core/engineNotes';
+import { engineNotes, gearboxNotes } from '../src/core/engineNotes';
 import { CYLINDER_OPTIONS } from '../src/data/tech';
 import type { FocusKey } from '../src/core/types';
 import { store } from '../src/ui/store';
@@ -104,6 +104,14 @@ describe('scoring', () => {
 });
 
 describe('testing', () => {
+  it('testing costs real money and even the longest programme misses some defects', () => {
+    const road = TESTS.find((t) => t.id === 'road')!;
+    // A week of road testing a $500 car costs a good share of a car.
+    expect(testWeekCost(road, 500, 1900)).toBeGreaterThan(150);
+    const max = { dyno: 30, road: 30, crash: 30, durability: 30 };
+    expect(expectedRemaining(10, max)).toBeGreaterThan(0.5);
+  });
+
   it('more testing leaves fewer expected defects', () => {
     const none = expectedRemaining(6, { dyno: 0, road: 0, crash: 0, durability: 0 });
     const some = expectedRemaining(6, { dyno: 4, road: 8, crash: 0, durability: 8 });
@@ -307,6 +315,14 @@ describe('engineering', () => {
     expect(v6.smoothness).toBeLessThan(i6.smoothness);
   });
 
+  it('says when the gear ratios do not suit the car', () => {
+    const { design } = aiDesign('family', 1925, { style: 'mass', skill: 55, market: 'usa' }, () => 0.5);
+    const short = gearboxNotes({ ...design, gearbox: { ...design.gearbox, spread: 0 } }, 1925, 'family');
+    expect(short.cons.some((x) => x.includes('çok yakıyor') || x.includes('Son vites kısa'))).toBe(true);
+    const long = gearboxNotes({ ...design, gearbox: { ...design.gearbox, spread: 1 } }, 1925, 'family');
+    expect(long.pros.some((x) => x.includes('az yakıyor'))).toBe(true);
+  });
+
   it('explains what an engine is good and bad at', () => {
     const typical = aiDesign('family', 1925, { style: 'mass', skill: 55, market: 'usa' }, () => 0.5).design.engine;
     const tiny = engineNotes({ ...typical, cylinders: 2, bore: 60, stroke: 70 }, 1925, 'family');
@@ -335,7 +351,10 @@ describe('engineering', () => {
     expect(experienceFactor(s)).toBeGreaterThan(1.8);
     s.company.modelsLaunched = 6;
     s.company.skill = 70;
+    const small = experienceFactor(s);
+    s.company.engineers = 25;
     expect(experienceFactor(s)).toBeLessThan(1.1);
+    expect(experienceFactor(s)).toBeLessThan(small);
   });
 
   it('automatic capacity follows demand', () => {
@@ -352,6 +371,21 @@ describe('engineering', () => {
 });
 
 describe('market pressure', () => {
+  it('precision tooling costs more up front and builds a tighter car', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 5 });
+    s.modals = [];
+    const r = A.startProject(s, { name: 'T', segment: 'family', targetPrice: 0 });
+    if (!r.ok) throw new Error(r.error);
+    const p = s.projects[0];
+    p.phase = 'production';
+    const soft = A.toolingQuote(s, p, s.lines[0].id, 'soft');
+    const precise = A.toolingQuote(s, p, s.lines[0].id, 'precision');
+    expect(precise.cost).toBeGreaterThan(soft.cost * 3);
+    expect(precise.weeks).toBeGreaterThan(soft.weeks);
+    const base = { stats: computeCarStats(p.design, 1900), suppliers: p.suppliers, unitsBuilt: 0 };
+    expect(materialUnitCost(s, { ...base, tooling: 'precision' })).toBeLessThan(materialUnitCost(s, { ...base, tooling: 'soft' }));
+  });
+
   it('a model looks dated after two years and a facelift takes most of that away', () => {
     expect(datedPenalty(1.5)).toBe(-0);
     expect(datedPenalty(5)).toBeLessThan(-8);

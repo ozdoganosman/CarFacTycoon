@@ -1,4 +1,5 @@
-import { useId, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 export function Panel(props: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; tight?: boolean }) {
   return (
@@ -224,5 +225,70 @@ export function RangeBar(props: { lo: number; hi: number; rough?: boolean }) {
       <div className={`rangebar-band sb-${tone} ${props.rough ? 'is-rough' : ''}`} style={{ left: `${lo}%`, width: `${Math.max(2, hi - lo)}%` }} />
       <div className="scorebar-mid" />
     </div>
+  );
+}
+
+/**
+ * A small (i) button whose details show in a bubble on hover, focus or tap.
+ * The bubble lives on <body> so panels never clip it, and it stays on screen.
+ */
+export function Info({ children, label = 'Ayrıntı' }: { children: ReactNode; label?: string }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ left: number; top: number; width: number } | null>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  const tip = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (!open || !btn.current || !tip.current) {
+      setPos(null);
+      return;
+    }
+    const r = btn.current.getBoundingClientRect();
+    const width = Math.min(340, window.innerWidth - 16);
+    const h = tip.current.offsetHeight;
+    const left = Math.max(8, Math.min(r.left + r.width / 2 - width / 2, window.innerWidth - width - 8));
+    const top = r.bottom + 8 + h < window.innerHeight || r.top - 8 - h < 0 ? r.bottom + 6 : r.top - 6 - h;
+    setPos({ left, top, width });
+  }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [open]);
+  return (
+    <span className="info" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button
+        type="button"
+        ref={btn}
+        className="info-btn"
+        aria-label={label}
+        aria-expanded={open}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+      >
+        i
+      </button>
+      {open &&
+        createPortal(
+          <div
+            ref={tip}
+            role="tooltip"
+            className="info-tip"
+            style={pos ? { left: pos.left, top: pos.top, width: pos.width } : { left: 0, top: 0, width: Math.min(340, window.innerWidth - 16), visibility: 'hidden' }}
+          >
+            {children}
+          </div>,
+          document.body,
+        )}
+    </span>
   );
 }

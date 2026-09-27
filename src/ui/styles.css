@@ -2662,3 +2662,81 @@ fieldset {
 .price-guide table tr.is-mine td {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
+
+/* ---------- Info bubbles ---------- */
+.info {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+.info-btn {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--muted);
+  font: italic 700 0.7rem/1 Georgia, 'Times New Roman', serif;
+  padding: 0;
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.info-btn:hover,
+.info-btn[aria-expanded='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.info-tip {
+  position: fixed;
+  z-index: 200;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+.info-tip p {
+  margin: 0 0 6px;
+}
+.info-tip p:last-child {
+  margin-bottom: 0;
+}
+.info-tip ul {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+.info-tip li {
+  margin: 2px 0;
+}
+.info-tip b {
+  color: inherit;
+}
+.info-tip .up {
+  color: color-mix(in srgb, var(--good) 55%, var(--bg));
+}
+.info-tip .down {
+  color: color-mix(in srgb, var(--bad) 55%, var(--bg));
+}
+
+/* ---------- Production prep ---------- */
+.prod-howto ol {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+.prod-howto li {
+  margin: 2px 0;
+}
+
+.sp-facts-note {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.readouts-note {
+  margin: 12px 0 -6px;
+}

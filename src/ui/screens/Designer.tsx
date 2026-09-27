@@ -3,7 +3,7 @@ import * as A from '../../core/actions';
 import { enginePresets, withStrokeRatio } from '../../core/ai';
 import { DIESEL_COMPRESSION, DIESEL_YEAR, displacementCc, isDiesel, knockLimit } from '../../core/engine';
 import { newEstimate } from '../../core/estimate';
-import { engineNotes } from '../../core/engineNotes';
+import { engineNotes, gearboxNotes, suspensionNotes } from '../../core/engineNotes';
 import { yearFloat } from '../../core/time';
 import { engineCurve, gearSpeeds, tractionCurves, rollingResistance } from '../../core/vehicle';
 import {
@@ -23,7 +23,7 @@ import type { CarDesign, EngineDesign, FeatureId, Project } from '../../core/typ
 import { store, useGameState } from '../store';
 import { kmh, litres, money, secs } from '../format';
 import { inYear } from '../format';
-import { Button, Choice, Slider, Toggle } from '../components/ui';
+import { Button, Choice, Info, Slider, Toggle } from '../components/ui';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { CarSVG } from '../viz/CarSVG';
 import { LineChart } from '../viz/LineChart';
@@ -130,33 +130,9 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
               </>
             )}
             {tab === 'engine' && <EngineTab s={s} d={d} yf={yf} locked={engineLocked} onChange={setEngine} project={project} />}
-            {tab === 'gearbox' && <GearboxTab d={d} yf={yf} bonus={project.bonus} onChange={set} />}
-            {tab === 'suspension' && (
-              <>
-                <Choice
-                  value={d.suspension}
-                  onChange={(v) => set({ suspension: v })}
-                  options={SUSPENSIONS.map((x) => ({
-                    value: x.id,
-                    label: x.name,
-                    disabled: platformLocked || x.year > yf,
-                    sub: x.year > yf ? `${inYear(x.year)} gelir` : x.desc,
-                  }))}
-                />
-                <Slider
-                  label="Ayar"
-                  value={d.suspBalance}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  onChange={(v) => set({ suspBalance: v })}
-                  left="Konfor"
-                  right="Yol tutuş"
-                  format={(v) => (v < 0.4 ? 'Yumuşak' : v > 0.6 ? 'Sert' : 'Dengeli')}
-                />
-              </>
-            )}
-            {tab === 'safety' && <FeatureList d={d} yf={yf} group="safety" onChange={(features) => set({ features })} />}
+            {tab === 'gearbox' && <GearboxTab d={d} yf={yf} bonus={project.bonus} segment={project.segment} onChange={set} />}
+            {tab === 'suspension' && <SuspensionTab d={d} yf={yf} bonus={project.bonus} segment={project.segment} locked={platformLocked} onChange={set} />}
+          {tab === 'safety' && <FeatureList d={d} yf={yf} group="safety" onChange={(features) => set({ features })} />}
             {tab === 'equipment' && (
               <>
                 <FeatureList d={d} yf={yf} group="equipment" onChange={(features) => set({ features })} />
@@ -267,7 +243,18 @@ function EngineTab({
       <fieldset disabled={locked} className="engine-controls">
         {yf >= DIESEL_YEAR && (
           <div className="field">
-            <span>Yakıt</span>
+            <span>
+              Yakıt
+              <Info>
+                <p>
+                  <b>Benzin:</b> hafif, sessiz ve yüksek devirli.
+                </p>
+                <p>
+                  <b>Dizel:</b> yakıtı sıkıştırmanın ısısı tutuşturur. Çok az yakar ve uzun ömürlüdür; ama ağır, gürültülü, düşük devirli ve pahalıdır, alıcılar prestijli
+                  bulmaz.
+                </p>
+              </Info>
+            </span>
             <Choice
               compact
               value={diesel ? 'diesel' : 'petrol'}
@@ -279,8 +266,8 @@ function EngineTab({
                 )
               }
               options={[
-                { value: 'petrol', label: 'Benzin', sub: 'Hafif, sessiz, yüksek devirli.' },
-                { value: 'diesel', label: 'Dizel', sub: 'Çok az yakar ve dayanıklıdır; ağır, gürültülü, yavaş ve pahalı.' },
+                { value: 'petrol', label: 'Benzin' },
+                { value: 'diesel', label: 'Dizel' },
               ]}
             />
           </div>
@@ -288,8 +275,20 @@ function EngineTab({
         {!engineer ? (
           <>
             <div className="field">
-              <span>Hazır motorlar</span>
+              <span>
+                Hazır motorlar
+                <Info>
+                  <ul>
+                    {presets.map((p) => (
+                      <li key={p.id}>
+                        <b>{p.name}:</b> {p.desc}
+                      </li>
+                    ))}
+                  </ul>
+                </Info>
+              </span>
               <Choice
+                compact
                 value={
                   presets.find(
                     (p) => p.design.cylinders === e.cylinders && (p.design.fuel ?? 'petrol') === (e.fuel ?? 'petrol') && Math.abs(displacementCc(p.design) - displacementCc(e)) < 60,
@@ -302,29 +301,51 @@ function EngineTab({
                 options={presets.map((p) => ({
                   value: p.id,
                   label: `${p.name} · ${(displacementCc(p.design) / 1000).toFixed(1)} L ${p.design.layout === 'v' ? 'V' : ''}${p.design.cylinders}`,
-                  sub: p.desc,
                 }))}
               />
             </div>
             <Slider
-              label="Karakter (strok / çap)"
+              label={
+                <>
+                  Karakter (strok / çap)
+                  <Info>
+                    <p className="up">↑ Uzun strok: düşük devirde güçlü çeker, az yakar{eu ? ', Avrupa’da vergisi düşük (vergi yalnızca çapa bakar)' : ''}.</p>
+                    <p className="down">↓ Kısa strok: yüksek devre çıkar ve daha çok güç verir, ama düşük devirde zayıftır.</p>
+                  </Info>
+                </>
+              }
               value={Math.round(ratio * 100) / 100}
               min={0.75}
               max={1.6}
               step={0.05}
               onChange={(v) => onChange(withStrokeRatio(e, v, yf))}
-              left="Kısa strok: devir, güç"
-              right="Uzun strok: tork, verim, vergi"
+              left="Kısa strok"
+              right="Uzun strok"
               format={(v) => v.toFixed(2)}
-              hint={eu ? 'Avrupa’da vergi beygiri yalnızca silindir çapına bakar: uzun strok vergiyi düşürür.' : 'Uzun strok düşük devirde çeker, kısa strok yüksek devirde güç verir.'}
             />
-            <p className="muted small">Her ayar için “Mühendis modu”nu Ayarlar’dan açabilirsin.</p>
+            <p className="muted small">Her ayarı ayrı ayrı yapmak için Ayarlar’dan “Mühendis modu”nu aç.</p>
           </>
         ) : (
           <>
             <div className="field">
-              <span>Silindir düzeni</span>
+              <span>
+                Silindir düzeni
+                <Info>
+                  <p>Aynı hacmi kaç silindire böleceğin. Değiştirince hacim korunur.</p>
+                  <p className="up">↑ Daha çok silindir: motor yumuşar ve sessizleşir, küçülen pistonlar daha yüksek devre çıkar, prestij artar.</p>
+                  <p className="down">↓ Ama motor pahalanır, ağırlaşır, arızalanacak parça çoğalır.</p>
+                  <ul>
+                    {CYLINDER_OPTIONS.map((c) => (
+                      <li key={`${c.cylinders}${c.layout}`}>
+                        <b>{c.label}</b>
+                        {c.year > yf ? ` (${c.year})` : ''}: {c.desc}
+                      </li>
+                    ))}
+                  </ul>
+                </Info>
+              </span>
               <Choice
+                compact
                 value={`${e.cylinders}${e.layout}`}
                 onChange={(v) => {
                   const c = cylOpts.find((x) => `${x.cylinders}${x.layout}` === v)!;
@@ -335,61 +356,80 @@ function EngineTab({
                 }}
                 options={CYLINDER_OPTIONS.map((c) => ({
                   value: `${c.cylinders}${c.layout}`,
-                  label: c.label,
+                  label: c.label.replace(' silindir sıra', ' sıra').replace('Tek silindir', 'Tek'),
                   disabled: c.year > yf,
-                  sub: c.year > yf ? `${inYear(c.year)} gelir` : c.desc,
+                  title: c.year > yf ? `${inYear(c.year)} gelir` : c.desc,
+                  sub: c.year > yf ? String(c.year) : undefined,
                 }))}
-              />
-              <UpDown
-                intro="Aynı hacmi kaç silindire böleceğin. Değiştirince hacim korunur."
-                up="Daha çok silindir: motor yumuşar ve sessizleşir, küçülen pistonlar daha yüksek devre çıkar, prestij artar. Ama pahalanır, ağırlaşır, arızalanacak parça çoğalır."
-                down="Daha az silindir: ucuz, hafif ve basit. Ama sarsıntılı çalışır."
               />
             </div>
             <div className="grid-2 tight">
               <Slider
-                label="Silindir çapı"
+                label={
+                  <>
+                    Silindir çapı
+                    <Info>
+                      <p>Silindirin genişliği.</p>
+                      <p className="up">
+                        ↑ Artırınca: hacim ve güç artar{e.valvetrain === 'sv' ? '' : ', büyük supaplar nefesi iyileştirir'}. Ama alev yolu uzar, vuruntu sınırı düşer; motor
+                        ağırlaşır{eu ? '; Avrupa’da vergi çapın karesiyle artar' : ''}.
+                      </p>
+                      <p className="down">↓ Azaltınca: vuruntuya dayanıklı ve hafif{eu ? ', vergisi düşük' : ''}. Ama hacim ve güç düşer.</p>
+                    </Info>
+                  </>
+                }
                 value={e.bore}
                 min={50}
                 max={160}
                 step={0.5}
                 onChange={(v) => onChange({ ...e, bore: v })}
                 format={(v) => `${v} mm`}
-                hint={
-                  <UpDown
-                    up={
-                      <>
-                        Artırınca: hacim ve güç artar{e.valvetrain === 'sv' ? '' : ', büyük supaplar nefesi iyileştirir'}. Ama alev yolu uzar, vuruntu sınırı düşer; motor ağırlaşır
-                        {eu ? '; Avrupa’da vergi çapın karesiyle artar' : ''}.
-                      </>
-                    }
-                    down={<>Azaltınca: vuruntuya dayanıklı ve hafif{eu ? ', vergisi düşük' : ''}. Ama hacim ve güç düşer.</>}
-                  />
-                }
               />
               <Slider
-                label="Strok"
+                label={
+                  <>
+                    Strok
+                    <Info>
+                      <p>Pistonun bir turda aldığı yol.</p>
+                      <p className="up">
+                        ↑ Artırınca: hacim ve tork artar, tork düşük devre iner{eu ? ', vergi değişmez' : ''}. Ama piston çok hızlanır: devir sınırı düşer (şu an{' '}
+                        {Math.round(es.redline)} d/d).
+                      </p>
+                      <p className="down">↓ Azaltınca: motor yüksek devre çıkar, güç tepesi geç gelir. Ama düşük devirde zayıflar, hacim düşer.</p>
+                    </Info>
+                  </>
+                }
                 value={e.stroke}
                 min={50}
                 max={180}
                 step={0.5}
                 onChange={(v) => onChange({ ...e, stroke: v })}
                 format={(v) => `${v} mm`}
-                hint={
-                  <UpDown
-                    up={
-                      <>
-                        Artırınca: hacim ve tork artar, tork düşük devre iner{eu ? ', vergi değişmez' : ''}. Ama piston çok hızlanır: devir sınırı düşer (şu an{' '}
-                        {Math.round(es.redline)} d/d).
-                      </>
-                    }
-                    down="Azaltınca: motor yüksek devre çıkar, güç tepesi geç gelir. Ama düşük devirde zayıflar, hacim düşer."
-                  />
-                }
               />
             </div>
             <Slider
-              label="Sıkıştırma oranı"
+              label={
+                <>
+                  Sıkıştırma oranı
+                  <Info>
+                    {diesel ? (
+                      <>
+                        <p>Dizelde yakıtı sıkıştırmanın ısısı tutuşturur: vuruntu sınırı yok.</p>
+                        <p className="up">↑ Artırınca: verim ve güç artar.</p>
+                        <p className="down">↓ Azaltınca: güç ve verim düşer.</p>
+                      </>
+                    ) : (
+                      <>
+                        <p>Piston karışımı ne kadar sıkıştırıyor.</p>
+                        <p className="up">↑ Artırınca: yakıt daha iyi değerlendirilir, verim ve güç artar.</p>
+                        <p className="down">
+                          ↓ Sınırı aşarsa karışım erken patlar (vuruntu): güç ve motor ömrü çöker. Sınır çap büyüdükçe düşer, dönemin benzini iyileştikçe yükselir.
+                        </p>
+                      </>
+                    )}
+                  </Info>
+                </>
+              }
               value={e.compression}
               min={diesel ? DIESEL_COMPRESSION[0] : 3.5}
               max={diesel ? DIESEL_COMPRESSION[1] : Math.round(maxCompression(yf) * 10) / 10}
@@ -397,37 +437,35 @@ function EngineTab({
               onChange={(v) => onChange({ ...e, compression: v })}
               format={(v) => `${v.toFixed(1)} : 1`}
               hint={
-                diesel ? (
-                  <UpDown
-                    intro="Dizelde yakıtı sıkıştırmanın ısısı tutuşturur: vuruntu sınırı yok."
-                    up="Artırınca: verim ve güç artar."
-                    down="Azaltınca: güç ve verim düşer."
-                  />
-                ) : (
-                  <UpDown
-                    intro={
-                      <>
-                        Bu çapta vuruntu sınırı <b>{kl.toFixed(1)}</b>.{' '}
-                        {e.compression > kl ? <span className="tone-bad">Motor vuruntu yapıyor: güç ve güvenilirlik düşer!</span> : 'Güvenli.'} Dönemin benzini iyileştikçe sınır yükselir.
-                      </>
-                    }
-                    up="Artırınca: yakıt daha iyi değerlendirilir, verim ve güç artar. Sınırı aşarsa karışım erken patlar: vuruntu gücü ve motoru yer."
-                    down="Azaltınca: güvenli ama güç ve verim boşa gider."
-                  />
+                diesel ? undefined : (
+                  <>
+                    Vuruntu sınırı <b>{kl.toFixed(1)}</b>. {e.compression > kl ? <span className="tone-bad">Motor vuruntu yapıyor!</span> : 'Güvenli.'}
+                  </>
                 )
               }
             />
             <div className="field">
-              <span>Supap düzeni</span>
+              <span>
+                Supap düzeni
+                <Info>
+                  <p>Supaplar yukarı çıktıkça motor daha rahat nefes alır.</p>
+                  <p className="up">↑ Gelişmiş düzen: daha yüksek devir, daha çok güç, biraz daha verim.</p>
+                  <p className="down">↓ Ama pahalı ve hassas; yeni teknoloji ilk yıllarında arıza çıkarır.</p>
+                  <ul>
+                    {VALVETRAINS.map((v) => (
+                      <li key={v.id}>
+                        <b>{v.name}</b>
+                        {v.year > yf ? ` (${v.year})` : ''}: {v.desc}
+                      </li>
+                    ))}
+                  </ul>
+                </Info>
+              </span>
               <Choice
+                compact
                 value={e.valvetrain}
                 onChange={(v) => onChange({ ...e, valvetrain: v })}
-                options={VALVETRAINS.map((v) => ({ value: v.id, label: v.name, disabled: v.year > yf, sub: v.year > yf ? `${inYear(v.year)} gelir` : v.desc }))}
-              />
-              <UpDown
-                intro="Supaplar yukarı çıktıkça motor daha rahat nefes alır."
-                up="Daha gelişmiş düzen: daha yüksek devir, daha çok güç, biraz daha verim. Ama pahalı ve hassas; yeni teknoloji ilk yıllarında arıza çıkarır."
-                down="Daha basit düzen: ucuz, sessiz ve sağlam. Ama düşük devirde kalır."
+                options={VALVETRAINS.map((v) => ({ value: v.id, label: v.name, disabled: v.year > yf, title: v.desc, sub: v.year > yf ? String(v.year) : undefined }))}
               />
             </div>
             <div className="grid-2 tight">
@@ -438,27 +476,53 @@ function EngineTab({
                 </div>
               ) : (
                 <div className="field">
-                  <span>Yakıt sistemi</span>
+                  <span>
+                    Yakıt sistemi
+                    <Info>
+                      <ul>
+                        {FUEL_SYSTEMS.map((f) => (
+                          <li key={f.id}>
+                            <b>{f.name}</b>
+                            {f.year > yf ? ` (${f.year})` : ''}: {f.desc}
+                          </li>
+                        ))}
+                      </ul>
+                    </Info>
+                  </span>
                   <Choice
+                    compact
                     value={e.fuelSystem}
                     onChange={(v) => onChange({ ...e, fuelSystem: v })}
-                    options={FUEL_SYSTEMS.map((f) => ({ value: f.id, label: f.name, disabled: f.year > yf, sub: f.year > yf ? `${inYear(f.year)} gelir` : f.desc }))}
+                    options={FUEL_SYSTEMS.map((f) => ({ value: f.id, label: f.name, disabled: f.year > yf, title: f.desc, sub: f.year > yf ? String(f.year) : undefined }))}
                   />
                 </div>
               )}
               <div className="field">
-                <span>Aşırı besleme</span>
+                <span>
+                  Aşırı besleme
+                  <Info>
+                    <ul>
+                      {ASPIRATIONS.map((a) => (
+                        <li key={a.id}>
+                          <b>{a.name}</b>
+                          {a.year > yf ? ` (${a.year})` : ''}: {a.desc}
+                        </li>
+                      ))}
+                    </ul>
+                  </Info>
+                </span>
                 <Choice
+                  compact
                   value={e.aspiration}
                   onChange={(v) => onChange({ ...e, aspiration: v })}
-                  options={ASPIRATIONS.map((a) => ({ value: a.id, label: a.name, disabled: a.year > yf, sub: a.year > yf ? `${inYear(a.year)} gelir` : a.desc }))}
+                  options={ASPIRATIONS.map((a) => ({ value: a.id, label: a.name, disabled: a.year > yf, title: a.desc, sub: a.year > yf ? String(a.year) : undefined }))}
                 />
               </div>
             </div>
-            <p className="muted small">Karışık geldiyse Ayarlar’dan “Mühendis modu”nu kapatıp hazır motorlarla çalışabilirsin.</p>
           </>
         )}
       </fieldset>
+      <p className="muted small readouts-note">Çizim üzerindeki hesap; gerçek motor geliştirme ve işçilikle bundan sapar:</p>
       <div className="readouts">
         <div>
           <span>Hacim</span>
@@ -477,7 +541,12 @@ function EngineTab({
           </b>
         </div>
         <div>
-          <span>Devir sınırı</span>
+          <span>
+            Devir sınırı
+            <Info>
+              <p>Motorun güvenle dönebildiği en yüksek devir. Piston hızı sınırı belirler: uzun strok ve basit supaplar devri düşürür.</p>
+            </Info>
+          </span>
           <b>{Math.round(es.redline)} d/d</b>
         </div>
         <div>
@@ -486,8 +555,14 @@ function EngineTab({
             {e.bore} × {e.stroke} mm
           </b>
         </div>
-        <div title="İngiliz vergi beygiri: çap² × silindir / 2,5 (inç)">
-          <span>Vergi beygiri</span>
+        <div>
+          <span>
+            Vergi beygiri
+            <Info>
+              <p>İngiliz usulü vergi beygiri: çap² × silindir sayısı / 2,5 (inç). Stroka hiç bakmaz.</p>
+              <p>1910-1947 arası Avrupa’da araç vergisi buna göre alınır: düşük vergi beygiri alıcının cebinde kalan paradır.</p>
+            </Info>
+          </span>
           <b>{es.taxHp.toFixed(1)}</b>
         </div>
         <div>
@@ -531,41 +606,24 @@ function EngineTab({
   );
 }
 
-/** What moving a control up or down does, in two short lines. */
-function UpDown({ intro, up, down }: { intro?: ReactNode; up: ReactNode; down: ReactNode }) {
-  return (
-    <div className="updown">
-      {intro && <p>{intro}</p>}
-      <p>
-        <b className="tone-good" aria-hidden>
-          ↑
-        </b>{' '}
-        {up}
-      </p>
-      <p>
-        <b className="tone-bad" aria-hidden>
-          ↓
-        </b>{' '}
-        {down}
-      </p>
-    </div>
-  );
-}
-
 /** The engine's strong and weak points next to the class's typical engine. */
 function EngineVerdict({ e, yf, segment }: { e: EngineDesign; yf: number; segment: Project['segment'] }) {
   const n = useMemo(() => engineNotes(e, yf, segment), [e, yf, segment]);
+  return <ProsCons intro={`Sınıfın tipik motoruna göre (${n.typical}):`} pros={n.pros} cons={n.cons} />;
+}
+
+function ProsCons({ intro, pros, cons }: { intro: string; pros: string[]; cons: string[] }) {
   return (
     <div className="engine-notes">
-      <p className="muted small">Sınıfın tipik motoruna göre ({n.typical}):</p>
+      <p className="muted small">{intro}</p>
       <div className="pc-grid">
         <div>
           <h5 className="tone-good">Artıları</h5>
-          <ul className="pc pc-pro">{n.pros.length ? n.pros.map((x) => <li key={x}>{x}</li>) : <li className="muted">Belirgin bir artısı yok.</li>}</ul>
+          <ul className="pc pc-pro">{pros.length ? pros.map((x) => <li key={x}>{x}</li>) : <li className="muted">Belirgin bir artısı yok.</li>}</ul>
         </div>
         <div>
           <h5 className="tone-bad">Eksileri</h5>
-          <ul className="pc pc-con">{n.cons.length ? n.cons.map((x) => <li key={x}>{x}</li>) : <li className="muted">Belirgin bir eksisi yok.</li>}</ul>
+          <ul className="pc pc-con">{cons.length ? cons.map((x) => <li key={x}>{x}</li>) : <li className="muted">Belirgin bir eksisi yok.</li>}</ul>
         </div>
       </div>
     </div>
@@ -574,8 +632,21 @@ function EngineVerdict({ e, yf, segment }: { e: EngineDesign; yf: number; segmen
 
 const GEAR_COLORS = ['var(--seq-1)', 'var(--seq-2)', 'var(--seq-3)', 'var(--seq-4)', 'var(--seq-5)', 'var(--seq-6)'];
 
-function GearboxTab({ d, yf, bonus, onChange }: { d: CarDesign; yf: number; bonus?: Project['bonus']; onChange: (p: Partial<CarDesign>) => void }) {
+function GearboxTab({
+  d,
+  yf,
+  bonus,
+  segment,
+  onChange,
+}: {
+  d: CarDesign;
+  yf: number;
+  bonus?: Project['bonus'];
+  segment: Project['segment'];
+  onChange: (p: Partial<CarDesign>) => void;
+}) {
   const st = useCarStats(d, yf, bonus);
+  const notes = useMemo(() => gearboxNotes(d, yf, segment, bonus), [d, yf, segment, bonus]);
   const g = d.gearbox;
   const maxG = g.type === 'automatic' ? 4 : maxGears(yf);
   const curves = tractionCurves(d, st, yf, bonus);
@@ -589,14 +660,40 @@ function GearboxTab({ d, yf, bonus, onChange }: { d: CarDesign; yf: number; bonu
   });
   return (
     <>
-      <Choice
-        value={g.type}
-        onChange={(v) => onChange({ gearbox: { ...g, type: v, gears: v === 'automatic' ? 4 : Math.min(g.gears, maxGears(yf)) } })}
-        options={GEARBOX_TYPES.map((x) => ({ value: x.id, label: x.name, disabled: x.year > yf, sub: x.year > yf ? `${inYear(x.year)} gelir` : x.desc }))}
-      />
+      <div className="field">
+        <span>
+          Şanzıman tipi
+          <Info>
+            <p>Vites değiştirmenin ne kadar kolay olduğunu belirler.</p>
+            <ul>
+              {GEARBOX_TYPES.map((x) => (
+                <li key={x.id}>
+                  <b>{x.name}</b>
+                  {x.year > yf ? ` (${x.year})` : ''}: {x.desc}
+                </li>
+              ))}
+            </ul>
+            <p className="up">↑ Kolay şanzıman: konfor ve pratiklik artar, vites değişimi hızlanır.</p>
+            <p className="down">↓ Ama pahalı ve ağırdır; otomatik biraz güç yutar. Yeni teknoloji ilk yıllarında arıza çıkarır.</p>
+          </Info>
+        </span>
+        <Choice
+          compact
+          value={g.type}
+          onChange={(v) => onChange({ gearbox: { ...g, type: v, gears: v === 'automatic' ? 4 : Math.min(g.gears, maxGears(yf)) } })}
+          options={GEARBOX_TYPES.map((x) => ({ value: x.id, label: x.name, disabled: x.year > yf, title: x.desc, sub: x.year > yf ? String(x.year) : undefined }))}
+        />
+      </div>
       <div className="grid-2 tight">
         <div className="field">
-          <span>İleri vites sayısı</span>
+          <span>
+            İleri vites sayısı
+            <Info>
+              <p className="up">↑ Daha çok vites: vitesler birbirine yaklaşır, motor güçlü olduğu devirde kalır. Hızlanma iyileşir; uzun son vites az yakar.</p>
+              <p className="down">↓ Daha az vites: ucuz ve hafif; ama vitesler arası boşluk büyük, motor her geçişte güçsüz devre düşer.</p>
+              <p>Dönemin teknolojisi en fazla {maxGears(yf)} vitese izin veriyor.</p>
+            </Info>
+          </span>
           <Choice
             compact
             value={g.gears}
@@ -605,7 +702,16 @@ function GearboxTab({ d, yf, bonus, onChange }: { d: CarDesign; yf: number; bonu
           />
         </div>
         <Slider
-          label="Oranlar"
+          label={
+            <>
+              Oranlar
+              <Info>
+                <p className="up">↑ Uzun oranlar: motor yolda düşük devirde döner; az yakar ve sessizdir, son hız artabilir. Ama kalkış ve hızlanma yavaşlar, güçsüz motor son viteste zorlanır.</p>
+                <p className="down">↓ Kısa oranlar: çevik kalkış ve güçlü çekiş. Ama motor hep yüksek devirde döner: çok yakar, son hız devir sınırına takılabilir.</p>
+                <p>Aşağıdaki grafikte eğrilerin yol direncini kestiği yer son hızdır.</p>
+              </Info>
+            </>
+          }
           value={g.spread}
           min={0}
           max={1}
@@ -616,6 +722,7 @@ function GearboxTab({ d, yf, bonus, onChange }: { d: CarDesign; yf: number; bonu
           format={(v) => (v < 0.3 ? 'Kısa' : v > 0.6 ? 'Uzun' : 'Dengeli')}
         />
       </div>
+      <p className="muted small readouts-note">Çizim üzerindeki hesap:</p>
       <div className="readouts">
         <div>
           <span>Son hız</span>
@@ -659,6 +766,80 @@ function GearboxTab({ d, yf, bonus, onChange }: { d: CarDesign; yf: number; bonu
         ariaLabel="Viteslere göre çekiş kuvveti grafiği"
       />
       <p className="muted small">Eğrilerin yol direncini kestiği yer son hızdır. Vites sayısı arttıkça eğriler birbirine yaklaşır ve motor güçlü olduğu devirde kalır.</p>
+      <ProsCons intro="Aynı arabaya sınıfın tipik şanzımanı takılsaydı:" pros={notes.pros} cons={notes.cons} />
+    </>
+  );
+}
+
+function SuspensionTab({
+  d,
+  yf,
+  bonus,
+  segment,
+  locked,
+  onChange,
+}: {
+  d: CarDesign;
+  yf: number;
+  bonus?: Project['bonus'];
+  segment: Project['segment'];
+  locked: boolean;
+  onChange: (p: Partial<CarDesign>) => void;
+}) {
+  const notes = useMemo(() => suspensionNotes(d, yf, segment, bonus), [d, yf, segment, bonus]);
+  return (
+    <>
+      <div className="field">
+        <span>
+          Süspansiyon tipi
+          <Info>
+            <p>Tekerleklerin yoldaki darbeleri gövdeye nasıl ilettiğini belirler.</p>
+            <ul>
+              {SUSPENSIONS.map((x) => (
+                <li key={x.id}>
+                  <b>{x.name}</b>
+                  {x.year > yf ? ` (${x.year})` : ''}: {x.desc}
+                </li>
+              ))}
+            </ul>
+            <p className="up">↑ Gelişmiş sistem: hem konfor hem yol tutuş artar.</p>
+            <p className="down">↓ Ama pahalı ve ağır; yeni teknoloji ilk yıllarında arıza çıkarır.</p>
+          </Info>
+        </span>
+        <Choice
+          compact
+          value={d.suspension}
+          onChange={(v) => onChange({ suspension: v })}
+          options={SUSPENSIONS.map((x) => ({
+            value: x.id,
+            label: x.name,
+            disabled: locked || x.year > yf,
+            title: x.desc,
+            sub: x.year > yf ? String(x.year) : undefined,
+          }))}
+        />
+      </div>
+      <Slider
+        label={
+          <>
+            Ayar
+            <Info>
+              <p className="up">↑ Sert (yol tutuş): araç virajda yatmaz, direksiyon isabetli; ama bozuk yolda yolcular sarsılır.</p>
+              <p className="down">↓ Yumuşak (konfor): darbeleri yutar; ama virajda yatar, hızlıyken yüzer gibi gider.</p>
+              <p>Dengeyi kimin için yaptığına göre seç.</p>
+            </Info>
+          </>
+        }
+        value={d.suspBalance}
+        min={0}
+        max={1}
+        step={0.05}
+        onChange={(v) => onChange({ suspBalance: v })}
+        left="Konfor"
+        right="Yol tutuş"
+        format={(v) => (v < 0.4 ? 'Yumuşak' : v > 0.6 ? 'Sert' : 'Dengeli')}
+      />
+      <ProsCons intro="Aynı arabaya sınıfın tipik süspansiyonu takılsaydı:" pros={notes.pros} cons={notes.cons} />
     </>
   );
 }

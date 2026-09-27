@@ -5,10 +5,13 @@ import { costIndex, labourShare } from '../../data/economy';
 import { ATTRS, ATTR_NAMES, importanceLabel, segmentDef } from '../../data/segments';
 import { activeTax } from '../../data/markets';
 import { computeCarStats } from '../../core/vehicle';
-import { estimateRange, isRough, rawRange } from '../../core/estimate';
+import { estimateRange, factRange, isRough, rawRange } from '../../core/estimate';
 import type { AttrKey, CarDesign, CarStats, DevBonus, Estimate, GameState, SegmentId } from '../../core/types';
 import { kmh, litres, money, secs } from '../format';
-import { RangeBar, ScoreBar } from './ui';
+import { Info, RangeBar, ScoreBar } from './ui';
+
+/** "lo–hi unit" for an engineers' range. */
+const span = ([lo, hi]: [number, number], f: (v: number) => string, unit = '') => `${f(lo)}–${f(hi)}${unit}`;
 
 export function useCarStats(design: CarDesign, yf: number, bonus?: DevBonus): CarStats {
   const key = JSON.stringify(design) + Math.floor(yf) + JSON.stringify(bonus ?? null);
@@ -132,21 +135,30 @@ export function StatsPanel(props: {
       </div>
       {!props.compact && (
         <div className="sp-facts">
+          {est && (
+            <p className="sp-facts-note muted small">
+              Kâğıt üstündeki hesap
+              <Info>
+                <p>Mühendislerin çizimden çıkardığı rakamlar. Tecrübesiz ya da küçük bir ekip geniş ve yanılabilir aralık verir; her yeni model, beceri ve kalabalık bir ekip aralığı daraltır.</p>
+                <p>Dinamometre gücü, yol testi ağırlığı netleştirir. Kesin birim maliyeti üretim hazırlığında tedarikçiler söyler.</p>
+              </Info>
+            </p>
+          )}
           <div>
             <span>Güç</span>
-            <b>{st.engine.powerHp.toFixed(0)} bg</b>
+            <b>{est ? span(factRange(est, 'power', st.engine.powerHp), (v) => v.toFixed(0), ' bg') : `${st.engine.powerHp.toFixed(0)} bg`}</b>
           </div>
           <div>
             <span>Ağırlık</span>
-            <b>{Math.round(st.massKg)} kg</b>
+            <b>{est ? span(factRange(est, 'mass', st.massKg), (v) => String(Math.round(v / 5) * 5), ' kg') : `${Math.round(st.massKg)} kg`}</b>
           </div>
           <div>
             <span>Malzeme maliyeti</span>
-            <b>{money(unit)}</b>
+            <b>{est ? span(factRange(est, 'cost', unit), money) : money(unit)}</b>
           </div>
           <div title="Malzeme + tahmini işçilik">
             <span>Tahmini toplam maliyet</span>
-            <b>{money(approxCost)}</b>
+            <b>{est ? span(factRange(est, 'cost', approxCost), money) : money(approxCost)}</b>
           </div>
           <div title="Bu fiyattan satarsan bayi payından sonra araç başına kalan">
             <span>Sınıfın tipik fiyatı</span>
@@ -154,7 +166,7 @@ export function StatsPanel(props: {
           </div>
           <div title="1 = sıradan araç. Yüksekse hat daha yavaş çalışır.">
             <span>Üretim zorluğu</span>
-            <b>{st.complexity.toFixed(2)}</b>
+            <b>{est ? span(factRange(est, 'complexity', st.complexity), (v) => v.toFixed(2)) : st.complexity.toFixed(2)}</b>
           </div>
           {eu && (
             <div title={eu.label}>

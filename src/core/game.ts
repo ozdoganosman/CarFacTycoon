@@ -3,6 +3,7 @@ import { costIndex, engineerSalary, overhead, creditTerms, DEALER_COMMISSION } f
 import { EVENTS } from '../data/events';
 import { MARKETS, marketScale } from '../data/markets';
 import { SEGMENTS } from '../data/segments';
+import { toolingDef } from '../data/tooling';
 import { buildLaunchReport, customerFeedback } from './feedback';
 import { ensureEstimate, narrowForTest } from './estimate';
 import { MILITARY_COMPLEXITY, emptyLine, lineReport, lineUpkeep, militaryMargin, stationPrice } from './factory';
@@ -16,6 +17,7 @@ import {
   TESTS,
   actualReliability,
   detectionChance,
+  testWeekCost,
   failureRate,
   fixCost,
   SUPPLIERS,
@@ -23,7 +25,8 @@ import {
 } from './testing';
 import { isMonthStart, weekFor, weekOfYear, yearFloat, yearOf } from './time';
 import { productivity } from './development';
-import type { CarModel, ComponentKey, GameState, MarketId, SegmentId, YearSummary } from './types';
+import type { CarModel, ComponentKey, GameState, MarketId, Project, SegmentId, YearSummary } from './types';
+import { computeCarStats } from './vehicle';
 
 export const COST_KEYS = ['materials', 'labor', 'salaries', 'dealers', 'marketing', 'rnd', 'warranty', 'interest', 'other', 'investment'] as const;
 import { clamp, earn, financeNow, log, money, pushModal, spend } from './util';
@@ -109,9 +112,14 @@ export function shareEngineers(s: GameState) {
   for (const p of dev) p.engineers = s.company.engineers / dev.length;
 }
 
-export function materialUnitCost(s: GameState, model: Pick<CarModel, 'stats' | 'suppliers' | 'unitsBuilt'>): number {
+/** Unit cost of the prototypes under test, in 1900 dollars (older saves did not store it). */
+export function protoUnitCost(p: Project, yf: number): number {
+  return p.protoUnitCost ?? computeCarStats(p.design, yf, p.bonus).unitCost;
+}
+
+export function materialUnitCost(s: GameState, model: Pick<CarModel, 'stats' | 'suppliers' | 'unitsBuilt' | 'tooling'>): number {
   const yf = yearFloat(s.week);
-  let cost = model.stats.unitCost;
+  let cost = model.stats.unitCost * toolingDef(model.tooling).materialMult;
   for (const k of Object.keys(model.suppliers) as ComponentKey[]) {
     const mult = SUPPLIERS.find((x) => x.id === model.suppliers[k])!.costMult;
     cost += model.stats.componentCost[k] * (mult - 1);
@@ -272,10 +280,10 @@ function advanceProjects(s: GameState) {
         plan.done += 1;
         p.testWeeks += 1;
         narrowForTest(ensureEstimate(p), t.id);
-        spend(s, t.costPerWeek * costIndex(yf) * (0.6 + 0.4 * p.design.size + 0.2 * p.design.engine.cylinders / 4), 'rnd');
+        spend(s, testWeekCost(t, protoUnitCost(p, yf), yf), 'rnd');
         for (const d of p.defects) {
           if (d.found) continue;
-          if (rng() < detectionChance(t, d.area, d.severity)) {
+          if (rng() < detectionChance(t, d.area, d.severity, d.stubborn)) {
             d.found = true;
             d.fixed = true;
             spend(s, fixCost(d.severity, yf), 'rnd');
