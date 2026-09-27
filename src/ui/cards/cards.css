@@ -1,0 +1,189 @@
+/* ---------- "Neden böyle çalışıyor?" explainer animations ---------- */
+
+.anim {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.anim *,
+.anim *::before,
+.anim *::after {
+  box-sizing: border-box;
+}
+
+.anim-canvas {
+  display: block;
+  width: 100%;
+  /* height is set inline by useCanvasAnimation from the aspect ratio */
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  touch-action: pan-y;
+}
+
+/* ---------- controls ---------- */
+
+.anim-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  min-width: 0;
+}
+
+.anim-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 auto;
+}
+
+.anim-ctl-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.anim-ctl-end {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.anim-ctl-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 4.5ch;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.anim-range {
+  width: 110px;
+  min-width: 60px;
+  flex: 1 1 110px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.anim-btn,
+.anim-seg-btn {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) * 0.7);
+  padding: 5px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.anim-btn:hover,
+.anim-seg-btn:hover {
+  border-color: var(--muted);
+}
+
+.anim-btn:focus-visible,
+.anim-seg-btn:focus-visible,
+.anim-range:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.anim-btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink, var(--panel));
+}
+
+.anim-btn--primary:hover {
+  filter: brightness(1.06);
+  border-color: var(--accent);
+}
+
+.anim-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.anim-seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) * 0.7);
+  overflow: hidden;
+}
+
+.anim-seg-btn {
+  border: 0;
+  border-radius: 0;
+  padding: 5px 9px;
+}
+
+.anim-seg-btn + .anim-seg-btn {
+  border-left: 1px solid var(--line);
+}
+
+.anim-seg-btn[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--panel);
+}
+
+/* ---------- readouts & note ---------- */
+
+.anim-readouts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.anim-readout {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  max-width: 100%;
+}
+
+.anim-readout-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.anim-readout-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.anim-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.anim-note strong {
+  color: var(--ink);
+  font-weight: 600;
+}

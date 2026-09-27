@@ -1,0 +1,212 @@
+import { useState } from 'react';
+import * as A from '../../core/actions';
+import { MILITARY_COMPLEXITY, lineReport, lineUpkeep, stationPrice } from '../../core/factory';
+import { yearFloat } from '../../core/time';
+import { MAX_SLOTS, costIndex, newLineCost, realWage, shopCost, slotCost } from '../../data/economy';
+import { STAGES, STATIONS, stationDef } from '../../data/stations';
+import type { ComponentKey, ProductionLine, StageId } from '../../core/types';
+import { store, useGameState } from '../store';
+import { money, num } from '../format';
+import { Badge, Button, Panel, Toggle } from '../components/ui';
+import { LineViz } from '../viz/LineViz';
+
+const SHOP_NAMES: Record<ComponentKey, string> = { engine: 'Motor atölyesi', gearbox: 'Şanzıman atölyesi', electrics: 'Elektrik atölyesi' };
+
+export function Factory() {
+  const s = useGameState();
+  const yf = yearFloat(s.week);
+  const military = (s.flags.militaryUntil ?? 0) > yf;
+  return (
+    <div className="screen">
+      <div className="screen-head">
+        <div>
+          <h1>Fabrika</h1>
+          <p className="muted">En yavaş istasyon bütün hattın hızını belirler. Darboğaz kırmızı yanar.</p>
+        </div>
+        <Button kind="primary" onClick={() => store.try((st) => A.buyLine(st), 'Yeni hat kuruldu')}>
+          + Yeni hat ({money(newLineCost(yf))})
+        </Button>
+      </div>
+      {military && (
+        <p className="note">
+          Askeri sözleşme sürüyor. Askeri üretimdeki hatlar masrafını ve araç başına {money(55 * costIndex(yf))} kâr getirir.
+        </p>
+      )}
+      {s.lines.map((l, i) => (
+        <LinePanel key={l.id} line={l} military={military} defaultOpen={s.lines.length <= 3 || i === 0} />
+      ))}
+      <Panel title="Parça atölyeleri (yap ya da satın al)">
+        <p className="muted small">Atölye kurarsan o parçayı kendin üretebilirsin: tedarikçiden %15 ucuz, kalite mühendislik becerine bağlı.</p>
+        <div className="shops">
+          {(Object.keys(SHOP_NAMES) as ComponentKey[]).map((k) => (
+            <div key={k} className="shop">
+              <b>{SHOP_NAMES[k]}</b>
+              {s.company.shops[k] ? (
+                <Badge tone="good">Kuruldu</Badge>
+              ) : (
+                <Button small onClick={() => store.try((st) => A.buildShop(st, k), `${SHOP_NAMES[k]} kuruldu`)}>
+                  Kur ({money(shopCost(yf))})
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; military: boolean; defaultOpen: boolean }) {
+  const s = useGameState();
+  const [open, setOpen] = useState(defaultOpen);
+  const yf = yearFloat(s.week);
+  const model = s.models.find((m) => m.id === line.modelId && m.status === 'active');
+  const isMilitary = military && line.military;
+  const complexity = isMilitary ? MILITARY_COMPLEXITY : model?.stats.complexity ?? 1;
+  const r = lineReport(s, line, complexity);
+  const retooling = line.retoolUntilWeek !== undefined && s.week < line.retoolUntilWeek;
+  const running = !!(isMilitary || (model && !retooling));
+  const rate = isMilitary ? 1 : model ? model.productionRate : 0;
+  const upkeep = lineUpkeep(s, line, rate);
+  const active = s.models.filter((m) => m.status === 'active');
+  const wage = costIndex(yf) * realWage(yf);
+  return (
+    <Panel
+      title={
+        <button type="button" className="line-title" onClick={() => setOpen(!open)} aria-expanded={open}>
+          <span aria-hidden>{open ? '▾' : '▸'}</span> {line.name}{' '}
+          <span className="muted small">
+            · {isMilitary ? 'askeri üretim' : model ? model.name : 'boş'} · {r.throughput.toFixed(1)} araç/hafta · işçilik {money(upkeep)}/hafta
+            {running && <> · darboğaz: {STAGES.find((x) => x.id === r.bottleneck)!.name}</>}
+          </span>
+        </button>
+      }
+      actions={
+        <div className="line-actions">
+          <select
+            aria-label="Hatta üretilecek model"
+            value={line.modelId ?? ''}
+            onChange={(e) => {
+              const v = e.target.value || undefined;
+              if (v && !window.confirm('Hat yeni model için yeniden ayarlanacak (3 hafta, kalıp masrafı). Devam?')) return;
+              store.try((st) => A.assignLine(st, line.id, v));
+            }}
+          >
+            <option value="">— Boş —</option>
+            {active.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name} ({money(A.retoolCost(s, m))})
+              </option>
+            ))}
+          </select>
+          {military && <Toggle checked={!!line.military} onChange={(v) => store.try((st) => A.setLineMilitary(st, line.id, v))} label="Askeri üretim" />}
+        </div>
+      }
+    >
+      {open && (
+        <>
+      <LineViz
+        line={line}
+        perStage={r.perStage}
+        bottleneck={r.bottleneck}
+        running={running}
+        label={retooling ? 'Kalıp değişimi sürüyor…' : 'Hat boşta: bir model ata'}
+      />
+      <div className="stages">
+        {STAGES.map((st) => (
+          <StageColumn key={st.id} line={line} stage={st.id} bottleneck={running && r.bottleneck === st.id} capacity={r.perStage[st.id]} wage={wage} />
+        ))}
+      </div>
+      <div className="row-between">
+        <span className="muted small">
+          Bölüm başına yer: {line.slots}/{MAX_SLOTS}
+          {model && !isMilitary && ` · ${model.name} üretim zorluğu ${model.stats.complexity.toFixed(2)}`}
+        </span>
+        {line.slots < MAX_SLOTS && (
+          <Button small onClick={() => store.try((st) => A.expandLine(st, line.id), 'Hat genişletildi')}>
+            Hattı genişlet ({money(slotCost(yf, line.slots))})
+          </Button>
+        )}
+      </div>
+        </>
+      )}
+    </Panel>
+  );
+}
+
+function StageColumn({ line, stage, bottleneck, capacity, wage }: { line: ProductionLine; stage: StageId; bottleneck: boolean; capacity: number; wage: number }) {
+  const s = useGameState();
+  const yf = yearFloat(s.week);
+  const def = STAGES.find((x) => x.id === stage)!;
+  const options = STATIONS.filter((x) => x.stage === stage && x.year <= yf);
+  const full = line.stations[stage].length >= line.slots;
+  const groups: { id: string; count: number }[] = [];
+  for (const id of line.stations[stage]) {
+    const g = groups.find((x) => x.id === id);
+    if (g) g.count++;
+    else groups.push({ id, count: 1 });
+  }
+  return (
+    <div className={`stage ${bottleneck ? 'is-bottleneck' : ''}`}>
+      <div className="stage-head">
+        <b>{def.name}</b>
+        <span className={bottleneck ? 'tone-bad' : 'muted'}>{capacity.toFixed(1)}/hf</span>
+      </div>
+      {bottleneck && <Badge tone="bad">Darboğaz</Badge>}
+      <ul className="stations">
+        {groups.map(({ id, count }) => {
+          const d = stationDef(id);
+          return (
+            <li key={id} title={d.desc}>
+              <span className="station-name">
+                {d.name} {count > 1 && <b>×{count}</b>}
+                <small className="muted">
+                  {d.capacity}/hf · {money(d.upkeep * wage)}/hf{count > 1 ? ' (her biri)' : ''}
+                </small>
+              </span>
+              <span className="station-btns">
+                <button
+                  type="button"
+                  className="icon-btn"
+                  aria-label={`Bir ${d.name} sat`}
+                  title="Birini sat (%30 geri alınır)"
+                  onClick={() => store.try((st) => A.sellStation(st, line.id, stage, line.stations[stage].lastIndexOf(id)))}
+                >
+                  −
+                </button>
+                <button
+                  type="button"
+                  className="icon-btn icon-add"
+                  aria-label={`Bir ${d.name} daha al`}
+                  title={full ? 'Yer yok' : `Bir tane daha al (${money(stationPrice(id, s.week))})`}
+                  disabled={full || d.year > yf}
+                  onClick={() => store.try((st) => A.buyStation(st, line.id, stage, id))}
+                >
+                  +
+                </button>
+              </span>
+            </li>
+          );
+        })}
+        {line.slots - line.stations[stage].length > 0 && (
+          <li className="slot-empty">{line.slots - line.stations[stage].length} boş yer</li>
+        )}
+      </ul>
+      <select
+        aria-label={`${def.name} bölümüne istasyon ekle`}
+        value=""
+        disabled={full}
+        onChange={(e) => e.target.value && store.try((st) => A.buyStation(st, line.id, stage, e.target.value))}
+      >
+        <option value="">{full ? 'Yer yok' : '+ İstasyon ekle'}</option>
+        {options.map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.name}: {o.capacity}/hf · {money(stationPrice(o.id, s.week))}
+            {o.blackOnly ? ' · sadece siyah' : ''}
+          </option>
+        ))}
+      </select>
+      <span className="muted small">{num(line.stations[stage].reduce((a, id) => a + stationDef(id).capacity, 0))} ham kapasite</span>
+    </div>
+  );
+}

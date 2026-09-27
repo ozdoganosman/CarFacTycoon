@@ -1,0 +1,158 @@
+import { useSyncExternalStore } from 'react';
+import { newGame, tick, type NewGameOptions } from '../core/game';
+import { loadLocal, saveLocal } from '../core/save';
+import type { GameState } from '../core/types';
+
+// A tiny external store: the simulation mutates GameState in place and bumps a
+// version number so React re-renders. The clock runs one game week per step.
+
+export type Speed = 0 | 1 | 2 | 3;
+const INTERVALS: Record<Exclude<Speed, 0>, number> = { 1: 900, 2: 400, 3: 150 };
+
+export type Screen =
+  | { id: 'hq' }
+  | { id: 'projects' }
+  | { id: 'project'; projectId: string }
+  | { id: 'models' }
+  | { id: 'model'; modelId: string }
+  | { id: 'factory' }
+  | { id: 'markets' }
+  | { id: 'finance' }
+  | { id: 'cards' }
+  | { id: 'settings' };
+
+class GameStore {
+  state: GameState | null = null;
+  speed: Speed = 0;
+  lastSpeed: Exclude<Speed, 0> = 1;
+  screen: Screen = { id: 'hq' };
+  toast: { text: string; tone: 'good' | 'bad' | 'info'; id: number } | null = null;
+  version = 0;
+  private listeners = new Set<() => void>();
+  private timer: ReturnType<typeof setInterval> | null = null;
+  private weeksSinceSave = 0;
+
+  subscribe = (fn: () => void) => {
+    this.listeners.add(fn);
+    return () => this.listeners.delete(fn);
+  };
+
+  getVersion = () => this.version;
+
+  notify() {
+    this.version++;
+    for (const l of this.listeners) l();
+  }
+
+  start(opts: NewGameOptions) {
+    this.state = newGame(opts);
+    this.screen = { id: 'hq' };
+    this.setSpeed(0);
+    this.save();
+    this.notify();
+  }
+
+  load(state: GameState) {
+    this.state = state;
+    this.screen = { id: 'hq' };
+    this.setSpeed(0);
+    this.notify();
+  }
+
+  loadSaved(): boolean {
+    const s = loadLocal();
+    if (!s) return false;
+    this.load(s);
+    return true;
+  }
+
+  quit() {
+    this.save();
+    this.setSpeed(0);
+    this.state = null;
+    this.notify();
+  }
+
+  save() {
+    if (this.state) saveLocal(this.state);
+    this.weeksSinceSave = 0;
+  }
+
+  /** Run a mutation against the game state, then re-render. */
+  act<T>(fn: (s: GameState) => T): T | undefined {
+    if (!this.state) return undefined;
+    const r = fn(this.state);
+    this.notify();
+    return r;
+  }
+
+  /** Run an action returning {ok, error}; shows the error as a toast. */
+  try(fn: (s: GameState) => { ok: boolean; error?: string } | undefined, success?: string): boolean {
+    const r = this.act(fn);
+    if (r && !r.ok) {
+      this.showToast(r.error ?? 'Olmadı.', 'bad');
+      return false;
+    }
+    if (success) this.showToast(success, 'good');
+    return true;
+  }
+
+  showToast(text: string, tone: 'good' | 'bad' | 'info' = 'info') {
+    const id = Date.now();
+    this.toast = { text, tone, id };
+    this.notify();
+    setTimeout(() => {
+      if (this.toast?.id === id) {
+        this.toast = null;
+        this.notify();
+      }
+    }, 3200);
+  }
+
+  go(screen: Screen) {
+    this.screen = screen;
+    this.notify();
+  }
+
+  setSpeed(speed: Speed) {
+    this.speed = speed;
+    if (speed !== 0) this.lastSpeed = speed;
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+    if (speed !== 0) this.timer = setInterval(() => this.step(), INTERVALS[speed]);
+    this.notify();
+  }
+
+  togglePause() {
+    this.setSpeed(this.speed === 0 ? this.lastSpeed : 0);
+  }
+
+  step() {
+    const s = this.state;
+    if (!s) return;
+    // Decisions pause the clock.
+    if (s.modals.length || s.gameOver) {
+      if (this.speed !== 0) this.setSpeed(0);
+      return;
+    }
+    tick(s);
+    this.weeksSinceSave++;
+    if (this.weeksSinceSave >= 13) this.save();
+    if (s.modals.length) this.setSpeed(0);
+    this.notify();
+  }
+}
+
+export const store = new GameStore();
+
+/** Re-render on every store change; returns the (mutable) game state. */
+export function useGame(): { state: GameState | null; version: number } {
+  const version = useSyncExternalStore(store.subscribe, store.getVersion);
+  return { state: store.state, version };
+}
+
+export function useGameState(): GameState {
+  useSyncExternalStore(store.subscribe, store.getVersion);
+  if (!store.state) throw new Error('No game in progress');
+  return store.state;
+}
