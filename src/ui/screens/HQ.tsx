@@ -2,9 +2,10 @@ import { engineersBusy, idleEngineers } from '../../core/game';
 import { engineerSalary } from '../../data/economy';
 import { lineReport } from '../../core/factory';
 import { formatDate, formatShort, yearFloat, yearOf } from '../../core/time';
-import { researchDefs, rivalAdoption, techState } from '../../core/research';
+import { queueHold, researchDef, researchDefs, rivalAdoption, techState } from '../../core/research';
 import { segmentDef } from '../../data/segments';
-import type { CarModel, GameState } from '../../core/types';
+import type { CarModel, GameState, LogCategory } from '../../core/types';
+import { useState } from 'react';
 import { store, useGameState } from '../store';
 import { money, num, recentProfit, signedMoney } from '../format';
 import { Badge, Button, Empty, Panel, Progress, Stat, Table } from '../components/ui';
@@ -42,7 +43,10 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
   }
   // Research standing idle while rivals already build with technology the company has not learned.
   const r = s.research;
-  if (r && r.active.length === 0 && s.models.length) {
+  const hold = queueHold(s, yearFloat(s.week));
+  if (r && r.active.length === 0 && hold?.reason === 'cash')
+    out.push({ text: `Ar-Ge sırası bekliyor: ${researchDef(hold.id)?.name} için kasa yetmiyor.`, go: () => store.go({ id: 'research' }) });
+  else if (r && r.active.length === 0 && !r.queue?.length && s.models.length) {
     const yf = yearFloat(s.week);
     const adoption = rivalAdoption(s);
     const behind = researchDefs().filter((d) => techState(s, d.id, yf) === 'available' && (adoption[d.id] ?? 0) >= 0.25);
@@ -64,6 +68,49 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
     });
   if (s.company.cash < 0) out.unshift({ text: 'Kasa ekside! Kredi al ya da masrafları kıs.', go: () => store.go({ id: 'finance' }) });
   return out.slice(0, 6);
+}
+
+const FEED_TABS: { id: 'all' | LogCategory; label: string }[] = [
+  { id: 'company', label: 'Şirketim' },
+  { id: 'buyers', label: 'Müşteriler' },
+  { id: 'rival', label: 'Rakipler' },
+  { id: 'tech', label: 'Teknoloji' },
+  { id: 'all', label: 'Tümü' },
+];
+
+/** The news feed, by subject; the company's bad news of the last two months stays pinned on top. */
+function NewsFeed() {
+  const s = useGameState();
+  const [tab, setTab] = useState<'all' | LogCategory>('company');
+  const all = [...s.log].reverse();
+  const pinned = all.filter((l) => (l.cat ?? 'company') === 'company' && l.tone === 'bad' && s.week - l.week <= 8).slice(0, 3);
+  const list = all.filter((l) => !pinned.includes(l) && (tab === 'all' || (l.cat ?? 'company') === tab)).slice(0, 14);
+  return (
+    <Panel title="Haberler ve raporlar">
+      <div className="tabs feed-tabs" role="tablist">
+        {FEED_TABS.map((t) => (
+          <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={`tab ${tab === t.id ? 'is-on' : ''}`} onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <ul className="news">
+        {pinned.map((l, i) => (
+          <li key={`p${i}`} className="news-bad is-pinned">
+            <span className="news-date">📌 {formatDate(l.week)}</span>
+            <span>{l.text}</span>
+          </li>
+        ))}
+        {list.map((l, i) => (
+          <li key={i} className={`news-${l.tone}`}>
+            <span className="news-date">{formatDate(l.week)}</span>
+            <span>{l.text}</span>
+          </li>
+        ))}
+        {!list.length && !pinned.length && <li className="muted">Bu başlıkta haber yok.</li>}
+      </ul>
+    </Panel>
+  );
 }
 
 export function HQ() {
@@ -176,16 +223,7 @@ export function HQ() {
       <Panel title="Gazete arşivi">
         <NewsArchive />
       </Panel>
-      <Panel title="Haberler ve raporlar">
-        <ul className="news">
-          {[...s.log].reverse().slice(0, 14).map((l, i) => (
-            <li key={i} className={`news-${l.tone}`}>
-              <span className="news-date">{formatDate(l.week)}</span>
-              <span>{l.text}</span>
-            </li>
-          ))}
-        </ul>
-      </Panel>
+      <NewsFeed />
     </div>
   );
 }

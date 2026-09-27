@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { deserialize, hasLocalSave } from '../../core/save';
 import type { MarketId } from '../../core/types';
+import { DIFFICULTIES, type DifficultyId } from '../../data/difficulty';
 import { store } from '../store';
 import { Button, Choice } from '../components/ui';
 import { CarSVG } from '../viz/CarSVG';
@@ -8,6 +9,7 @@ import { CarSVG } from '../viz/CarSVG';
 export function StartScreen() {
   const [name, setName] = useState('Öncü Motor');
   const [hq, setHq] = useState<MarketId>('usa');
+  const [difficulty, setDifficulty] = useState<DifficultyId>('normal');
   const [err, setErr] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const canContinue = hasLocalSave();
@@ -32,7 +34,7 @@ export function StartScreen() {
           className="start-form"
           onSubmit={(e) => {
             e.preventDefault();
-            store.start({ companyName: name, hq });
+            store.start({ companyName: name, hq, difficulty });
           }}
         >
           <label className="field">
@@ -49,6 +51,10 @@ export function StartScreen() {
                 { value: 'europe', label: '🇪🇺 Coventry, Avrupa', sub: 'Pahalı benzin ve silindir çapı vergisi. Küçük, verimli araçlar satar.' },
               ]}
             />
+          </div>
+          <div className="field">
+            <span>Başlangıç</span>
+            <Choice value={difficulty} onChange={setDifficulty} options={DIFFICULTIES.map((d) => ({ value: d.id, label: d.name, sub: d.desc }))} />
           </div>
           <div className="start-actions">
             <Button kind="primary" type="submit">

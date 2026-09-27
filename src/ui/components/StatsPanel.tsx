@@ -6,7 +6,7 @@ import { ATTRS, ATTR_NAMES, importanceLabel, segmentDef } from '../../data/segme
 import { activeTax } from '../../data/markets';
 import { computeCarStats } from '../../core/vehicle';
 import { estimateRange, factRange, isRough, rawRange } from '../../core/estimate';
-import type { AttrKey, CarDesign, CarStats, DevBonus, Estimate, GameState, SegmentId } from '../../core/types';
+import type { AttrKey, CarDesign, CarStats, DevBonus, Estimate, GameState, Scores, SegmentId } from '../../core/types';
 import { kmh, litres, money, secs } from '../format';
 import { Info, RangeBar, ScoreBar } from './ui';
 
@@ -77,11 +77,13 @@ export function StatsPanel(props: {
   note?: string;
   /** When given, show engineers' ranges instead of exact scores and keep the buyers' verdict hidden. */
   estimate?: Estimate;
+  /** Scores as buyers see them (a car on sale: perceived reliability, workshop name). */
+  scores?: Scores;
 }) {
   const { s, design, segment, yf } = props;
   const st = useCarStats(design, yf, props.bonus);
   // Engineers know their own workshop: its inexperience is part of the estimate.
-  const scores = applyWorkshopPenalty(scoreStats(st, yf, segment), workshopPenalty(s));
+  const scores = props.scores ?? applyWorkshopPenalty(scoreStats(st, yf, segment), workshopPenalty(s));
   const hq = s.company.hq;
   const ap = appeal(scores, segment, hq, yf);
   const ci = costIndex(yf);

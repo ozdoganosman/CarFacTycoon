@@ -3,7 +3,7 @@ import * as A from '../../core/actions';
 import { materialUnitCost } from '../../core/game';
 import { lineReport } from '../../core/factory';
 import { consumerPrice, demandAtPrice, modelScores, priceNow, segmentMarket } from '../../core/market';
-import { eraReference } from '../../core/scoring';
+import { scoreStats } from '../../core/scoring';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { formatDate, formatShort, yearFloat } from '../../core/time';
 import { MARKETS } from '../../data/markets';
@@ -14,7 +14,7 @@ import type { CarModel, MarketId } from '../../core/types';
 import { store, useGameState } from '../store';
 import { customerLetters } from '../../core/letters';
 import { money, num, pct } from '../format';
-import { Badge, Button, Empty, NumberInput, Panel, Slider, Stat, Table, Toggle, ScoreBar } from '../components/ui';
+import { Badge, Button, Empty, NumberInput, Panel, Slider, Stat, Table, Toggle, ScoreBar, Info } from '../components/ui';
 import { StatsPanel } from '../components/StatsPanel';
 import { CarSVG } from '../viz/CarSVG';
 import { LineChart } from '../viz/LineChart';
@@ -98,7 +98,7 @@ export function ModelView({ modelId }: { modelId: string }) {
         <Stat label="Stok" value={num(m.inventory)} tone={m.inventory > demand * 12 && m.inventory > 10 ? 'warn' : undefined} />
         <Stat label="Toplam satış" value={num(m.unitsSold)} sub={money(m.revenueTotal)} />
         <Stat label="Dergi ortalaması" value={m.reviewScore.toFixed(1)} sub="/ 10" />
-        <Stat label="Güvenilirlik algısı" value={Math.round(scores.reliability)} sub="sınıf ort. 50" tone={scores.reliability < 40 ? 'bad' : undefined} />
+        <Stat label="Güvenilirlik (alıcı gözünde)" value={Math.round(scores.reliability)} sub="sınıf ort. 50" tone={scores.reliability < 40 ? 'bad' : undefined} />
       </div>
 
       <div className="grid-2">
@@ -120,7 +120,18 @@ export function ModelView({ modelId }: { modelId: string }) {
                 checked={!!m.autoCapacity}
                 onChange={(v) => store.act((st) => A.setModelAutoCapacity(st, m.id, v))}
                 label="Talebi otomatik karşıla"
-                sub="Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır."
+                sub={
+                  <>
+                    Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan
+                    hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır.
+                    {(m.autoSpent ?? 0) !== 0 && (
+                      <>
+                        {' '}
+                        <b>Bu model için şimdiye kadar net {money(m.autoSpent ?? 0)} harcadı.</b> Harcamalar Finans’ta ayrı satırda görünür.
+                      </>
+                    )}
+                  </>
+                }
               />
               <Slider
                 label="Üretim hızı"
@@ -197,7 +208,7 @@ export function ModelView({ modelId }: { modelId: string }) {
       <div className="grid-2">
         <Panel title="Araç">
           <CarSVG body={m.design.body} size={m.design.size} year={yearFloat(m.refreshWeek)} cylinders={m.design.engine.cylinders} styling={m.design.styling} />
-          <StatsPanel s={s} design={m.design} segment={m.segment} yf={yf} bonus={m.bonus} compact />
+          <StatsPanel s={s} design={m.design} segment={m.segment} yf={yf} bonus={m.bonus} scores={scores} compact />
           <p className="muted small">Puanlar bugünün sınıf ortalamasına göre. Model yaşlandıkça rakipler gelişir ve puanlar düşer.</p>
         </Panel>
         <div>
@@ -238,9 +249,15 @@ export function ModelView({ modelId }: { modelId: string }) {
                 <b>{money(m.warrantyCost)}</b>
               </div>
               <div>
-                <span>Algılanan güvenilirlik</span>
+                <span>
+                  Güvenilirlik: alıcı gözünde / gerçekte
+                  <Info>
+                    <p>İkisi de aynı ölçekte: 50 sınıfın ortalaması.</p>
+                    <p>Alıcılar arabayı önce ününe göre tartar; sahada arıza gördükçe ya da yıllarca sorunsuz kullandıkça görüşleri mühendislerin ölçtüğü gerçek değere yaklaşır. Arızalar ve geri çağırmalar algıyı ayrıca düşürür.</p>
+                  </Info>
+                </span>
                 <b>
-                  {Math.round(m.perceivedReliability)} <span className="muted small">(sınıf ort. {Math.round(eraReference(yf, m.segment).reliability)})</span>
+                  {Math.round(scores.reliability)} / {Math.round(scoreStats(m.stats, yf, m.segment).reliability)}
                 </b>
               </div>
             </div>

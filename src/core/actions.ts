@@ -9,7 +9,7 @@ import { aiDesign } from './ai';
 import { FOCUS_KEYS, bonusFromPoints, evenFocus, normalizeFocus } from './development';
 import { displacementCc } from './engine';
 import { writeReviews } from './feedback';
-import { emptyLine, lineReport, modernizeQuote, planBalancedLine, stationPrice, stationResale, turnkeyLineCost } from './factory';
+import { emptyLine, lineReport, modernizeQuote, planBalancedLine, stationPrice, stationResale, turnkeyLineCost, workshopLineCost, workshopPlan } from './factory';
 import {
   shareEngineers,
   availableSegments,
@@ -22,7 +22,8 @@ import {
 } from './game';
 import { modelScores, priceNow, referencePrice } from './market';
 import { stateRng } from './rng';
-import { ensureResearch, knownKnowhow, missingRequirements, researchCost, researchDef, researchSlots, researchWeeks, restrictToKnown, unknownTech } from './research';
+import { acquisitionTargets } from './acquisitions';
+import { beginResearch, ensureResearch, knownKnowhow, missingRequirements, pumpResearchQueue, researchCost, researchDef, researchSlots, restrictToKnown, unknownTech } from './research';
 import { experienceFactor, newEstimate } from './estimate';
 import { TESTS, SUPPLIERS, expectedDefects, generateDefects } from './testing';
 import { yearFloat } from './time';
@@ -107,10 +108,16 @@ export function designSummary(d: CarDesign): string {
  * the player the answer): the company's latest car, or a plain workshop car
  * that is the same whatever the class.
  */
-export function defaultDesign(s: GameState, segment: SegmentId): CarDesign {
+/**
+ * Where a new design starts: a new generation from the car it replaces (as last updated by its
+ * facelifts), anything else from the company's most recently updated car.
+ */
+export function defaultDesign(s: GameState, segment: SegmentId, replacesModelId?: string): CarDesign {
   void segment;
   const yf = yearFloat(s.week);
-  const latest = [...s.models].sort((a, b) => b.launchWeek - a.launchWeek)[0];
+  const replaced = replacesModelId ? s.models.find((m) => m.id === replacesModelId) : undefined;
+  if (replaced) return structuredClone(replaced.design);
+  const latest = [...s.models].sort((a, b) => Math.max(b.launchWeek, b.refreshWeek) - Math.max(a.launchWeek, a.refreshWeek))[0];
   if (latest) return structuredClone(latest.design);
   const { design } = aiDesign('family', Math.floor(yf), { style: 'mass', skill: 40, market: s.company.hq }, () => 0.5);
   return restrictToKnown(s, { ...design, size: 0.4, styling: 0.3, interior: 0.3, suspBalance: 0.5 }, maxGears(yf));
@@ -118,7 +125,7 @@ export function defaultDesign(s: GameState, segment: SegmentId): CarDesign {
 
 export function startProject(s: GameState, o: StartProjectOptions): { ok: true; id: string } | { ok: false; error: string } {
   if (!availableSegments(s).includes(o.segment)) return { ok: false, error: 'Bu segment henüz açılmadı.' };
-  const design = defaultDesign(s, o.segment);
+  const design = defaultDesign(s, o.segment, o.replacesModelId);
   const plat = o.platformId ? s.platforms.find((p) => p.id === o.platformId) : undefined;
   if (plat) {
     design.chassis = plat.chassis;
@@ -226,6 +233,31 @@ export function projectedBonus(s: GameState, p: Project): DevBonus {
   const points = { ...p.dev.points };
   for (const k of Object.keys(points) as FocusKey[]) points[k] += p.dev.focus[k] * remaining;
   return bonusFromPoints(points, required, Math.max(p.dev.done, required), s.company.skill);
+}
+
+export function toggleFocusLock(s: GameState, pid: string, k: FocusKey) {
+  const p = project(s, pid);
+  const locked = new Set(p.dev.locked ?? []);
+  if (locked.has(k)) locked.delete(k);
+  else locked.add(k);
+  p.dev.locked = FOCUS_KEYS.filter((x) => locked.has(x));
+}
+
+/**
+ * Move one focus slider; the other unlocked sliders make room in proportion, locked ones stay put.
+ * Returns the new split (unchanged when everything else is locked).
+ */
+export function refocus(focus: Record<FocusKey, number>, locked: FocusKey[], k: FocusKey, v: number): Record<FocusKey, number> {
+  const others = FOCUS_KEYS.filter((x) => x !== k);
+  const fixed = others.filter((x) => locked.includes(x));
+  const free = others.filter((x) => !locked.includes(x));
+  if (!free.length) return focus;
+  const fixedSum = fixed.reduce((a, x) => a + focus[x], 0);
+  const val = Math.max(0, Math.min(v, 1 - fixedSum));
+  const rest = free.reduce((a, x) => a + focus[x], 0);
+  const next = { ...focus, [k]: val };
+  for (const x of free) next[x] = rest > 0 ? (focus[x] / rest) * (1 - fixedSum - val) : (1 - fixedSum - val) / free.length;
+  return next;
 }
 
 export function setFocus(s: GameState, pid: string, focus: Record<FocusKey, number>) {
@@ -722,6 +754,49 @@ export function buildTurnkeyLines(s: GameState, count: number, modelId: string |
   return ok;
 }
 
+/** Buy a smaller rival: its engineers join, its dealers sell your cars, its models are withdrawn. */
+export function acquireRival(s: GameState, id: string): ActionResult {
+  const t = acquisitionTargets(s).find((x) => x.id === id);
+  if (!t) return fail('Bu şirket satılık değil.');
+  if (s.company.cash < t.price) return fail(`${t.name} için ${money(t.price)} gerekiyor.`);
+  spend(s, t.price, 'investment');
+  (s.acquired ??= []).push(id);
+  for (const rm of s.rivalModels) if (rm.companyId === id) rm.active = false;
+  s.company.engineers += t.engineers;
+  shareEngineers(s);
+  const mk = s.markets[t.home];
+  const opened = !mk.unlocked;
+  mk.unlocked = true;
+  mk.dealerLevel = Math.min(10, Math.max(1, mk.dealerLevel + 1));
+  mk.awareness = clamp(mk.awareness + 0.05, 0, 1);
+  s.company.reputation = clamp(s.company.reputation + 1, 0, 100);
+  log(
+    s,
+    `${s.company.name}, ${t.name} şirketini ${money(t.price)} karşılığında satın aldı: ${t.engineers} mühendis katıldı, bayileri artık senin arabalarını satıyor${opened ? ' ve yeni bir pazar açıldı' : ''}.`,
+    'good',
+  );
+  decide(s, 'acquire:' + id, `${t.name} satın alındı (${money(t.price)}, ${t.units} araç/yıl)`);
+  return ok;
+}
+
+/** A cheap craft line for a young firm: slow, but a fraction of a modern line's price. */
+export function buildWorkshopLine(s: GameState, modelId: string | undefined): ActionResult {
+  const m = modelId ? model(s, modelId) : undefined;
+  const cost = workshopLineCost(s.week) + (m ? retoolCost(s, m) : 0);
+  if (s.company.cash < cost) return fail(`Atölye hattı için ${money(cost)} gerekiyor.`);
+  spend(s, cost, 'investment');
+  const line = emptyLine(`L${s.nextId++}`, `Atölye ${s.lines.length + 1}`);
+  const plan = workshopPlan(yearFloat(s.week));
+  for (const st of STAGES) line.stations[st.id] = [...plan[st.id]];
+  if (m) {
+    line.modelId = m.id;
+    line.retoolUntilWeek = s.week + 3;
+  }
+  s.lines.push(line);
+  decide(s, 'workshop', `Atölye hattı${m ? ` (${m.name})` : ''}, ${money(cost)}; toplam ${s.lines.length} hat`);
+  return ok;
+}
+
 /** Rebuild a line with today's best stations, balanced; reusable stations stay, the rest are sold. */
 export function modernizeLine(s: GameState, lineId: string, allowBlack: boolean): ActionResult {
   const line = s.lines.find((l) => l.id === lineId);
@@ -903,11 +978,64 @@ export function startResearch(s: GameState, id: string): ActionResult {
     return fail('Mühendislerin aynı anda bu kadar konu araştırabiliyor. Daha çok mühendisle daha çok konu yürütülür.');
   const cost = researchCost(def, yf);
   if (s.company.cash < cost) return fail(`${def.name} araştırması için ${money(cost)} gerekiyor.`);
-  spend(s, cost, 'rnd');
-  const weeks = researchWeeks(def, yf, s.company.engineers);
-  r.active.push({ id, weeksLeft: weeks, weeks });
-  log(s, `Ar-Ge: ${def.name} araştırması başladı (${money(cost)}, ${weeks} hafta).`);
-  decide(s, 'research:' + id, `Ar-Ge: ${def.name} (${def.year}) ${money(cost)}, ${weeks} hafta`);
+  beginResearch(s, def, yf);
+  r.queue = (r.queue ?? []).filter((x) => x !== id);
+  return ok;
+}
+
+/**
+ * Put a subject at the end of the research queue, with any prerequisites it still lacks ahead of it.
+ * The queue starts subjects by itself as slots free up and the till allows.
+ */
+export function queueResearch(s: GameState, id: string): ActionResult {
+  const yf = yearFloat(s.week);
+  const def = researchDef(id);
+  if (!def) return fail('Bu teknolojinin araştırılması gerekmiyor.');
+  ensureResearch(s, yf);
+  const r = s.research!;
+  if (r.known.includes(id)) return fail(`${def.name} zaten biliniyor.`);
+  if (def.year > yf) return fail(`${def.name} henüz ortaya çıkmadı (${def.year}).`);
+  if (r.active.some((a) => a.id === id)) return fail(`${def.name} zaten araştırılıyor.`);
+  const q = (r.queue ??= []);
+  if (q.includes(id)) return fail(`${def.name} zaten sırada.`);
+  // Prerequisites first, deepest first.
+  const add = (x: string) => {
+    const d = researchDef(x);
+    if (!d || r.known.includes(x) || r.active.some((a) => a.id === x) || q.includes(x)) return;
+    for (const req of d.requires) add(req);
+    q.push(x);
+  };
+  add(id);
+  decide(s, 'rqueue', `Ar-Ge sırası: ${q.map((x) => researchDef(x)?.name ?? x).join(' → ')}`);
+  // Free slots take the head of the queue at once (the player sees it start; no corner note needed).
+  pumpResearchQueue(s, yf);
+  return ok;
+}
+
+export function unqueueResearch(s: GameState, id: string): ActionResult {
+  const r = s.research;
+  if (!r?.queue) return ok;
+  // Whatever needs this subject leaves the queue with it.
+  const drop = new Set([id]);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const x of r.queue) if (!drop.has(x) && (researchDef(x)?.requires ?? []).some((q) => drop.has(q))) (drop.add(x), (grew = true));
+  }
+  r.queue = r.queue.filter((x) => !drop.has(x));
+  return ok;
+}
+
+/** Move a queued subject up or down; it never moves ahead of its own prerequisites. */
+export function moveResearch(s: GameState, id: string, dir: -1 | 1): ActionResult {
+  const q = s.research?.queue;
+  if (!q) return ok;
+  const i = q.indexOf(id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= q.length) return ok;
+  const [a, b] = dir < 0 ? [q[j], q[i]] : [q[i], q[j]];
+  if ((researchDef(b)?.requires ?? []).includes(a)) return fail(`${researchDef(b)?.name} için önce ${researchDef(a)?.name} gerekir.`);
+  [q[i], q[j]] = [q[j], q[i]];
   return ok;
 }
 

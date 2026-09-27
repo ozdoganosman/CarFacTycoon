@@ -4,7 +4,7 @@ import { cardDef } from '../../data/cards';
 import { eventDef } from '../../data/events';
 import { MARKETS } from '../../data/markets';
 import { segmentDef } from '../../data/segments';
-import { cashReport, companyAssets, rescueLoan, type CashReport } from '../../core/game';
+import { cashReport, companyValue, finalScore, rescueLoan, type CashReport } from '../../core/game';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { allTech } from '../../core/techtree';
 import { isBlockingModal } from '../../core/util';
@@ -304,7 +304,9 @@ function Insolvency({ s, stage }: { s: GameState; stage: 'first' | 'last' }) {
 function GameOver({ s }: { s: GameState }) {
   const bankrupt = s.gameOver?.reason === 'bankrupt';
   const totalSold = s.models.reduce((a, m) => a + m.unitsSold, 0);
-  const value = companyAssets(s) - s.company.loan;
+  const value = companyValue(s);
+  const score = finalScore(s);
+  const summary = `CarFacTycoon 1960 · ${s.company.name}: ${bankrupt ? 'iflas' : ''}${num(totalSold)} araç, şirket değeri ${money(value)}, itibar ${Math.round(s.company.reputation)}, puan ${score.total}.`;
   const table = [
     { name: s.company.name, units: totalSold, me: true },
     ...s.rivals.map((r) => ({ name: r.name, units: r.unitsSold, me: false })),
@@ -343,6 +345,34 @@ function GameOver({ s }: { s: GameState }) {
       {bankrupt && <CashFacts r={cashReport(s)} s={s} />}
       {!bankrupt && (
         <>
+          <h4>Oyun sonu puanı: {score.total}</h4>
+          <table className="table compact">
+            <tbody>
+              {score.parts.map((p) => (
+                <tr key={p.label}>
+                  <td>{p.label}</td>
+                  <td className="al-r">{p.value}</td>
+                  <td className="al-r">
+                    <b>+{p.points}</b>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p>
+            <Button
+              small
+              onClick={() => {
+                const text = `${summary.replace('iflas', '')} Unvan: ${title}.`;
+                void navigator.clipboard?.writeText(text).then(
+                  () => store.showToast('Sonuç panoya kopyalandı', 'good'),
+                  () => store.showToast(text, 'info'),
+                );
+              }}
+            >
+              📋 Sonucu kopyala
+            </Button>
+          </p>
           <h4>Tüm zamanların satış sıralaması</h4>
           <ol className="rank">
             {table.slice(0, 8).map((r) => (

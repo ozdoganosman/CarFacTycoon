@@ -12,6 +12,8 @@ import {
   planBalancedLine,
   stationPrice,
   turnkeyLineCost,
+  workshopLineCost,
+  workshopPlan,
 } from '../../core/factory';
 import { yearFloat } from '../../core/time';
 import { MAX_SLOTS, costIndex, newLineCost, realWage, shopCost, slotCost } from '../../data/economy';
@@ -94,6 +96,8 @@ function CapacityPlanner() {
   const perLine = (b: boolean) =>
     lineReport(s, { ...emptyLine('plan', 'plan'), slots: MAX_SLOTS, stations: planBalancedLine(yf, b) }, m?.stats.complexity ?? 1).throughput;
   const each = turnkeyLineCost(s.week, allowBlack) + (m ? A.retoolCost(s, m) : 0);
+  const shopEach = workshopLineCost(s.week) + (m ? A.retoolCost(s, m) : 0);
+  const shopCap = lineReport(s, { ...emptyLine('plan', 'plan'), stations: workshopPlan(yf) }, m?.stats.complexity ?? 1).throughput;
   const demand = m ? Object.values(m.lastDemand ?? {}).reduce((a, b) => a + b, 0) : 0;
   const cap = m ? modelCapacity(s, m) : 0;
   const upgrades = s.lines
@@ -137,6 +141,17 @@ function CapacityPlanner() {
                   label={`Siyah vernik fırını kullan: hat başına ${perLine(true).toFixed(1)} yerine ${perLine(false).toFixed(1)} araç/hf`}
                   sub="Çok daha hızlı kurur ama araç yalnızca siyah olur: prestij −5."
                 />
+              )}
+              {shopEach < each * 0.5 && (
+                <div className="planner-row planner-shop">
+                  <span className="small">
+                    <b>Küçük atölye hattı:</b> başlangıçtaki atölye gibi, el işçiliği makineleriyle. Yavaş ve araç başına işçiliği pahalı ama ucuz: +{shopCap.toFixed(1)} araç/hf,
+                    kalıp dahil <b>{money(shopEach)}</b>.
+                  </span>
+                  <Button disabled={s.company.cash < shopEach} onClick={() => store.try((st) => A.buildWorkshopLine(st, m.id), `Atölye hattı kuruldu: ${m.name}`)}>
+                    Atölye hattı kur
+                  </Button>
+                </div>
               )}
               <div className="planner-row">
                 <div className="stepper" role="group" aria-label="Kurulacak hat sayısı">

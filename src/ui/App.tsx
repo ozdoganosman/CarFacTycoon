@@ -7,6 +7,7 @@ import { TopBar } from './components/TopBar';
 import { Nav } from './components/Nav';
 import { ModalHost, YearCard } from './components/ModalHost';
 import { NewsCard, NewspaperHost } from './components/Newspaper';
+import { ResearchCard } from './components/ResearchCard';
 import { ConfirmHost } from './components/ConfirmHost';
 import { PauseBanner } from './components/PauseBanner';
 import { HQ } from './screens/HQ';
@@ -18,6 +19,7 @@ import { ModelView } from './screens/ModelView';
 import { Factory } from './screens/Factory';
 import { Markets } from './screens/Markets';
 import { Finance } from './screens/Finance';
+import { Company } from './screens/Company';
 import { Cards } from './screens/Cards';
 import { Settings } from './screens/Settings';
 
@@ -94,6 +96,9 @@ export function App() {
     case 'finance':
       body = <Finance />;
       break;
+    case 'company':
+      body = <Company />;
+      break;
     case 'cards':
       body = <Cards />;
       break;
@@ -113,8 +118,12 @@ export function App() {
           {body}
         </main>
       </div>
-      <YearCard />
-      <NewsCard />
+      {/* Corner notes stack up from the bottom right instead of covering each other. */}
+      <div className="corner-stack">
+        <YearCard />
+        <NewsCard />
+        <ResearchCard />
+      </div>
       <NewspaperHost />
       <ModalHost />
       <ConfirmHost />

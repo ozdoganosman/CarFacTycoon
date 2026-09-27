@@ -182,7 +182,9 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
           <b>{mine ? pct(mine.weight / sm.totalWeight) : '—'}</b>
         </div>
         <div>
-          <span className="muted small">Segment büyüklüğü</span>
+          <span className="muted small">
+            Segment büyüklüğü ({MARKETS.find((x) => x.id === market)!.name})
+          </span>
           <b>{num(sm.demand * 52)} araç/yıl</b>
         </div>
       </div>

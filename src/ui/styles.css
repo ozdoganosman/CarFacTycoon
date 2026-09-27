@@ -2848,9 +2848,6 @@ fieldset {
   gap: 8px;
   animation: year-card-in 0.35s ease-out;
 }
-.news-card.is-stacked {
-  bottom: 190px;
-}
 .news-card.is-boom {
   border-top-color: #a8432c;
 }
@@ -3299,9 +3296,6 @@ fieldset {
   .paper-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .news-card.is-stacked {
-    bottom: 200px;
-  }
 }
 
 /* ---------- Owners' letters ---------- */
@@ -3355,4 +3349,94 @@ fieldset {
   margin-top: 6px;
   display: grid;
   gap: 2px;
+}
+
+/* ---------- corner notes: year report, newspaper, research ---------- */
+.corner-stack {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 46;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+  max-height: calc(100vh - 100px);
+}
+.corner-stack > * {
+  pointer-events: auto;
+}
+.corner-stack .year-card,
+.corner-stack .news-card {
+  position: static;
+}
+.research-card {
+  width: min(320px, calc(100vw - 32px));
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent2);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  display: grid;
+  gap: 6px;
+  animation: year-card-in 0.35s ease-out;
+}
+.research-card-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 2px;
+}
+@media (max-width: 760px) {
+  .corner-stack {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .research-card {
+    animation: none;
+  }
+}
+.rqueue {
+  margin: 0 0 8px;
+  padding-left: 22px;
+  display: grid;
+  gap: 4px;
+}
+.rqueue li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.rqueue-btns {
+  display: flex;
+  gap: 2px;
+  flex: none;
+}
+.focus-lock {
+  background: none;
+  border: 0;
+  padding: 0 2px;
+  margin-left: 4px;
+  cursor: pointer;
+  font-size: 0.85em;
+  opacity: 0.55;
+}
+.focus-lock[aria-pressed='true'],
+.focus-lock:hover {
+  opacity: 1;
+}
+.focus-card.is-locked {
+  outline: 1px dashed var(--line);
+}
+.feed-tabs {
+  margin-bottom: 8px;
+}
+.news li.is-pinned {
+  background: color-mix(in srgb, var(--bad) 8%, transparent);
+  border-radius: 6px;
 }

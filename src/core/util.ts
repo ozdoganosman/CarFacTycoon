@@ -1,7 +1,7 @@
-import type { FinanceWeek, GameState, LogEntry, ModalItem } from './types';
+import type { FinanceWeek, GameState, LogCategory, LogEntry, ModalItem } from './types';
 
-export function log(state: GameState, text: string, tone: LogEntry['tone'] = 'info') {
-  state.log.push({ week: state.week, text, tone });
+export function log(state: GameState, text: string, tone: LogEntry['tone'] = 'info', cat?: LogCategory) {
+  state.log.push(cat && cat !== 'company' ? { week: state.week, text, tone, cat } : { week: state.week, text, tone });
   if (state.log.length > 300) state.log.splice(0, state.log.length - 300);
 }
 
@@ -10,7 +10,7 @@ export function pushModal(state: GameState, modal: ModalItem) {
 }
 
 /** Informational pop-ups (the year report) do not stop the clock; everything else waits for the player. */
-export const isBlockingModal = (m: ModalItem) => m.kind !== 'yearReport' && m.kind !== 'news';
+export const isBlockingModal = (m: ModalItem) => m.kind !== 'yearReport' && m.kind !== 'news' && m.kind !== 'research';
 
 /** Close the pop-up the player is looking at: the first blocking one, otherwise the first one. */
 export function shiftModal(state: GameState) {

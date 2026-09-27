@@ -9,6 +9,7 @@ const ITEMS: { id: Screen['id']; label: string; icon: string }[] = [
   { id: 'factory', label: 'Fabrika', icon: '🏭' },
   { id: 'markets', label: 'Pazarlar', icon: '🌍' },
   { id: 'finance', label: 'Finans', icon: '💰' },
+  { id: 'company', label: 'Şirket', icon: '🏁' },
   { id: 'cards', label: 'Bilgi kartları', icon: '💡' },
   { id: 'settings', label: 'Ayarlar', icon: '⚙️' },
 ];

@@ -3,6 +3,7 @@ import { costIndex, engineerSalary, overhead, creditTerms, DEALER_COMMISSION } f
 import { EVENTS } from '../data/events';
 import { MARKETS, marketScale } from '../data/markets';
 import { SEGMENTS } from '../data/segments';
+import { difficultyDef, type DifficultyId } from '../data/difficulty';
 import { toolingDef } from '../data/tooling';
 import { buildLaunchReport, customerFeedback } from './feedback';
 import { ensureEstimate, narrowForTest } from './estimate';
@@ -13,8 +14,9 @@ import { updateRivals, initRivals } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
 import { eraReference } from './scoring';
 import { allTech } from './techtree';
-import { knownKnowhow, researchDef, startingKnowledge } from './research';
+import { knownKnowhow, noteResearch, pumpResearchQueue, researchDef, startingKnowledge } from './research';
 import { checkBoom, publish, techIssue } from './news';
+import { racingWeek } from './racing';
 import {
   TESTS,
   actualReliability,
@@ -40,10 +42,12 @@ export interface NewGameOptions {
   companyName: string;
   hq: MarketId;
   seed?: number;
+  difficulty?: DifficultyId;
 }
 
 export function newGame(opts: NewGameOptions): GameState {
   const seed = opts.seed ?? Math.floor(Math.random() * 2 ** 31);
+  const diff = difficultyDef(opts.difficulty);
   const markets = {} as GameState['markets'];
   for (const m of MARKETS) {
     // A local agent sells your first cars at home (dealer level 1).
@@ -62,10 +66,10 @@ export function newGame(opts: NewGameOptions): GameState {
     company: {
       name: opts.companyName || 'Yeni Motor',
       hq: opts.hq,
-      cash: 40000,
+      cash: diff.cash,
       loan: 0,
-      reputation: 30,
-      engineers: 2,
+      reputation: diff.reputation,
+      engineers: diff.engineers,
       skill: 30,
       shops: { engine: false, gearbox: false, electrics: false },
       modelsLaunched: 0,
@@ -92,7 +96,7 @@ export function newGame(opts: NewGameOptions): GameState {
     research: { known: startingKnowledge(1900), active: [] },
     news: [],
     cardsSeen: CARDS.filter((c) => c.year <= 1900).map((c) => c.id),
-    settings: { engineerMode: true, autoPauseCards: true, modeChosen: false },
+    settings: { engineerMode: true, autoPauseCards: true, modeChosen: false, difficulty: diff.id },
     nextId: 1,
     decisions: [],
     errors: [],
@@ -193,8 +197,42 @@ export function companyAssets(s: GameState): number {
   return lines + inventory + Math.max(0, s.company.cash);
 }
 
+/**
+ * What the company is worth: its machines, stock and cash, less debt, plus the earning power of the
+ * make (six years of the last year's operating profit).
+ */
+export function companyValue(s: GameState): number {
+  const last = s.finance.slice(-52);
+  const operating = last.reduce((a, f) => a + f.revenue - COST_KEYS.filter((k) => k !== 'investment').reduce((b, k) => b + f[k], 0), 0);
+  return companyAssets(s) - s.company.loan + Math.max(0, operating) * 6;
+}
+
+export interface FinalScore {
+  total: number;
+  parts: { label: string; value: string; points: number }[];
+  rank: number;
+}
+
+/** The end-of-campaign score: sales rank, company value, reputation, best magazine verdict, racing wins. */
+export function finalScore(s: GameState): FinalScore {
+  const totalSold = s.models.reduce((a, m) => a + m.unitsSold, 0);
+  const rank = [totalSold, ...s.rivals.map((r) => r.unitsSold)].sort((a, b) => b - a).indexOf(totalSold) + 1;
+  const value = companyValue(s);
+  const best = s.models.reduce((a, m) => Math.max(a, m.reviewScore), 0);
+  const wins = s.racing?.wins ?? 0;
+  const parts = [
+    { label: 'Tüm zamanların satış sırası', value: `${rank}.`, points: Math.max(0, Math.round(400 * (1 - (rank - 1) / 10))) },
+    { label: 'Şirket değeri', value: money(value), points: Math.max(0, Math.round(50 * Math.log10(Math.max(1, value)))) },
+    { label: 'İtibar', value: `${Math.round(s.company.reputation)}/100`, points: Math.round(3 * s.company.reputation) },
+    { label: 'En iyi dergi puanı', value: `${best.toFixed(1)}/10`, points: Math.round(30 * best) },
+    { label: 'Yarış zaferleri', value: String(wins), points: Math.min(200, 20 * wins) },
+  ];
+  return { total: parts.reduce((a, p) => a + p.points, 0), parts, rank };
+}
+
 export function credit(s: GameState) {
-  return creditTerms(yearFloat(s.week), s.company.reputation, companyAssets(s));
+  const c = creditTerms(yearFloat(s.week), s.company.reputation, companyAssets(s));
+  return { ...c, limit: c.limit * difficultyDef(s.settings.difficulty).credit };
 }
 
 export function dealerUpkeep(s: GameState, market: MarketId): number {
@@ -237,7 +275,7 @@ export function tick(s: GameState): void {
     announceTech(s, yearOf(s.week));
   }
   if (isMonthStart(s.week)) {
-    for (const n of updateRivals(s, stateRng(s))) log(s, n.text, n.tone);
+    for (const n of updateRivals(s, stateRng(s))) log(s, n.text, n.tone, 'rival');
   }
   advanceProjects(s);
   advanceResearch(s);
@@ -247,6 +285,7 @@ export function tick(s: GameState): void {
   launchReports(s);
   field(s);
   fixedCosts(s);
+  racingWeek(s);
   drift(s);
   if (isMonthStart(s.week)) {
     monthly(s);
@@ -274,8 +313,8 @@ function announceTech(s: GameState, year: number) {
   for (const t of fresh) s.unlockedTech.push(t.id);
   const toLearn = fresh.filter((t) => researchDef(t.id));
   const free = fresh.filter((t) => !researchDef(t.id));
-  if (free.length) log(s, `Yeni teknolojiler: ${free.map((t) => t.name).join(', ')}`, 'good');
-  if (toLearn.length) log(s, `Yeni teknolojiler ortaya çıktı, Ar-Ge’de araştırılabilir: ${toLearn.map((t) => t.name).join(', ')}`, 'good');
+  if (free.length) log(s, `Yeni teknolojiler: ${free.map((t) => t.name).join(', ')}`, 'good', 'tech');
+  if (toLearn.length) log(s, `Yeni teknolojiler ortaya çıktı, Ar-Ge’de araştırılabilir: ${toLearn.map((t) => t.name).join(', ')}`, 'good', 'tech');
   const issue = techIssue(
     s,
     toLearn.map((t) => researchDef(t.id)!),
@@ -324,7 +363,11 @@ function advanceResearch(s: GameState) {
   if (!s.research) return;
   for (const a of s.research.active) a.weeksLeft -= 1;
   const done = s.research.active.filter((a) => a.weeksLeft <= 0);
-  if (!done.length) return;
+  if (!done.length) {
+    // A queue held up by an empty till starts once the money is there.
+    if (s.research.queue?.length) noteResearch(s, [], pumpResearchQueue(s, yearFloat(s.week)));
+    return;
+  }
   s.research.active = s.research.active.filter((a) => a.weeksLeft > 0);
   for (const a of done) {
     s.research.known.push(a.id);
@@ -335,10 +378,12 @@ function advanceResearch(s: GameState) {
         ? `Ar-Ge tamamlandı: ${def.name} bundan sonraki bütün tasarımlara kendiliğinden girer.`
         : `Ar-Ge tamamlandı: ${def?.name ?? a.id} artık tasarımlarda kullanılabilir.`,
       'good',
+      'tech',
     );
   }
   // Designs still on the drawing board pick up new know-how at once.
   for (const p of s.projects) if (p.phase === 'design') p.design = { ...p.design, knowhow: knownKnowhow(s) };
+  noteResearch(s, done.map((a) => a.id), pumpResearchQueue(s, yearFloat(s.week)));
 }
 
 function advanceProjects(s: GameState) {
@@ -532,7 +577,11 @@ function field(s: GameState) {
     for (const d of model.defects) {
       if (d.found || d.fixed) continue;
       if (!d.surfaced) {
-        const k = d.severity === 'critical' ? 0.00004 : d.severity === 'major' ? 0.00002 : 0;
+        // The flaws no prototype meets need mileage: they show only after the car's first half year,
+        // and slowly, so a well-tested first car is not undone in its first months.
+        const age = s.week - model.launchWeek;
+        const slow = d.stubborn ? (age < 26 ? 0 : 0.4) : 1;
+        const k = (d.severity === 'critical' ? 0.00004 : d.severity === 'major' ? 0.00002 : 0) * slow;
         if (k && rand(s) < 1 - Math.exp(-fieldUnits * k)) {
           d.surfaced = true;
           pushModal(s, { kind: d.severity === 'critical' ? 'recall' : 'service', modelId: model.id, defectId: d.id });
@@ -589,7 +638,7 @@ function monthly(s: GameState) {
     if (model.status !== 'active') continue;
     const recent = modelFieldUnits(model, 4);
     if (recent <= 0) continue;
-    for (const line of customerFeedback(s, model, rng)) log(s, line.text, line.tone === 'info' ? 'info' : line.tone);
+    for (const line of customerFeedback(s, model, rng)) log(s, line.text, line.tone === 'info' ? 'info' : line.tone, 'buyers');
   }
 }
 

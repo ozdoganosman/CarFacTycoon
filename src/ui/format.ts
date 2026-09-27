@@ -37,7 +37,7 @@ export function inYear(year: number): string {
 }
 
 /** Names of the cost lines in the books. */
-export const COST_NAMES: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue'>, string> = {
+export const COST_NAMES: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue' | 'auto'>, string> = {
   materials: 'Malzeme ve parça',
   labor: 'Hat işçiliği',
   salaries: 'Mühendis maaşları',

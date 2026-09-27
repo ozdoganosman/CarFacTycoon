@@ -6,7 +6,7 @@ import { DEALER_COMMISSION } from '../data/economy';
 import { priceNow } from './market';
 import { yearFloat } from './time';
 import type { CarModel, GameState, ProductionLine, StageId } from './types';
-import { earn, log, money, spend } from './util';
+import { earn, financeNow, log, money, spend } from './util';
 
 // "Talebi otomatik karşıla": for models that opt in, the factory grows while
 // buyers wait and shrinks when they stop coming. Each month it buys the
@@ -156,6 +156,9 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
       if (!opts.length) break;
       const pick = opts.reduce((a, b) => (useful(b) / Math.max(1, b.cost) > useful(a) / Math.max(1, a.cost) ? b : a));
       spend(s, pick.cost, 'investment');
+      const f = financeNow(s);
+      f.auto = (f.auto ?? 0) + pick.cost;
+      m.autoSpent = (m.autoSpent ?? 0) + pick.cost;
       pick.apply();
       spent += pick.cost;
       for (const [k, n] of Object.entries(pick.counts)) done[k] = (done[k] ?? 0) + n;
@@ -188,6 +191,9 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
       }
       if (sold) {
         earn(s, refund);
+        const f = financeNow(s);
+        f.auto = (f.auto ?? 0) - refund;
+        m.autoSpent = (m.autoSpent ?? 0) - refund;
         log(s, `Otomatik kapasite: ${m.name} için talep düştü; ${sold} hat kapatıldı, makineler satıldı (${money(refund)}).`, 'warn');
       }
       m.lowDemandMonths = 0;

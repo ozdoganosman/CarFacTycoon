@@ -1,3 +1,4 @@
+import type { DifficultyId } from '../data/difficulty';
 // Shared types for the CarFacTycoon simulation core.
 // Everything stored in GameState must stay JSON-serializable (save games).
 import type { ToolingTier } from '../data/tooling';
@@ -219,6 +220,8 @@ export interface Project {
     done: number;
     focus: Record<FocusKey, number>;
     points: Record<FocusKey, number>;
+    /** Focus areas the player has pinned: moving another slider leaves them alone. */
+    locked?: FocusKey[];
   };
   bonus?: DevBonus;
   defects: Defect[];
@@ -284,6 +287,8 @@ export interface CarModel {
   /** Sales milestones and firsts the papers have already covered. */
   newsFlags?: string[];
   autoCapacity?: boolean;
+  /** Net spent by automatic capacity on this model so far. */
+  autoSpent?: number;
   lowDemandMonths?: number;
   inventory: number;
   suppliers: Record<ComponentKey, SupplierChoice>;
@@ -395,17 +400,25 @@ export type ModalItem =
   | { kind: 'news'; newsId: string }
   | { kind: 'unlock'; title: string; body: string }
   | { kind: 'insolvency'; stage: 'first' | 'last' }
+  /** Research finished (and what started next from the queue): a corner note that does not stop the clock. */
+  | { kind: 'research'; done: string[]; started: string[] }
   | { kind: 'gameOver' };
 
 export interface LogEntry {
   week: number;
   text: string;
   tone: 'info' | 'good' | 'warn' | 'bad';
+  /** What the news is about (older saves: the company). */
+  cat?: LogCategory;
 }
+
+export type LogCategory = 'company' | 'buyers' | 'rival' | 'tech';
 
 export interface FinanceWeek {
   week: number;
   revenue: number;
+  /** Of `investment`: what "meet demand automatically" spent, less machines it sold. */
+  auto?: number;
   materials: number;
   labor: number;
   salaries: number;
@@ -425,7 +438,7 @@ export interface YearSummary {
   unitsSold: number;
   shareByMarket: Record<MarketId, number>;
   cashEnd: number;
-  costs: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue'>, number>;
+  costs: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue' | 'auto'>, number>;
 }
 
 export interface Company {
@@ -473,10 +486,15 @@ export interface GameState {
   /** Newspaper front pages published so far (older saves lack it). */
   news?: NewsIssue[];
   /** Technologies the company has learned, and what its engineers are researching now (older saves lack it). */
-  research?: { known: string[]; active: { id: string; weeksLeft: number; weeks: number }[] };
+  /** queue: subjects waiting for a free slot, in order; they start by themselves when there is room and money. */
+  research?: { known: string[]; active: { id: string; weeksLeft: number; weeks: number }[]; queue?: string[] };
   cardsSeen: string[];
+  /** The racing team: budget level 0-3 and the fame its results earned. */
+  racing?: { level: number; fame: number; wins?: number; last?: { year: number; race: string; result: 'win' | 'podium' | 'none'; model: string } };
+  /** Rival companies the player has bought. */
+  acquired?: string[];
   /** modeChosen: the player picked the engine designer mode themselves (older saves defaulted to the simple one). */
-  settings: { engineerMode: boolean; autoPauseCards: boolean; modeChosen?: boolean };
+  settings: { engineerMode: boolean; autoPauseCards: boolean; modeChosen?: boolean; difficulty?: DifficultyId };
   gameOver?: { reason: 'bankrupt' | 'end'; week: number };
   nextId: number;
   /** The player's key decisions, newest last (read when a playtest is studied). */

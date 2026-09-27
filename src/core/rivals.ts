@@ -5,7 +5,7 @@ import { aiDesign } from './ai';
 import type { Rng } from './rng';
 import { yearFloat, yearOf } from './time';
 import { computeCarStats } from './vehicle';
-import type { GameState, MarketId, RivalCompany, RivalModel, SegmentId } from './types';
+import type { CarDesign, GameState, MarketId, RivalCompany, RivalModel, SegmentId } from './types';
 
 const STYLE_MARKUP = { mass: 1, utility: 1, premium: 1.22, sport: 1.18 } as const;
 
@@ -55,11 +55,44 @@ function atWar(market: MarketId, yf: number): boolean {
   return (yf >= 1914.6 && yf < 1918.9) || (yf >= 1939.7 && yf < 1945.5);
 }
 
-function modelName(state: GameState, def: RivalDef, week: number): string {
+/** Horsepower in a model's name: brake horsepower in America, the taxable rating in Britain and France. */
+const HP_NAMES: [RegExp, number][] = [
+  [/\bTenner\b|\bTen\b|\b10 CV\b/, 10],
+  [/\b8 CV\b/, 8],
+  [/\bTwelve\b|\b12 CV\b/, 12],
+  [/\bFourteen\b/, 14],
+  [/\b15 CV\b/, 15],
+  [/\bSixteen\b/, 16],
+  [/\bTwenty\b/, 20],
+  [/\bThirty-Five\b/, 35],
+  [/\bThirty\b/, 30],
+  [/\bForty\b/, 40],
+];
+
+/** A name that promises something (six cylinders, thirty horsepower, a roadster body) must be true of the car. */
+export function nameFits(name: string, design: CarDesign, hp: number): boolean {
+  const cyl = design.engine.cylinders;
+  if (/\bSix\b|Six-/.test(name) && cyl !== 6) return false;
+  if (/\bEight\b/.test(name) && cyl !== 8) return false;
+  if (/\bFour\b|\bQuatre\b/.test(name) && cyl !== 4) return false;
+  for (const [re, n] of HP_NAMES) if (re.test(name)) return Math.abs(hp - n) / n < 0.35;
+  if (/\bRoadster\b|\bSpeedster\b/.test(name) && design.body !== 'roadster') return false;
+  if (/\bTourer\b|\bTonneau\b/.test(name) && design.body !== 'phaeton') return false;
+  return true;
+}
+
+function modelName(state: GameState, def: RivalDef, week: number, design: CarDesign, hp: number): string {
   const count = state.rivalModels.filter((m) => m.companyId === def.id).length;
-  const base = def.names[count % def.names.length];
-  if (count < def.names.length) return base;
-  return `${base} '${String(yearOf(week)).slice(2)}`;
+  const n = def.names.length;
+  // The next name in the maker's list that fits this car; a plain letter model if none does.
+  let base: string | undefined;
+  for (let i = 0; i < n && !base; i++) {
+    const cand = def.names[(count + i) % n];
+    if (nameFits(cand, design, hp)) base = cand;
+  }
+  base ??= `${def.home === 'usa' ? 'Model' : 'Type'} ${String.fromCharCode(65 + (count % 26))}`;
+  const taken = state.rivalModels.some((m) => m.companyId === def.id && m.name === base);
+  return taken || count >= n ? `${base} '${String(yearOf(week)).slice(2)}` : base;
 }
 
 export function launchRivalModel(
@@ -86,7 +119,7 @@ export function launchRivalModel(
   const rm: RivalModel = {
     id: `r${state.nextId++}`,
     companyId: def.id,
-    name: special?.name ?? modelName(state, def, week),
+    name: special?.name ?? modelName(state, def, week, design, def.home === 'usa' ? stats.engine.powerHp : stats.engine.taxHp),
     segment: seg,
     launchWeek: week,
     design,
@@ -131,10 +164,10 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
   ensureRivals(state);
   for (const def of RIVALS) {
     const company = state.rivals.find((c) => c.id === def.id)!;
-    const active = isRivalActive(def, yf);
+    const active = isRivalActive(def, yf) && !state.acquired?.includes(def.id);
     const ownModels = state.rivalModels.filter((m) => m.companyId === def.id && m.active);
     if (!active) {
-      if (def.closes && yf >= def.closes && ownModels.length) {
+      if (def.closes && yf >= def.closes && ownModels.length && !state.acquired?.includes(def.id)) {
         ownModels.forEach((m) => (m.active = false));
         news.push({ text: `${def.name} kapılarını kapattı. Pazarında boşluk oluştu.`, tone: 'warn' });
       }

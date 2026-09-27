@@ -149,6 +149,8 @@ export function modelScores(state: GameState, model: CarModel): { scores: Scores
   // "Any colour so long as it's black": the fast-drying black enamel oven limits choice.
   const blackOnly = state.lines.some((l) => l.modelId === model.id && l.stations.paint.some((id) => stationDef(id).blackOnly));
   if (blackOnly) scores.prestige = Math.max(0, scores.prestige - 5);
+  // The racing team's fame rubs off on every car of the make.
+  scores.prestige = Math.min(100, scores.prestige + Math.min(8, state.racing?.fame ?? 0));
   const ap = {} as Record<MarketId, number>;
   for (const m of MARKETS) ap[m.id] = appeal(scores, model.segment, m.id, yf);
   model.cache = { week: state.week, scores, appeal: ap };

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import * as A from '../../core/actions';
-import { missingRequirements, researchCost, researchDefs, researchSlots, researchSpeed, researchWeeks, rivalAdoption, techState, type ResearchDef } from '../../core/research';
+import { missingRequirements, queueHold, researchCost, researchDef, researchDefs, researchSlots, researchSpeed, researchWeeks, rivalAdoption, techState, type ResearchDef } from '../../core/research';
 import { yearFloat } from '../../core/time';
 import { store, useGameState } from '../store';
 import { money } from '../format';
@@ -13,7 +13,9 @@ const CATEGORIES: ResearchDef['category'][] = ['Motor', 'Şanzıman', 'Şasi ve 
 export function Research() {
   const s = useGameState();
   const yf = yearFloat(s.week);
-  const r = s.research ?? { known: [], active: [] };
+  const r = s.research ?? { known: [], active: [], queue: [] };
+  const queue = r.queue ?? [];
+  const hold = queueHold(s, yf);
   const slots = researchSlots(s.company.engineers);
   const free = slots - r.active.length;
   const adoption = useMemo(() => rivalAdoption(s), [s.week, s.rivalModels.length]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -73,9 +75,60 @@ export function Research() {
           })}
         </Panel>
       )}
+      <Panel title={`Ar-Ge sırası${queue.length ? ` (${queue.length})` : ''}`}>
+        {queue.length ? (
+          <>
+            <ol className="rqueue">
+              {queue.map((id, i) => {
+                const d = researchDef(id);
+                if (!d) return null;
+                const waiting = missingRequirements(s, id);
+                const why =
+                  hold?.id === id && hold.reason === 'cash'
+                    ? `kasa yetmiyor (${money(researchCost(d, yf))})`
+                    : waiting.length
+                      ? `önce ${waiting.map((w) => w.name).join(', ')}`
+                      : d.year > yf
+                        ? `${inYear(d.year)} ortaya çıkar`
+                        : 'yer açılınca başlar';
+                return (
+                  <li key={id}>
+                    <span className="rqueue-name">
+                      <b>{d.name}</b>
+                      <span className="muted small">
+                        {' '}
+                        {money(researchCost(d, yf))} · {researchWeeks(d, yf, s.company.engineers)} hf · {why}
+                      </span>
+                    </span>
+                    <span className="rqueue-btns">
+                      <Button small kind="ghost" disabled={i === 0} onClick={() => store.try((st) => A.moveResearch(st, id, -1))} aria-label="Yukarı taşı">
+                        ↑
+                      </Button>
+                      <Button small kind="ghost" disabled={i === queue.length - 1} onClick={() => store.try((st) => A.moveResearch(st, id, 1))} aria-label="Aşağı taşı">
+                        ↓
+                      </Button>
+                      <Button small kind="ghost" onClick={() => store.try((st) => A.unqueueResearch(st, id))} aria-label="Sıradan çıkar">
+                        ×
+                      </Button>
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+            <p className="muted small">
+              Bir araştırma bitip yer açılınca sıradaki konu kendiliğinden başlar ve bedeli o an ödenir. Kasa yetmezse sıra bekler; önkoşulunu bekleyen konunun yerine arkasındaki
+              başlar. Her biten ve başlayan araştırma için köşede not çıkar.
+            </p>
+          </>
+        ) : (
+          <p className="muted small">
+            Sıra boş. Kartlardaki “Sıraya ekle” ile birden çok konuyu sırala: bir araştırma bitince sıradaki kendiliğinden başlar. Eksik önkoşullar da önüne eklenir.
+          </p>
+        )}
+      </Panel>
       {free <= 0 && available > 0 && (
         <p className="note">
-          Bütün araştırma yerlerin dolu: yeni bir konuya başlamak için süren araştırmanın bitmesini bekle. Her 15 mühendis bir araştırma yeri daha açar.
+          Bütün araştırma yerlerin dolu: yeni konuları sıraya ekle, yer açılınca başlarlar. Her 15 mühendis bir araştırma yeri daha açar.
         </p>
       )}
       <div className="tabs research-tabs" role="tablist">
@@ -129,15 +182,31 @@ export function Research() {
                     {st === 'known' && <Badge tone="good">Biliniyor</Badge>}
                     {st === 'future' && <p className="muted small">{inYear(d.year)} ortaya çıkar.</p>}
                     {st === 'researching' && active && <Progress value={active.weeks - active.weeksLeft} max={active.weeks} label={`${active.weeksLeft} hf`} />}
-                    {st === 'available' && (
-                      <Button
-                        small
-                        kind="primary"
-                        disabled={free <= 0 || s.company.cash < cost || missing.length > 0}
-                        onClick={() => store.try((st2) => A.startResearch(st2, d.id), `${d.name} araştırması başladı`)}
-                      >
-                        Araştır · {money(cost)} · {weeks} hf
-                      </Button>
+                    {st === 'available' && queue.includes(d.id) && (
+                      <div className="row">
+                        <Badge tone="info">Sırada #{queue.indexOf(d.id) + 1}</Badge>
+                        <Button small kind="ghost" onClick={() => store.try((st2) => A.unqueueResearch(st2, d.id))}>
+                          Sıradan çıkar
+                        </Button>
+                      </div>
+                    )}
+                    {st === 'available' && !queue.includes(d.id) && (
+                      <div className="row">
+                        {free > 0 && missing.length === 0 && (
+                          <Button
+                            small
+                            kind="primary"
+                            disabled={s.company.cash < cost}
+                            onClick={() => store.try((st2) => A.startResearch(st2, d.id), `${d.name} araştırması başladı`)}
+                          >
+                            Araştır · {money(cost)} · {weeks} hf
+                          </Button>
+                        )}
+                        <Button small kind={free > 0 && missing.length === 0 ? 'ghost' : 'primary'} onClick={() => store.try((st2) => A.queueResearch(st2, d.id), `${d.name} sıraya eklendi`)}>
+                          {missing.length ? 'Önkoşullarıyla sıraya ekle' : 'Sıraya ekle'}
+                          {free <= 0 || missing.length ? ` · ${money(cost)} · ${weeks} hf` : ''}
+                        </Button>
+                      </div>
                     )}
                   </div>
                 );

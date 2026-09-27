@@ -12,7 +12,7 @@ import { STAGES } from '../../data/stations';
 import { TOOLING, toolingDef } from '../../data/tooling';
 import type { ComponentKey, MarketId, Project, ProjectPhase, TestId, ToolingTier } from '../../core/types';
 import { store, useGameState } from '../store';
-import { money, recentProfit } from '../format';
+import { money, num, recentProfit } from '../format';
 import { inYear } from '../format';
 import { Badge, Button, Choice, NumberInput, Panel, Progress, Slider, Toggle } from '../components/ui';
 import { newEstimate } from '../../core/estimate';
@@ -551,7 +551,7 @@ function Launch({ p }: { p: Project }) {
               label={`${mk.flag} ${mk.name}`}
               sub={
                 open
-                  ? `Alıcıya fiyat ${money(cp.total)}${cp.tariff ? ` (gümrük ${money(cp.tariff)})` : ''}${cp.tax ? ` (vergi ${money(cp.tax)})` : ''} · segment ${segSize.toFixed(0)} araç/hafta · tipik fiyat ${money(referencePrice(mk.id, p.segment, yf))}`
+                  ? `Alıcıya fiyat ${money(cp.total)}${cp.tariff ? ` (gümrük ${money(cp.tariff)})` : ''}${cp.tax ? ` (vergi ${money(cp.tax)})` : ''} · segment ${num(segSize * 52)} araç/yıl · tipik fiyat ${money(referencePrice(mk.id, p.segment, yf))}`
                   : 'İlk modelinden sonra açılır'
               }
             />
@@ -572,8 +572,10 @@ function Launch({ p }: { p: Project }) {
       <Panel title="Lansman özeti">
         <div className="quote">
           <div>
-            <span>Seçili pazarlarda segment</span>
-            <b>{segmentWeekly.toFixed(0)} araç/hafta</b>
+            <span>Seçili pazarlarda segment ({markets.map((mk) => MARKETS.find((x) => x.id === mk)!.name).join(' + ')})</span>
+            <b>
+              {num(segmentWeekly * 52)} araç/yıl <span className="muted small">(haftada {segmentWeekly.toFixed(0)})</span>
+            </b>
           </div>
           <div>
             <span>Hat kapasitesi</span>

@@ -103,14 +103,9 @@ export function FocusPanel({ project: p }: { project: Project }) {
     return () => clearTimeout(t);
   }, [p.dev.points.performance, p.dev.points.efficiency, p.dev.points.comfort, p.dev.points.safety, p.dev.points.cost, p.dev.points.quality]);
 
-  const setFocus = (k: FocusKey, v: number) => {
-    const others = FOCUS_KEYS.filter((x) => x !== k);
-    const rest = others.reduce((a, x) => a + p.dev.focus[x], 0);
-    const next = { ...p.dev.focus, [k]: v };
-    // Keep the total at 100%: scale the other sliders.
-    for (const x of others) next[x] = rest > 0 ? (p.dev.focus[x] / rest) * (1 - v) : (1 - v) / others.length;
-    store.act((st) => A.setFocus(st, p.id, next));
-  };
+  const locked = p.dev.locked ?? [];
+  // Keep the total at 100%: the unlocked sliders make room, the locked ones stay put.
+  const setFocus = (k: FocusKey, v: number) => store.act((st) => A.setFocus(st, p.id, A.refocus(p.dev.focus, locked, k, v)));
   const effect: Record<FocusKey, string> = {
     performance: `Güç +%${((bonus.powerMult - 1) * 100).toFixed(1)}`,
     efficiency: `Tüketim −%${((1 - bonus.fuelMult) * 100).toFixed(1)}`,
@@ -130,7 +125,16 @@ export function FocusPanel({ project: p }: { project: Project }) {
             buna göre. Neye ağırlık vereceğin senin fikrin: bu araba kimin için?
           </p>
         </div>
-        <Button small kind="ghost" onClick={() => store.act((st) => A.setFocus(st, p.id, evenFocus()))}>
+        <Button
+          small
+          kind="ghost"
+          onClick={() =>
+            store.act((st) => {
+              A.setFocus(st, p.id, evenFocus());
+              for (const k of locked) A.toggleFocusLock(st, p.id, k);
+            })
+          }
+        >
           Eşit dağıt
         </Button>
       </div>
@@ -141,13 +145,23 @@ export function FocusPanel({ project: p }: { project: Project }) {
       </div>
       <div className="focus-grid">
         {FOCUS_KEYS.map((k) => (
-          <div key={k} className={`focus-card fc-${k}`}>
+          <div key={k} className={`focus-card fc-${k} ${locked.includes(k) ? 'is-locked' : ''}`}>
             <Slider
               label={
                 <>
                   <span className="focus-dot" aria-hidden /> {FOCUS_NAMES[k]}
+                  <button
+                    type="button"
+                    className="focus-lock"
+                    aria-pressed={locked.includes(k)}
+                    title={locked.includes(k) ? 'Kilidi aç' : 'Bu yüzdeyi kilitle: diğer kaydırıcılar onu değiştirmez'}
+                    onClick={() => store.act((st) => A.toggleFocusLock(st, p.id, k))}
+                  >
+                    {locked.includes(k) ? '🔒' : '🔓'}
+                  </button>
                 </>
               }
+              disabled={locked.includes(k)}
               value={Math.round(p.dev.focus[k] * 100)}
               min={0}
               max={100}

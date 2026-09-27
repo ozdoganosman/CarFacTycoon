@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MARKETS } from '../../data/markets';
 import * as A from '../../core/actions';
 import { availableSegments, gates } from '../../core/game';
 import { referencePrice, weeklySegmentDemand } from '../../core/market';
@@ -83,7 +84,7 @@ function NewProject({ onDone }: { onDone: () => void }) {
                   {seg.desc}
                   <br />
                   <span className="muted">
-                    Yurt içi pazar: {num(demand)}/yıl · tipik fiyat {money(referencePrice(s.company.hq, seg.id, yf))}
+                    Segment ({MARKETS.find((x) => x.id === s.company.hq)!.name}): {num(demand)} araç/yıl · tipik fiyat {money(referencePrice(s.company.hq, seg.id, yf))}
                   </span>
                 </>
               ) : (

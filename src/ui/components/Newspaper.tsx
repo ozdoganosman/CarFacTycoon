@@ -27,7 +27,6 @@ export function NewsCard() {
   const s = useGameState();
   const item = s.modals.find((m) => m.kind === 'news');
   const issue = item?.kind === 'news' ? s.news?.find((n) => n.id === item.newsId) : undefined;
-  const stacked = s.modals.some((m) => m.kind === 'yearReport');
   // Folds into a small tab after a few seconds so it does not cover the page, and goes away later.
   const [compact, setCompact] = useState(false);
   useEffect(() => {
@@ -49,7 +48,7 @@ export function NewsCard() {
   };
   if (compact)
     return (
-      <aside className={`news-card is-compact ${stacked ? 'is-stacked' : ''} ${issue.kind === 'boom' ? 'is-boom' : ''}`}>
+      <aside className={`news-card is-compact ${issue.kind === 'boom' ? 'is-boom' : ''}`}>
         <button type="button" className="news-card-tab" onClick={read} title={issue.lead.headline}>
           📰 <span className={`mast-${era}`}>{MAST[era].name}</span>
         </button>
@@ -59,7 +58,7 @@ export function NewsCard() {
       </aside>
     );
   return (
-    <aside className={`news-card ${stacked ? 'is-stacked' : ''} ${issue.kind === 'boom' ? 'is-boom' : ''}`} aria-live="polite">
+    <aside className={`news-card ${issue.kind === 'boom' ? 'is-boom' : ''}`} aria-live="polite">
       <div className="news-card-head">
         <span className={`news-card-mast mast-${era}`}>{MAST[era].name}</span>
         <button type="button" className="year-card-x" aria-label="Kapat" onClick={dismiss}>

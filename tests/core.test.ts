@@ -6,7 +6,9 @@ import { researchCost, researchDef, researchDefs, researchScale, unknownTech } f
 import { KNOWHOW } from '../src/data/knowhow';
 import { costIndex } from '../src/data/economy';
 import { lineReport } from '../src/core/factory';
-import { materialUnitCost, newGame, tick } from '../src/core/game';
+import { credit, finalScore, materialUnitCost, newGame, tick } from '../src/core/game';
+import { setRacingLevel } from '../src/core/racing';
+import { acquisitionTargets } from '../src/core/acquisitions';
 import { datedPenalty, modelAgeYears, priceNow, segmentMarket } from '../src/core/market';
 import { makeRng } from '../src/core/rng';
 import { deserialize, serialize } from '../src/core/save';
@@ -240,6 +242,67 @@ describe('game', () => {
   }, 60_000);
 });
 
+describe('what the money is for', () => {
+  it('a racing team costs money every week and earns fame from the season race', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 5 });
+    runBot(s, 52 * 8, { segments: ['family'], smart: true });
+    s.modals = [];
+    setRacingLevel(s, 3);
+    const before = s.finance.slice(-1)[0]?.marketing ?? 0;
+    for (let i = 0; i < 52; i++) {
+      tick(s);
+      s.modals = [];
+    }
+    expect(s.racing!.last).toBeDefined();
+    expect(s.racing!.fame).toBeGreaterThan(0);
+    expect(s.finance.slice(-52).reduce((a, f) => a + f.marketing, 0)).toBeGreaterThan(before);
+    expect(finalScore(s).total).toBeGreaterThan(0);
+  }, 30_000);
+
+  it('buying a smaller rival withdraws its cars and brings its engineers', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 8 });
+    runBot(s, 52 * 18, { segments: ['city', 'family'], smart: true });
+    s.modals = [];
+    const t = acquisitionTargets(s)[0];
+    expect(t).toBeDefined();
+    s.company.cash = Math.max(s.company.cash, t.price * 2);
+    const eng = s.company.engineers;
+    expect(A.acquireRival(s, t.id).ok).toBe(true);
+    expect(s.company.engineers).toBe(eng + t.engineers);
+    expect(s.rivalModels.filter((m) => m.companyId === t.id && m.active)).toHaveLength(0);
+    for (let i = 0; i < 60; i++) tick(s);
+    expect(s.rivalModels.filter((m) => m.companyId === t.id && m.active)).toHaveLength(0);
+  }, 30_000);
+
+  it('difficulty sets the starting till and the bank', () => {
+    const easy = newGame({ companyName: 'E', hq: 'usa', seed: 1, difficulty: 'easy' });
+    const hard = newGame({ companyName: 'H', hq: 'usa', seed: 1, difficulty: 'hard' });
+    expect(easy.company.cash).toBeGreaterThan(hard.company.cash);
+    expect(credit(easy).limit).toBeGreaterThan(credit(hard).limit);
+  });
+});
+
+describe('new generations', () => {
+  it('start from the design of the car they replace, not from the newest car', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 4 });
+    runBot(s, 52 * 4, { segments: ['family'] });
+    const old = s.models[0];
+    // a later, different car of the company
+    const other = structuredClone(old);
+    other.id = 'mX';
+    other.launchWeek = s.week;
+    other.design = { ...other.design, size: old.design.size > 0.5 ? 0.1 : 0.9, styling: 0.95 };
+    s.models.push(other);
+    s.projects = [];
+    const r = A.startProject(s, { name: 'Yeni', segment: old.segment, targetPrice: 0, replacesModelId: old.id });
+    if (!r.ok) throw new Error(r.error);
+    const d = s.projects.find((p) => p.id === r.id)!.design;
+    expect(d.size).toBe(old.design.size);
+    expect(d.styling).toBe(old.design.styling);
+    expect(d.engine).toEqual(old.design.engine);
+  });
+});
+
 describe('factory tools', () => {
   it('a turnkey line is full, balanced and assigned in one step', () => {
     const s = newGame({ companyName: 'Test', hq: 'usa', seed: 4 });
@@ -408,6 +471,34 @@ describe('research', () => {
     }
     expect(s.research!.known).toContain('vt:ohv');
     expect(A.beginDevelopment(s, r.id).ok).toBe(true);
+  });
+
+  it('a research queue adds missing prerequisites, starts the next subject by itself and says so', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 3 });
+    s.modals = [];
+    s.week = 52 * 11; // 1911: OHC exists, OHV not yet learned
+    s.company.cash = 5_000_000;
+    expect(A.queueResearch(s, 'vt:ohc').ok).toBe(true);
+    // OHV went in first and started at once; OHC waits for it.
+    expect(s.research!.active.map((a) => a.id)).toEqual(['vt:ohv']);
+    expect(s.research!.queue).toEqual(['vt:ohc']);
+    expect(A.moveResearch(s, 'vt:ohc', -1).ok).toBe(true);
+    const notes: { done: string[]; started: string[] }[] = [];
+    for (let i = 0; i < 200 && !s.research!.known.includes('vt:ohc'); i++) {
+      tick(s);
+      for (const m of s.modals) if (m.kind === 'research') notes.push({ done: [...m.done], started: [...m.started] });
+      s.modals = [];
+    }
+    expect(s.research!.known).toEqual(expect.arrayContaining(['vt:ohv', 'vt:ohc']));
+    expect(notes.some((n) => n.done.includes('vt:ohv') && n.started.includes('vt:ohc'))).toBe(true);
+    expect(notes.some((n) => n.done.includes('vt:ohc'))).toBe(true);
+    // Taking a prerequisite out of the queue takes out what needs it.
+    s.week = 52 * 16;
+    s.company.cash = 0;
+    expect(A.queueResearch(s, 'cyl:12v').ok).toBe(true);
+    expect(s.research!.queue).toContain('cyl:8v');
+    A.unqueueResearch(s, 'cyl:8v');
+    expect(s.research!.queue).not.toContain('cyl:12v');
   });
 
   it('know-how effects stay within sane bounds and every prerequisite exists', () => {

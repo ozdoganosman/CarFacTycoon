@@ -25,6 +25,7 @@ export type Screen =
   | { id: 'factory' }
   | { id: 'markets' }
   | { id: 'finance' }
+  | { id: 'company' }
   | { id: 'cards' }
   | { id: 'settings' };
 

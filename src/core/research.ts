@@ -3,6 +3,7 @@ import { KNOWHOW, effectsText } from '../data/knowhow';
 import { ASPIRATIONS, CHASSIS, CYLINDER_OPTIONS, FEATURES, FUEL_SYSTEMS, GEARBOX_TYPES, SUSPENSIONS, VALVETRAINS } from '../data/tech';
 import { DIESEL_YEAR, boreStrokeFor, displacementCc } from './engine';
 import type { CarDesign, GameState } from './types';
+import { decide, log, money, pushModal, spend } from './util';
 
 // Research: a technology that has appeared in the world still has to be
 // learned before a company can build it. Being first is expensive and slow
@@ -179,6 +180,62 @@ export function researchCost(def: ResearchDef, yf: number): number {
 
 /** A bigger engineering department learns faster. */
 export const researchSpeed = (engineers: number) => 0.6 + Math.min(2.4, engineers / 10);
+
+/** Pay for a subject and put the engineers on it (checks are the caller's). */
+export function beginResearch(s: GameState, def: ResearchDef, yf: number): { cost: number; weeks: number } {
+  const cost = researchCost(def, yf);
+  spend(s, cost, 'rnd');
+  const weeks = researchWeeks(def, yf, s.company.engineers);
+  s.research!.active.push({ id: def.id, weeksLeft: weeks, weeks });
+  log(s, `Ar-Ge: ${def.name} araştırması başladı (${money(cost)}, ${weeks} hafta).`, 'info', 'tech');
+  decide(s, 'research:' + def.id, `Ar-Ge: ${def.name} (${def.year}) ${money(cost)}, ${weeks} hafta`);
+  return { cost, weeks };
+}
+
+/** Why the head of the queue is not running yet, if it is not. */
+export function queueHold(s: GameState, yf: number): { id: string; reason: 'cash' | 'requires' | 'slots' } | null {
+  const r = s.research;
+  const q = r?.queue ?? [];
+  if (!r || !q.length) return null;
+  if (r.active.length >= researchSlots(s.company.engineers)) return { id: q[0], reason: 'slots' };
+  const next = q.find((id) => missingRequirements(s, id).length === 0);
+  if (!next) return { id: q[0], reason: 'requires' };
+  const def = researchDef(next)!;
+  if (s.company.cash < researchCost(def, yf)) return { id: next, reason: 'cash' };
+  return null;
+}
+
+/**
+ * Start queued subjects while there are free slots: in order, skipping only those still waiting for
+ * a prerequisite. A subject the till cannot pay for holds the queue (it is the next priority).
+ */
+export function pumpResearchQueue(s: GameState, yf: number): string[] {
+  const r = s.research;
+  const started: string[] = [];
+  if (!r?.queue?.length) return started;
+  // Drop what is already known or running (learned some other way).
+  r.queue = r.queue.filter((id) => !r.known.includes(id) && !r.active.some((a) => a.id === id) && researchDef(id));
+  while (r.active.length < researchSlots(s.company.engineers)) {
+    const id: string | undefined = r.queue.find((x) => researchDef(x)!.year <= yf && missingRequirements(s, x).length === 0);
+    if (!id) break;
+    const def = researchDef(id)!;
+    if (s.company.cash < researchCost(def, yf)) break;
+    beginResearch(s, def, yf);
+    r.queue = r.queue.filter((x: string) => x !== id);
+    started.push(id);
+  }
+  return started;
+}
+
+/** Tell the player what finished and what the queue started next (one corner note per week). */
+export function noteResearch(s: GameState, done: string[], started: string[]) {
+  if (!done.length && !started.length) return;
+  const prev = s.modals.find((m) => m.kind === 'research');
+  if (prev && prev.kind === 'research') {
+    prev.done.push(...done);
+    prev.started.push(...started);
+  } else pushModal(s, { kind: 'research', done, started });
+}
 
 export function researchWeeks(def: ResearchDef, yf: number, engineers: number): number {
   return Math.max(2, Math.ceil((def.weeks * (1 + pioneer(def, yf))) / researchSpeed(engineers)));

@@ -17,6 +17,7 @@ export function Finance() {
   const last = s.finance.slice(-52);
   const sums = Object.fromEntries(COST_KEYS.map((k) => [k, last.reduce((a, f) => a + f[k], 0)])) as Record<(typeof COST_KEYS)[number], number>;
   const revenue = last.reduce((a, f) => a + f.revenue, 0);
+  const auto = last.reduce((a, f) => a + (f.auto ?? 0), 0);
   const operating = revenue - COST_KEYS.filter((k) => k !== 'investment').reduce((a, k) => a + sums[k], 0);
   const busy = engineersBusy(s);
   return (
@@ -71,6 +72,9 @@ export function Finance() {
           rows={[
             ['Ciro', money(revenue), ''],
             ...COST_KEYS.map((k) => [COST_NAMES[k], money(-sums[k]), revenue > 0 ? `%${((sums[k] / revenue) * 100).toFixed(1)}` : '—']),
+            ...(auto !== 0
+              ? [[<span key="a" className="muted">  └ bunun “talebi otomatik karşıla” payı (satılan makineler düşülmüş)</span>, money(-auto), revenue > 0 ? `%${((auto / revenue) * 100).toFixed(1)}` : '—']]
+              : []),
             [<b key="p">Faaliyet kârı (yatırım hariç)</b>, <b key="v">{money(operating)}</b>, revenue > 0 ? `%${((operating / revenue) * 100).toFixed(1)}` : '—'],
           ]}
         />

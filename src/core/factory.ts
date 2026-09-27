@@ -102,6 +102,21 @@ export function expansionCost(yf: number, from: number, to: number): number {
   return c;
 }
 
+/** A small workshop line like the one the company starts with: the cheapest machines of the day, one per section. */
+export function workshopPlan(yf: number): Record<StageId, string[]> {
+  const plan = {} as Record<StageId, string[]>;
+  for (const st of STAGES) {
+    const cheapest = STATIONS.filter((x) => x.stage === st.id && x.year <= yf && !x.blackOnly).reduce((a, b) => (b.cost < a.cost ? b : a));
+    plan[st.id] = [cheapest.id];
+  }
+  return plan;
+}
+
+export function workshopLineCost(week: number): number {
+  const plan = workshopPlan(yearFloat(week));
+  return newLineCost(yearFloat(week)) + STAGES.reduce((a, st) => a + plan[st.id].reduce((b, id) => b + stationPrice(id, week), 0), 0);
+}
+
 /** Price of a new, fully equipped, balanced line (without tooling for a model). */
 export function turnkeyLineCost(week: number, allowBlack: boolean): number {
   const yf = yearFloat(week);
