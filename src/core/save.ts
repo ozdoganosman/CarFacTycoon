@@ -1,5 +1,7 @@
 import { SAVE_VERSION } from './game';
 import { ensureRivals } from './rivals';
+import { ensureResearch } from './research';
+import { yearFloat } from './time';
 import type { GameState } from './types';
 
 const KEY = 'carfactycoon.save.v1';
@@ -26,6 +28,8 @@ function migrate(s: GameState) {
     p.dev.points.quality ??= 0;
     p.dev.focus.quality ??= 0;
   }
+  // Research arrived later: older companies already know everything that exists.
+  ensureResearch(s, yearFloat(s.week));
   // The full engine designer became the default; saves that never chose a mode get it too.
   if (!s.settings.modeChosen) s.settings.engineerMode = true;
 }

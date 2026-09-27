@@ -1,9 +1,10 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import * as A from '../../core/actions';
 import { enginePresets, withStrokeRatio } from '../../core/ai';
-import { DIESEL_COMPRESSION, DIESEL_YEAR, displacementCc, isDiesel, knockLimit } from '../../core/engine';
+import { DIESEL_COMPRESSION, DIESEL_YEAR, displacementCc, eraRpmCap, isDiesel, knockLimit } from '../../core/engine';
 import { newEstimate } from '../../core/estimate';
 import { engineNotes, gearboxNotes, suspensionNotes } from '../../core/engineNotes';
+import { knownMaxGears, techState, unknownTech } from '../../core/research';
 import { yearFloat } from '../../core/time';
 import { engineCurve, gearSpeeds, tractionCurves, rollingResistance } from '../../core/vehicle';
 import {
@@ -40,6 +41,42 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'equipment', label: 'İç mekân' },
 ];
 
+interface Gate {
+  disabled: boolean;
+  /** For compact choices: the year or "Ar-Ge". */
+  short?: string;
+  /** For choices with a description line. */
+  long?: string;
+}
+
+/** Whether a technology can go into a design now: not yet invented, not yet researched, or free to use. */
+function useTechGate(): (id: string, year: number) => Gate {
+  const s = useGameState();
+  const yf = yearFloat(s.week);
+  return (id, year) => {
+    if (year > yf) return { disabled: true, short: String(year), long: `${inYear(year)} gelir` };
+    const st = techState(s, id, yf);
+    if (st === 'available') return { disabled: true, short: 'Ar-Ge', long: 'Önce Ar-Ge’de araştır' };
+    if (st === 'researching') return { disabled: true, short: 'Ar-Ge’de', long: 'Ar-Ge’de araştırılıyor' };
+    return { disabled: false };
+  };
+}
+
+/** A line pointing to the research screen when some options wait for research. */
+function ResearchHint({ ids }: { ids: string[] }) {
+  const s = useGameState();
+  const yf = yearFloat(s.week);
+  if (!ids.some((id) => ['available', 'researching'].includes(techState(s, id, yf)))) return null;
+  return (
+    <p className="muted small research-hint">
+      “Ar-Ge” yazan seçenekler önce araştırılmalı.{' '}
+      <button type="button" className="link-btn" onClick={() => store.go({ id: 'research' })}>
+        Ar-Ge’ye git
+      </button>
+    </p>
+  );
+}
+
 export function Designer({ project, readOnly, below }: { project: Project; readOnly?: boolean; below?: ReactNode }) {
   const s = useGameState();
   const yf = yearFloat(s.week);
@@ -54,6 +91,7 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
   };
   const setEngine = (e: EngineDesign) => set({ engine: e });
   const neutral = useMemo(() => newEstimate(() => 0.5), []);
+  const gate = useTechGate();
 
   return (
     <div className="designer">
@@ -81,13 +119,12 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
                 <Choice
                   value={d.chassis}
                   onChange={(v) => set({ chassis: v })}
-                  options={CHASSIS.map((c) => ({
-                    value: c.id,
-                    label: c.name,
-                    disabled: platformLocked || c.year > yf,
-                    sub: c.year > yf ? `${inYear(c.year)} gelir` : c.desc,
-                  }))}
+                  options={CHASSIS.map((c) => {
+                    const g = gate(`chassis:${c.id}`, c.year);
+                    return { value: c.id, label: c.name, disabled: platformLocked || g.disabled, sub: g.long ?? c.desc };
+                  })}
                 />
+                <ResearchHint ids={CHASSIS.map((c) => `chassis:${c.id}`)} />
                 <Slider
                   label="Boyut"
                   value={d.size}
@@ -132,10 +169,10 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
             {tab === 'engine' && <EngineTab s={s} d={d} yf={yf} locked={engineLocked} onChange={setEngine} project={project} />}
             {tab === 'gearbox' && <GearboxTab d={d} yf={yf} bonus={project.bonus} segment={project.segment} onChange={set} />}
             {tab === 'suspension' && <SuspensionTab d={d} yf={yf} bonus={project.bonus} segment={project.segment} locked={platformLocked} onChange={set} />}
-          {tab === 'safety' && <FeatureList d={d} yf={yf} group="safety" onChange={(features) => set({ features })} />}
+          {tab === 'safety' && <FeatureList d={d} group="safety" onChange={(features) => set({ features })} />}
             {tab === 'equipment' && (
               <>
-                <FeatureList d={d} yf={yf} group="equipment" onChange={(features) => set({ features })} />
+                <FeatureList d={d} group="equipment" onChange={(features) => set({ features })} />
                 <Slider
                   label="İç mekân kalitesi"
                   value={d.interior}
@@ -169,8 +206,9 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
   );
 }
 
-function FeatureList({ d, yf, group, onChange }: { d: CarDesign; yf: number; group: 'safety' | 'equipment'; onChange: (f: FeatureId[]) => void }) {
+function FeatureList({ d, group, onChange }: { d: CarDesign; group: 'safety' | 'equipment'; onChange: (f: FeatureId[]) => void }) {
   const list = FEATURES.filter((f) => f.group === group);
+  const gate = useTechGate();
   const toggle = (id: FeatureId, on: boolean) => {
     let next = on ? [...d.features, id] : d.features.filter((x) => x !== id);
     // Dropping a prerequisite drops what depends on it.
@@ -181,22 +219,23 @@ function FeatureList({ d, yf, group, onChange }: { d: CarDesign; yf: number; gro
     <div className="feature-list">
       {list.map((f) => {
         const missing = (f.requires ?? []).filter((r) => !d.features.includes(r));
-        const future = f.year > yf;
+        const g = gate(`feat:${f.id}`, f.year);
         return (
           <Toggle
             key={f.id}
             checked={d.features.includes(f.id)}
-            disabled={future || missing.length > 0}
+            disabled={(g.disabled && !d.features.includes(f.id)) || missing.length > 0}
             onChange={(v) => toggle(f.id, v)}
             label={
               <>
                 {f.name} <span className="muted small">{money(f.cost)}’dan</span>
               </>
             }
-            sub={future ? `${inYear(f.year)} gelir` : missing.length ? `Önce: ${missing.map((m) => FEATURES.find((x) => x.id === m)!.name).join(', ')}` : f.desc}
+            sub={g.long ?? (missing.length ? `Önce: ${missing.map((m) => FEATURES.find((x) => x.id === m)!.name).join(', ')}` : f.desc)}
           />
         );
       })}
+      <ResearchHint ids={list.map((f) => `feat:${f.id}`)} />
     </div>
   );
 }
@@ -219,12 +258,14 @@ function EngineTab({
   const e = d.engine;
   const st = useCarStats(d, yf, project.bonus);
   const es = st.engine;
-  const presets = enginePresets(Math.floor(yf));
+  // Ready-made engines the company can build with what it has researched.
+  const presets = enginePresets(Math.floor(yf)).filter((p) => unknownTech(s, { ...d, engine: p.design }).length === 0);
   const ratio = e.stroke / e.bore;
   const curve = engineCurve(d, yf, project.bonus?.powerMult);
   const engineer = s.settings.engineerMode;
   const cylOpts = CYLINDER_OPTIONS;
   const kl = knockLimit(e.bore, yf);
+  const gate = useTechGate();
   const eu = yf >= 1910 && yf <= 1947;
   const diesel = isDiesel(e);
 
@@ -267,7 +308,7 @@ function EngineTab({
               }
               options={[
                 { value: 'petrol', label: 'Benzin' },
-                { value: 'diesel', label: 'Dizel' },
+                { value: 'diesel', label: 'Dizel', disabled: gate('fuel:diesel', DIESEL_YEAR).disabled && !diesel, sub: diesel ? undefined : gate('fuel:diesel', DIESEL_YEAR).short },
               ]}
             />
           </div>
@@ -354,13 +395,16 @@ function EngineTab({
                   const bore = Math.round(Math.cbrt((4 * perCyl) / (Math.PI * ratio)) * 10 * 2) / 2;
                   onChange({ ...e, cylinders: c.cylinders, layout: c.layout, bore, stroke: Math.round(bore * ratio * 2) / 2 });
                 }}
-                options={CYLINDER_OPTIONS.map((c) => ({
-                  value: `${c.cylinders}${c.layout}`,
-                  label: c.label.replace(' silindir sıra', ' sıra').replace('Tek silindir', 'Tek'),
-                  disabled: c.year > yf,
-                  title: c.year > yf ? `${inYear(c.year)} gelir` : c.desc,
-                  sub: c.year > yf ? String(c.year) : undefined,
-                }))}
+                options={CYLINDER_OPTIONS.map((c) => {
+                  const g = gate(`cyl:${c.cylinders}${c.layout}`, c.year);
+                  return {
+                    value: `${c.cylinders}${c.layout}`,
+                    label: c.label.replace(' silindir sıra', ' sıra').replace('Tek silindir', 'Tek'),
+                    disabled: g.disabled,
+                    title: g.long ?? c.desc,
+                    sub: g.short,
+                  };
+                })}
               />
             </div>
             <div className="grid-2 tight">
@@ -396,6 +440,10 @@ function EngineTab({
                         {Math.round(es.redline)} d/d).
                       </p>
                       <p className="down">↓ Azaltınca: motor yüksek devre çıkar, güç tepesi geç gelir. Ama düşük devirde zayıflar, hacim düşer.</p>
+                      <p>
+                        Dönemin supap yayları ve yatakları da devri sınırlar: bu yıl bu supap düzeniyle en fazla {Math.round(eraRpmCap(e.valvetrain, yf))} d/d. Bu sınıra
+                        dayanan bir motorda stroku kısaltmak gücü artırmaz.
+                      </p>
                     </Info>
                   </>
                 }
@@ -465,7 +513,10 @@ function EngineTab({
                 compact
                 value={e.valvetrain}
                 onChange={(v) => onChange({ ...e, valvetrain: v })}
-                options={VALVETRAINS.map((v) => ({ value: v.id, label: v.name, disabled: v.year > yf, title: v.desc, sub: v.year > yf ? String(v.year) : undefined }))}
+                options={VALVETRAINS.map((v) => {
+                  const g = gate(`vt:${v.id}`, v.year);
+                  return { value: v.id, label: v.name, disabled: g.disabled, title: g.long ?? v.desc, sub: g.short };
+                })}
               />
             </div>
             <div className="grid-2 tight">
@@ -493,7 +544,10 @@ function EngineTab({
                     compact
                     value={e.fuelSystem}
                     onChange={(v) => onChange({ ...e, fuelSystem: v })}
-                    options={FUEL_SYSTEMS.map((f) => ({ value: f.id, label: f.name, disabled: f.year > yf, title: f.desc, sub: f.year > yf ? String(f.year) : undefined }))}
+                    options={FUEL_SYSTEMS.map((f) => {
+                      const g = gate(`fuel:${f.id}`, f.year);
+                      return { value: f.id, label: f.name, disabled: g.disabled, title: g.long ?? f.desc, sub: g.short };
+                    })}
                   />
                 </div>
               )}
@@ -515,13 +569,25 @@ function EngineTab({
                   compact
                   value={e.aspiration}
                   onChange={(v) => onChange({ ...e, aspiration: v })}
-                  options={ASPIRATIONS.map((a) => ({ value: a.id, label: a.name, disabled: a.year > yf, title: a.desc, sub: a.year > yf ? String(a.year) : undefined }))}
+                  options={ASPIRATIONS.map((a) => {
+                    const g = gate(`asp:${a.id}`, a.year);
+                    return { value: a.id, label: a.name, disabled: g.disabled, title: g.long ?? a.desc, sub: g.short };
+                  })}
                 />
               </div>
             </div>
           </>
         )}
       </fieldset>
+      <ResearchHint
+        ids={[
+          ...CYLINDER_OPTIONS.map((c) => `cyl:${c.cylinders}${c.layout}`),
+          ...VALVETRAINS.map((v) => `vt:${v.id}`),
+          ...FUEL_SYSTEMS.map((f) => `fuel:${f.id}`),
+          ...ASPIRATIONS.map((a) => `asp:${a.id}`),
+          'fuel:diesel',
+        ]}
+      />
       <p className="muted small readouts-note">Çizim üzerindeki hesap; gerçek motor geliştirme ve işçilikle bundan sapar:</p>
       <div className="readouts">
         <div>
@@ -648,7 +714,10 @@ function GearboxTab({
   const st = useCarStats(d, yf, bonus);
   const notes = useMemo(() => gearboxNotes(d, yf, segment, bonus), [d, yf, segment, bonus]);
   const g = d.gearbox;
-  const maxG = g.type === 'automatic' ? 4 : maxGears(yf);
+  const s = useGameState();
+  const gate = useTechGate();
+  const eraMax = maxGears(yf);
+  const maxG = g.type === 'automatic' ? 4 : knownMaxGears(s, eraMax);
   const curves = tractionCurves(d, st, yf, bonus);
   const speeds = gearSpeeds(st, yf, d.size);
   const maxKmh = Math.max(...speeds) * 1.05;
@@ -680,9 +749,13 @@ function GearboxTab({
         <Choice
           compact
           value={g.type}
-          onChange={(v) => onChange({ gearbox: { ...g, type: v, gears: v === 'automatic' ? 4 : Math.min(g.gears, maxGears(yf)) } })}
-          options={GEARBOX_TYPES.map((x) => ({ value: x.id, label: x.name, disabled: x.year > yf, title: x.desc, sub: x.year > yf ? String(x.year) : undefined }))}
+          onChange={(v) => onChange({ gearbox: { ...g, type: v, gears: v === 'automatic' ? 4 : Math.min(g.gears, knownMaxGears(s, eraMax)) } })}
+          options={GEARBOX_TYPES.map((x) => {
+            const gg = gate(`gb:${x.id}`, x.year);
+            return { value: x.id, label: x.name, disabled: gg.disabled, title: gg.long ?? x.desc, sub: gg.short };
+          })}
         />
+        <ResearchHint ids={[...GEARBOX_TYPES.map((x) => `gb:${x.id}`), 'gears:4', 'gears:5']} />
       </div>
       <div className="grid-2 tight">
         <div className="field">
@@ -698,7 +771,12 @@ function GearboxTab({
             compact
             value={g.gears}
             onChange={(v) => onChange({ gearbox: { ...g, gears: v } })}
-            options={[2, 3, 4, 5].map((n) => ({ value: n, label: `${n}`, disabled: n > maxG || (g.type === 'automatic' && n !== 4) }))}
+            options={[2, 3, 4, 5].map((n) => ({
+              value: n,
+              label: `${n}`,
+              disabled: n > maxG || (g.type === 'automatic' && n !== 4),
+              sub: g.type !== 'automatic' && n > maxG && n <= eraMax ? 'Ar-Ge' : undefined,
+            }))}
           />
         </div>
         <Slider
@@ -787,6 +865,7 @@ function SuspensionTab({
   onChange: (p: Partial<CarDesign>) => void;
 }) {
   const notes = useMemo(() => suspensionNotes(d, yf, segment, bonus), [d, yf, segment, bonus]);
+  const gate = useTechGate();
   return (
     <>
       <div className="field">
@@ -810,14 +889,12 @@ function SuspensionTab({
           compact
           value={d.suspension}
           onChange={(v) => onChange({ suspension: v })}
-          options={SUSPENSIONS.map((x) => ({
-            value: x.id,
-            label: x.name,
-            disabled: locked || x.year > yf,
-            title: x.desc,
-            sub: x.year > yf ? String(x.year) : undefined,
-          }))}
+          options={SUSPENSIONS.map((x) => {
+            const g = gate(`susp:${x.id}`, x.year);
+            return { value: x.id, label: x.name, disabled: locked || g.disabled, title: g.long ?? x.desc, sub: g.short };
+          })}
         />
+        <ResearchHint ids={SUSPENSIONS.map((x) => `susp:${x.id}`)} />
       </div>
       <Slider
         label={

@@ -4,6 +4,7 @@ import { SendToClaude } from './SendToClaude';
 const ITEMS: { id: Screen['id']; label: string; icon: string }[] = [
   { id: 'hq', label: 'Merkez', icon: '🏢' },
   { id: 'projects', label: 'Projeler', icon: '📐' },
+  { id: 'research', label: 'Ar-Ge', icon: '🔬' },
   { id: 'models', label: 'Modeller', icon: '🚗' },
   { id: 'factory', label: 'Fabrika', icon: '🏭' },
   { id: 'markets', label: 'Pazarlar', icon: '🌍' },

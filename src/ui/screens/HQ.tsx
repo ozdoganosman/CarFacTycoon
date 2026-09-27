@@ -1,6 +1,7 @@
 import { engineersBusy } from '../../core/game';
 import { lineReport } from '../../core/factory';
-import { formatDate, formatShort, yearOf } from '../../core/time';
+import { formatDate, formatShort, yearFloat, yearOf } from '../../core/time';
+import { researchDefs, rivalAdoption, techState } from '../../core/research';
 import { segmentDef } from '../../data/segments';
 import type { CarModel, GameState } from '../../core/types';
 import { store, useGameState } from '../store';
@@ -33,6 +34,21 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
     if (lines.length && demand > cap * 1.25 && m.inventory < cap) out.push({ text: `${m.name} için talep üretimi aşıyor. Darboğazı çöz ya da hat ekle.`, go: () => store.go({ id: 'factory' }) });
     if (m.inventory > Math.max(8, demand * 12)) out.push({ text: `${m.name} stokları birikiyor. Fiyatı ya da üretim hızını düşür.`, go: () => store.go({ id: 'model', modelId: m.id }) });
     if ((s.week - m.refreshWeek) / 52 > 3) out.push({ text: `${m.name} ${Math.floor((s.week - m.refreshWeek) / 52)} yaşında ve her yıl eskiyor; makyaj ya da yeni kuşak düşün.`, go: () => store.go({ id: 'model', modelId: m.id }) });
+  }
+  // Research standing idle while rivals already build with technology the company has not learned.
+  const r = s.research;
+  if (r && r.active.length === 0 && s.models.length) {
+    const yf = yearFloat(s.week);
+    const adoption = rivalAdoption(s);
+    const behind = researchDefs().filter((d) => techState(s, d.id, yf) === 'available' && (adoption[d.id] ?? 0) >= 0.25);
+    if (behind.length)
+      out.push({
+        text: `Ar-Ge boşta. Rakiplerin çoğu kullanıyor, sen bilmiyorsun: ${behind
+          .slice(0, 3)
+          .map((d) => d.name)
+          .join(', ')}.`,
+        go: () => store.go({ id: 'research' }),
+      });
   }
   if (s.company.cash < 0) out.push({ text: 'Kasa ekside! Kredi al ya da masrafları kıs.', go: () => store.go({ id: 'finance' }) });
   return out.slice(0, 6);

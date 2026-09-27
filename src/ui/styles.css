@@ -2740,3 +2740,48 @@ fieldset {
 .readouts-note {
   margin: 12px 0 -6px;
 }
+
+/* ---------- Research ---------- */
+.research-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+.rcard {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--panel-2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.rcard p {
+  margin: 0;
+}
+.rcard-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.rcard.is-known {
+  border-color: color-mix(in srgb, var(--good) 45%, var(--line));
+}
+.rcard.is-researching {
+  border-color: var(--accent2);
+}
+.rcard.is-available {
+  border-color: var(--accent);
+  background: var(--panel);
+}
+.rcard.is-future {
+  opacity: 0.55;
+}
+.rcard .btn {
+  align-self: flex-start;
+}
+.research-active + .research-active {
+  margin-top: 10px;
+}

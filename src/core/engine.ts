@@ -35,6 +35,17 @@ export function knockLimit(bore: number, year: number): number {
   return maxCompression(year) - 0.018 * Math.max(0, bore - 85);
 }
 
+/**
+ * Highest revs the era's valve springs, bearings and crankshafts survive with
+ * this valve gear. Early engines turned slowly whatever their shape: a very
+ * short stroke only makes a small engine, not a fast one, until metallurgy
+ * catches up (about half of the mature limit in 1900, all of it by 1960).
+ */
+export function eraRpmCap(valvetrain: EngineDesign['valvetrain'], year: number): number {
+  const vt = byId(VALVETRAINS, valvetrain);
+  return vt.rpmCap * (0.5 + 0.5 * Math.min(1, Math.max(0, (year - 1900) / 60)));
+}
+
 export function otto(r: number): number {
   return 1 - Math.pow(r, -0.3);
 }
@@ -62,7 +73,7 @@ export function curveFor(e: EngineDesign, year: number, powerMult = 1): TorqueCu
   const diesel = isDiesel(e);
   const pistonLimit = vt.pistonSpeed + 0.055 * techYears;
   let redline = (30000 * pistonLimit) / e.stroke;
-  redline = Math.min(redline, vt.rpmCap + 15 * techYears, diesel ? dieselRpmCap(year) : Infinity);
+  redline = Math.min(redline, eraRpmCap(e.valvetrain, year), diesel ? dieselRpmCap(year) : Infinity);
   // Overhead valves with a big bore get bigger valves -> better breathing.
   const boreRatio = e.bore / e.stroke;
   const breathing = vt.id === 'sv' ? 1 : 1 + 0.06 * Math.max(-0.4, Math.min(0.5, boreRatio - 1));

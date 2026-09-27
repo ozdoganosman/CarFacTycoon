@@ -39,16 +39,19 @@ test('generate a first project and a 1940 project', () => {
 
 test('generate saves', () => {
   const s = newGame({ companyName: 'Anadolu Motor', hq: 'usa', seed: 7 });
-  runBot(s, 52 * 12 + 20, { segments: ['family', 'city'] });
+  runBot(s, 52 * 12 + 20, { segments: ['family', 'city'], smart: true });
+  if (s.gameOver) throw new Error('fixture company went bankrupt');
   // A fresh project walked through the phases by hand.
   s.modals = [];
   const r = A.startProject(s, { name: 'Yıldız', segment: 'sport', targetPrice: 1500 });
   if (!r.ok) throw new Error(r.error);
   writeFileSync(`${OUT}/save-design.json`, serialize(s));
-  A.beginDevelopment(s, r.id);
+  const b = A.beginDevelopment(s, r.id);
+  if (!b.ok) throw new Error(b.error);
   for (let i = 0; i < 200 && s.projects.find((p) => p.id === r.id)!.dev.done < s.projects.find((p) => p.id === r.id)!.dev.required * 1.05; i++) { tick(s); s.modals = []; }
   writeFileSync(`${OUT}/save-dev.json`, serialize(s));
-  A.finishDevelopment(s, r.id);
+  const f = A.finishDevelopment(s, r.id);
+  if (!f.ok) throw new Error(f.error);
   for (let i = 0; i < 5; i++) { tick(s); s.modals = []; }
   writeFileSync(`${OUT}/save-testing.json`, serialize(s));
   A.finishTesting(s, r.id);
@@ -56,7 +59,10 @@ test('generate saves', () => {
   A.buyLine(s);
   const line = s.lines[s.lines.length - 1];
   for (const st of ['press_power', 'body_coach', 'paint_brush', 'asm_static'] as const) A.buyStation(s, line.id, st.startsWith('press') ? 'press' : st.startsWith('body') ? 'body' : st.startsWith('paint') ? 'paint' : 'assembly', st);
-  A.startTooling(s, r.id, line.id);
+  // A screenshot fixture: make sure the tooling can be paid for.
+  s.company.cash = Math.max(s.company.cash, 100000);
+  const t = A.startTooling(s, r.id, line.id);
+  if (!t.ok) throw new Error(t.error);
   for (let i = 0; i < 30 && s.projects.find((p) => p.id === r.id)!.phase !== 'ready'; i++) { tick(s); s.modals = []; }
   writeFileSync(`${OUT}/save-ready.json`, serialize(s));
   const l = A.launchModel(s, r.id, { price: 1500, markets: ['usa', 'europe'], autoShow: true });

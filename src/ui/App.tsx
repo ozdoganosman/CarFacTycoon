@@ -10,6 +10,7 @@ import { ConfirmHost } from './components/ConfirmHost';
 import { PauseBanner } from './components/PauseBanner';
 import { HQ } from './screens/HQ';
 import { Projects } from './screens/Projects';
+import { Research } from './screens/Research';
 import { ProjectView } from './screens/ProjectView';
 import { Models } from './screens/Models';
 import { ModelView } from './screens/ModelView';
@@ -73,6 +74,9 @@ export function App() {
       break;
     case 'project':
       body = state.projects.some((p) => p.id === sc.projectId) ? <ProjectView projectId={sc.projectId} /> : <Projects />;
+      break;
+    case 'research':
+      body = <Research />;
       break;
     case 'models':
       body = <Models />;

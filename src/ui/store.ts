@@ -18,6 +18,7 @@ const INTERVALS: Record<Exclude<Speed, 0>, number> = { 1: 900, 2: 400, 3: 150 };
 export type Screen =
   | { id: 'hq' }
   | { id: 'projects' }
+  | { id: 'research' }
   | { id: 'project'; projectId: string }
   | { id: 'models' }
   | { id: 'model'; modelId: string }

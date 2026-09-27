@@ -454,6 +454,8 @@ export interface GameState {
   /** Units sold per (market, segment) last year and this year for share reports. */
   segmentSales: Record<string, number>;
   unlockedTech: string[];
+  /** Technologies the company has learned, and what its engineers are researching now (older saves lack it). */
+  research?: { known: string[]; active: { id: string; weeksLeft: number; weeks: number }[] };
   cardsSeen: string[];
   /** modeChosen: the player picked the engine designer mode themselves (older saves defaulted to the simple one). */
   settings: { engineerMode: boolean; autoPauseCards: boolean; modeChosen?: boolean };

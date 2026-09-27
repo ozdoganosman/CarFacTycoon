@@ -1,6 +1,8 @@
 // A simple scripted player used to sanity-check game balance headlessly.
 import * as A from '../src/core/actions';
 import { aiDesign } from '../src/core/ai';
+import { designTech, researchCost, researchDefs, researchSlots, restrictToKnown } from '../src/core/research';
+import { maxGears } from '../src/data/tech';
 import { STATIONS } from '../src/data/stations';
 import { availableSegments, credit, dealerUpgradeCost, materialUnitCost, tick } from '../src/core/game';
 import { newLineCost } from '../src/data/economy';
@@ -72,7 +74,8 @@ export function botStep(s: GameState, o: BotOptions = {}) {
         // The bot is a yardstick, not a player: it designs the class's typical car itself.
         if (r.ok) {
           const style = seg === 'luxury' ? 'premium' : seg === 'sport' ? 'sport' : seg === 'pickup' || seg === 'suv' ? 'utility' : 'mass';
-          A.updateDesign(s, r.id, aiDesign(seg, Math.floor(yf), { style, skill: 50, market: s.company.hq }, () => 0.5).design);
+          const typical = aiDesign(seg, Math.floor(yf), { style, skill: 50, market: s.company.hq }, () => 0.5).design;
+          A.updateDesign(s, r.id, restrictToKnown(s, typical, maxGears(yf)));
         }
         break;
       }
@@ -135,6 +138,19 @@ export function botStep(s: GameState, o: BotOptions = {}) {
     const c = dealerUpgradeCost(s, mk);
     const selling = s.models.some((m) => m.status === 'active' && m.markets.includes(mk));
     if (selling && s.company.cash > c * (mk === s.company.hq ? 8 : 15) && s.markets[mk].dealerLevel < 10) A.upgradeDealers(s, mk);
+  }
+  // Research: first what the class's typical car already uses, then the cheapest of the rest.
+  const r = s.research;
+  if (r && r.active.length < researchSlots(s.company.engineers)) {
+    const open = researchDefs().filter((d) => d.year <= yf && !r.known.includes(d.id) && !r.active.some((a) => a.id === d.id));
+    const needed = new Set(
+      (o.segments ?? ['family']).flatMap((seg) => designTech(aiDesign(seg, Math.floor(yf), { style: 'mass', skill: 50, market: s.company.hq }, () => 0.5).design)),
+    );
+    const byCost = (a: (typeof open)[number], b: (typeof open)[number]) => researchCost(a, yf) - researchCost(b, yf);
+    const want = open.filter((d) => needed.has(d.id)).sort(byCost)[0];
+    const other = open.sort(byCost)[0];
+    if (want && researchCost(want, yf) < 0.3 * s.company.cash) A.startResearch(s, want.id);
+    else if (other && researchCost(other, yf) < 0.1 * s.company.cash) A.startResearch(s, other.id);
   }
   // Engineers: grow with the company.
   const wantEng = Math.min(60, 2 + Math.floor(s.company.cash / 40000));

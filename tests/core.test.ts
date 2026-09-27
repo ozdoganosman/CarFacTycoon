@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import * as A from '../src/core/actions';
 import { aiDesign, referenceBonus, referenceDesigns } from '../src/core/ai';
-import { computeEngine, displacementCc, racHp } from '../src/core/engine';
+import { computeEngine, displacementCc, eraRpmCap, racHp } from '../src/core/engine';
+import { researchCost, researchDef, unknownTech } from '../src/core/research';
 import { lineReport } from '../src/core/factory';
 import { materialUnitCost, newGame, tick } from '../src/core/game';
 import { datedPenalty, modelAgeYears, priceNow, segmentMarket } from '../src/core/market';
@@ -57,6 +58,14 @@ describe('engine', () => {
     const a = computeEngine({ ...modelT.engine, stroke: 90 }, 1920);
     const b = computeEngine({ ...modelT.engine, stroke: 140 }, 1920);
     expect(a.taxHp).toBeCloseTo(b.taxHp, 5);
+  });
+
+  it('early engines rev slowly whatever their shape', () => {
+    const square = { cylinders: 6, layout: 'inline' as const, bore: 102.5, stroke: 41.5, compression: 4.2, valvetrain: 'ohv' as const, fuelSystem: 'carb' as const, aspiration: 'na' as const };
+    const e1910 = computeEngine(square, 1910);
+    expect(e1910.redline).toBeLessThanOrEqual(eraRpmCap('ohv', 1910) + 1);
+    expect(e1910.redline).toBeLessThan(3500);
+    expect(computeEngine(square, 1955).redline).toBeGreaterThan(e1910.redline * 1.4);
   });
 
   it('knocks when compression exceeds what the fuel allows', () => {
@@ -367,6 +376,41 @@ describe('engineering', () => {
     autoCapacity(s, () => 100);
     const cap = s.lines.filter((l) => l.modelId === m.id).reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
     expect(cap).toBeGreaterThan(45);
+  });
+});
+
+describe('research', () => {
+  it('new technology must be researched before it goes into a design, and being first costs more', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 3 });
+    s.modals = [];
+    s.week = 52 * 6; // 1906
+    s.company.cash = 200000;
+    const r = A.startProject(s, { name: 'T', segment: 'family', targetPrice: 0 });
+    if (!r.ok) throw new Error(r.error);
+    const p = s.projects[0];
+    A.updateDesign(s, r.id, { ...p.design, engine: { ...p.design.engine, valvetrain: 'ohv' } });
+    expect(unknownTech(s, s.projects[0].design)).toContain('Üstten supap (OHV)');
+    expect(A.beginDevelopment(s, r.id).ok).toBe(false);
+    const ohv = researchDef('vt:ohv')!;
+    expect(researchCost(ohv, 1904)).toBeGreaterThan(researchCost(ohv, 1914) * 1.8);
+    const cash = s.company.cash;
+    expect(A.startResearch(s, 'vt:ohv').ok).toBe(true);
+    expect(s.company.cash).toBeLessThan(cash);
+    for (let i = 0; i < 80 && !s.research!.known.includes('vt:ohv'); i++) {
+      tick(s);
+      s.modals = [];
+    }
+    expect(s.research!.known).toContain('vt:ohv');
+    expect(A.beginDevelopment(s, r.id).ok).toBe(true);
+  });
+
+  it('an older save already knows the technology of its day', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 3 });
+    s.week = 52 * 15;
+    delete s.research;
+    const back = deserialize(serialize(s));
+    expect(back.research!.known).toContain('feat:electricStart');
+    expect(back.research!.known).not.toContain('gb:synchro');
   });
 });
 

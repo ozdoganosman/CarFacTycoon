@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as A from '../../core/actions';
 import { FOCUS_HINTS, FOCUS_KEYS, FOCUS_NAMES, evenFocus, productivity } from '../../core/development';
+import { unknownTech } from '../../core/research';
 import type { FocusKey, Project } from '../../core/types';
 import { store, useGameState } from '../store';
 import { Button, Progress, Slider } from '../components/ui';
@@ -26,6 +27,7 @@ export function DevBar({ project: p }: { project: Project }) {
   const bonus = A.projectedBonus(s, p);
   const polish = bonus.reliability - (s.company.skill - 50) * 0.08;
   const paused = store.speed === 0;
+  const missing = developing ? [] : unknownTech(s, p.design);
   const team = others ? `${s.company.engineers} mühendis ${others + 1} projeye bölünüyor (bu projede ~${eng.toFixed(1)})` : `${s.company.engineers} mühendisin hepsi bu projede`;
 
   return (
@@ -34,7 +36,11 @@ export function DevBar({ project: p }: { project: Project }) {
         {!developing ? (
           <>
             <b>Geliştirme:</b> tahmini <b>~{Math.ceil(remaining / Math.max(0.1, rate))} hafta</b> · {team}
-            <span className="muted small">Aracı tasarla, mühendislik odağını seç, sonra başlat. Başlayınca tasarım kilitlenir; odak her zaman değişebilir.</span>
+            {missing.length ? (
+              <span className="small tone-bad">Tasarımda henüz araştırılmamış teknoloji var: {missing.join(', ')}. Ar-Ge’de araştır ya da tasarımdan çıkar.</span>
+            ) : (
+              <span className="muted small">Aracı tasarla, mühendislik odağını seç, sonra başlat. Başlayınca tasarım kilitlenir; odak her zaman değişebilir.</span>
+            )}
           </>
         ) : done ? (
           <>
@@ -54,7 +60,7 @@ export function DevBar({ project: p }: { project: Project }) {
       )}
       <div className="dev-bar-actions">
         {!developing ? (
-          <Button kind="primary" onClick={() => store.try((st) => A.beginDevelopment(st, p.id), 'Geliştirme başladı')}>
+          <Button kind="primary" disabled={missing.length > 0} onClick={() => store.try((st) => A.beginDevelopment(st, p.id), 'Geliştirme başladı')}>
             Geliştirmeyi başlat
           </Button>
         ) : done ? (

@@ -3,7 +3,7 @@ import { eventDef } from '../data/events';
 import { MARKETS, marketScale, MAX_DEALER_LEVEL } from '../data/markets';
 import { segmentDef } from '../data/segments';
 import { STAGES, stationDef } from '../data/stations';
-import { CHASSIS, byId } from '../data/tech';
+import { CHASSIS, byId, maxGears } from '../data/tech';
 import { toolingDef } from '../data/tooling';
 import { aiDesign } from './ai';
 import { FOCUS_KEYS, bonusFromPoints, evenFocus, normalizeFocus } from './development';
@@ -21,6 +21,7 @@ import {
 } from './game';
 import { modelScores, priceNow, referencePrice } from './market';
 import { stateRng } from './rng';
+import { ensureResearch, researchCost, researchDef, researchSlots, researchWeeks, restrictToKnown, unknownTech } from './research';
 import { experienceFactor, newEstimate } from './estimate';
 import { TESTS, SUPPLIERS, expectedDefects, generateDefects } from './testing';
 import { yearFloat } from './time';
@@ -108,7 +109,7 @@ export function defaultDesign(s: GameState, segment: SegmentId): CarDesign {
   const latest = [...s.models].sort((a, b) => b.launchWeek - a.launchWeek)[0];
   if (latest) return structuredClone(latest.design);
   const { design } = aiDesign('family', Math.floor(yf), { style: 'mass', skill: 40, market: s.company.hq }, () => 0.5);
-  return { ...design, size: 0.4, styling: 0.3, interior: 0.3, suspBalance: 0.5 };
+  return restrictToKnown(s, { ...design, size: 0.4, styling: 0.3, interior: 0.3, suspBalance: 0.5 }, maxGears(yf));
 }
 
 export function startProject(s: GameState, o: StartProjectOptions): { ok: true; id: string } | { ok: false; error: string } {
@@ -233,6 +234,8 @@ const fmtEngineers = (n: number) => String(Math.round(n * 10) / 10);
 export function beginDevelopment(s: GameState, pid: string): ActionResult {
   const p = project(s, pid);
   if (p.phase !== 'design') return fail('Proje zaten geliştirmede.');
+  const missing = unknownTech(s, p.design);
+  if (missing.length) return fail(`Önce Ar-Ge’de araştırılmalı: ${missing.join(', ')}.`);
   p.dev.required = requiredWork(s, p);
   p.phase = 'development';
   shareEngineers(s);
@@ -865,6 +868,29 @@ export function recallDecision(s: GameState, modelId: string, defectId: string, 
   }
   decide(s, 'recall:' + defectId, `${m.name}: kusur için ${decision === 'recall' ? 'geri çağırma' : 'hiçbir şey yapmama'}`);
   shiftModal(s);
+}
+
+// ---------------- Research ----------------
+
+export function startResearch(s: GameState, id: string): ActionResult {
+  const yf = yearFloat(s.week);
+  const def = researchDef(id);
+  if (!def) return fail('Bu teknolojinin araştırılması gerekmiyor.');
+  ensureResearch(s, yf);
+  const r = s.research!;
+  if (r.known.includes(id)) return fail(`${def.name} zaten biliniyor.`);
+  if (def.year > yf) return fail(`${def.name} henüz ortaya çıkmadı (${def.year}).`);
+  if (r.active.some((a) => a.id === id)) return fail(`${def.name} zaten araştırılıyor.`);
+  if (r.active.length >= researchSlots(s.company.engineers))
+    return fail('Mühendislerin aynı anda bu kadar konu araştırabiliyor. Daha çok mühendisle daha çok konu yürütülür.');
+  const cost = researchCost(def, yf);
+  if (s.company.cash < cost) return fail(`${def.name} araştırması için ${money(cost)} gerekiyor.`);
+  spend(s, cost, 'rnd');
+  const weeks = researchWeeks(def, yf, s.company.engineers);
+  r.active.push({ id, weeksLeft: weeks, weeks });
+  log(s, `Ar-Ge: ${def.name} araştırması başladı (${money(cost)}, ${weeks} hafta).`);
+  decide(s, 'research:' + id, `Ar-Ge: ${def.name} (${def.year}) ${money(cost)}, ${weeks} hafta`);
+  return ok;
 }
 
 export function setEngineerMode(s: GameState, on: boolean) {

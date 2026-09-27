@@ -1,6 +1,6 @@
 import { GEARBOX_TYPES, SUSPENSIONS, byId } from '../data/tech';
 import { referenceDesigns } from './ai';
-import { computeEngine } from './engine';
+import { computeEngine, eraRpmCap } from './engine';
 import type { CarDesign, CarStats, DevBonus, EngineDesign, EngineStats, SegmentId } from './types';
 import { computeCarStats } from './vehicle';
 
@@ -78,6 +78,9 @@ export function engineNotes(e: EngineDesign, year: number, segment: SegmentId): 
 
   if (x.peakTorqueRpm <= t.torqueRpm * 0.8) pros.push(`Torkunu düşük devirde veriyor (${Math.round(x.peakTorqueRpm)} d/d): şehirde esnek ve sessiz.`);
   else if (x.peakTorqueRpm >= t.torqueRpm * 1.25) cons.push(`Torkunu yüksek devirde veriyor (${Math.round(x.peakTorqueRpm)} d/d): canlı kalmak için bağırtmak gerekir.`);
+  const capped = !x.diesel && x.redline >= eraRpmCap(e.valvetrain, year) - 1;
+  if (capped && e.stroke < e.bore)
+    cons.push(`Devri dönemin supap yayları ve yatakları sınırlıyor (${Math.round(x.redline)} d/d): stroku daha da kısaltmak gücü artırmaz, yalnızca hacmi küçültür.`);
   if (x.redline >= t.redline * 1.2) pros.push(`Yüksek devre çıkıyor (${Math.round(x.redline)} d/d): kısa strok ve iyi supaplar sayesinde güç tepesi geç gelir.`);
 
   const cc = x.displacementCc / t.cc;

@@ -13,6 +13,7 @@ import { updateRivals, initRivals } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
 import { eraReference } from './scoring';
 import { allTech } from './techtree';
+import { researchDef, startingKnowledge } from './research';
 import {
   TESTS,
   actualReliability,
@@ -87,6 +88,7 @@ export function newGame(opts: NewGameOptions): GameState {
     years: [],
     segmentSales: {},
     unlockedTech: allTech().filter((t) => t.year <= 1900).map((t) => t.id),
+    research: { known: startingKnowledge(1900), active: [] },
     cardsSeen: CARDS.filter((c) => c.year <= 1900).map((c) => c.id),
     settings: { engineerMode: true, autoPauseCards: true, modeChosen: false },
     nextId: 1,
@@ -185,6 +187,7 @@ export function tick(s: GameState): void {
     for (const n of updateRivals(s, stateRng(s))) log(s, n.text, n.tone);
   }
   advanceProjects(s);
+  advanceResearch(s);
   autoProductionRates(s);
   produce(s);
   sell(s);
@@ -216,7 +219,10 @@ function announceTech(s: GameState, year: number) {
   const fresh = allTech().filter((t) => t.year <= year && !s.unlockedTech.includes(t.id));
   if (!fresh.length) return;
   for (const t of fresh) s.unlockedTech.push(t.id);
-  log(s, `Yeni teknolojiler: ${fresh.map((t) => t.name).join(', ')}`, 'good');
+  const toLearn = fresh.filter((t) => researchDef(t.id));
+  const free = fresh.filter((t) => !researchDef(t.id));
+  if (free.length) log(s, `Yeni teknolojiler: ${free.map((t) => t.name).join(', ')}`, 'good');
+  if (toLearn.length) log(s, `Yeni teknolojiler ortaya çıktı, Ar-Ge’de araştırılabilir: ${toLearn.map((t) => t.name).join(', ')}`, 'good');
   for (const c of CARDS) {
     if (c.year <= year && !s.cardsSeen.includes(c.id)) {
       s.cardsSeen.push(c.id);
@@ -252,6 +258,18 @@ function closeYear(s: GameState, year: number) {
     // Only the latest year report is kept; it waits in a corner while time runs on.
     s.modals = s.modals.filter((m) => m.kind !== 'yearReport');
     pushModal(s, { kind: 'yearReport', year });
+  }
+}
+
+function advanceResearch(s: GameState) {
+  if (!s.research) return;
+  for (const a of s.research.active) a.weeksLeft -= 1;
+  const done = s.research.active.filter((a) => a.weeksLeft <= 0);
+  if (!done.length) return;
+  s.research.active = s.research.active.filter((a) => a.weeksLeft > 0);
+  for (const a of done) {
+    s.research.known.push(a.id);
+    log(s, `Ar-Ge tamamlandı: ${researchDef(a.id)?.name ?? a.id} artık tasarımlarda kullanılabilir.`, 'good');
   }
 }
 
