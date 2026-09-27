@@ -86,9 +86,17 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
           <select
             aria-label="Hatta üretilecek model"
             value={line.modelId ?? ''}
-            onChange={(e) => {
+            onChange={async (e) => {
               const v = e.target.value || undefined;
-              if (v && !window.confirm('Hat yeni model için yeniden ayarlanacak (3 hafta, kalıp masrafı). Devam?')) return;
+              if (v) {
+                const m = s.models.find((x) => x.id === v)!;
+                const ok = await store.ask({
+                  title: `${line.name} hattında ${m.name} üretilsin mi?`,
+                  body: `Hat yeniden ayarlanır: 3 hafta üretim durur ve ${money(A.retoolCost(s, m))} kalıp masrafı çıkar.`,
+                  confirm: 'Hattı ayarla',
+                });
+                if (!ok) return;
+              }
               store.try((st) => A.assignLine(st, line.id, v));
             }}
           >

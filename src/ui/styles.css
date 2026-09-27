@@ -269,8 +269,7 @@ fieldset {
 .app {
   display: grid;
   grid-template-rows: auto 1fr;
-  height: 100vh;
-  height: 100dvh;
+  height: 100%;
 }
 .topbar {
   display: flex;
@@ -1882,7 +1881,7 @@ fieldset {
   }
   .topbar {
     gap: 8px 12px;
-    padding: 8px 12px;
+    padding: 8px 16px;
   }
   .topbar-kpis {
     margin-left: 0;
@@ -1933,4 +1932,16 @@ fieldset {
 /* Card screens already explain the mechanism in their own text. */
 .card-anim .anim-note {
   display: none;
+}
+
+.save-code textarea {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  resize: vertical;
+  color: var(--ink);
 }

@@ -46,8 +46,9 @@ export function ProjectView({ projectId }: { projectId: string }) {
         <Button
           kind="danger"
           small
-          onClick={() => {
-            if (window.confirm(`${p.name} projesi iptal edilsin mi? Harcanan para geri gelmez.`)) {
+          onClick={async () => {
+            const ok = await store.ask({ title: `${p.name} iptal edilsin mi?`, body: 'Bu projeye harcanan para geri gelmez.', confirm: 'Projeyi iptal et', danger: true });
+            if (ok) {
               store.act((st) => A.cancelProject(st, p.id));
               store.go({ id: 'projects' });
             }

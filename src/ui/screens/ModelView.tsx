@@ -75,8 +75,14 @@ export function ModelView({ modelId }: { modelId: string }) {
             </Button>
             <Button
               kind="danger"
-              onClick={() => {
-                if (window.confirm(`${m.name} üretimden kaldırılsın mı? Kalan stok indirimle satılır.`)) store.act((st) => A.retireModel(st, m.id));
+              onClick={async () => {
+                const ok = await store.ask({
+                  title: `${m.name} üretimden kaldırılsın mı?`,
+                  body: 'Kalan stok bayilerde indirimle satılır ve hatlar boşa çıkar.',
+                  confirm: 'Üretimden kaldır',
+                  danger: true,
+                });
+                if (ok) store.act((st) => A.retireModel(st, m.id));
               }}
             >
               Üretimden kaldır

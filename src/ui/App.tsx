@@ -4,6 +4,7 @@ import { StartScreen } from './screens/StartScreen';
 import { TopBar } from './components/TopBar';
 import { Nav } from './components/Nav';
 import { ModalHost } from './components/ModalHost';
+import { ConfirmHost } from './components/ConfirmHost';
 import { HQ } from './screens/HQ';
 import { Projects } from './screens/Projects';
 import { ProjectView } from './screens/ProjectView';
@@ -84,6 +85,7 @@ export function App() {
         <main className="main">{body}</main>
       </div>
       <ModalHost />
+      <ConfirmHost />
       {store.toast && (
         <div className={`toast toast-${store.toast.tone}`} role="status">
           {store.toast.text}

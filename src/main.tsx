@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { App } from './ui/App';
 import './ui/styles.css';
 import { applyTheme } from './ui/screens/Settings';
+import { store } from './ui/store';
+import { deserialize, serialize } from './core/save';
 
 try {
   const t = localStorage.getItem('carfactycoon.theme');
@@ -11,8 +13,31 @@ try {
   /* storage unavailable: follow the OS theme */
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+// When the page is hosted where it can be updated while open, hand the running
+// game over to the new version instead of dropping the player back to the menu.
+interface HotHost {
+  snapshot?: (fn: () => unknown) => void;
+  ready?: (start: (data: unknown) => void) => void;
+  data?: unknown;
+}
+const hot = (window as unknown as { claude?: { hot?: HotHost } }).claude?.hot;
+hot?.snapshot?.(() => (store.state ? { save: serialize(store.state) } : {}));
+
+function start(data: unknown) {
+  const save = (data as { save?: string } | undefined)?.save;
+  if (save) {
+    try {
+      store.load(deserialize(save));
+    } catch {
+      /* incompatible snapshot: start from the menu */
+    }
+  }
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+}
+
+if (hot?.ready) hot.ready(start);
+else start(hot?.data ?? {});

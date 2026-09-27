@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import * as A from '../../core/actions';
 import { deserialize, serialize } from '../../core/save';
-import { formatDate } from '../../core/time';
 import { store, useGameState } from '../store';
 import { Button, Choice, Panel, Toggle } from '../components/ui';
 
@@ -28,15 +27,29 @@ export function applyTheme(t: Theme) {
 export function Settings() {
   const s = useGameState();
   const [theme, setTheme] = useState<Theme>(readTheme);
+  const [code, setCode] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
-  const exportSave = () => {
-    const blob = new Blob([serialize(s)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `carfactycoon-${s.company.name.replace(/\s+/g, '-').toLowerCase()}-${formatDate(s.week).replace(' ', '-')}.json`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+
+  const copySave = async () => {
+    const text = serialize(s);
+    setCode(text);
+    try {
+      await navigator.clipboard.writeText(text);
+      store.showToast('Kayıt kodu panoya kopyalandı', 'good');
+    } catch {
+      store.showToast('Panoya kopyalanamadı: aşağıdaki kutudaki metni seçip kopyala', 'info');
+    }
   };
+
+  const loadText = (text: string) => {
+    try {
+      store.load(deserialize(text.trim()));
+      store.showToast('Kayıt yüklendi', 'good');
+    } catch (err) {
+      store.showToast((err as Error).message, 'bad');
+    }
+  };
+
   return (
     <div className="screen">
       <div className="screen-head">
@@ -72,7 +85,10 @@ export function Settings() {
         />
       </Panel>
       <Panel title="Kayıt">
-        <p className="muted small">Oyun her çeyrek otomatik olarak bu tarayıcıya kaydedilir. Başka bir cihazda devam etmek için kayıt dosyasını indir.</p>
+        <p className="muted small">
+          Oyun her çeyrek otomatik olarak bu tarayıcıya kaydedilir. Başka bir cihazda devam etmek için kayıt kodunu kopyala ve orada yapıştırıp yükle ya da bir kayıt dosyası
+          seç.
+        </p>
         <div className="row">
           <Button
             onClick={() => {
@@ -82,26 +98,48 @@ export function Settings() {
           >
             Şimdi kaydet
           </Button>
-          <Button onClick={exportSave}>Kayıt dosyasını indir</Button>
+          <Button onClick={copySave}>Kayıt kodunu kopyala</Button>
           <Button onClick={() => fileRef.current?.click()}>Kayıt dosyası yükle</Button>
           <input
             ref={fileRef}
             type="file"
-            accept="application/json,.json"
+            accept="application/json,.json,.txt"
             hidden
             onChange={async (e) => {
               const f = e.target.files?.[0];
-              if (!f) return;
-              try {
-                store.load(deserialize(await f.text()));
-                store.showToast('Kayıt yüklendi', 'good');
-              } catch (err) {
-                store.showToast((err as Error).message, 'bad');
-              }
+              if (f) loadText(await f.text());
             }}
           />
-          <Button kind="danger" onClick={() => window.confirm('Ana menüye dönülsün mü? (Oyun kaydedilir)') && store.quit()}>
+          <Button
+            kind="danger"
+            onClick={async () => {
+              if (
+                await store.ask({
+                  title: 'Ana menüye dönülsün mü?',
+                  body: 'Oyun bu tarayıcıya kaydedilir; ana menüden kaldığın yerden devam edebilirsin.',
+                  confirm: 'Ana menü',
+                })
+              )
+                store.quit();
+            }}
+          >
             Ana menü
+          </Button>
+        </div>
+        <label className="field save-code">
+          <span>Kayıt kodu</span>
+          <textarea
+            id="save-code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            onFocus={(e) => e.target.select()}
+            rows={3}
+            placeholder="Başka bir cihazdan kopyaladığın kayıt kodunu buraya yapıştır"
+          />
+        </label>
+        <div className="row">
+          <Button disabled={!code.trim()} onClick={() => loadText(code)}>
+            Koddan yükle
           </Button>
         </div>
       </Panel>

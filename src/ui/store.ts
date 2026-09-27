@@ -27,6 +27,8 @@ class GameStore {
   lastSpeed: Exclude<Speed, 0> = 1;
   screen: Screen = { id: 'hq' };
   toast: { text: string; tone: 'good' | 'bad' | 'info'; id: number } | null = null;
+  /** Pending in-game confirmation (browser confirm() is not available everywhere). */
+  question: { title: string; body: string; confirm: string; danger?: boolean; resolve: (ok: boolean) => void } | null = null;
   version = 0;
   private listeners = new Set<() => void>();
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -107,6 +109,20 @@ class GameStore {
         this.notify();
       }
     }, 3200);
+  }
+
+  ask(q: { title: string; body: string; confirm: string; danger?: boolean }): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.question = {
+        ...q,
+        resolve: (ok) => {
+          this.question = null;
+          this.notify();
+          resolve(ok);
+        },
+      };
+      this.notify();
+    });
   }
 
   go(screen: Screen) {
