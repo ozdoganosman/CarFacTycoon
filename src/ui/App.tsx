@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { store, useGame } from './store';
 import { StartScreen } from './screens/StartScreen';
 import { TopBar } from './components/TopBar';
 import { Nav } from './components/Nav';
 import { ModalHost } from './components/ModalHost';
 import { ConfirmHost } from './components/ConfirmHost';
+import { PauseBanner } from './components/PauseBanner';
 import { HQ } from './screens/HQ';
 import { Projects } from './screens/Projects';
 import { ProjectView } from './screens/ProjectView';
@@ -18,6 +19,15 @@ import { Settings } from './screens/Settings';
 
 export function App() {
   const { state } = useGame();
+  const mainRef = useRef<HTMLElement>(null);
+  const sc0 = store.screen;
+  // Scroll back to the top when the screen or a project's phase changes.
+  const viewKey = `${sc0.id}:${'projectId' in sc0 ? sc0.projectId : 'modelId' in sc0 ? sc0.modelId : ''}:${
+    'projectId' in sc0 ? (state?.projects.find((p) => p.id === sc0.projectId)?.phase ?? '') : ''
+  }`;
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [viewKey]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -82,7 +92,10 @@ export function App() {
       <TopBar />
       <div className="app-body">
         <Nav />
-        <main className="main">{body}</main>
+        <main className="main" ref={mainRef}>
+          <PauseBanner />
+          {body}
+        </main>
       </div>
       <ModalHost />
       <ConfirmHost />

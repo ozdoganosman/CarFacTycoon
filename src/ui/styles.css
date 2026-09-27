@@ -1945,3 +1945,37 @@ fieldset {
   resize: vertical;
   color: var(--ink);
 }
+
+.pause-banner {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  max-width: 1280px;
+  margin: 0 auto 16px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent2) 14%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent2) 45%, var(--line));
+  box-shadow: var(--shadow);
+}
+.howto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  background: var(--panel-2);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.howto p {
+  margin: 0;
+  flex: 1 1 280px;
+}

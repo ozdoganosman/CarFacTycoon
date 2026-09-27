@@ -85,8 +85,14 @@ function Development({ p }: { p: Project }) {
   const maxEng = Math.max(1, s.company.engineers - busyElsewhere);
   const rate = p.engineers * productivity(s.company.skill);
   const remaining = Math.max(0, p.dev.required - p.dev.done);
-  const bonus = bonusFromPoints(p.dev.points, p.dev.required, p.dev.done, s.company.skill);
   const done = p.dev.done >= p.dev.required;
+  const pctDone = Math.round((p.dev.done / p.dev.required) * 100);
+  // What the car gets if development runs to 100% with the current focus.
+  const projectedPoints = { ...p.dev.points };
+  for (const k of FOCUS_KEYS) projectedPoints[k] += p.dev.focus[k] * remaining;
+  const bonus = bonusFromPoints(projectedPoints, p.dev.required, Math.max(p.dev.done, p.dev.required), s.company.skill);
+  const polish = bonus.reliability - (s.company.skill - 50) * 0.08;
+  const paused = store.speed === 0;
   const setFocus = (k: FocusKey, v: number) => {
     const others = FOCUS_KEYS.filter((x) => x !== k);
     const rest = others.reduce((a, x) => a + p.dev.focus[x], 0);
@@ -106,10 +112,24 @@ function Development({ p }: { p: Project }) {
     <div className="grid-2 wide-left">
       <div>
         <Panel title="Geliştirme">
-          <Progress value={Math.min(p.dev.done, p.dev.required * 1.6)} max={p.dev.required * 1.6} label={`${Math.round((p.dev.done / p.dev.required) * 100)}%`} />
-          <p className="muted small">
-            %100’den sonrası “cila”dır: güvenilirliği artırır (şu an {bonus.reliability >= 0 ? '+' : ''}{bonus.reliability.toFixed(1)}). En fazla %160.
-          </p>
+          <div className="howto">
+            {done ? (
+              <p>
+                <b>Geliştirme bitti.</b> Şimdi teste geçebilirsin. İstersen zamanı biraz daha akıtıp aracı cilalayabilirsin: cila güvenilirliği artırır (şu an +
+                {polish.toFixed(1)}, en fazla %160’a kadar).
+              </p>
+            ) : (
+              <p>
+                <b>Ne yapmalıyım?</b> Mühendislerin her hafta çalışır ve çubuk dolar. Bu sırada aşağıdan odağı ayarla. Çubuk %100 olunca “Teste geç” düğmesi açılır.
+              </p>
+            )}
+            {paused && (
+              <Button kind="primary" onClick={() => store.setSpeed(store.lastSpeed)}>
+                ▶ Zamanı başlat
+              </Button>
+            )}
+          </div>
+          <Progress value={Math.min(p.dev.done, p.dev.required * 1.6)} max={p.dev.required * 1.6} label={`%${pctDone}`} />
           <Slider
             label="Mühendis sayısı"
             value={p.engineers}
@@ -117,16 +137,19 @@ function Development({ p }: { p: Project }) {
             max={maxEng}
             onChange={(v) => store.act((st) => A.setProjectEngineers(st, p.id, v))}
             format={(v) => `${v} kişi`}
-            hint={done ? 'Temel geliştirme bitti.' : `Kalan süre: ~${Math.ceil(remaining / Math.max(0.1, rate))} hafta`}
+            hint={done ? 'Temel geliştirme bitti.' : `Kalan süre: ~${Math.ceil(remaining / Math.max(0.1, rate))} hafta. Daha çok mühendis daha hızlı bitirir (Finans ekranından işe al).`}
           />
           <div className="row-end">
             <Button kind="primary" disabled={!done} onClick={() => store.try((st) => A.finishDevelopment(st, p.id))}>
-              Prototipleri yap, teste geç
+              {done ? 'Prototipleri yap, teste geç' : `Geliştirme sürüyor (%${pctDone})`}
             </Button>
           </div>
         </Panel>
         <Panel title="Mühendislik odağı">
-          <p className="muted small">Mühendislerin zamanını nasıl böleceğini seç. Her alanda getiri azalarak artar; hangi alanın önemli olduğu segmente bağlı.</p>
+          <p className="muted small">
+            Mühendislerin zamanını alanlara böl; toplam her zaman %100. Sağdaki değerler, geliştirme bu dağılımla biterse aracın kazanacağı iyileştirmeler. Hangi alanın
+            önemli olduğu segmente bağlı: segmentin açıklamasına ve dergi yorumlarına bak.
+          </p>
           {FOCUS_KEYS.map((k) => (
             <div key={k} className="focus-row">
               <Slider
@@ -147,7 +170,7 @@ function Development({ p }: { p: Project }) {
         </Panel>
       </div>
       <aside>
-        <Panel title="Beklenen sonuç" tight>
+        <Panel title="Bitince beklenen sonuç" tight>
           <StatsPanel s={s} design={p.design} segment={p.segment} yf={yf} bonus={bonus} targetPrice={p.targetPrice} compact />
         </Panel>
       </aside>
