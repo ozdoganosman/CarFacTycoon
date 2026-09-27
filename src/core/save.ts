@@ -21,6 +21,11 @@ function migrate(s: GameState) {
   ensureRivals(s);
   s.errors ??= [];
   s.decisions ??= [];
+  // The quality focus arrived later.
+  for (const p of s.projects) {
+    p.dev.points.quality ??= 0;
+    p.dev.focus.quality ??= 0;
+  }
 }
 
 /** Browser storage can be unavailable (private mode, blocked site data); never let that break the game. */

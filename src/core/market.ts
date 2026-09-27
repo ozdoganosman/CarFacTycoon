@@ -103,10 +103,27 @@ export function weeklySegmentDemand(market: MarketId, segment: SegmentId, yf: nu
 
 // ---- cached scores ----
 
+/**
+ * A new maker's cars rattle: fit, finish and an unknown name on the grille.
+ * 1 for a first car, fading as the company builds cars and launches models.
+ */
+export function workshopPenalty(state: GameState): number {
+  const built = state.models.reduce((a, m) => a + m.unitsBuilt, 0);
+  return Math.exp(-built / 3000) * Math.exp(-(state.company.modelsLaunched ?? 0) / 4);
+}
+
+export function applyWorkshopPenalty(scores: Scores, pen: number): Scores {
+  scores.reliability = Math.max(0, scores.reliability - 10 * pen);
+  scores.comfort = Math.max(0, scores.comfort - 5 * pen);
+  scores.prestige = Math.max(0, scores.prestige - 7 * pen);
+  scores.handling = Math.max(0, scores.handling - 3 * pen);
+  return scores;
+}
+
 export function modelScores(state: GameState, model: CarModel): { scores: Scores; appeal: Record<MarketId, number> } {
   if (model.cache && state.week - model.cache.week < 4) return model.cache;
   const yf = yearFloat(state.week);
-  const scores = scoreStats(model.stats, yf, model.segment, model.perceivedReliability);
+  const scores = applyWorkshopPenalty(scoreStats(model.stats, yf, model.segment, model.perceivedReliability), workshopPenalty(state));
   // Platform over-sharing ("they are all the same car") hurts prestige.
   const siblings = state.models.filter((m) => m.status === 'active' && m.platformId === model.platformId).length;
   if (siblings > 3) scores.prestige = Math.max(0, scores.prestige - 6 * (siblings - 3));

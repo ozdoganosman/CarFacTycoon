@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import * as A from '../../core/actions';
 import { enginePresets, withStrokeRatio } from '../../core/ai';
-import { displacementCc, knockLimit } from '../../core/engine';
+import { DIESEL_COMPRESSION, DIESEL_YEAR, displacementCc, isDiesel, knockLimit } from '../../core/engine';
 import { newEstimate } from '../../core/estimate';
 import { yearFloat } from '../../core/time';
 import { engineCurve, gearSpeeds, tractionCurves, rollingResistance } from '../../core/vehicle';
@@ -181,7 +181,6 @@ export function Designer({ project, readOnly }: { project: Project; readOnly?: b
           segment={project.segment}
           yf={yf}
           bonus={A.projectedBonus(s, project)}
-          targetPrice={project.targetPrice}
           estimate={project.estimate ?? neutral}
           note="Geliştirme mevcut odak dağılımıyla biterse."
         />
@@ -247,6 +246,7 @@ function EngineTab({
   const cylOpts = CYLINDER_OPTIONS.filter((c) => c.year <= yf);
   const kl = knockLimit(e.bore, yf);
   const eu = yf >= 1910 && yf <= 1947;
+  const diesel = isDiesel(e);
 
   return (
     <div className="engine-tab">
@@ -261,12 +261,36 @@ function EngineTab({
         </p>
       )}
       <fieldset disabled={locked} className="engine-controls">
+        {yf >= DIESEL_YEAR && (
+          <div className="field">
+            <span>Yakıt</span>
+            <Choice
+              compact
+              value={diesel ? 'diesel' : 'petrol'}
+              onChange={(v) =>
+                onChange(
+                  v === 'diesel'
+                    ? { ...e, fuel: 'diesel', compression: 17 }
+                    : { ...e, fuel: 'petrol', compression: Math.round(Math.min(maxCompression(yf), knockLimit(e.bore, yf) - 0.2) * 10) / 10 },
+                )
+              }
+              options={[
+                { value: 'petrol', label: 'Benzin', sub: 'Hafif, sessiz, yüksek devirli.' },
+                { value: 'diesel', label: 'Dizel', sub: 'Çok az yakar ve dayanıklıdır; ağır, gürültülü, yavaş ve pahalı.' },
+              ]}
+            />
+          </div>
+        )}
         {!engineer ? (
           <>
             <div className="field">
               <span>Hazır motorlar</span>
               <Choice
-                value={presets.find((p) => p.design.cylinders === e.cylinders && Math.abs(displacementCc(p.design) - displacementCc(e)) < 60)?.id ?? ''}
+                value={
+                  presets.find(
+                    (p) => p.design.cylinders === e.cylinders && (p.design.fuel ?? 'petrol') === (e.fuel ?? 'petrol') && Math.abs(displacementCc(p.design) - displacementCc(e)) < 60,
+                  )?.id ?? ''
+                }
                 onChange={(id) => {
                   const p = presets.find((x) => x.id === id);
                   if (p) onChange({ ...p.design });
@@ -315,15 +339,19 @@ function EngineTab({
             <Slider
               label="Sıkıştırma oranı"
               value={e.compression}
-              min={3.5}
-              max={Math.round(maxCompression(yf) * 10) / 10}
+              min={diesel ? DIESEL_COMPRESSION[0] : 3.5}
+              max={diesel ? DIESEL_COMPRESSION[1] : Math.round(maxCompression(yf) * 10) / 10}
               step={0.1}
               onChange={(v) => onChange({ ...e, compression: v })}
               format={(v) => `${v.toFixed(1)} : 1`}
               hint={
-                <>
-                  Bu çapta vuruntu sınırı <b>{kl.toFixed(1)}</b>. {e.compression > kl ? <span className="tone-bad">Motor vuruntu yapıyor: güç ve güvenilirlik düşer!</span> : 'Güvenli.'}
-                </>
+                diesel ? (
+                  'Dizelde yakıtı sıkıştırmanın ısısı tutuşturur: vuruntu sınırı yok. Yüksek oran verimi artırır, motoru ağırlaştırır.'
+                ) : (
+                  <>
+                    Bu çapta vuruntu sınırı <b>{kl.toFixed(1)}</b>. {e.compression > kl ? <span className="tone-bad">Motor vuruntu yapıyor: güç ve güvenilirlik düşer!</span> : 'Güvenli.'}
+                  </>
+                )
               }
             />
             <div className="field">
@@ -335,14 +363,21 @@ function EngineTab({
               />
             </div>
             <div className="grid-2 tight">
-              <div className="field">
-                <span>Yakıt sistemi</span>
-                <Choice
-                  value={e.fuelSystem}
-                  onChange={(v) => onChange({ ...e, fuelSystem: v })}
-                  options={FUEL_SYSTEMS.map((f) => ({ value: f.id, label: f.name, disabled: f.year > yf, sub: f.year > yf ? `${inYear(f.year)}` : undefined }))}
-                />
-              </div>
+              {diesel ? (
+                <div className="field">
+                  <span>Yakıt sistemi</span>
+                  <p className="muted small">Dizelin kendi yüksek basınçlı enjeksiyon pompası var.</p>
+                </div>
+              ) : (
+                <div className="field">
+                  <span>Yakıt sistemi</span>
+                  <Choice
+                    value={e.fuelSystem}
+                    onChange={(v) => onChange({ ...e, fuelSystem: v })}
+                    options={FUEL_SYSTEMS.map((f) => ({ value: f.id, label: f.name, disabled: f.year > yf, sub: f.year > yf ? `${inYear(f.year)}` : undefined }))}
+                  />
+                </div>
+              )}
               <div className="field">
                 <span>Aşırı besleme</span>
                 <Choice
@@ -397,7 +432,7 @@ function EngineTab({
       </div>
       <div className="engine-viz">
         <div className="engine-anim">
-          <FourStroke bore={e.bore} stroke={e.stroke} rpm={Math.round(es.peakPowerRpm)} controls={false} />
+          <FourStroke bore={e.bore} stroke={e.stroke} rpm={Math.round(es.peakPowerRpm)} controls={false} diesel={diesel} />
         </div>
         <div className="engine-charts">
           <LineChart

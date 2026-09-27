@@ -9,6 +9,7 @@ import { MILITARY_COMPLEXITY, emptyLine, lineReport, lineUpkeep, militaryMargin,
 import { MARKET_IDS, SEGMENT_IDS, modelScores, priceNow, segmentMarket } from './market';
 import { makeRng, rand, stateRng } from './rng';
 import { updateRivals, initRivals } from './rivals';
+import { autoCapacity, autoProductionRates } from './autocap';
 import { eraReference } from './scoring';
 import { allTech } from './techtree';
 import {
@@ -18,6 +19,7 @@ import {
   failureRate,
   fixCost,
   SUPPLIERS,
+  withTuning,
 } from './testing';
 import { isMonthStart, weekFor, weekOfYear, yearFloat, yearOf } from './time';
 import { productivity } from './development';
@@ -169,13 +171,17 @@ export function tick(s: GameState): void {
     for (const n of updateRivals(s, stateRng(s))) log(s, n.text, n.tone);
   }
   advanceProjects(s);
+  autoProductionRates(s);
   produce(s);
   sell(s);
   launchReports(s);
   field(s);
   fixedCosts(s);
   drift(s);
-  if (isMonthStart(s.week)) monthly(s);
+  if (isMonthStart(s.week)) {
+    monthly(s);
+    autoCapacity(s, (m) => materialUnitCost(s, m));
+  }
   checkSolvency(s);
   void yf;
 }
@@ -268,6 +274,11 @@ function advanceProjects(s: GameState) {
             spend(s, fixCost(d.severity, yf), 'rnd');
           }
         }
+      }
+      // Testing also tunes the car.
+      if (running && p.bonus) {
+        p.devBonus ??= p.bonus;
+        p.bonus = withTuning(p.devBonus, p.tests);
       }
       const allDone = TESTS.every((t) => p.tests[t.id].done >= p.tests[t.id].planned);
       if (running && allDone) {

@@ -5,7 +5,7 @@ import { eventDef } from '../../data/events';
 import { MARKETS } from '../../data/markets';
 import { segmentDef } from '../../data/segments';
 import { companyAssets } from '../../core/game';
-import { AREA_NAMES, SEVERITY_NAMES } from '../../core/testing';
+import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { allTech } from '../../core/techtree';
 import { costIndex } from '../../data/economy';
 import { yearFloat } from '../../core/time';
@@ -122,8 +122,8 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
           }
         >
           <p>
-            Sahadaki {model.name} araçlarında <b>{AREA_NAMES[d.area].toLowerCase()}</b> kaynaklı {SEVERITY_NAMES[d.severity].toLowerCase()} bir kusur ortaya çıktı.
-            Yola çıkmış {num(model.unitsSold)} araç etkileniyor.
+            Sahadaki {model.name} araçlarında <b>{AREA_NAMES[d.area].toLowerCase()}</b> kaynaklı {SEVERITY_NAMES[d.severity].toLowerCase()} bir kusur ortaya çıktı:{' '}
+            <b>{defectText(d).toLowerCase()}</b>. Yola çıkmış {num(model.unitsSold)} araç etkileniyor.
           </p>
           <p className="muted">
             Bu kusur testlerde bulunamadı. Test süresini kısa tutmak lansmanı hızlandırır ama bu tür sürprizleri artırır ({model.testWeeks} hafta test yapılmıştı).

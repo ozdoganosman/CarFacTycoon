@@ -8,7 +8,7 @@ import type { GameState, Project, ProjectPhase, SegmentId } from '../../core/typ
 import { store, useGameState } from '../store';
 import { money, num } from '../format';
 import { inYear } from '../format';
-import { Badge, Button, Choice, Empty, NumberInput, Panel, Progress } from '../components/ui';
+import { Badge, Button, Choice, Empty, Panel, Progress } from '../components/ui';
 
 export const PHASE_LABEL: Record<ProjectPhase, string> = {
   design: 'Tasarım',
@@ -43,7 +43,6 @@ function NewProject({ onDone }: { onDone: () => void }) {
   const segs = availableSegments(s);
   const [segment, setSegment] = useState<SegmentId>(segs.includes('family') ? 'family' : segs[0]);
   const [name, setName] = useState(`Model ${String.fromCharCode(65 + (s.company.modelsLaunched % 26))}`);
-  const [price, setPrice] = useState(() => Math.round(referencePrice(s.company.hq, segment, yf)));
   const [platformId, setPlatformId] = useState('');
   const [engineId, setEngineId] = useState('');
   const [replaces, setReplaces] = useState('');
@@ -52,7 +51,6 @@ function NewProject({ onDone }: { onDone: () => void }) {
 
   const pickSegment = (id: SegmentId) => {
     setSegment(id);
-    setPrice(Math.round(referencePrice(s.company.hq, id, yf)));
     setReplaces('');
   };
 
@@ -63,7 +61,6 @@ function NewProject({ onDone }: { onDone: () => void }) {
           <span>Model adı</span>
           <input value={name} maxLength={24} onChange={(e) => setName(e.target.value)} />
         </label>
-        <NumberInput label="Hedef satış fiyatı" prefix="$" value={price} min={1} step={10} onChange={setPrice} />
       </div>
       <div className="field">
         <span>Segment</span>
@@ -145,7 +142,7 @@ function NewProject({ onDone }: { onDone: () => void }) {
           kind="primary"
           onClick={() => {
             const r = store.act((st) =>
-              A.startProject(st, { name, segment, targetPrice: price, platformId: platformId || undefined, engineRefId: engineId || undefined, replacesModelId: replaces || undefined }),
+              A.startProject(st, { name, segment, targetPrice: Math.round(referencePrice(s.company.hq, segment, yf)), platformId: platformId || undefined, engineRefId: engineId || undefined, replacesModelId: replaces || undefined }),
             );
             if (r && r.ok) {
               onDone();
@@ -198,13 +195,11 @@ export function Projects() {
       <Panel title="Nasıl çalışır?">
         <ol className="steps">
           <li>
-            <b>Tasarım:</b> Segmentin alıcıları için modülleri seç. Sağdaki puanlar sınıfın o yılki ortalamasına (50) göredir.
+            <b>Tasarım ve geliştirme:</b> Aracı kimin için yaptığına sen karar ver: modülleri seç, mühendislerini ata, odağı dağıt (performans, verim, konfor,
+            güvenlik, maliyet, kalite). Odak aracı gerçekten değiştirir.
           </li>
           <li>
-            <b>Geliştirme:</b> Mühendislerini ata, odağı dağıt (performans, verim, konfor, güvenlik, maliyet).
-          </li>
-          <li>
-            <b>Test:</b> Dinamometre, yol, dayanıklılık ve (1934’ten sonra) çarpışma testleri kusurları bulur. Kısa kesersen sahada patlar.
+            <b>Test:</b> Dinamometre, yol, dayanıklılık ve (1934’ten sonra) çarpışma testleri kusurları bulur ve aracı ayarlar. Kısa kesersen kusurlar sahada patlar.
           </li>
           <li>
             <b>Üretim:</b> Tedarikçileri ve hattı seç, kalıplar hazırlanır.

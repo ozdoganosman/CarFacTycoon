@@ -34,6 +34,7 @@ export function allTech(): TechItem[] {
   ASPIRATIONS.forEach((x) => out.push({ id: `asp:${x.id}`, name: x.name, year: x.year, category: 'Motor', cardId: x.cardId }));
   CYLINDER_OPTIONS.forEach((x) => out.push({ id: `cyl:${x.cylinders}${x.layout}`, name: x.label, year: x.year, category: 'Motor' }));
   GEARBOX_TYPES.forEach((x) => out.push({ id: `gb:${x.id}`, name: x.name, year: x.year, category: 'Şanzıman', cardId: x.cardId }));
+  out.push({ id: 'fuel:diesel', name: 'Dizel motor', year: 1936, category: 'Motor' });
   out.push({ id: 'gears:4', name: '4 ileri vites', year: 1925, category: 'Şanzıman' });
   out.push({ id: 'gears:5', name: '5 ileri vites', year: 1955, category: 'Şanzıman' });
   SUSPENSIONS.forEach((x) => out.push({ id: `susp:${x.id}`, name: x.name, year: x.year, category: 'Süspansiyon', cardId: x.cardId }));

@@ -3,7 +3,7 @@ import * as A from '../../core/actions';
 import { gates, materialUnitCost } from '../../core/game';
 import { lineReport, lineUpkeep } from '../../core/factory';
 import { consumerPrice, referencePrice, weeklySegmentDemand } from '../../core/market';
-import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, expectedRemaining, riskLabel } from '../../core/testing';
+import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, defectRange, defectText, expectedRemaining, riskLabel, testTuning, type Tuning } from '../../core/testing';
 import { yearFloat } from '../../core/time';
 import { DEALER_COMMISSION, costIndex, shopCost } from '../../data/economy';
 import { MARKETS } from '../../data/markets';
@@ -45,7 +45,7 @@ export function ProjectView({ projectId }: { projectId: string }) {
           </h1>
           <p className="muted">
             {segmentDef(p.segment).icon} {segmentDef(p.segment).name}
-            {p.kind === 'facelift' ? ' · makyaj projesi' : p.replacesModelId ? ' · yeni kuşak' : ''} · hedef fiyat {money(p.targetPrice)}
+            {p.kind === 'facelift' ? ' · makyaj projesi' : p.replacesModelId ? ' · yeni kuşak' : ''}
           </p>
         </div>
         <Button
@@ -87,6 +87,7 @@ function Testing({ p }: { p: Project }) {
   const yf = yearFloat(s.week);
   const planned = Object.fromEntries(TESTS.map((t) => [t.id, p.tests[t.id].planned])) as Record<TestId, number>;
   const exp = expectedRemaining(p.defectPrior, planned);
+  const startRange = defectRange(p.defectPrior);
   const risk = riskLabel(exp);
   const found = p.defects.filter((d) => d.found);
   const running = TESTS.some((t) => p.tests[t.id].done < p.tests[t.id].planned);
@@ -130,12 +131,21 @@ function Testing({ p }: { p: Project }) {
       <aside>
         <Panel title="Kusur raporu">
           <div className="risk">
-            <span>Tahmini gizli kusur</span>
-            <b className={`tone-${risk.tone}`}>
-              ~{exp.toFixed(1)} · {risk.label} risk
+            <span>Geliştirmeden çıkan gizli kusur (tahmin)</span>
+            <b>
+              {startRange[0]}–{startRange[1]} kusur
             </b>
           </div>
-          <p className="muted small">Tahmin, planlanan testlere göre hesaplanır. Kaç kusur olduğunu kimse kesin bilmez.</p>
+          <div className="risk">
+            <span>Bu test planı bitince kalması beklenen</span>
+            <b className={`tone-${risk.tone}`}>
+              ~{Math.round(exp)} · {risk.label} risk
+            </b>
+          </div>
+          <p className="muted small">
+            Kaç kusur olduğunu kimse kesin bilmez. {s.company.modelsLaunched < 2 ? 'Ekibin ilk arabalarında çok hata yapar; ' : ''}Kalan her kusur sahada
+            arıza, garanti masrafı ve geri çağırma demektir.
+          </p>
           <p>
             Bulunan ve giderilen: <b>{found.length}</b>
             {running && <span className="muted small"> · test maliyeti ~{money(weeklyCost)}/hafta</span>}
@@ -144,11 +154,16 @@ function Testing({ p }: { p: Project }) {
             <ul className="defects">
               {found.map((d) => (
                 <li key={d.id}>
-                  <Badge tone={d.severity === 'critical' ? 'bad' : d.severity === 'major' ? 'warn' : 'muted'}>{SEVERITY_NAMES[d.severity]}</Badge> {AREA_NAMES[d.area]}
+                  <Badge tone={d.severity === 'critical' ? 'bad' : d.severity === 'major' ? 'warn' : 'muted'}>{SEVERITY_NAMES[d.severity]}</Badge> {AREA_NAMES[d.area]}:{' '}
+                  {defectText(d)} <span className="muted small">— giderildi</span>
                 </li>
               ))}
             </ul>
           )}
+          <h4>Testlerin araca katkısı</h4>
+          <p className="small">
+            {tuningText(testTuning(p.tests)) || <span className="muted">Testler başlayınca ayarlar iyileşir: dinamometre gücü ve tüketimi, yol testi konfor ve yol tutuşu, çarpışma testi güvenliği, dayanıklılık güvenilirliği.</span>}
+          </p>
         </Panel>
         <Panel tight>
           <StatsPanel
@@ -165,6 +180,17 @@ function Testing({ p }: { p: Project }) {
       </aside>
     </div>
   );
+}
+
+function tuningText(t: Tuning): string {
+  const parts: string[] = [];
+  if (t.power > 0.001) parts.push(`güç +%${(t.power * 100).toFixed(1)}`);
+  if (t.fuel > 0.001) parts.push(`tüketim −%${(t.fuel * 100).toFixed(1)}`);
+  if (t.comfort > 0.05) parts.push(`konfor +${t.comfort.toFixed(1)}`);
+  if (t.handling > 0.05) parts.push(`yol tutuş +${t.handling.toFixed(1)}`);
+  if (t.safety > 0.05) parts.push(`güvenlik +${t.safety.toFixed(1)}`);
+  if (t.reliability > 0.05) parts.push(`güvenilirlik +${t.reliability.toFixed(1)}`);
+  return parts.length ? `Şimdiye kadar: ${parts.join(', ')}.` : '';
 }
 
 const COMPONENT_NAMES: Record<ComponentKey, string> = { engine: 'Motor', gearbox: 'Şanzıman', electrics: 'Elektrik ve donanım' };
@@ -258,6 +284,12 @@ function Production({ p }: { p: Project }) {
             {quote.sharedPlatform && <Badge tone="good">Aynı platform: kalıplar büyük ölçüde ortak</Badge>}
           </div>
         )}
+        <Toggle
+          checked={p.autoCapacity ?? true}
+          onChange={(v) => store.act((st2) => A.setProjectAutoCapacity(st2, p.id, v))}
+          label="Satışa çıkınca talebi otomatik karşıla"
+          sub="Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır. Sonradan Model ve Fabrika ekranlarından değiştirebilirsin."
+        />
         <div className="row-end">
           <Button kind="primary" disabled={!lineId} onClick={() => lineId && store.try((st2) => A.startTooling(st2, p.id, lineId))}>
             Kalıpları sipariş et

@@ -1,5 +1,5 @@
 import type { MarketId, SegmentId } from '../core/types';
-import { MINOR_RIVALS } from './minorRivals';
+import { makeMinorRivals } from './minorRivals';
 
 // Fictional rival manufacturers, loosely inspired by the real history of the industry.
 
@@ -326,4 +326,4 @@ const MAJOR_RIVALS: RivalDef[] = [
   },
 ];
 
-export const RIVALS: RivalDef[] = [...MAJOR_RIVALS, ...MINOR_RIVALS];
+export const RIVALS: RivalDef[] = [...MAJOR_RIVALS, ...makeMinorRivals(MAJOR_RIVALS)];

@@ -48,7 +48,7 @@ export function DevPanel({ project: p }: { project: Project }) {
     const ids = new Set(fresh.map((b) => b.id));
     const t = setTimeout(() => setBubbles((b) => b.filter((x) => !ids.has(x.id))), 1400);
     return () => clearTimeout(t);
-  }, [p.dev.points.performance, p.dev.points.efficiency, p.dev.points.comfort, p.dev.points.safety, p.dev.points.cost]);
+  }, [p.dev.points.performance, p.dev.points.efficiency, p.dev.points.comfort, p.dev.points.safety, p.dev.points.cost, p.dev.points.quality]);
 
   const setFocus = (k: FocusKey, v: number) => {
     const others = FOCUS_KEYS.filter((x) => x !== k);
@@ -64,6 +64,7 @@ export function DevPanel({ project: p }: { project: Project }) {
     comfort: `Konfor +${bonus.comfort.toFixed(1)}`,
     safety: `Güvenlik +${bonus.safety.toFixed(1)}`,
     cost: `Maliyet −%${((1 - bonus.costMult) * 100).toFixed(1)}`,
+    quality: `Gizli kusur −%${((1 - (bonus.defectMult ?? 1)) * 100).toFixed(0)}`,
   };
 
   return (

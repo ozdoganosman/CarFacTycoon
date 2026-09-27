@@ -27,6 +27,8 @@ export interface FourStrokeProps {
   stroke?: number;
   /** Engine speed used for the piston-speed readout (default 2000 d/dk). */
   rpm?: number;
+  /** Compression ignition: air only, fuel injected at the top, no spark plug. */
+  diesel?: boolean;
   /** Show the speed / bore / stroke controls (default true). */
   controls?: boolean;
 }
@@ -46,6 +48,13 @@ const STAGES = [
   { name: 'Emme', title: '1. zaman · Emme', desc: 'Piston iner, emme supabı açık: benzin-hava karışımı silindire dolar.' },
   { name: 'Sıkıştırma', title: '2. zaman · Sıkıştırma', desc: `Supaplar kapalı; piston çıkar ve karışımı ~1/${CR} hacme sıkıştırır.` },
   { name: 'İş', title: '3. zaman · İş (Ateşleme)', desc: 'Buji ateşler; yanan gaz genleşip pistonu iter. Güç veren tek zaman budur.' },
+  { name: 'Egzoz', title: '4. zaman · Egzoz', desc: 'Egzoz supabı açık: piston çıkarken yanmış gazı dışarı süpürür.' },
+];
+
+const DIESEL_STAGES = [
+  { name: 'Emme', title: '1. zaman · Emme', desc: 'Piston iner, emme supabı açık: silindire yalnızca hava dolar.' },
+  { name: 'Sıkıştırma', title: '2. zaman · Sıkıştırma', desc: 'Supaplar kapalı; piston havayı ~1/17 hacme sıkıştırır ve hava 500 °C’yi geçer.' },
+  { name: 'İş', title: '3. zaman · İş (Püskürtme)', desc: 'Enjektör mazotu kızgın havaya püskürtür, yakıt kendiliğinden tutuşur. Buji yoktur.' },
   { name: 'Egzoz', title: '4. zaman · Egzoz', desc: 'Egzoz supabı açık: piston çıkarken yanmış gazı dışarı süpürür.' },
 ];
 
@@ -141,7 +150,7 @@ function pinHeight(g: Geo, a: number) {
 // looks bigger; larger engines shrink to fit.
 const REF = geometry(100, 110);
 
-function drawFourStroke(ctx: Ctx, w: number, h: number, c: ThemeColors, thetaDeg: number, t: number, B: number, S: number) {
+function drawFourStroke(ctx: Ctx, w: number, h: number, c: ThemeColors, thetaDeg: number, t: number, B: number, S: number, diesel = false) {
   const th = mod(thetaDeg, 720);
   const a = rad(th);
   const stage = Math.min(3, Math.floor(th / 180));
@@ -568,7 +577,7 @@ function drawFourStroke(ctx: Ctx, w: number, h: number, c: ThemeColors, thetaDeg
   }
 
   // ----- info panel -----
-  drawInfo(ctx, info, wide, c, sc, th, stage, f, liftI > 0.02 * g.lh, liftE > 0.02 * g.lh, sparkOn);
+  drawInfo(ctx, info, wide, c, sc, th, stage, f, liftI > 0.02 * g.lh, liftE > 0.02 * g.lh, sparkOn, diesel);
 }
 
 function dimLine(ctx: Ctx, x1: number, y1: number, x2: number, y2: number, color: string) {
@@ -606,8 +615,9 @@ function drawInfo(
   inOpen: boolean,
   exOpen: boolean,
   sparkOn: boolean,
+  diesel: boolean,
 ) {
-  const st = STAGES[stage];
+  const st = (diesel ? DIESEL_STAGES : STAGES)[stage];
   const pad = 12;
   const ringR = wide ? clamp(Math.min(box.w, box.h) * 0.24, 36, 76) : clamp((box.h - 22) / 2, 26, 44);
   const ringCx = wide ? box.x + box.w / 2 : box.x + box.w - pad - ringR;
@@ -673,10 +683,11 @@ function drawInfo(
   };
   row('Emme supabı', inOpen, c.accent2, 'açık', 'kapalı');
   row('Egzoz supabı', exOpen, c.muted, 'açık', 'kapalı');
-  row('Buji', sparkOn, c.fire, 'kıvılcım!', 'bekliyor');
+  if (diesel) row('Enjektör', sparkOn, c.fire, 'püskürtüyor!', 'bekliyor');
+  else row('Buji', sparkOn, c.fire, 'kıvılcım!', 'bekliyor');
 }
 
-export function FourStroke({ bore, stroke, rpm, controls = true }: FourStrokeProps) {
+export function FourStroke({ bore, stroke, rpm, controls = true, diesel = false }: FourStrokeProps) {
   const [speed, setSpeed] = useState(0.4); // crank turns per second on screen
   const [boreS, setBoreS] = useState(95);
   const [strokeS, setStrokeS] = useState(100);
@@ -688,9 +699,9 @@ export function FourStroke({ bore, stroke, rpm, controls = true }: FourStrokePro
   const ref = useCanvasAnimation(
     (ctx, t, w, h, c, dt) => {
       theta.current = mod(theta.current + dt * speed * 360, 720);
-      drawFourStroke(ctx, w, h, c, theta.current, t, B, S);
+      drawFourStroke(ctx, w, h, c, theta.current, t, B, S, diesel);
     },
-    [B, S],
+    [B, S, diesel],
     { aspect: (w) => (w >= 520 ? 1.45 : w / Math.min(560, 360 + w * 0.4)), maxHeight: 600 },
   );
 

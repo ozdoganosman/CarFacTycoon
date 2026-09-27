@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { accelMetric, appeal, eraReference, scoreStats } from '../../core/scoring';
-import { consumerPrice, ownershipTax, referencePrice } from '../../core/market';
+import { applyWorkshopPenalty, consumerPrice, ownershipTax, referencePrice, workshopPenalty } from '../../core/market';
 import { costIndex, labourShare } from '../../data/economy';
 import { ATTRS, ATTR_NAMES, importanceLabel, segmentDef } from '../../data/segments';
 import { activeTax } from '../../data/markets';
 import { computeCarStats } from '../../core/vehicle';
-import { estimateRange, isRough } from '../../core/estimate';
+import { estimateRange, isRough, rawRange } from '../../core/estimate';
 import type { AttrKey, CarDesign, CarStats, DevBonus, Estimate, GameState, SegmentId } from '../../core/types';
 import { kmh, litres, money, secs } from '../format';
 import { RangeBar, ScoreBar } from './ui';
@@ -14,6 +14,26 @@ export function useCarStats(design: CarDesign, yf: number, bonus?: DevBonus): Ca
   const key = JSON.stringify(design) + Math.floor(yf) + JSON.stringify(bonus ?? null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => computeCarStats(design, yf, bonus), [key]);
+}
+
+/** The engineers' quote for a measured quantity: a range while they are unsure. */
+function estimatedRaw(k: AttrKey, st: CarStats, yf: number, seg: SegmentId, est: Estimate): string {
+  const range = (v: number, digits: number, unit: string) => {
+    const [lo, hi] = rawRange(est, k, v);
+    return `${lo.toFixed(digits)}–${hi.toFixed(digits)} ${unit}`;
+  };
+  switch (k) {
+    case 'accel': {
+      const m = accelMetric(st, eraReference(yf, seg));
+      return m.value === null || m.value >= 99 ? `${m.label}: —` : `${m.label}: ${range(m.value, 0, 'sn')}`;
+    }
+    case 'topSpeed':
+      return range(st.topSpeed, 0, 'km/s');
+    case 'economy':
+      return range(st.fuel, 1, 'L/100km');
+    default:
+      return '';
+  }
 }
 
 function rawValue(k: AttrKey, st: CarStats, yf: number, seg: SegmentId): string {
@@ -50,7 +70,6 @@ export function StatsPanel(props: {
   segment: SegmentId;
   yf: number;
   bonus?: DevBonus;
-  targetPrice?: number;
   compact?: boolean;
   note?: string;
   /** When given, show engineers' ranges instead of exact scores and keep the buyers' verdict hidden. */
@@ -58,14 +77,16 @@ export function StatsPanel(props: {
 }) {
   const { s, design, segment, yf } = props;
   const st = useCarStats(design, yf, props.bonus);
-  const scores = scoreStats(st, yf, segment);
+  // Engineers know their own workshop: its inexperience is part of the estimate.
+  const scores = applyWorkshopPenalty(scoreStats(st, yf, segment), workshopPenalty(s));
   const hq = s.company.hq;
   const ap = appeal(scores, segment, hq, yf);
   const ci = costIndex(yf);
   const unit = st.unitCost * ci;
   const approxCost = unit * (1 + labourShare(yf) * 0.8);
   const ref = referencePrice(hq, segment, yf);
-  const target = props.targetPrice ?? ref;
+  // Price is decided at launch; while designing, the class's typical price is the yardstick.
+  const target = ref;
   const eu = activeTax('europe', yf);
   const est = props.estimate;
   const measurable = (k: AttrKey) => k === 'accel' || k === 'topSpeed' || k === 'economy';
@@ -78,6 +99,9 @@ export function StatsPanel(props: {
             <div className="muted small">
               Alıcıların {segmentDef(segment).name.toLowerCase()} için ne diyeceği lansmanda belli olur. Aralıklar sınıf ortalamasına (çizgi) göre; testler aralıkları daraltır.
             </div>
+            {(est.experience ?? 1) > 1.5 && (
+              <div className="small tone-warn">Ekibin ilk arabalarından biri: tahminler kaba ve yanılabilir. Her yeni model ekibini keskinleştirir.</div>
+            )}
             {props.note && <div className="muted small">{props.note}</div>}
           </div>
         ) : (
@@ -99,7 +123,7 @@ export function StatsPanel(props: {
                 {!est && <Importance s={s} segment={segment} attr={k} />}
               </div>
               <div className="sp-raw">
-                {!est ? rawValue(k, st, yf, segment) : measurable(k) ? `${isRough(est, k) ? '≈ ' : ''}${rawValue(k, st, yf, segment)}` : isRough(est, k) ? 'kaba tahmin' : 'ölçüldü'}
+                {!est ? rawValue(k, st, yf, segment) : measurable(k) ? (isRough(est, k) ? estimatedRaw(k, st, yf, segment, est) : rawValue(k, st, yf, segment)) : isRough(est, k) ? 'kaba tahmin' : 'ölçüldü'}
               </div>
               {r ? <RangeBar lo={r.lo} hi={r.hi} rough={isRough(est!, k)} /> : <ScoreBar value={scores[k]} />}
             </div>
@@ -124,13 +148,9 @@ export function StatsPanel(props: {
             <span>Tahmini toplam maliyet</span>
             <b>{money(approxCost)}</b>
           </div>
-          <div>
-            <span>Hedef fiyat</span>
-            <b className={approxCost > target * 0.9 ? 'tone-bad' : ''}>{money(target)}</b>
-          </div>
-          <div>
+          <div title="Bu fiyattan satarsan bayi payından sonra araç başına kalan">
             <span>Sınıfın tipik fiyatı</span>
-            <b>{money(ref)}</b>
+            <b className={approxCost > target * 0.9 ? 'tone-bad' : ''}>{money(ref)}</b>
           </div>
           <div title="1 = sıradan araç. Yüksekse hat daha yavaş çalışır.">
             <span>Üretim zorluğu</span>

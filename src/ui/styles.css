@@ -2484,3 +2484,6 @@ fieldset {
   cursor: pointer;
   font: inherit;
 }
+.bubble-quality {
+  background: var(--series-5, var(--good));
+}

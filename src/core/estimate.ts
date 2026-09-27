@@ -1,6 +1,6 @@
 import { ATTRS } from '../data/segments';
 import type { Rng } from './rng';
-import type { AttrKey, Estimate, Project, TestId } from './types';
+import type { AttrKey, Estimate, GameState, Project, TestId } from './types';
 
 // Before launch the player only sees engineers' estimates: a range per attribute.
 // Buyers' verdict (the appeal) stays hidden until the launch. Tests narrow the ranges.
@@ -37,15 +37,28 @@ const TEST_NARROW: Record<TestId, Partial<Record<AttrKey, number>>> = {
   durability: { reliability: 0.88, comfort: 0.95 },
 };
 
-export function newEstimate(rng: Rng): Estimate {
+/**
+ * How much wider a green team's guesses are: about 2.2x for a company's first
+ * car, shrinking with every launch and with engineering skill.
+ */
+export function experienceFactor(s: GameState): number {
+  const launched = s.company.modelsLaunched ?? 0;
+  const greenness = Math.min(1, Math.max(0.2, (80 - s.company.skill) / 50));
+  return 1 + 1.3 * Math.exp(-launched / 2) * greenness;
+}
+
+export function newEstimate(rng: Rng, experience = 1): Estimate {
   const offsets = {} as Record<AttrKey, number>;
   const width = {} as Record<AttrKey, number>;
   for (const k of ATTRS) {
     offsets[k] = rng() * 2 - 1;
-    width[k] = INITIAL_WIDTH[k];
+    width[k] = INITIAL_WIDTH[k] * experience;
   }
-  return { offsets, width };
+  return { offsets, width, experience };
 }
+
+/** A green team cannot pin things down as tightly, however long it tests. */
+const minWidth = (est: Estimate, k: AttrKey) => MIN_WIDTH[k] * (1 + 0.6 * ((est.experience ?? 1) - 1));
 
 /** Older saves have no estimate: give them a neutral one. */
 export function ensureEstimate(p: Project): Estimate {
@@ -55,12 +68,23 @@ export function ensureEstimate(p: Project): Estimate {
 
 export function narrowForTest(est: Estimate, test: TestId) {
   for (const [k, f] of Object.entries(TEST_NARROW[test]) as [AttrKey, number][]) {
-    est.width[k] = Math.max(MIN_WIDTH[k], est.width[k] * f);
+    est.width[k] = Math.max(minWidth(est, k), est.width[k] * f);
   }
 }
 
 /** Is the estimate for this attribute still rough? */
-export const isRough = (est: Estimate, k: AttrKey) => est.width[k] > MIN_WIDTH[k] + 1.5;
+export const isRough = (est: Estimate, k: AttrKey) => est.width[k] > minWidth(est, k) + 1.5;
+
+/**
+ * A measured quantity (seconds, km/h, litres) as the engineers would quote it:
+ * a range that is as wide, and as off-centre, as their score estimate.
+ */
+export function rawRange(est: Estimate, k: AttrKey, raw: number): [number, number] {
+  // Multiplicative, so a wide guess never runs down to nonsense like 2 L/100km.
+  const rel = est.width[k] / (k === 'topSpeed' ? 70 : 50);
+  const shift = est.offsets[k] * 0.6 * rel * (k === 'topSpeed' ? 1 : -1);
+  return [raw * Math.exp(shift - rel), raw * Math.exp(shift + rel)];
+}
 
 export function estimateRange(est: Estimate, k: AttrKey, trueScore: number): { lo: number; hi: number; mid: number } {
   const w = est.width[k];

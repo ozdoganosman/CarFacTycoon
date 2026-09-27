@@ -34,8 +34,16 @@ export function initRivals(): RivalCompany[] {
   return RIVALS.map(initRival);
 }
 
-/** Saves from older versions lack companies added since: give them a fresh record. */
+/**
+ * Saves from other builds: give companies added since a fresh record, and let
+ * go of companies (and their cars) that no longer exist.
+ */
 export function ensureRivals(state: GameState) {
+  const known = new Set(RIVALS.map((r) => r.id));
+  if (state.rivals.some((c) => !known.has(c.id))) {
+    state.rivals = state.rivals.filter((c) => known.has(c.id));
+    state.rivalModels = state.rivalModels.filter((m) => known.has(m.companyId));
+  }
   for (const def of RIVALS) if (!state.rivals.some((c) => c.id === def.id)) state.rivals.push(initRival(def));
 }
 

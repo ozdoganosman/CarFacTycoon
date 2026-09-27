@@ -118,6 +118,7 @@ function CapacityPlanner() {
                     </span>
                     {d > c * 1.1 && <span className="small tone-bad">~{(d - c).toFixed(0)} araç/hf kaçıyor</span>}
                   </button>
+                  <Toggle checked={!!x.autoCapacity} onChange={(v) => store.act((st) => A.setModelAutoCapacity(st, x.id, v))} label="Otomatik" title="Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır." />
                 </div>
               );
             })}

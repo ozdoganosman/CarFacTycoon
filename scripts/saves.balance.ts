@@ -20,6 +20,23 @@ test('generate an early launch save', () => {
   console.log('early launch week', s.week, s.models.map((m) => m.name + ':' + m.segment).join(','), 'modals', s.modals.length);
 });
 
+test('generate a first project and a 1940 project', () => {
+  // A brand-new company designing its first car: wide, green estimates.
+  const s = newGame({ companyName: 'Öncü Motor', hq: 'usa', seed: 7 });
+  s.modals = [];
+  const r = A.startProject(s, { name: 'Model A', segment: 'family', targetPrice: 0 });
+  if (!r.ok) throw new Error(r.error);
+  writeFileSync(`${OUT}/save-novice.json`, serialize(s));
+  // The same company in 1940, with a pickup project where diesel is on offer.
+  const t = newGame({ companyName: 'Öncü Motor', hq: 'europe', seed: 8 });
+  runBot(t, 52 * 40, { segments: ['family', 'city'] });
+  t.modals = [];
+  t.projects = [];
+  const q = A.startProject(t, { name: 'Yük 40', segment: 'pickup', targetPrice: 0 });
+  if (!q.ok) throw new Error(q.error);
+  writeFileSync(`${OUT}/save-1940.json`, serialize(t));
+});
+
 test('generate saves', () => {
   const s = newGame({ companyName: 'Anadolu Motor', hq: 'usa', seed: 7 });
   runBot(s, 52 * 12 + 20, { segments: ['family', 'city'] });

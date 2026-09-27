@@ -24,9 +24,9 @@ claude.ai içinde oyuncu izin verirse oyun kendi kaydını sayfanın veritabanı
 ## Ana döngü
 
 1. **Proje:** Segmenti (şehir arabası, aile, spor, pikap, lüks, 1946’dan sonra arazi aracı) ve hedef fiyatı seç.
-2. **Tasarım ve geliştirme:** Şasi, gövde, motor, şanzıman, süspansiyon, güvenlik ve iç mekân modülleri (her modül dönemine göre açılır). Mühendisleri ata; odağı performans, verim, konfor, güvenlik ve maliyet arasında dağıt. Lansmana kadar yalnızca mühendis tahminleri (aralıklar) görünür; testler aralıkları daraltır.
-3. **Test:** Dinamometre, yol, dayanıklılık ve 1934’ten sonra çarpışma testi. Testi kısa kesersen erken çıkarsın ama gizli kusurlar sahada patlar.
-4. **Üretim:** Yap ya da satın al (motor, şanzıman, elektrik), hat seçimi, kalıplar. **Kapasite planlayıcı** tek tıkla dengeli, tam donanımlı hatlar kurar ve eski hatları yeni makinelerle yeniler; darboğaz bölümüne gece vardiyası eklenebilir.
+2. **Tasarım ve geliştirme:** Şasi, gövde, motor (1936’dan sonra dizel de), şanzıman, süspansiyon, güvenlik ve iç mekân modülleri (her modül dönemine göre açılır). Mühendisleri ata; odağı performans, verim, konfor, güvenlik, maliyet ve kalite arasında dağıt. Odak aracı belirgin biçimde değiştirir (tek alana yüklenmek gücü %25’e kadar artırabilir). Lansmana kadar yalnızca mühendis tahminleri (aralıklar) görünür; tecrübesiz bir ekibin tahminleri çok daha geniştir ve testler aralıkları daraltır.
+3. **Test:** Dinamometre, yol, dayanıklılık ve 1934’ten sonra çarpışma testi. Testler adıyla anılan kusurları bulur (“Frenler: balatalar çok erken bitiyor”) ve aracı ayarlar (güç, tüketim, konfor, yol tutuş, güvenlik, güvenilirlik). İlk arabalarında bir firma çok daha fazla kusur yapar; testi kısa kesersen kusurlar sahada patlar.
+4. **Üretim:** Yap ya da satın al (motor, şanzıman, elektrik), hat seçimi, kalıplar. **Talebi otomatik karşıla** açıksa fabrika her ay en ucuz ek kapasiteyi alır (darboğaza istasyon, hattı genişletme, yeni makine, yeni hat), marjı sağlıksızsa büyümez, talep düşerse fazla hatları satar. **Kapasite planlayıcı** tek tıkla dengeli hatlar kurar ve eski hatları yeniler; darboğaz bölümüne gece vardiyası eklenebilir.
 5. **Lansman:** Fiyat, pazarlar, otomobil fuarı. Perde açılır, üç dergi puan verir, araç segmentteki bütün rakiplerle karşılaştırılır; bir ay sonra ilk ay raporu gelir.
 6. **Satış sonrası:** Müşteri yorumları, arızalar, geri çağırma ya da sessiz kalma kararı, makyaj ve yeni kuşak.
 
@@ -41,7 +41,7 @@ Oyun her tasarımdan 0-100 (erken dönemde 0-50), son hız, tüketim, konfor, yo
 | Gizli ağırlıklar rastgele hissettirebilir | Aylık müşteri yorumları (“Pikap alıcıları güvenilirlikten şikâyetçi”), dergi alıntıları, doldurulan segment bilgisi tablosu, ücretli pazar araştırması ve model ekranında “Neden bu kadar satıyor?” dökümü (çekicilik, fiyat, marka, yenilik, erişim, rakipler). |
 | Tasarım hayal gücüne yer bırakmalı | Yeni proje sınıfın tipik aracıyla değil, şirketin son aracıyla (ilk projede sade bir atölye arabasıyla) başlar. Tasarım ve test sırasında önem noktaları gösterilmez; segment metinleri alıcının ne istediğini değil kim olduğunu anlatır. |
 | Puanlar döneme göre olmalı | Her puan o yılın aynı sınıftaki ortalama aracına göre hesaplanır (50 = ortalama). Eski modeller kendiliğinden eskir. |
-| Rakipler gerekli | 17 büyük ve 44 küçük kurgusal üretici. Küçükler 1900-1915 arasında dalgalar hâlinde kurulur, çoğu Buhran’a kadar kapanır. 1900’den itibaren her pazarda her segmentte isimli rakip var (testle korunur). Bir segmentte payın büyürse rakipler yeni modellerini erken ve daha iyi çıkarır. Araçları oyuncunun kullandığı hesaplayıcıyla bir yapay tasarımcı üretir. |
+| Rakipler gerekli | 17 büyük ve yaklaşık 220 küçük kurgusal üretici; 1930’a kadar her açık sınıfta 10-15, sonra 6-10 isimli araç. Küçükler kurulur, kapanır, yerlerine yenileri gelir. Yeni bir firmanın ilk arabaları işçilik yüzünden daha az güvenilir, konforlu ve prestijlidir. 1900’den itibaren her pazarda her segmentte isimli rakip var (testle korunur). Bir segmentte payın büyürse rakipler yeni modellerini erken ve daha iyi çıkarır. Araçları oyuncunun kullandığı hesaplayıcıyla bir yapay tasarımcı üretir. |
 | Sistemler kademeli açılmalı | İhracat ve yap-ya-da-al ikinci modelle, platform ve motor paylaşımı üçüncü modelle açılır. |
 
 ### Tarihten mekaniğe

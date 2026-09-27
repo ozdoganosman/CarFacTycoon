@@ -2,6 +2,7 @@ import { costIndex } from '../data/economy';
 import { poisson, type Rng } from './rng';
 import type {
   CarStats,
+  DevBonus,
   ComponentKey,
   Defect,
   DefectArea,
@@ -88,8 +89,13 @@ const AREA_SHARE: Record<DefectArea, number> = {
 const SEVERITY_SHARE: Record<Severity, number> = { minor: 0.55, major: 0.32, critical: 0.13 };
 const SEVERITY_VISIBILITY: Record<Severity, number> = { minor: 0.8, major: 1, critical: 1.25 };
 
-export function expectedDefects(stats: CarStats, skill: number): number {
-  return (2 + 3.5 * stats.complexity) * (1.35 - skill / 100) * (1 + Math.max(0, 60 - stats.reliability) / 40);
+/**
+ * Latent defects a design comes out of development with. A company building
+ * its first cars makes many more mistakes; each launch teaches it.
+ */
+export function expectedDefects(stats: CarStats, skill: number, modelsLaunched = 3): number {
+  const novice = 1 + 1.0 * Math.exp(-modelsLaunched / 1.5);
+  return (2 + 3.5 * stats.complexity) * (1.35 - skill / 100) * (1 + Math.max(0, 60 - stats.reliability) / 40) * novice;
 }
 
 function pickWeighted<K extends string>(rng: Rng, weights: Record<K, number>): K {
@@ -209,4 +215,94 @@ export function failureRate(
     r += { minor: 0.0003, major: 0.0008, critical: 0.0005 }[d.severity] * mult;
   }
   return r;
+}
+
+// ---------------- What a defect is ----------------
+
+const DEFECT_TEXTS: Record<DefectArea, Record<Severity, string[]>> = {
+  engine: {
+    minor: ['Rölanti düzensiz', 'Yağ keçesi sızdırıyor', 'Karbüratör ayarı kayıyor', 'Egzoz manifoldu çatırdıyor'],
+    major: ['Silindir kapağı contası üflüyor', 'Supaplar erken yanıyor', 'Motor tırmanışta aşırı ısınıyor', 'Su pompası sızdırıyor'],
+    critical: ['Krank mili yatağı eriyor', 'Biyel kolu kırılıyor', 'Motor bloğu soğukta çatlıyor'],
+  },
+  gearbox: {
+    minor: ['Vites geçişleri sert', 'Şanzıman uğulduyor', 'Vites kolu titriyor'],
+    major: ['İkinci vites boşa atıyor', 'Debriyaj kayıyor', 'Diferansiyel ısınıp uğulduyor'],
+    critical: ['Dişliler yük altında kırılıyor', 'Aks mili kırılıyor'],
+  },
+  chassis: {
+    minor: ['Makaslar gıcırdıyor', 'Direksiyon titriyor', 'Bijonlar gevşiyor'],
+    major: ['Makas yaprakları çatlıyor', 'Direksiyon boşluğu hızla artıyor', 'Rot başları çabuk aşınıyor'],
+    critical: ['Şasi kaynağı çatlıyor', 'Ön aks yerinden oynuyor'],
+  },
+  electrics: {
+    minor: ['Farlar sarsıntıda sönüyor', 'Korna ara sıra susuyor', 'Arka lamba bağlantısı kopuyor'],
+    major: ['Ateşleme nemli havada tekliyor', 'Dinamo aküyü dolduramıyor', 'Akü çabuk bitiyor'],
+    critical: ['Kablo tesisatı ısınıp tutuşuyor', 'Ateşleme bobini yolda yanıyor'],
+  },
+  brakes: {
+    minor: ['Balatalar gıcırdıyor', 'Fren pedalı boşluk yapıyor', 'El freni yokuşta tutmuyor'],
+    major: ['Frenler bir yana çekiyor', 'Balatalar çok erken bitiyor', 'Kampanalar ısınınca fren zayıflıyor'],
+    critical: ['Fren çubuğu kopuyor', 'Fren kampanası çatlıyor'],
+  },
+  body: {
+    minor: ['Kapılar tıkırdıyor', 'Boya çabuk çatlıyor', 'Çamurluklar titriyor'],
+    major: ['Gövde yağmurda su alıyor', 'Menteşeler sarkıyor', 'Kaporta sacı titreşimden çatlıyor'],
+    critical: ['Kapı kilidi yolda açılıyor', 'Gövde bağlantıları şasiden sökülüyor'],
+  },
+};
+
+/** A defect in words; the same defect always reads the same. */
+export function defectText(d: Defect): string {
+  const list = DEFECT_TEXTS[d.area][d.severity];
+  let h = 0;
+  for (const c of d.id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return list[h % list.length];
+}
+
+/** Rough range for a Poisson count: what "about λ" means in practice. */
+export function defectRange(lambda: number): [number, number] {
+  const sd = Math.sqrt(Math.max(0, lambda));
+  return [Math.max(0, Math.round(lambda - sd)), Math.round(lambda + sd)];
+}
+
+// ---------------- What testing teaches the car ----------------
+
+/** Each test also tunes the car; gains flatten out over about ten weeks. */
+const TUNING: Record<TestId, Partial<Record<'power' | 'fuel' | 'comfort' | 'handling' | 'safety' | 'reliability', number>>> = {
+  dyno: { power: 0.06, fuel: 0.06 },
+  road: { comfort: 5, handling: 6 },
+  crash: { safety: 8 },
+  durability: { reliability: 5 },
+};
+
+export interface Tuning {
+  power: number;
+  fuel: number;
+  comfort: number;
+  handling: number;
+  safety: number;
+  reliability: number;
+}
+
+export function testTuning(tests: Record<TestId, { done: number }>): Tuning {
+  const t: Tuning = { power: 0, fuel: 0, comfort: 0, handling: 0, safety: 0, reliability: 0 };
+  for (const [id, gains] of Object.entries(TUNING) as [TestId, Partial<Tuning>][]) {
+    const f = 1 - Math.exp(-(tests[id]?.done ?? 0) / 10);
+    for (const [k, v] of Object.entries(gains) as [keyof Tuning, number][]) t[k] += v * f;
+  }
+  return t;
+}
+
+export function withTuning(bonus: DevBonus, tests: Record<TestId, { done: number }>): DevBonus {
+  const t = testTuning(tests);
+  return {
+    ...bonus,
+    powerMult: bonus.powerMult * (1 + t.power),
+    fuelMult: bonus.fuelMult * (1 - t.fuel),
+    comfort: bonus.comfort + t.comfort,
+    handling: (bonus.handling ?? 0) + t.handling,
+    safety: bonus.safety + t.safety,
+    reliability: bonus.reliability + t.reliability,
+  };
 }

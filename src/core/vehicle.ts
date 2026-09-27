@@ -164,9 +164,12 @@ function fuelAt(d: DriveModel, eng: EngineStats, v: number, extraEnergyJ: number
   const pAvail = (torqueAt(d.tc, rpm) * rpm * 2 * Math.PI) / 60;
   const load = Math.min(1, Math.max(0.03, pNeed / Math.max(1, pAvail)));
   // Throttled engines waste energy pumping air; spinning fast wastes it on friction.
-  const eta = eng.peakEfficiency * (0.3 + 0.7 * Math.sqrt(load)) * (1 - 0.25 * (rpm / d.tc.redline) ** 2);
+  // A diesel has no throttle to pump against, so it stays efficient at part load.
+  const partLoad = eng.diesel ? 0.55 + 0.45 * Math.sqrt(load) : 0.3 + 0.7 * Math.sqrt(load);
+  const eta = eng.peakEfficiency * partLoad * (1 - 0.25 * (rpm / d.tc.redline) ** 2);
   const energy = roadLoadN(d, v) * 1e5 + extraEnergyJ; // J per 100 km at the wheels
-  return (REAL_WORLD_FUEL * energy) / (eta * d.eta) / (FUEL_MJ_PER_L * 1e6);
+  // Diesel fuel carries about 12% more energy per litre.
+  return (REAL_WORLD_FUEL * energy) / (eta * d.eta) / (FUEL_MJ_PER_L * (eng.diesel ? 1.12 : 1) * 1e6);
 }
 
 export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus = NO_BONUS): CarStats {
@@ -264,7 +267,8 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
     body.cog +
     8 * (1 - design.size) -
     Math.min(18, Math.max(-6, (mass - 800) / 70)) +
-    sum('handling');
+    sum('handling') +
+    (bonus.handling ?? 0);
 
   const safety =
     10 +
@@ -290,7 +294,8 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
     bonus.reliability;
 
   const prestige =
-    10 +
+    10 -
+    (design.engine.fuel === 'diesel' ? 3 : 0) +
     25 * design.styling +
     body.prestige +
     12 * design.size +

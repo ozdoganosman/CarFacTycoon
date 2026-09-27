@@ -19,7 +19,7 @@ import {
 } from './game';
 import { modelScores, referencePrice } from './market';
 import { stateRng } from './rng';
-import { newEstimate } from './estimate';
+import { experienceFactor, newEstimate } from './estimate';
 import { TESTS, SUPPLIERS, expectedDefects, generateDefects } from './testing';
 import { yearFloat } from './time';
 import type {
@@ -136,13 +136,14 @@ export function startProject(s: GameState, o: StartProjectOptions): { ok: true; 
     phase: 'design',
     createdWeek: s.week,
     engineers: Math.max(1, free),
-    dev: { required: 0, done: 0, focus: evenFocus(), points: { performance: 0, efficiency: 0, comfort: 0, safety: 0, cost: 0 } },
+    dev: { required: 0, done: 0, focus: evenFocus(), points: { performance: 0, efficiency: 0, comfort: 0, safety: 0, cost: 0, quality: 0 } },
     defects: [],
     defectPrior: 0,
     tests: { dyno: { planned: 4, done: 0 }, road: { planned: 8, done: 0 }, crash: { planned: 0, done: 0 }, durability: { planned: 8, done: 0 } },
     testWeeks: 0,
     suppliers: { engine: 'quality', gearbox: 'quality', electrics: 'quality' },
-    estimate: newEstimate(stateRng(s)),
+    estimate: newEstimate(stateRng(s), experienceFactor(s)),
+    autoCapacity: true,
   };
   decide(s, 'project:' + id, `Yeni proje: ${p.name} (${o.segment}, hedef fiyat ${money(o.targetPrice)}${plat ? ', ortak platform' : ''}${eng ? ', ortak motor' : ''})`);
   s.projects.push(p);
@@ -168,7 +169,7 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
     phase: 'design',
     createdWeek: s.week,
     engineers: Math.max(1, free),
-    dev: { required: 0, done: 0, focus: evenFocus(), points: { performance: 0, efficiency: 0, comfort: 0, safety: 0, cost: 0 } },
+    dev: { required: 0, done: 0, focus: evenFocus(), points: { performance: 0, efficiency: 0, comfort: 0, safety: 0, cost: 0, quality: 0 } },
     defects: [],
     defectPrior: 0,
     tests: { dyno: { planned: 0, done: 0 }, road: { planned: 3, done: 0 }, crash: { planned: 0, done: 0 }, durability: { planned: 0, done: 0 } },
@@ -176,7 +177,7 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
     suppliers: { ...m.suppliers },
     // Engineers already know the car well: a facelift starts with tighter estimates.
     estimate: (() => {
-      const e = newEstimate(stateRng(s));
+      const e = newEstimate(stateRng(s), experienceFactor(s));
       for (const k of Object.keys(e.width) as (keyof typeof e.width)[]) e.width[k] *= 0.6;
       return e;
     })(),
@@ -252,8 +253,9 @@ export function finishDevelopment(s: GameState, pid: string): ActionResult {
   if (p.dev.done < p.dev.required) return fail('Geliştirme henüz tamamlanmadı.');
   const yf = yearFloat(s.week);
   p.bonus = bonusFromPoints(p.dev.points, p.dev.required, p.dev.done, s.company.skill);
+  p.devBonus = p.bonus;
   const stats = computeCarStats(p.design, yf, p.bonus);
-  let lambda = expectedDefects(stats, s.company.skill);
+  let lambda = expectedDefects(stats, s.company.skill, s.company.modelsLaunched) * (p.bonus.defectMult ?? 1);
   if (p.kind === 'facelift') lambda *= 0.3;
   else {
     if (p.engineRefId) lambda *= 0.8;
@@ -462,6 +464,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
     indexPrice: true,
     markets,
     productionRate: 1,
+    autoCapacity: p.autoCapacity ?? true,
     inventory: 0,
     suppliers: p.suppliers,
     defects: p.defects,
@@ -703,6 +706,19 @@ export function setNightShift(s: GameState, lineId: string, stage: StageId, on: 
   line.nightShift = { ...line.nightShift, [stage]: on };
   decide(s, `night:${lineId}:${stage}`, `${line.name} ${stage}: gece vardiyası ${on ? 'açık' : 'kapalı'}`);
   return ok;
+}
+
+export function setProjectAutoCapacity(s: GameState, pid: string, on: boolean) {
+  const p = project(s, pid);
+  p.autoCapacity = on;
+  decide(s, 'autocap:' + pid, `${p.name}: talebi otomatik karşıla ${on ? 'açık' : 'kapalı'}`);
+}
+
+export function setModelAutoCapacity(s: GameState, id: string, on: boolean) {
+  const m = model(s, id);
+  m.autoCapacity = on;
+  m.lowDemandMonths = 0;
+  decide(s, 'autocap:' + id, `${m.name}: talebi otomatik karşıla ${on ? 'açık' : 'kapalı'}`);
 }
 
 export function setLineMilitary(s: GameState, lineId: string, military: boolean): ActionResult {

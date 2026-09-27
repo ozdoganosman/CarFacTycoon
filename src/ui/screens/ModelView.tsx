@@ -4,7 +4,7 @@ import { materialUnitCost } from '../../core/game';
 import { lineReport } from '../../core/factory';
 import { consumerPrice, demandAtPrice, modelScores, priceNow, segmentMarket } from '../../core/market';
 import { eraReference } from '../../core/scoring';
-import { AREA_NAMES, SEVERITY_NAMES } from '../../core/testing';
+import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { formatDate, formatShort, yearFloat } from '../../core/time';
 import { MARKETS } from '../../data/markets';
 import { RIVALS } from '../../data/rivals';
@@ -114,12 +114,19 @@ export function ModelView({ modelId }: { modelId: string }) {
           />
           {active && (
             <>
+              <Toggle
+                checked={!!m.autoCapacity}
+                onChange={(v) => store.act((st) => A.setModelAutoCapacity(st, m.id, v))}
+                label="Talebi otomatik karşıla"
+                sub="Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır."
+              />
               <Slider
                 label="Üretim hızı"
                 value={Math.round(m.productionRate * 100)}
                 min={0}
                 max={100}
                 step={5}
+                disabled={!!m.autoCapacity}
                 onChange={(v) => store.act((st) => A.setProductionRate(st, m.id, v / 100))}
                 format={(v) => `%${v} · ${((cap * v) / 100).toFixed(1)} araç/hafta`}
                 hint="Talep düşükse üretimi kıs: stok bekletmek para bağlar ve depolama masrafı çıkarır."
@@ -182,7 +189,7 @@ export function ModelView({ modelId }: { modelId: string }) {
       <div className="grid-2">
         <Panel title="Araç">
           <CarSVG body={m.design.body} size={m.design.size} year={yearFloat(m.refreshWeek)} cylinders={m.design.engine.cylinders} styling={m.design.styling} />
-          <StatsPanel s={s} design={m.design} segment={m.segment} yf={yf} bonus={m.bonus} targetPrice={priceNow(m, s.week)} compact />
+          <StatsPanel s={s} design={m.design} segment={m.segment} yf={yf} bonus={m.bonus} compact />
           <p className="muted small">Puanlar bugünün sınıf ortalamasına göre. Model yaşlandıkça rakipler gelişir ve puanlar düşer.</p>
         </Panel>
         <div>
@@ -231,7 +238,7 @@ export function ModelView({ modelId }: { modelId: string }) {
                   .map((d) => (
                     <li key={d.id}>
                       <Badge tone={d.fixed ? 'good' : d.ignored ? 'bad' : 'warn'}>{d.fixed ? 'Giderildi' : d.ignored ? 'Gizlendi' : 'Açık'}</Badge> {SEVERITY_NAMES[d.severity]}{' '}
-                      {AREA_NAMES[d.area].toLowerCase()} kusuru
+                      {AREA_NAMES[d.area].toLowerCase()} kusuru: {defectText(d).toLowerCase()}
                     </li>
                   ))}
               </ul>

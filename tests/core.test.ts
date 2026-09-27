@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as A from '../src/core/actions';
-import { aiDesign, referenceDesigns } from '../src/core/ai';
+import { aiDesign, referenceBonus, referenceDesigns } from '../src/core/ai';
 import { computeEngine, displacementCc, racHp } from '../src/core/engine';
 import { lineReport } from '../src/core/factory';
 import { newGame, tick } from '../src/core/game';
@@ -15,6 +15,10 @@ import type { CarDesign } from '../src/core/types';
 import { RIVALS } from '../src/data/rivals';
 import { SEGMENTS } from '../src/data/segments';
 import { inYear } from '../src/ui/format';
+import { FOCUS_KEYS, bonusFromPoints } from '../src/core/development';
+import { experienceFactor } from '../src/core/estimate';
+import { autoCapacity } from '../src/core/autocap';
+import type { FocusKey } from '../src/core/types';
 import { store } from '../src/ui/store';
 import { runBot } from '../scripts/bot';
 
@@ -79,7 +83,7 @@ describe('vehicle', () => {
 describe('scoring', () => {
   it('the class reference scores around 50', () => {
     for (const year of [1905, 1930, 1955]) {
-      const refs = referenceDesigns(year, 'family').map((d) => computeCarStats(d, year));
+      const refs = referenceDesigns(year, 'family').map((d) => computeCarStats(d, year, referenceBonus()));
       const scores = refs.map((s) => scoreStats(s, year, 'family'));
       const avgComfort = scores.reduce((a, s) => a + s.comfort, 0) / scores.length;
       expect(avgComfort).toBeGreaterThan(35);
@@ -275,6 +279,42 @@ describe('clock', () => {
     store.act(A.dismissModal);
     expect(store.speed).toBe(0);
     store.quit();
+  });
+});
+
+describe('engineering', () => {
+  it('a diesel burns far less fuel but makes less power', () => {
+    const { design } = aiDesign('family', 1950, { style: 'mass', skill: 55, market: 'europe' }, () => 0.5);
+    const petrol = computeCarStats(design, 1950);
+    const diesel = computeCarStats({ ...design, engine: { ...design.engine, fuel: 'diesel', compression: 17 } }, 1950);
+    expect(diesel.fuel).toBeLessThan(petrol.fuel * 0.8);
+    expect(diesel.engine.powerHp).toBeLessThan(petrol.engine.powerHp);
+    expect(diesel.engine.knocking).toBe(false);
+  });
+
+  it('focus makes a real difference and a green team guesses widely', () => {
+    const all = (k: FocusKey) => Object.fromEntries(FOCUS_KEYS.map((x) => [x, x === k ? 1 : 0])) as Record<FocusKey, number>;
+    const perf = bonusFromPoints(all('performance'), 1, 1, 50);
+    const econ = bonusFromPoints(all('efficiency'), 1, 1, 50);
+    expect(perf.powerMult).toBeGreaterThan(1.2);
+    expect(econ.fuelMult).toBeLessThan(0.82);
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 10 });
+    expect(experienceFactor(s)).toBeGreaterThan(1.8);
+    s.company.modelsLaunched = 6;
+    s.company.skill = 70;
+    expect(experienceFactor(s)).toBeLessThan(1.1);
+  });
+
+  it('automatic capacity follows demand', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 12 });
+    runBot(s, 52 * 2, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active')!;
+    A.setModelAutoCapacity(s, m.id, true);
+    m.lastDemand = { usa: 60, europe: 0 };
+    s.company.cash = 5e6;
+    autoCapacity(s, () => 100);
+    const cap = s.lines.filter((l) => l.modelId === m.id).reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
+    expect(cap).toBeGreaterThan(45);
   });
 });
 

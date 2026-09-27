@@ -16,7 +16,7 @@ export type AttrKey =
   | 'prestige'
   | 'practicality';
 
-export type FocusKey = 'performance' | 'efficiency' | 'comfort' | 'safety' | 'cost';
+export type FocusKey = 'performance' | 'efficiency' | 'comfort' | 'safety' | 'cost' | 'quality';
 export type ComponentKey = 'engine' | 'gearbox' | 'electrics';
 export type SupplierChoice = 'inhouse' | 'cheap' | 'quality';
 export type TestId = 'dyno' | 'road' | 'crash' | 'durability';
@@ -55,6 +55,8 @@ export interface EngineDesign {
   valvetrain: ValvetrainId;
   fuelSystem: FuelSystemId;
   aspiration: AspirationId;
+  /** Compression ignition (from 1936). Absent means petrol. */
+  fuel?: 'petrol' | 'diesel';
 }
 
 export interface GearboxDesign {
@@ -90,6 +92,10 @@ export interface DevBonus {
   safety: number;
   costMult: number;
   reliability: number;
+  /** Quality work: fewer latent defects when development ends (older saves lack it). */
+  defectMult?: number;
+  /** Chassis tuning from road tests. */
+  handling?: number;
 }
 
 export interface EngineStats {
@@ -109,7 +115,8 @@ export interface EngineStats {
   knocking: boolean;
   /** British RAC ("treasury") horsepower used by the European tax rule. */
   taxHp: number;
-  peakEfficiency: number; // brake thermal efficiency at best point
+  peakEfficiency: number;
+  diesel?: boolean; // brake thermal efficiency at best point
   reliabilityPenalty: number;
 }
 
@@ -159,6 +166,8 @@ export type ProjectPhase = 'design' | 'development' | 'testing' | 'production' |
 export interface Estimate {
   offsets: Record<AttrKey, number>;
   width: Record<AttrKey, number>;
+  /** How green the engineering team is (1 = seasoned; about 2 for a first car). */
+  experience?: number;
 }
 
 export interface LaunchReport {
@@ -205,6 +214,10 @@ export interface Project {
   suppliers: Record<ComponentKey, SupplierChoice>;
   estimate?: Estimate;
   lineId?: string;
+  /** Chosen during production prep; carried to the model at launch. */
+  autoCapacity?: boolean;
+  /** The bonus as development left it; testing adds its tuning on top. */
+  devBonus?: DevBonus;
   productionReadyWeek?: number;
   toolingCost?: number;
   notes?: string[];
@@ -244,6 +257,9 @@ export interface CarModel {
   markets: MarketId[];
   /** Share of its lines' throughput to use, 0..1. Lines point at models via ProductionLine.modelId. */
   productionRate: number;
+  /** Let the factory follow demand: add capacity while buyers wait, give it back when they don't. */
+  autoCapacity?: boolean;
+  lowDemandMonths?: number;
   inventory: number;
   suppliers: Record<ComponentKey, SupplierChoice>;
   defects: Defect[];

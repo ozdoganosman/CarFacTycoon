@@ -196,6 +196,7 @@ export function aiDesign(segment: SegmentId, year: number, o: AiOptions, rng: Rn
     comfort: w.comfort + 0.05,
     safety: w.safety + 0.05,
     cost: o.style === 'mass' || o.style === 'utility' ? 0.3 : 0.1,
+    quality: w.reliability + 0.05,
   };
   return { design, bonus: aiBonus(focus, o.skill) };
 }
@@ -226,6 +227,11 @@ export function enginePresets(year: number): EnginePreset[] {
   mk('big', 'Güçlü', 'Büyük hacim, bol tork. Ağır gövdeleri rahat çeker ama çok yakar.', big, 'family', 'mass', 'usa');
   mk('lux', 'Prestij', 'Çok silindirli, ipek gibi çalışan büyük motor. Pahalı.', lux, 'luxury', 'premium', 'usa');
   if (year >= 1912) mk('race', 'Yarış', 'Üstten kamlı, yüksek devirli motor. Güçlü ama hassas.', interp([[1912, 3.0], [1960, 2.5]], year) * 1000, 'sport', 'sport', 'europe');
+  if (year >= 1936) {
+    const base = aiEngine(interp([[1936, 2.4], [1960, 1.9]], year) * 1000, 'family', year, { style: 'utility', skill: 50, market: 'europe' }, constant);
+    const shaped = withStrokeRatio({ ...base, fuel: 'diesel', compression: 17 }, 1.25, year);
+    presets.push({ id: 'diesel', name: 'Dizel', desc: 'Mazotla çalışır: çok az yakar, dayanıklıdır; ağır, gürültülü ve yavaştır.', design: shaped });
+  }
   return presets;
 }
 
@@ -233,6 +239,8 @@ export function enginePresets(year: number): EnginePreset[] {
 export function withStrokeRatio(e: EngineDesign, ratio: number, year: number): EngineDesign {
   const cc = e.cylinders * (Math.PI / 4) * (e.bore / 10) ** 2 * (e.stroke / 10);
   const { bore, stroke } = boreStrokeFor(cc, e.cylinders, ratio);
+  // A diesel has no knock limit: its compression stays where it is.
+  if (e.fuel === 'diesel') return { ...e, bore, stroke };
   const compression = Math.round(Math.min(e.compression, knockLimit(bore, year) - 0.05) * 10) / 10;
   return { ...e, bore, stroke, compression: Math.max(3.5, compression) };
 }
@@ -254,5 +262,5 @@ export function referenceDesigns(year: number, segment: SegmentId): CarDesign[] 
 }
 
 export function referenceBonus(): DevBonus {
-  return aiBonus({ performance: 0.2, efficiency: 0.2, comfort: 0.25, safety: 0.15, cost: 0.2 }, 55);
+  return aiBonus({ performance: 0.2, efficiency: 0.2, comfort: 0.25, safety: 0.15, cost: 0.2, quality: 0.15 }, 55);
 }
