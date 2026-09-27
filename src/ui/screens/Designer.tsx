@@ -5,6 +5,7 @@ import { DIESEL_COMPRESSION, DIESEL_YEAR, displacementCc, eraRpmCap, isDiesel, k
 import { newEstimate } from '../../core/estimate';
 import { engineNotes, gearboxNotes, suspensionNotes } from '../../core/engineNotes';
 import { knownMaxGears, techState, unknownTech } from '../../core/research';
+import { effectsText, knowhowDef } from '../../data/knowhow';
 import { yearFloat } from '../../core/time';
 import { engineCurve, gearSpeeds, tractionCurves, rollingResistance } from '../../core/vehicle';
 import {
@@ -28,7 +29,7 @@ import { Button, Choice, Info, Slider, Toggle } from '../components/ui';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { CarSVG } from '../viz/CarSVG';
 import { LineChart } from '../viz/LineChart';
-import { FourStroke } from '../cards/animations';
+import { EngineBlock, FourStroke, SuspensionSim } from '../cards/animations';
 
 type Tab = 'chassis' | 'body' | 'engine' | 'gearbox' | 'suspension' | 'safety' | 'equipment';
 const TABS: { id: Tab; label: string }[] = [
@@ -60,6 +61,40 @@ function useTechGate(): (id: string, year: number) => Gate {
     if (st === 'researching') return { disabled: true, short: 'Ar-Ge’de', long: 'Ar-Ge’de araştırılıyor' };
     return { disabled: false };
   };
+}
+
+/** Know-how the car gets from the company without any choice in the designer. */
+function KnowhowStrip({ ids }: { ids: string[] }) {
+  const list = ids.map((id) => knowhowDef(id)).filter((k): k is NonNullable<typeof k> => !!k);
+  return (
+    <div className="knowhow-strip">
+      <span className="muted small">
+        Şirketin bilgi birikimi
+        <Info>
+          <p>Ar-Ge’de araştırılan mühendislik yenilikleri (manyeto ateşleme, amortisör, balon lastik…) bütün yeni tasarımlara kendiliğinden girer.</p>
+          {list.length > 0 && (
+            <ul>
+              {list.map((k) => (
+                <li key={k.id}>
+                  <b>{k.name}:</b> {effectsText(k.effects)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Info>
+        :
+      </span>
+      {list.length ? (
+        list.map((k) => (
+          <span key={k.id} className="kh-chip" title={effectsText(k.effects)}>
+            {k.name}
+          </span>
+        ))
+      ) : (
+        <span className="muted small">henüz yok</span>
+      )}
+    </div>
+  );
 }
 
 /** A line pointing to the research screen when some options wait for research. */
@@ -107,6 +142,7 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
               </button>
             ))}
           </div>
+          <KnowhowStrip ids={d.knowhow ?? []} />
           {readOnly && <p className="note design-locked">Geliştirme başladı: tasarım kilitli. Değişiklik için makyaj ya da yeni kuşak projesi gerekir.</p>}
           <fieldset className="tab-body" disabled={readOnly}>
             {tab === 'chassis' && (
@@ -640,6 +676,7 @@ function EngineTab({
           <b>{money(es.cost)}</b>
         </div>
       </div>
+      <EngineBlock cylinders={e.cylinders} layout={e.layout} bore={e.bore} stroke={e.stroke} diesel={diesel} />
       <div className="engine-viz">
         <div className="engine-anim">
           <FourStroke bore={e.bore} stroke={e.stroke} rpm={Math.round(es.peakPowerRpm)} controls={false} diesel={diesel} />
@@ -916,6 +953,7 @@ function SuspensionTab({
         right="Yol tutuş"
         format={(v) => (v < 0.4 ? 'Yumuşak' : v > 0.6 ? 'Sert' : 'Dengeli')}
       />
+      <SuspensionSim suspension={d.suspension} balance={d.suspBalance} knowhow={d.knowhow} year={yf} />
       <ProsCons intro="Aynı arabaya sınıfın tipik süspansiyonu takılsaydı:" pros={notes.pros} cons={notes.cons} />
     </>
   );

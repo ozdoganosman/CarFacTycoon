@@ -1,4 +1,5 @@
 import { costIndex } from '../data/economy';
+import { KNOWHOW, effectsText } from '../data/knowhow';
 import { ASPIRATIONS, CHASSIS, CYLINDER_OPTIONS, FEATURES, FUEL_SYSTEMS, GEARBOX_TYPES, SUSPENSIONS, VALVETRAINS } from '../data/tech';
 import { DIESEL_YEAR, boreStrokeFor, displacementCc } from './engine';
 import type { CarDesign, GameState } from './types';
@@ -18,7 +19,29 @@ export interface ResearchDef {
   cost: number;
   /** Mature duration in weeks for a team of about ten engineers. */
   weeks: number;
+  /** Technologies that must be known first. */
+  requires: string[];
+  /** Know-how goes into every new design by itself; the rest are options in the designer. */
+  passive: boolean;
+  /** What it does to a car, in a few words. */
+  effects?: string;
 }
+
+/** Which technology leads to which (beyond what the data itself says). */
+const REQUIRES: Record<string, string[]> = {
+  'vt:ohc': ['vt:ohv'],
+  'vt:dohc': ['vt:ohc'],
+  'cyl:6v': ['cyl:6inline'],
+  'cyl:12v': ['cyl:8v'],
+  'cyl:16v': ['cyl:12v'],
+  'fuel:injection': ['fuel:carb2'],
+  'gb:automatic': ['gears:4'],
+  'gears:5': ['gears:4'],
+  'susp:allind': ['susp:ifs'],
+  'chassis:monocoque': ['feat:steelBody'],
+  'feat:airCon': ['feat:heater'],
+  'feat:radio': ['feat:electricLights'],
+};
 
 const COST: Record<string, [number, number]> = {
   'cyl:3inline': [3000, 8],
@@ -56,6 +79,14 @@ const COST: Record<string, [number, number]> = {
   'feat:radio': [6000, 10],
   'feat:powerSteering': [12000, 16],
   'feat:airCon': [20000, 22],
+  'feat:windshield': [2000, 4],
+  'feat:speedometer': [2500, 5],
+  'feat:spareWheel': [1500, 4],
+  'feat:rearMirror': [1000, 3],
+  'feat:wipers': [2500, 5],
+  'feat:fuelGauge': [2000, 4],
+  'feat:turnSignals': [3000, 6],
+  'feat:sealedBeam': [4000, 8],
 };
 
 let cache: ResearchDef[] | null = null;
@@ -64,9 +95,10 @@ let cache: ResearchDef[] | null = null;
 export function researchDefs(): ResearchDef[] {
   if (cache) return cache;
   const out: ResearchDef[] = [];
-  const add = (id: string, name: string, category: ResearchDef['category'], year: number, desc: string) => {
+  const add = (id: string, name: string, category: ResearchDef['category'], year: number, desc: string, extra: Partial<ResearchDef> = {}) => {
     const c = COST[id];
-    if (c && year > 1900) out.push({ id, name, category, year, desc, cost: c[0], weeks: c[1] });
+    if (c && year > 1900)
+      out.push({ id, name, category, year, desc, cost: c[0], weeks: c[1], passive: false, ...extra, requires: [...(REQUIRES[id] ?? []), ...(extra.requires ?? [])] });
   };
   CYLINDER_OPTIONS.forEach((x) => add(`cyl:${x.cylinders}${x.layout}`, x.label, 'Motor', x.year, x.desc));
   VALVETRAINS.forEach((x) => add(`vt:${x.id}`, x.name, 'Motor', x.year, x.desc));
@@ -78,7 +110,17 @@ export function researchDefs(): ResearchDef[] {
   add('gears:5', '5 ileri vites', 'Şanzıman', 1955, 'Uzun bir son vitesle yolda az yakar, kısa ilk vitesle çevik kalkar.');
   CHASSIS.forEach((x) => add(`chassis:${x.id}`, x.name, 'Şasi ve süspansiyon', x.year, x.desc));
   SUSPENSIONS.forEach((x) => add(`susp:${x.id}`, x.name, 'Şasi ve süspansiyon', x.year, x.desc));
-  FEATURES.forEach((x) => add(`feat:${x.id}`, x.name, x.group === 'safety' ? 'Güvenlik' : 'Donanım', x.year, x.desc));
+  FEATURES.forEach((x) =>
+    add(`feat:${x.id}`, x.name, x.group === 'safety' ? 'Güvenlik' : 'Donanım', x.year, x.desc, {
+      requires: (x.requires ?? []).map((r) => `feat:${r}`),
+      effects: [effectsText({ comfort: x.comfort, handling: x.handling, safety: x.safety, reliability: x.reliability, practicality: x.practicality, prestige: x.prestige }), `araç başına ~$${x.cost}`]
+        .filter(Boolean)
+        .join(', '),
+    }),
+  );
+  for (const k of KNOWHOW) {
+    out.push({ id: k.id, name: k.name, category: k.area, year: k.year, desc: k.desc, cost: k.cost, weeks: k.weeks, requires: k.requires ?? [], passive: true, effects: effectsText(k.effects) });
+  }
   cache = out;
   return out;
 }
@@ -112,11 +154,21 @@ export function techState(s: GameState, id: string, yf: number): TechState {
   return s.research?.active.some((a) => a.id === id) ? 'researching' : 'available';
 }
 
-/** First in the field pays for it: three times the mature price at release, falling over about five years. */
+/** Prerequisites still missing for a technology. */
+export function missingRequirements(s: GameState, id: string): ResearchDef[] {
+  return (researchDef(id)?.requires ?? []).filter((r) => !isKnown(s, r)).map((r) => researchDef(r)!).filter(Boolean);
+}
+
+/** Know-how the company has learned: it goes into every new design. */
+export function knownKnowhow(s: GameState): string[] {
+  return KNOWHOW.filter((k) => isKnown(s, k.id)).map((k) => k.id);
+}
+
+/** First in the field pays for it: twice the mature price at release, falling over about five years. */
 const pioneer = (def: ResearchDef, yf: number) => Math.exp(-Math.max(0, yf - def.year) / 5);
 
 export function researchCost(def: ResearchDef, yf: number): number {
-  return def.cost * (1 + 2 * pioneer(def, yf)) * costIndex(yf);
+  return def.cost * (1 + pioneer(def, yf)) * costIndex(yf);
 }
 
 /** A bigger engineering department learns faster. */
@@ -189,14 +241,14 @@ export function restrictToKnown(s: GameState, d: CarDesign, eraMaxGears: number)
   if (!isKnown(s, `susp:${suspension}`)) suspension = isKnown(s, 'susp:ifs') ? 'ifs' : 'leaf';
   const chassis = isKnown(s, `chassis:${d.chassis}`) ? d.chassis : 'ladder';
   const features = d.features.filter((f) => isKnown(s, `feat:${f}`) && (FEATURES.find((x) => x.id === f)?.requires ?? []).every((r) => isKnown(s, `feat:${r}`)));
-  return { ...d, engine: e, gearbox, suspension, chassis, features };
+  return { ...d, engine: e, gearbox, suspension, chassis, features, knowhow: knownKnowhow(s) };
 }
 
 /** Share of the rivals' cars on sale that already use each technology. */
 export function rivalAdoption(s: GameState): Record<string, number> {
   const active = s.rivalModels.filter((m) => m.active);
   const counts: Record<string, number> = {};
-  for (const m of active) for (const id of new Set(designTech(m.design))) counts[id] = (counts[id] ?? 0) + 1;
+  for (const m of active) for (const id of new Set([...designTech(m.design), ...(m.design.knowhow ?? [])])) counts[id] = (counts[id] ?? 0) + 1;
   const out: Record<string, number> = {};
   for (const [id, n] of Object.entries(counts)) out[id] = n / Math.max(1, active.length);
   return out;

@@ -1,3 +1,4 @@
+import { KNOWHOW } from '../data/knowhow';
 import { SEGMENTS } from '../data/segments';
 import { STATIONS } from '../data/stations';
 import {
@@ -39,6 +40,7 @@ export function allTech(): TechItem[] {
   out.push({ id: 'gears:5', name: '5 ileri vites', year: 1955, category: 'Şanzıman' });
   SUSPENSIONS.forEach((x) => out.push({ id: `susp:${x.id}`, name: x.name, year: x.year, category: 'Süspansiyon', cardId: x.cardId }));
   FEATURES.forEach((x) => out.push({ id: `feat:${x.id}`, name: x.name, year: x.year, category: x.group === 'safety' ? 'Güvenlik' : 'Donanım', cardId: x.cardId }));
+  KNOWHOW.forEach((x) => out.push({ id: x.id, name: x.name, year: x.year, category: x.area }));
   STATIONS.forEach((x) => out.push({ id: `st:${x.id}`, name: x.name, year: x.year, category: 'Fabrika', cardId: x.cardId }));
   SEGMENTS.forEach((x) => out.push({ id: `seg:${x.id}`, name: `${x.name} segmenti`, year: x.year, category: 'Pazar' }));
   TESTS.forEach((x) => out.push({ id: `test:${x.id}`, name: x.name, year: x.year, category: 'Test' }));

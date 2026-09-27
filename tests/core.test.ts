@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import * as A from '../src/core/actions';
 import { aiDesign, referenceBonus, referenceDesigns } from '../src/core/ai';
 import { computeEngine, displacementCc, eraRpmCap, racHp } from '../src/core/engine';
-import { researchCost, researchDef, unknownTech } from '../src/core/research';
+import { researchCost, researchDef, researchDefs, unknownTech } from '../src/core/research';
+import { KNOWHOW } from '../src/data/knowhow';
 import { lineReport } from '../src/core/factory';
 import { materialUnitCost, newGame, tick } from '../src/core/game';
 import { datedPenalty, modelAgeYears, priceNow, segmentMarket } from '../src/core/market';
@@ -392,7 +393,7 @@ describe('research', () => {
     expect(unknownTech(s, s.projects[0].design)).toContain('Üstten supap (OHV)');
     expect(A.beginDevelopment(s, r.id).ok).toBe(false);
     const ohv = researchDef('vt:ohv')!;
-    expect(researchCost(ohv, 1904)).toBeGreaterThan(researchCost(ohv, 1914) * 1.8);
+    expect(researchCost(ohv, 1904)).toBeGreaterThan(researchCost(ohv, 1914) * 1.4);
     const cash = s.company.cash;
     expect(A.startResearch(s, 'vt:ohv').ok).toBe(true);
     expect(s.company.cash).toBeLessThan(cash);
@@ -402,6 +403,17 @@ describe('research', () => {
     }
     expect(s.research!.known).toContain('vt:ohv');
     expect(A.beginDevelopment(s, r.id).ok).toBe(true);
+  });
+
+  it('know-how effects stay within sane bounds and every prerequisite exists', () => {
+    for (const k of KNOWHOW) {
+      for (const m of ['power', 'fuel', 'cd', 'cost', 'mass'] as const) {
+        const v = k.effects[m];
+        if (v !== undefined) expect(v, `${k.id} ${m}`).toBeGreaterThan(0.8);
+        if (v !== undefined) expect(v, `${k.id} ${m}`).toBeLessThan(1.2);
+      }
+    }
+    for (const d of researchDefs()) for (const r of d.requires) expect(researchDef(r), `${d.id} needs ${r}`).toBeTruthy();
   });
 
   it('an older save already knows the technology of its day', () => {

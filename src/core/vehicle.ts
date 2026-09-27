@@ -8,6 +8,7 @@ import {
   immaturityPenalty,
   interp,
 } from '../data/tech';
+import { knowhowEffects } from '../data/knowhow';
 import { computeEngine, curveFor, torqueAt, type TorqueCurve } from './engine';
 import type { CarDesign, CarStats, DevBonus, EngineStats } from './types';
 
@@ -180,8 +181,10 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
   const feats = design.features.map((f) => byId(FEATURES, f));
   const has = (id: string) => design.features.includes(id as never);
   const sizeScale = 0.75 + 0.6 * design.size;
+  const kh = knowhowEffects(design.knowhow);
+  const powerMult = bonus.powerMult * kh.power;
 
-  const engine = computeEngine(design.engine, year, bonus.powerMult);
+  const engine = computeEngine(design.engine, year, powerMult);
   const gearboxMass = 20 + 8 * design.gearbox.gears + gb.mass;
 
   // ---- Mass ----
@@ -197,15 +200,16 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
       90 * sizeScale +
       (20 + 60 * design.interior) * sizeScale +
       featureMass) *
-    bonus.massMult;
+    bonus.massMult *
+    kh.mass;
   const testMass = mass + PAYLOAD;
 
   // ---- Aero ----
-  const cd = body.cd * streamlining(year) * (1 - 0.06 * design.styling);
+  const cd = body.cd * streamlining(year) * (1 - 0.06 * design.styling) * kh.cd;
   const area = 1.9 + 0.8 * design.size + body.area;
 
   // ---- Driveline ----
-  const tc = curveFor(design.engine, year, bonus.powerMult);
+  const tc = curveFor(design.engine, year, powerMult);
   const eta = gb.efficiency;
   const r = wheelRadius(year, design.size);
   const crr = rollingResistance(year);
@@ -239,7 +243,7 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
   const cityExtra = stopsPer100km * 0.5 * testMass * vCity * vCity;
   const fuelCruise = fuelAt(drive, engine, vc, 0);
   const fuelCity = fuelAt(drive, engine, vCity, cityExtra);
-  const fuel = (0.55 * fuelCruise + 0.45 * fuelCity) * bonus.fuelMult;
+  const fuel = (0.55 * fuelCruise + 0.45 * fuelCity) * bonus.fuelMult * kh.fuel;
 
   // ---- Soft attributes (absolute points; scoring compares them with the era) ----
   const sum = (key: 'comfort' | 'handling' | 'safety' | 'prestige' | 'practicality' | 'reliability') =>
@@ -257,6 +261,7 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
     gb.comfort +
     Math.min(8, Math.max(-4, (mass - 700) / 150)) +
     sum('comfort') +
+    kh.comfort +
     bonus.comfort;
 
   const handling =
@@ -268,6 +273,7 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
     8 * (1 - design.size) -
     Math.min(18, Math.max(-6, (mass - 800) / 70)) +
     sum('handling') +
+    kh.handling +
     (bonus.handling ?? 0);
 
   const safety =
@@ -277,6 +283,7 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
     Math.min(10, Math.max(-3, (mass - 600) / 120)) +
     0.12 * handling +
     sum('safety') +
+    kh.safety +
     bonus.safety;
 
   const featureImmaturity = feats.reduce((s, f) => s + immaturityPenalty(3, f.year, year), 0);
@@ -291,6 +298,7 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
     featureImmaturity -
     0.6 * feats.length +
     sum('reliability') +
+    kh.reliability +
     bonus.reliability;
 
   const prestige =
@@ -302,7 +310,8 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
     (design.engine.cylinders >= 16 ? 20 : design.engine.cylinders >= 12 ? 16 : design.engine.cylinders >= 8 ? 10 : design.engine.cylinders >= 6 ? 5 : design.engine.cylinders <= 2 ? -5 : design.engine.cylinders === 3 ? -2 : 0) +
     15 * design.interior +
     gb.prestige +
-    sum('prestige');
+    sum('prestige') +
+    kh.prestige;
 
   const practicality =
     20 +
@@ -310,7 +319,8 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
     20 * design.size +
     gb.practicality +
     (closed ? 5 : 0) +
-    sum('practicality');
+    sum('practicality') +
+    kh.practicality;
 
   // ---- Cost ----
   const gearboxCost = 25 + 12 * n + gb.cost;
@@ -327,7 +337,7 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
     (20 + 200 * design.interior * design.interior) * sizeScale +
     60 * design.styling +
     otherFeatures;
-  const unitCost = baseCost * bonus.costMult;
+  const unitCost = baseCost * bonus.costMult * kh.cost;
 
   const complexity =
     0.75 +

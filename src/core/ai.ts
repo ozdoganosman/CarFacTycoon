@@ -10,6 +10,7 @@ import {
   maxCompression,
   maxGears,
 } from '../data/tech';
+import { KNOWHOW } from '../data/knowhow';
 import { segmentDef } from '../data/segments';
 import { aiBonus } from './development';
 import { boreStrokeFor, knockLimit } from './engine';
@@ -152,6 +153,12 @@ function featuresFor(segment: SegmentId, year: number, o: AiOptions, rng: Rng): 
   return out;
 }
 
+/** Know-how an established maker has in its cars: premium and sporting firms learn first. */
+function knowhowFor(year: number, o: AiOptions): string[] {
+  const lag = { premium: 3, sport: 4, mass: 7, utility: 8 }[o.style];
+  return KNOWHOW.filter((k) => k.year + lag <= year).map((k) => k.id);
+}
+
 export function aiDesign(segment: SegmentId, year: number, o: AiOptions, rng: Rng): { design: CarDesign; bonus: DevBonus } {
   const cc = interp(DISPLACEMENT[o.market][segment], year) * 1000 * (0.9 + rng() * 0.2);
   const engine = aiEngine(cc, segment, year, o, rng);
@@ -187,6 +194,7 @@ export function aiDesign(segment: SegmentId, year: number, o: AiOptions, rng: Rn
     suspension,
     suspBalance: Math.min(1, Math.max(0, BALANCE[segment] + (rng() - 0.5) * 0.1)),
     features: featuresFor(segment, year, o, rng),
+    knowhow: knowhowFor(year, o),
     interior: Math.min(1, Math.max(0, INTERIOR[segment] + (o.style === 'premium' ? 0.1 : 0) + (rng() - 0.5) * 0.1)),
   };
   const w = segmentDef(segment).weights;

@@ -47,7 +47,15 @@ export type FeatureId =
   | 'heater'
   | 'radio'
   | 'powerSteering'
-  | 'airCon';
+  | 'airCon'
+  | 'windshield'
+  | 'speedometer'
+  | 'spareWheel'
+  | 'rearMirror'
+  | 'wipers'
+  | 'fuelGauge'
+  | 'turnSignals'
+  | 'sealedBeam';
 
 export interface EngineDesign {
   cylinders: number;
@@ -84,6 +92,8 @@ export interface CarDesign {
   features: FeatureId[];
   /** Interior quality 0..1. */
   interior: number;
+  /** Engineering know-how built in (magneto, dampers…); older designs have none. */
+  knowhow?: string[];
 }
 
 /** Bonuses earned during development, applied on top of the raw design. */
@@ -271,6 +281,8 @@ export interface CarModel {
   /** Let the factory follow demand: add capacity while buyers wait, give it back when they don't. */
   /** Body dies and fixtures it is built with (older saves: standard). */
   tooling?: ToolingTier;
+  /** Sales milestones and firsts the papers have already covered. */
+  newsFlags?: string[];
   autoCapacity?: boolean;
   lowDemandMonths?: number;
   inventory: number;
@@ -380,6 +392,7 @@ export type ModalItem =
   | { kind: 'launchReport'; modelId: string; report: LaunchReport }
   | { kind: 'phase'; projectId: string; phase: ProjectPhase }
   | { kind: 'yearReport'; year: number }
+  | { kind: 'news'; newsId: string }
   | { kind: 'unlock'; title: string; body: string }
   | { kind: 'gameOver' };
 
@@ -454,6 +467,8 @@ export interface GameState {
   /** Units sold per (market, segment) last year and this year for share reports. */
   segmentSales: Record<string, number>;
   unlockedTech: string[];
+  /** Newspaper front pages published so far (older saves lack it). */
+  news?: NewsIssue[];
   /** Technologies the company has learned, and what its engineers are researching now (older saves lack it). */
   research?: { known: string[]; active: { id: string; weeksLeft: number; weeks: number }[] };
   cardsSeen: string[];
@@ -465,4 +480,35 @@ export interface GameState {
   decisions?: { week: number; key: string; text: string }[];
   /** Errors caught while the game ran, for bug reports. */
   errors?: { week: number; at: string; message: string; stack?: string }[];
+}
+
+// ---------------- Newspapers ----------------
+
+export interface NewsStoryData {
+  headline: string;
+  deck?: string;
+  body: string;
+}
+
+export type NewsArt = { kind: 'car'; modelId: string } | { kind: 'tech'; area: string };
+
+export interface NewsLetter {
+  name: string;
+  place: string;
+  role: string;
+  stars: number;
+  text: string;
+  tone: 'good' | 'bad' | 'mixed';
+}
+
+export interface NewsIssue {
+  id: string;
+  week: number;
+  kind: 'tech' | 'boom';
+  lead: NewsStoryData & { art: NewsArt; caption?: string; paragraphs?: string[] };
+  side: NewsStoryData[];
+  world?: NewsStoryData;
+  stats?: { label: string; value: string }[];
+  ad?: { modelId: string; slogan: string; lines: string[]; price: number };
+  letters?: NewsLetter[];
 }

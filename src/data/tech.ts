@@ -226,6 +226,14 @@ export const FEATURES: FeatureDef[] = [
   { id: 'radio', name: 'Radyo', year: 1930, group: 'equipment', desc: 'Lambalı araç radyosu. Pahalı bir oyuncak.', comfort: 4, prestige: 4, cost: 40, electric: true, mass: 8, complexity: 0.03, reliability: -1 },
   { id: 'powerSteering', name: 'Hidrolik direksiyon', year: 1951, group: 'equipment', desc: 'Park ederken bile direksiyon tüy gibi.', comfort: 4, handling: 1, practicality: 3, prestige: 2, cost: 55, mass: 12, complexity: 0.04, reliability: -1 },
   { id: 'airCon', name: 'Klima', year: 1953, group: 'equipment', desc: 'Sıcak yaz günlerinde serin kabin.', comfort: 8, prestige: 5, cost: 120, electric: true, mass: 45, complexity: 0.08, reliability: -2 },
+  { id: 'windshield', name: 'Ön cam', year: 1904, group: 'equipment', desc: 'Sürücüyü rüzgârdan, tozdan ve böceklerden korur. Gözlüksüz araba kullanmak mümkün olur.', comfort: 4, safety: 1, cost: 10, mass: 8, complexity: 0.01 },
+  { id: 'speedometer', name: 'Hız göstergesi', year: 1906, group: 'equipment', desc: 'Tekerlekten tel ile dönen ibre: sürücü hızını bilir, hız cezasından kaçar.', practicality: 2, prestige: 1, safety: 1, cost: 8, mass: 2, complexity: 0.01 },
+  { id: 'spareWheel', name: 'Yedek tekerlek', year: 1908, group: 'equipment', desc: 'Arkada ya da yanda taşınan yedek jant ve lastik. Patlak lastik yolculuğu bitirmez.', practicality: 5, cost: 12, mass: 18, complexity: 0.01 },
+  { id: 'rearMirror', name: 'Dikiz aynası', year: 1914, group: 'safety', desc: 'Sürücü arkasını dönmeden görür. Kalabalık şehir trafiğinde kaza azalır.', safety: 2, cost: 3, mass: 1, complexity: 0.005 },
+  { id: 'wipers', name: 'Otomatik silecek', year: 1917, group: 'safety', desc: 'Motor vakumuyla çalışan silecek: yağmurda sürücü eliyle camı silmek zorunda kalmaz.', safety: 2, comfort: 1, cost: 6, mass: 2, complexity: 0.01, requires: ['windshield'] },
+  { id: 'fuelGauge', name: 'Yakıt göstergesi', year: 1922, group: 'equipment', desc: 'Depoya çubuk sokmaya son: gösterge panelinde benzinin ne kadar kaldığı görünür.', practicality: 2, cost: 5, electric: true, mass: 1, complexity: 0.01 },
+  { id: 'turnSignals', name: 'Sinyal lambaları', year: 1939, group: 'safety', desc: 'Sürücü dönmeden önce kolunu camdan çıkarmaz; yanıp sönen lambalar arkadakini uyarır.', safety: 3, practicality: 1, cost: 8, electric: true, mass: 2, complexity: 0.01, requires: ['electricLights'] },
+  { id: 'sealedBeam', name: 'Mühürlü farlar', year: 1940, group: 'safety', desc: 'Ampul, yansıtıcı ve cam tek parça: farlar kararmaz, gece yol iki kat aydınlanır.', safety: 3, cost: 10, electric: true, mass: 2, complexity: 0.01, requires: ['electricLights'] },
 ];
 
 export interface CylinderOption {

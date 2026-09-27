@@ -8,6 +8,7 @@ import { store, useGameState } from '../store';
 import { money, num, recentProfit, signedMoney } from '../format';
 import { Badge, Button, Empty, Panel, Progress, Stat, Table } from '../components/ui';
 import { LineChart } from '../viz/LineChart';
+import { NewsArchive } from '../components/Newspaper';
 import { PHASE_LABEL, projectProgress } from './Projects';
 
 export function weeklySold(m: CarModel, weeks = 4) {
@@ -156,6 +157,9 @@ export function HQ() {
         )}
       </Panel>
 
+      <Panel title="Gazete arşivi">
+        <NewsArchive />
+      </Panel>
       <Panel title="Haberler ve raporlar">
         <ul className="news">
           {[...s.log].reverse().slice(0, 14).map((l, i) => (

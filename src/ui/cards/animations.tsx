@@ -2,6 +2,8 @@
 import type { ComponentType } from 'react';
 import './cards.css';
 import { FourStroke } from './anim/FourStroke';
+import { EngineBlock } from './anim/EngineBlock';
+import { SuspensionSim } from './anim/SuspensionSim';
 import { Gearbox } from './anim/Gearbox';
 import { MovingLine } from './anim/MovingLine';
 import { ElectricStarter } from './anim/ElectricStarter';
@@ -15,6 +17,8 @@ import { Supercharger } from './anim/Supercharger';
 export type { FourStrokeProps } from './anim/FourStroke';
 export {
   FourStroke,
+  EngineBlock,
+  SuspensionSim,
   Gearbox,
   MovingLine,
   ElectricStarter,

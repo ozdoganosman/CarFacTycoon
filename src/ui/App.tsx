@@ -6,6 +6,7 @@ import { StartScreen } from './screens/StartScreen';
 import { TopBar } from './components/TopBar';
 import { Nav } from './components/Nav';
 import { ModalHost, YearCard } from './components/ModalHost';
+import { NewsCard, NewspaperHost } from './components/Newspaper';
 import { ConfirmHost } from './components/ConfirmHost';
 import { PauseBanner } from './components/PauseBanner';
 import { HQ } from './screens/HQ';
@@ -113,6 +114,8 @@ export function App() {
         </main>
       </div>
       <YearCard />
+      <NewsCard />
+      <NewspaperHost />
       <ModalHost />
       <ConfirmHost />
       {store.toast && (

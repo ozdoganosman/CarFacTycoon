@@ -36,6 +36,8 @@ class GameStore {
   toast: { text: string; tone: 'good' | 'bad' | 'info'; id: number } | null = null;
   /** Pending in-game confirmation (browser confirm() is not available everywhere). */
   question: { title: string; body: string; confirm: string; danger?: boolean; resolve: (ok: boolean) => void } | null = null;
+  /** The newspaper issue open in the reader (not part of the saved game). */
+  newsOpen: string | null = null;
   version = 0;
   private listeners = new Set<() => void>();
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -49,6 +51,16 @@ class GameStore {
   };
 
   getVersion = () => this.version;
+
+  openNews(id: string) {
+    this.newsOpen = id;
+    this.notify();
+  }
+
+  closeNews() {
+    this.newsOpen = null;
+    this.notify();
+  }
 
   notify() {
     this.version++;

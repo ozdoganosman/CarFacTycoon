@@ -1,7 +1,7 @@
 // A simple scripted player used to sanity-check game balance headlessly.
 import * as A from '../src/core/actions';
 import { aiDesign } from '../src/core/ai';
-import { designTech, researchCost, researchDefs, researchSlots, restrictToKnown } from '../src/core/research';
+import { designTech, missingRequirements, researchCost, researchDefs, researchSlots, restrictToKnown } from '../src/core/research';
 import { maxGears } from '../src/data/tech';
 import { STATIONS } from '../src/data/stations';
 import { availableSegments, credit, dealerUpgradeCost, materialUnitCost, tick } from '../src/core/game';
@@ -144,12 +144,16 @@ export function botStep(s: GameState, o: BotOptions = {}) {
   if (r && r.active.length < researchSlots(s.company.engineers)) {
     const open = researchDefs().filter((d) => d.year <= yf && !r.known.includes(d.id) && !r.active.some((a) => a.id === d.id));
     const needed = new Set(
-      (o.segments ?? ['family']).flatMap((seg) => designTech(aiDesign(seg, Math.floor(yf), { style: 'mass', skill: 50, market: s.company.hq }, () => 0.5).design)),
+      (o.segments ?? ['family']).flatMap((seg) => {
+        const typical = aiDesign(seg, Math.floor(yf), { style: 'mass', skill: 50, market: s.company.hq }, () => 0.5).design;
+        return [...designTech(typical), ...(typical.knowhow ?? [])];
+      }),
     );
     const byCost = (a: (typeof open)[number], b: (typeof open)[number]) => researchCost(a, yf) - researchCost(b, yf);
-    const want = open.filter((d) => needed.has(d.id)).sort(byCost)[0];
-    const other = open.sort(byCost)[0];
-    if (want && researchCost(want, yf) < 0.3 * s.company.cash) A.startResearch(s, want.id);
+    const ready = open.filter((d) => missingRequirements(s, d.id).length === 0);
+    const want = ready.filter((d) => needed.has(d.id)).sort(byCost)[0];
+    const other = ready.sort(byCost)[0];
+    if (want && researchCost(want, yf) < 0.5 * s.company.cash) A.startResearch(s, want.id);
     else if (other && researchCost(other, yf) < 0.1 * s.company.cash) A.startResearch(s, other.id);
   }
   // Engineers: grow with the company.

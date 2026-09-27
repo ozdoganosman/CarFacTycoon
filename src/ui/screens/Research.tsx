@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import * as A from '../../core/actions';
-import { researchCost, researchDefs, researchSlots, researchSpeed, researchWeeks, rivalAdoption, techState, type ResearchDef } from '../../core/research';
+import { missingRequirements, researchCost, researchDefs, researchSlots, researchSpeed, researchWeeks, rivalAdoption, techState, type ResearchDef } from '../../core/research';
 import { yearFloat } from '../../core/time';
 import { store, useGameState } from '../store';
 import { money } from '../format';
@@ -19,6 +19,7 @@ export function Research() {
   const adoption = useMemo(() => rivalAdoption(s), [s.week, s.rivalModels.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const defs = researchDefs();
   const available = defs.filter((d) => techState(s, d.id, yf) === 'available').length;
+  const [tab, setTab] = useState<'Tümü' | ResearchDef['category']>('Tümü');
   return (
     <div className="screen">
       <div className="screen-head">
@@ -77,7 +78,18 @@ export function Research() {
           Bütün araştırma yerlerin dolu: yeni bir konuya başlamak için süren araştırmanın bitmesini bekle. Her 15 mühendis bir araştırma yeri daha açar.
         </p>
       )}
-      {CATEGORIES.map((cat) => {
+      <div className="tabs research-tabs" role="tablist">
+        {(['Tümü', ...CATEGORIES] as const).map((c) => {
+          const n = defs.filter((d) => (c === 'Tümü' || d.category === c) && techState(s, d.id, yf) === 'available').length;
+          return (
+            <button key={c} type="button" role="tab" aria-selected={tab === c} className={`tab ${tab === c ? 'is-on' : ''}`} onClick={() => setTab(c)}>
+              {c}
+              {n > 0 && <span className="tab-count">{n}</span>}
+            </button>
+          );
+        })}
+      </div>
+      {CATEGORIES.filter((c) => tab === 'Tümü' || tab === c).map((cat) => {
         const list = defs.filter((d) => d.category === cat).sort((a, b) => a.year - b.year);
         const near = list.filter((d) => d.year <= yf + 10);
         const later = list.length - near.length;
@@ -90,13 +102,29 @@ export function Research() {
                 const weeks = researchWeeks(d, yf, s.company.engineers);
                 const share = adoption[d.id] ?? 0;
                 const active = r.active.find((a) => a.id === d.id);
+                const missing = missingRequirements(s, d.id);
                 return (
                   <div key={d.id} className={`rcard is-${st}`}>
                     <div className="rcard-head">
                       <b>{d.name}</b>
                       <span className="muted small">{d.year}</span>
                     </div>
+                    {d.passive && (
+                      <span className="rcard-tag" title="Araştırıldıktan sonra bütün yeni tasarımlara ve makyajlara kendiliğinden girer.">
+                        Otomatik uygulanır
+                      </span>
+                    )}
                     <p className="muted small">{d.desc}</p>
+                    {d.effects && (
+                      <p className="small rcard-effects">
+                        <b>Etkisi:</b> {d.effects}
+                      </p>
+                    )}
+                    {missing.length > 0 && st !== 'known' && (
+                      <p className="small tone-warn">
+                        <b>Önce:</b> {missing.map((m) => m.name).join(', ')}
+                      </p>
+                    )}
                     {st !== 'future' && <p className="small">{share > 0 ? `Rakip araçların %${Math.round(share * 100)}’i kullanıyor.` : 'Rakiplerde henüz yok.'}</p>}
                     {st === 'known' && <Badge tone="good">Biliniyor</Badge>}
                     {st === 'future' && <p className="muted small">{inYear(d.year)} ortaya çıkar.</p>}
@@ -105,7 +133,7 @@ export function Research() {
                       <Button
                         small
                         kind="primary"
-                        disabled={free <= 0 || s.company.cash < cost}
+                        disabled={free <= 0 || s.company.cash < cost || missing.length > 0}
                         onClick={() => store.try((st2) => A.startResearch(st2, d.id), `${d.name} araştırması başladı`)}
                       >
                         Araştır · {money(cost)} · {weeks} hf

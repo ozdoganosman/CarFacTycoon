@@ -13,7 +13,8 @@ import { updateRivals, initRivals } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
 import { eraReference } from './scoring';
 import { allTech } from './techtree';
-import { researchDef, startingKnowledge } from './research';
+import { knownKnowhow, researchDef, startingKnowledge } from './research';
+import { checkBoom, publish, techIssue } from './news';
 import {
   TESTS,
   actualReliability,
@@ -89,6 +90,7 @@ export function newGame(opts: NewGameOptions): GameState {
     segmentSales: {},
     unlockedTech: allTech().filter((t) => t.year <= 1900).map((t) => t.id),
     research: { known: startingKnowledge(1900), active: [] },
+    news: [],
     cardsSeen: CARDS.filter((c) => c.year <= 1900).map((c) => c.id),
     settings: { engineerMode: true, autoPauseCards: true, modeChosen: false },
     nextId: 1,
@@ -198,6 +200,7 @@ export function tick(s: GameState): void {
   if (isMonthStart(s.week)) {
     monthly(s);
     autoCapacity(s, (m) => materialUnitCost(s, m));
+    checkBoom(s);
   }
   checkSolvency(s);
   void yf;
@@ -217,12 +220,17 @@ function fireEvents(s: GameState) {
 
 function announceTech(s: GameState, year: number) {
   const fresh = allTech().filter((t) => t.year <= year && !s.unlockedTech.includes(t.id));
-  if (!fresh.length) return;
   for (const t of fresh) s.unlockedTech.push(t.id);
   const toLearn = fresh.filter((t) => researchDef(t.id));
   const free = fresh.filter((t) => !researchDef(t.id));
   if (free.length) log(s, `Yeni teknolojiler: ${free.map((t) => t.name).join(', ')}`, 'good');
   if (toLearn.length) log(s, `Yeni teknolojiler ortaya çıktı, Ar-Ge’de araştırılabilir: ${toLearn.map((t) => t.name).join(', ')}`, 'good');
+  const issue = techIssue(
+    s,
+    toLearn.map((t) => researchDef(t.id)!),
+    year,
+  );
+  if (issue) publish(s, issue);
   for (const c of CARDS) {
     if (c.year <= year && !s.cardsSeen.includes(c.id)) {
       s.cardsSeen.push(c.id);
@@ -269,8 +277,17 @@ function advanceResearch(s: GameState) {
   s.research.active = s.research.active.filter((a) => a.weeksLeft > 0);
   for (const a of done) {
     s.research.known.push(a.id);
-    log(s, `Ar-Ge tamamlandı: ${researchDef(a.id)?.name ?? a.id} artık tasarımlarda kullanılabilir.`, 'good');
+    const def = researchDef(a.id);
+    log(
+      s,
+      def?.passive
+        ? `Ar-Ge tamamlandı: ${def.name} bundan sonraki bütün tasarımlara kendiliğinden girer.`
+        : `Ar-Ge tamamlandı: ${def?.name ?? a.id} artık tasarımlarda kullanılabilir.`,
+      'good',
+    );
   }
+  // Designs still on the drawing board pick up new know-how at once.
+  for (const p of s.projects) if (p.phase === 'design') p.design = { ...p.design, knowhow: knownKnowhow(s) };
 }
 
 function advanceProjects(s: GameState) {

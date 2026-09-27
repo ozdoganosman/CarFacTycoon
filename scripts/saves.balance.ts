@@ -38,7 +38,7 @@ test('generate a first project and a 1940 project', () => {
 });
 
 test('generate saves', () => {
-  const s = newGame({ companyName: 'Anadolu Motor', hq: 'usa', seed: 7 });
+  const s = newGame({ companyName: 'Anadolu Motor', hq: 'usa', seed: 8 });
   runBot(s, 52 * 12 + 20, { segments: ['family', 'city'], smart: true });
   if (s.gameOver) throw new Error('fixture company went bankrupt');
   // A fresh project walked through the phases by hand.

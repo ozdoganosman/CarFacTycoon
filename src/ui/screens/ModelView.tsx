@@ -10,8 +10,9 @@ import { MARKETS } from '../../data/markets';
 import { RIVALS } from '../../data/rivals';
 import { segmentDef } from '../../data/segments';
 import { costIndex } from '../../data/economy';
-import type { MarketId } from '../../core/types';
+import type { CarModel, MarketId } from '../../core/types';
 import { store, useGameState } from '../store';
+import { customerLetters } from '../../core/letters';
 import { money, num, pct } from '../format';
 import { Badge, Button, Empty, NumberInput, Panel, Slider, Stat, Table, Toggle, ScoreBar } from '../components/ui';
 import { StatsPanel } from '../components/StatsPanel';
@@ -217,6 +218,11 @@ export function ModelView({ modelId }: { modelId: string }) {
               <Empty>Değerlendirme yok.</Empty>
             )}
           </Panel>
+          {m.status === 'active' && m.unitsSold > 0 && (
+            <Panel title="Müşteri mektupları">
+              <OwnerLetters s={s} m={m} />
+            </Panel>
+          )}
           <Panel title="Sahadaki kalite">
             <div className="quote">
               <div>
@@ -329,5 +335,27 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
         ]}
       />
     </Panel>
+  );
+}
+
+/** This month's letters from owners: what real buyers of the car say. */
+function OwnerLetters({ s, m }: { s: ReturnType<typeof useGameState>; m: CarModel }) {
+  const letters = customerLetters(s, m, 3);
+  return (
+    <div className="letters">
+      {letters.map((l, i) => (
+        <blockquote key={i} className={`letter letter-${l.tone}`}>
+          <div className="letter-stars" aria-label={`${l.stars} yıldız`}>
+            {'★'.repeat(l.stars)}
+            <span className="letter-stars-off">{'★'.repeat(5 - l.stars)}</span>
+          </div>
+          <p>“{l.text}”</p>
+          <footer>
+            — {l.name}, {l.role}, {l.place}
+          </footer>
+        </blockquote>
+      ))}
+      <p className="muted small">Mektuplar her ay yenilenir; alıcıların neyi fark ettiğini gösterir.</p>
+    </div>
   );
 }

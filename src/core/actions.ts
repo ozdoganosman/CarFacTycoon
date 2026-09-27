@@ -21,7 +21,7 @@ import {
 } from './game';
 import { modelScores, priceNow, referencePrice } from './market';
 import { stateRng } from './rng';
-import { ensureResearch, researchCost, researchDef, researchSlots, researchWeeks, restrictToKnown, unknownTech } from './research';
+import { ensureResearch, knownKnowhow, missingRequirements, researchCost, researchDef, researchSlots, researchWeeks, restrictToKnown, unknownTech } from './research';
 import { experienceFactor, newEstimate } from './estimate';
 import { TESTS, SUPPLIERS, expectedDefects, generateDefects } from './testing';
 import { yearFloat } from './time';
@@ -123,6 +123,7 @@ export function startProject(s: GameState, o: StartProjectOptions): { ok: true; 
   }
   const eng = o.engineRefId ? s.engines.find((e) => e.id === o.engineRefId) : undefined;
   if (eng) design.engine = { ...eng.design };
+  design.knowhow = knownKnowhow(s);
   const id = newId(s, 'p');
   const free = s.company.engineers - engineersBusy(s);
   const p: Project = {
@@ -167,7 +168,8 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
     replacesModelId: m.id,
     platformId: m.platformId,
     engineRefId: m.engineId,
-    design: structuredClone(m.design),
+    // A facelift also brings in whatever the engineers have learned since.
+    design: { ...structuredClone(m.design), knowhow: knownKnowhow(s) },
     phase: 'design',
     createdWeek: s.week,
     engineers: Math.max(1, free),
@@ -192,7 +194,7 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
 export function updateDesign(s: GameState, pid: string, design: CarDesign): ActionResult {
   const p = project(s, pid);
   if (p.phase !== 'design') return fail('Tasarım geliştirme başladıktan sonra değiştirilemez.');
-  p.design = design;
+  p.design = { ...design, knowhow: knownKnowhow(s) };
   return ok;
 }
 
@@ -236,6 +238,8 @@ export function beginDevelopment(s: GameState, pid: string): ActionResult {
   if (p.phase !== 'design') return fail('Proje zaten geliştirmede.');
   const missing = unknownTech(s, p.design);
   if (missing.length) return fail(`Önce Ar-Ge’de araştırılmalı: ${missing.join(', ')}.`);
+  // Everything the engineers know goes into the car.
+  p.design = { ...p.design, knowhow: knownKnowhow(s) };
   p.dev.required = requiredWork(s, p);
   p.phase = 'development';
   shareEngineers(s);
@@ -881,6 +885,8 @@ export function startResearch(s: GameState, id: string): ActionResult {
   if (r.known.includes(id)) return fail(`${def.name} zaten biliniyor.`);
   if (def.year > yf) return fail(`${def.name} henüz ortaya çıkmadı (${def.year}).`);
   if (r.active.some((a) => a.id === id)) return fail(`${def.name} zaten araştırılıyor.`);
+  const missing = missingRequirements(s, id);
+  if (missing.length) return fail(`Önce şunlar bilinmeli: ${missing.map((m) => m.name).join(', ')}.`);
   if (r.active.length >= researchSlots(s.company.engineers))
     return fail('Mühendislerin aynı anda bu kadar konu araştırabiliyor. Daha çok mühendisle daha çok konu yürütülür.');
   const cost = researchCost(def, yf);

@@ -22,6 +22,7 @@ export function deserialize(json: string): GameState {
 function migrate(s: GameState) {
   ensureRivals(s);
   s.errors ??= [];
+  s.news ??= [];
   s.decisions ??= [];
   // The quality focus arrived later.
   for (const p of s.projects) {
