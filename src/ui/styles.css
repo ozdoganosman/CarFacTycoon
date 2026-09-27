@@ -1929,3 +1929,8 @@ fieldset {
     transition: none !important;
   }
 }
+
+/* Card screens already explain the mechanism in their own text. */
+.card-anim .anim-note {
+  display: none;
+}
