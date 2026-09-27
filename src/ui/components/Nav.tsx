@@ -1,4 +1,5 @@
 import { store, useGameState, type Screen } from '../store';
+import { SendToClaude } from './SendToClaude';
 
 const ITEMS: { id: Screen['id']; label: string; icon: string }[] = [
   { id: 'hq', label: 'Merkez', icon: '🏢' },
@@ -35,6 +36,7 @@ export function Nav() {
           {!!badges[it.id] && <span className="nav-badge">{badges[it.id]}</span>}
         </button>
       ))}
+      <SendToClaude />
     </nav>
   );
 }

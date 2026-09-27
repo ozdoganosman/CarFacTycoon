@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { newGame, tick, type NewGameOptions } from '../core/game';
 import { loadLocal, saveLocal } from '../core/save';
+import { isBlockingModal } from '../core/util';
 import type { GameState } from '../core/types';
 
 // A tiny external store: the simulation mutates GameState in place and bumps a
@@ -33,6 +34,8 @@ class GameStore {
   private listeners = new Set<() => void>();
   private timer: ReturnType<typeof setInterval> | null = null;
   private weeksSinceSave = 0;
+  /** Speed to return to once the decision that stopped the clock is answered. */
+  private resumeSpeed: Exclude<Speed, 0> | null = null;
 
   subscribe = (fn: () => void) => {
     this.listeners.add(fn);
@@ -84,6 +87,12 @@ class GameStore {
   act<T>(fn: (s: GameState) => T): T | undefined {
     if (!this.state) return undefined;
     const r = fn(this.state);
+    // The decision that stopped the clock has been answered: carry on.
+    if (this.resumeSpeed && !this.state.gameOver && !this.state.modals.some(isBlockingModal)) {
+      const speed = this.resumeSpeed;
+      this.resumeSpeed = null;
+      this.run(speed);
+    }
     this.notify();
     return r;
   }
@@ -130,13 +139,26 @@ class GameStore {
     this.notify();
   }
 
+  /** The player's own choice of speed (also cancels a pending auto-resume). */
   setSpeed(speed: Speed) {
+    this.resumeSpeed = null;
+    this.run(speed);
+  }
+
+  private run(speed: Speed) {
     this.speed = speed;
     if (speed !== 0) this.lastSpeed = speed;
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
     if (speed !== 0) this.timer = setInterval(() => this.step(), INTERVALS[speed]);
     this.notify();
+  }
+
+  /** Stop the clock for a decision, remembering how fast it was running. */
+  private holdForDecision() {
+    if (this.speed === 0) return;
+    this.resumeSpeed = this.speed;
+    this.run(0);
   }
 
   togglePause() {
@@ -146,15 +168,20 @@ class GameStore {
   step() {
     const s = this.state;
     if (!s) return;
-    // Decisions pause the clock.
-    if (s.modals.length || s.gameOver) {
-      if (this.speed !== 0) this.setSpeed(0);
+    if (s.gameOver) {
+      this.setSpeed(0);
+      return;
+    }
+    // Decisions pause the clock; the year report only waits in a corner.
+    if (s.modals.some(isBlockingModal)) {
+      this.holdForDecision();
       return;
     }
     tick(s);
     this.weeksSinceSave++;
     if (this.weeksSinceSave >= 13) this.save();
-    if (s.modals.length) this.setSpeed(0);
+    if (s.gameOver) this.setSpeed(0);
+    else if (s.modals.some(isBlockingModal)) this.holdForDecision();
     this.notify();
   }
 }

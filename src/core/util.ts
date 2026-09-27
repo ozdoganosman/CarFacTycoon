@@ -9,6 +9,15 @@ export function pushModal(state: GameState, modal: ModalItem) {
   state.modals.push(modal);
 }
 
+/** Informational pop-ups (the year report) do not stop the clock; everything else waits for the player. */
+export const isBlockingModal = (m: ModalItem) => m.kind !== 'yearReport';
+
+/** Close the pop-up the player is looking at: the first blocking one, otherwise the first one. */
+export function shiftModal(state: GameState) {
+  const i = state.modals.findIndex(isBlockingModal);
+  state.modals.splice(i >= 0 ? i : 0, 1);
+}
+
 export function newId(state: GameState, prefix: string): string {
   return `${prefix}${state.nextId++}`;
 }

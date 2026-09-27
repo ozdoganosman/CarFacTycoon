@@ -17,17 +17,18 @@ Tek dosyalık sürüm (sunucu gerekmez, dosyayı tarayıcıda açman yeterli):
 npm run build:single # dist-single/index.html
 ```
 
-Kısayollar: **boşluk** duraklat/devam, **1-2-3** hız. Oyun her çeyrekte tarayıcıya otomatik kaydedilir. Ayarlar ekranından kayıt dosyası indirip yükleyebilirsin.
+Kısayollar: **boşluk** duraklat/devam, **1-2-3** hız. Karar isteyen olaylar zamanı durdurur, karar verilince oyun kaldığı hızda sürer; yıl raporu zamanı durdurmaz, köşede bekler. Oyun her çeyrekte tarayıcıya otomatik kaydedilir. Ayarlar ekranından kayıt kodunu kopyalayıp yükleyebilirsin.
+
+claude.ai içinde menüdeki **Claude’a gönder** düğmesi oyunun o anki hâlini (sıkıştırılmış kayıt, kısa özet ve oyuncunun notu) sayfanın veritabanındaki `playtests` koleksiyonuna yazar. `node scripts/playtest.mjs <klasör> <id>` indirilen parçaları yeniden kayda çevirir.
 
 ## Ana döngü
 
 1. **Proje:** Segmenti (şehir arabası, aile, spor, pikap, lüks, 1946’dan sonra arazi aracı) ve hedef fiyatı seç.
-2. **Tasarım:** Şasi, gövde, motor, şanzıman, süspansiyon, güvenlik ve iç mekân modülleri. Her modül dönemine göre açılır.
-3. **Geliştirme:** Mühendisleri ata; odağı performans, verim, konfor, güvenlik ve maliyet arasında dağıt.
-4. **Test:** Dinamometre, yol, dayanıklılık ve 1934’ten sonra çarpışma testi. Testi kısa kesersen erken çıkarsın ama gizli kusurlar sahada patlar.
-5. **Üretim:** Yap ya da satın al (motor, şanzıman, elektrik), hat seçimi, kalıplar.
-6. **Lansman:** Fiyat, pazarlar, otomobil fuarı. Üç dergi puan verir.
-7. **Satış sonrası:** Müşteri yorumları, arızalar, geri çağırma ya da sessiz kalma kararı, makyaj ve yeni kuşak.
+2. **Tasarım ve geliştirme:** Şasi, gövde, motor, şanzıman, süspansiyon, güvenlik ve iç mekân modülleri (her modül dönemine göre açılır). Mühendisleri ata; odağı performans, verim, konfor, güvenlik ve maliyet arasında dağıt. Lansmana kadar yalnızca mühendis tahminleri (aralıklar) görünür; testler aralıkları daraltır.
+3. **Test:** Dinamometre, yol, dayanıklılık ve 1934’ten sonra çarpışma testi. Testi kısa kesersen erken çıkarsın ama gizli kusurlar sahada patlar.
+4. **Üretim:** Yap ya da satın al (motor, şanzıman, elektrik), hat seçimi, kalıplar. **Kapasite planlayıcı** tek tıkla dengeli, tam donanımlı hatlar kurar ve eski hatları yeni makinelerle yeniler; darboğaz bölümüne gece vardiyası eklenebilir.
+5. **Lansman:** Fiyat, pazarlar, otomobil fuarı. Perde açılır, üç dergi puan verir, araç segmentteki bütün rakiplerle karşılaştırılır; bir ay sonra ilk ay raporu gelir.
+6. **Satış sonrası:** Müşteri yorumları, arızalar, geri çağırma ya da sessiz kalma kararı, makyaj ve yeni kuşak.
 
 Oyun her tasarımdan 0-100 (erken dönemde 0-50), son hız, tüketim, konfor, yol tutuş, güvenlik, güvenilirlik, prestij, pratiklik ve maliyeti hesaplar. Her segmentin bu özelliklere verdiği önem gizlidir. Oyuncu bunu satış raporlarından ve dergi yorumlarından öğrenir ve **Pazarlar → Segment bilgisi** tablosu zamanla dolar.
 
@@ -39,7 +40,7 @@ Oyun her tasarımdan 0-100 (erken dönemde 0-50), son hız, tüketim, konfor, yo
 | Motor simülatörü yeni oyuncu için ağır | Varsayılan olarak hazır motorlar ve tek bir “karakter (strok/çap)” kaydırıcısı. Silindir, çap, strok, sıkıştırma, supap, yakıt sistemi ve kompresör **Mühendis modu**nda. |
 | Gizli ağırlıklar rastgele hissettirebilir | Aylık müşteri yorumları (“Pikap alıcıları güvenilirlikten şikâyetçi”), dergi alıntıları, doldurulan segment bilgisi tablosu, ücretli pazar araştırması ve model ekranında “Neden bu kadar satıyor?” dökümü (çekicilik, fiyat, marka, yenilik, erişim, rakipler). |
 | Puanlar döneme göre olmalı | Her puan o yılın aynı sınıftaki ortalama aracına göre hesaplanır (50 = ortalama). Eski modeller kendiliğinden eskir. |
-| Rakipler gerekli | 13 kurgusal üretici. Araçları oyuncunun kullandığı hesaplayıcıyla bir yapay tasarımcı üretir. |
+| Rakipler gerekli | 17 kurgusal üretici; 1900’den itibaren her pazarda her segmentte en az bir isimli rakip var (testle korunur). Araçları oyuncunun kullandığı hesaplayıcıyla bir yapay tasarımcı üretir. |
 | Sistemler kademeli açılmalı | İhracat ve yap-ya-da-al ikinci modelle, platform ve motor paylaşımı üçüncü modelle açılır. |
 
 ### Tarihten mekaniğe

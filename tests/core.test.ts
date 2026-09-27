@@ -9,9 +9,13 @@ import { makeRng } from '../src/core/rng';
 import { deserialize, serialize } from '../src/core/save';
 import { eraReference, scoreStats } from '../src/core/scoring';
 import { expectedRemaining } from '../src/core/testing';
+import { isBlockingModal } from '../src/core/util';
 import { computeCarStats } from '../src/core/vehicle';
 import type { CarDesign } from '../src/core/types';
+import { RIVALS } from '../src/data/rivals';
+import { SEGMENTS } from '../src/data/segments';
 import { inYear } from '../src/ui/format';
+import { store } from '../src/ui/store';
 import { runBot } from '../scripts/bot';
 
 const modelT: CarDesign = {
@@ -113,6 +117,30 @@ describe('game', () => {
     expect(s.rivalModels.length).toBeGreaterThan(0);
   });
 
+  it('every open class has a named rival in both markets, from the first day', () => {
+    for (const mk of ['usa', 'europe'] as const) {
+      for (const sg of SEGMENTS) {
+        for (let y = Math.max(1900, sg.year); y <= 1960; y += 0.25) {
+          const named = RIVALS.filter(
+            (r) =>
+              r.founded <= y &&
+              (!r.closes || y < r.closes) &&
+              r.segments.some((e) => e.seg === sg.id && e.from <= y && (!e.to || y < e.to)) &&
+              (r.home === mk || (r.exports ?? []).some((x) => x.market === mk && x.from <= y && (!x.segments || x.segments.includes(sg.id)))),
+          );
+          expect(named.length, `${mk} ${sg.id} ${y}`).toBeGreaterThan(0);
+        }
+      }
+    }
+    // And the models are really on sale when the game starts.
+    for (const hq of ['usa', 'europe'] as const) {
+      const s = newGame({ companyName: 'Test', hq, seed: 3 });
+      for (const seg of ['city', 'family', 'sport', 'luxury'] as const) {
+        expect(segmentMarket(s, hq, seg).offers.length, `${hq} ${seg}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it('market shares add up to 100%', () => {
     const s = newGame({ companyName: 'Test', hq: 'europe', seed: 2 });
     for (let i = 0; i < 52 * 15; i++) tick(s);
@@ -161,6 +189,72 @@ describe('game', () => {
     expect(s.gameOver?.reason).toBe('end');
     expect(s.company.cash).toBeGreaterThan(0);
   }, 60_000);
+});
+
+describe('factory tools', () => {
+  it('a turnkey line is full, balanced and assigned in one step', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 4 });
+    runBot(s, 52 * 3, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active')!;
+    s.company.cash = 1e7;
+    const before = s.lines.length;
+    expect(A.buildTurnkeyLines(s, 3, m.id, false).ok).toBe(true);
+    const fresh = s.lines.slice(before);
+    expect(fresh).toHaveLength(3);
+    for (const l of fresh) {
+      expect(l.modelId).toBe(m.id);
+      const r = lineReport(s, l, 1);
+      // Balanced: no section can do more than ~one station above the bottleneck.
+      for (const v of Object.values(r.perStage)) expect(v).toBeLessThan(r.throughput + 3.01);
+    }
+  });
+
+  it('modernising swaps in new machines and a night shift lifts the bottleneck', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 5 });
+    const line = s.lines[0];
+    s.company.cash = 1e7;
+    const old = lineReport(s, line, 1);
+    s.week = 52 * 26; // 1926: spray paint, moving lines
+    expect(A.modernizeLine(s, line.id, false).ok).toBe(true);
+    const fresh = lineReport(s, line, 1);
+    expect(fresh.throughput).toBeGreaterThan(old.throughput * 5);
+    A.setNightShift(s, line.id, fresh.bottleneck, true);
+    expect(lineReport(s, line, 1).throughput).toBeGreaterThan(fresh.throughput);
+  });
+
+  it('the year report does not stop the clock; decisions do', () => {
+    expect(isBlockingModal({ kind: 'yearReport', year: 1901 })).toBe(false);
+    expect(isBlockingModal({ kind: 'launch', modelId: 'm1', venue: 'x' })).toBe(true);
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 6 });
+    s.modals = [{ kind: 'yearReport', year: 1900 }, { kind: 'unlock', title: 'x', body: 'y' }];
+    A.dismissModal(s);
+    expect(s.modals.map((m) => m.kind)).toEqual(['yearReport']);
+  });
+});
+
+describe('clock', () => {
+  it('pauses for a decision, resumes by itself afterwards, and runs through the year report', () => {
+    store.start({ companyName: 'Test', hq: 'usa', seed: 8 });
+    store.setSpeed(3);
+    const s = store.state!;
+    s.modals = [{ kind: 'unlock', title: 'x', body: 'y' }];
+    store.step();
+    expect(store.speed).toBe(0);
+    store.act(A.dismissModal);
+    expect(store.speed).toBe(3);
+    s.modals = [{ kind: 'yearReport', year: 1900 }];
+    const week = s.week;
+    store.step();
+    expect(s.week).toBe(week + 1);
+    expect(store.speed).toBe(3);
+    // A pause the player chose is not undone by closing a pop-up.
+    s.modals = [{ kind: 'unlock', title: 'x', body: 'y' }];
+    store.step();
+    store.setSpeed(0);
+    store.act(A.dismissModal);
+    expect(store.speed).toBe(0);
+    store.quit();
+  });
 });
 
 describe('format', () => {

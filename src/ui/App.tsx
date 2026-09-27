@@ -3,7 +3,7 @@ import { store, useGame } from './store';
 import { StartScreen } from './screens/StartScreen';
 import { TopBar } from './components/TopBar';
 import { Nav } from './components/Nav';
-import { ModalHost } from './components/ModalHost';
+import { ModalHost, YearCard } from './components/ModalHost';
 import { ConfirmHost } from './components/ConfirmHost';
 import { PauseBanner } from './components/PauseBanner';
 import { HQ } from './screens/HQ';
@@ -97,6 +97,7 @@ export function App() {
           {body}
         </main>
       </div>
+      <YearCard />
       <ModalHost />
       <ConfirmHost />
       {store.toast && (

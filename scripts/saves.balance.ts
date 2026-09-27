@@ -7,6 +7,19 @@ import { serialize } from '../src/core/save';
 
 const OUT = process.env.SAVE_DIR ?? '/tmp';
 
+test('generate an early launch save', () => {
+  // The very first car of a new company, around 1901: who does it meet at the show?
+  const s = newGame({ companyName: 'Öncü Motor', hq: 'usa', seed: 7 });
+  for (let i = 0; i < 52 * 3 && !s.models.length; i++) {
+    s.modals = [];
+    botStep(s, { segments: ['family', 'city'] });
+    tick(s);
+  }
+  s.modals = s.modals.filter((m) => m.kind === 'launch');
+  writeFileSync(`${OUT}/save-early-launch.json`, serialize(s));
+  console.log('early launch week', s.week, s.models.map((m) => m.name + ':' + m.segment).join(','), 'modals', s.modals.length);
+});
+
 test('generate saves', () => {
   const s = newGame({ companyName: 'Anadolu Motor', hq: 'usa', seed: 7 });
   runBot(s, 52 * 12 + 20, { segments: ['family', 'city'] });

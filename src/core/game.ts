@@ -226,7 +226,11 @@ function closeYear(s: GameState, year: number) {
   const breakdown = {} as YearSummary['costs'];
   for (const k of COST_KEYS) breakdown[k] = weeks.reduce((a, f) => a + f[k], 0);
   s.years.push({ year, revenue, profit: revenue - costs, unitsSold: units, shareByMarket, cashEnd: s.company.cash, costs: breakdown });
-  if (year >= 1900 && s.week < s.endWeek) pushModal(s, { kind: 'yearReport', year });
+  if (year >= 1900 && s.week < s.endWeek) {
+    // Only the latest year report is kept; it waits in a corner while time runs on.
+    s.modals = s.modals.filter((m) => m.kind !== 'yearReport');
+    pushModal(s, { kind: 'yearReport', year });
+  }
 }
 
 function advanceProjects(s: GameState) {

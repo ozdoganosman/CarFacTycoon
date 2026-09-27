@@ -2,13 +2,13 @@ import { costIndex, newLineCost, shopCost, slotCost, toolingMultiple, MAX_SLOTS 
 import { eventDef } from '../data/events';
 import { MARKETS, marketScale, MAX_DEALER_LEVEL } from '../data/markets';
 import { segmentDef } from '../data/segments';
-import { stationDef } from '../data/stations';
+import { STAGES, stationDef } from '../data/stations';
 import { CHASSIS, byId } from '../data/tech';
 import { aiDesign } from './ai';
 import { bonusFromPoints, evenFocus, normalizeFocus } from './development';
 import { displacementCc } from './engine';
 import { writeReviews } from './feedback';
-import { emptyLine, lineReport, stationPrice, stationResale } from './factory';
+import { emptyLine, lineReport, modernizeQuote, planBalancedLine, stationPrice, stationResale, turnkeyLineCost } from './factory';
 import {
   availableSegments,
   credit,
@@ -37,7 +37,7 @@ import type {
   TestId,
 } from './types';
 import { NO_BONUS, computeCarStats } from './vehicle';
-import { clamp, earn, log, money, newId, spend } from './util';
+import { clamp, earn, log, money, newId, shiftModal, spend } from './util';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 const ok: ActionResult = { ok: true };
@@ -618,6 +618,51 @@ export function sellStation(s: GameState, lineId: string, stage: StageId, index:
   return ok;
 }
 
+/** Build `count` new lines, fully equipped and balanced, and put `modelId` on them. */
+export function buildTurnkeyLines(s: GameState, count: number, modelId: string | undefined, allowBlack: boolean): ActionResult {
+  const m = modelId ? model(s, modelId) : undefined;
+  const each = turnkeyLineCost(s.week, allowBlack) + (m ? retoolCost(s, m) : 0);
+  const total = each * count;
+  if (count < 1) return fail('En az bir hat seç.');
+  if (s.company.cash < total) return fail(`${count} hat için ${money(total)} gerekiyor.`);
+  const plan = planBalancedLine(yearFloat(s.week), allowBlack);
+  for (let i = 0; i < count; i++) {
+    spend(s, each, 'investment');
+    const line = emptyLine(`L${s.nextId++}`, `Hat ${s.lines.length + 1}`);
+    line.slots = MAX_SLOTS;
+    for (const st of STAGES) line.stations[st.id] = [...plan[st.id]];
+    if (m) {
+      line.modelId = m.id;
+      line.retoolUntilWeek = s.week + 3;
+    }
+    s.lines.push(line);
+  }
+  return ok;
+}
+
+/** Rebuild a line with today's best stations, balanced; reusable stations stay, the rest are sold. */
+export function modernizeLine(s: GameState, lineId: string, allowBlack: boolean): ActionResult {
+  const line = s.lines.find((l) => l.id === lineId);
+  if (!line) return fail('Hat bulunamadı.');
+  const q = modernizeQuote(line, s.week, allowBlack);
+  if (q.after <= q.before * 1.02) return fail('Bu hat zaten güncel.');
+  if (s.company.cash < q.cost) return fail(`Yenileme için ${money(q.cost)} gerekiyor.`);
+  spend(s, q.buy + q.expand, 'investment');
+  earn(s, q.resale);
+  line.slots = MAX_SLOTS;
+  for (const st of STAGES) line.stations[st.id] = [...q.plan[st.id]];
+  // Two weeks to install the new machines.
+  if (line.modelId) line.retoolUntilWeek = Math.max(line.retoolUntilWeek ?? 0, s.week + 2);
+  return ok;
+}
+
+export function setNightShift(s: GameState, lineId: string, stage: StageId, on: boolean): ActionResult {
+  const line = s.lines.find((l) => l.id === lineId);
+  if (!line) return fail('Hat bulunamadı.');
+  line.nightShift = { ...line.nightShift, [stage]: on };
+  return ok;
+}
+
 export function setLineMilitary(s: GameState, lineId: string, military: boolean): ActionResult {
   if (military && !((s.flags.militaryUntil ?? 0) > yearFloat(s.week))) return fail('Aktif bir askeri sözleşme yok.');
   s.lines.find((l) => l.id === lineId)!.military = military;
@@ -687,13 +732,17 @@ export function repayLoan(s: GameState, amount: number): ActionResult {
 // ---------------- Modals & decisions ----------------
 
 export function dismissModal(s: GameState) {
-  s.modals.shift();
+  shiftModal(s);
+}
+
+export function dismissYearReport(s: GameState) {
+  s.modals = s.modals.filter((m) => m.kind !== 'yearReport');
 }
 
 export function chooseEventOption(s: GameState, eventId: string, choiceId: string) {
   const ev = eventDef(eventId);
   ev?.choices?.find((c) => c.id === choiceId)?.apply?.(s);
-  s.modals.shift();
+  shiftModal(s);
 }
 
 export function recallDecision(s: GameState, modelId: string, defectId: string, decision: 'recall' | 'ignore') {
@@ -718,7 +767,7 @@ export function recallDecision(s: GameState, modelId: string, defectId: string, 
       log(s, `${m.name}: kusur için bir şey yapılmadı.`, 'warn');
     }
   }
-  s.modals.shift();
+  shiftModal(s);
 }
 
 export function setEngineerMode(s: GameState, on: boolean) {

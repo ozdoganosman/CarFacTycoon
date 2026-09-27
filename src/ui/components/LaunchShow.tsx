@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as A from '../../core/actions';
 import { mainMarket } from '../../core/feedback';
-import { modelScores, rivalScores, segmentMarket } from '../../core/market';
+import { modelScores, referencePrice, rivalScores, segmentMarket } from '../../core/market';
 import { accelMetric, eraReference } from '../../core/scoring';
 import { yearFloat } from '../../core/time';
 import { MARKETS } from '../../data/markets';
@@ -164,6 +164,9 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
   const strong = diffs.filter((x) => x.d > 5).slice(0, 3);
   const weak = diffs.filter((x) => x.d < -5).slice(-3).reverse();
   const accelLabel = specCells(m.stats, yf, m.segment).accelLabel;
+  // The small makers are shown as the typical car of the class (the 50-point yardstick).
+  const ref = eraReference(yf, m.segment);
+  const named = rows.length - 1;
   return (
     <div className="rivals">
       <div className="rival-head">
@@ -172,6 +175,7 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
           <b className="rival-rank">
             {rank ? `${rank}.` : '—'} <span className="muted small">/ {rows.length}</span>
           </b>
+          {named === 0 && <span className="muted small">Henüz büyük rakip yok</span>}
         </div>
         <div>
           <span className="muted small">Tahmini pay</span>
@@ -224,22 +228,25 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
               <td>
                 <b>Küçük üreticiler</b>
                 <br />
-                <span className="muted small">Onlarca atölye ve yerel marka</span>
+                <span className="muted small">Onlarca atölye · tipik araç</span>
               </td>
               <td className="rival-appeal">
-                <span className="muted small">değişken</span>
+                <ScoreBar value={50} />
+                <span className="small">≈50</span>
               </td>
               <td className="al-r">{pct(sm.othersWeight / sm.totalWeight)}</td>
-              <td className="al-r muted" colSpan={5}>
-                —
-              </td>
+              <td className="al-r">~{money(referencePrice(market, m.segment, yf))}</td>
+              <td className="al-r">{ref.powerHp.toFixed(0)} bg</td>
+              <td className="al-r">{kmh(ref.topSpeed)}</td>
+              <td className="al-r">{secs(ref.accel100 ?? ref.accel50)}</td>
+              <td className="al-r">{litres(ref.fuel)}</td>
             </tr>
           </tbody>
         </table>
       </div>
       <div className="rival-verdict">
         <div>
-          <h4>Rakiplerden iyi olduğun yerler</h4>
+          <h4>{rivals.length ? 'Rakiplerden iyi olduğun yerler' : 'Sınıf ortalamasından iyi olduğun yerler'}</h4>
           {strong.length ? (
             <ul>
               {strong.map((x) => (
@@ -253,7 +260,7 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
           )}
         </div>
         <div>
-          <h4>Geride kaldığın yerler</h4>
+          <h4>{rivals.length ? 'Geride kaldığın yerler' : 'Ortalamanın gerisinde kaldığın yerler'}</h4>
           {weak.length ? (
             <ul>
               {weak.map((x) => (

@@ -6,6 +6,7 @@ import { newLineCost } from '../src/data/economy';
 import { lineReport, stationPrice } from '../src/core/factory';
 import { referencePrice } from '../src/core/market';
 import { eventDef } from '../src/data/events';
+import { isBlockingModal } from '../src/core/util';
 import { yearFloat } from '../src/core/time';
 import type { GameState, SegmentId } from '../src/core/types';
 
@@ -18,7 +19,7 @@ export interface BotOptions {
 
 export function botStep(s: GameState, o: BotOptions = {}) {
   while (s.modals.length) {
-    const m = s.modals[0];
+    const m = s.modals.find(isBlockingModal) ?? s.modals[0];
     if (m.kind === 'event') {
       const ev = eventDef(m.eventId);
       if (ev?.choices?.length) A.chooseEventOption(s, m.eventId, ev.choices[0].id);

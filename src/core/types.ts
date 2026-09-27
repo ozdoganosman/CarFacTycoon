@@ -299,6 +299,8 @@ export interface ProductionLine {
   retoolUntilWeek?: number;
   /** When a line is working on military orders during the war. */
   military?: boolean;
+  /** Sections that also work a night shift. */
+  nightShift?: Partial<Record<StageId, boolean>>;
 }
 
 export interface MarketState {

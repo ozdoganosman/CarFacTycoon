@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import * as A from '../../core/actions';
 import { cardDef } from '../../data/cards';
 import { eventDef } from '../../data/events';
@@ -9,6 +9,7 @@ import { AREA_NAMES, SEVERITY_NAMES } from '../../core/testing';
 import { allTech } from '../../core/techtree';
 import { costIndex } from '../../data/economy';
 import { yearFloat } from '../../core/time';
+import { isBlockingModal } from '../../core/util';
 import type { GameState, ModalItem } from '../../core/types';
 import { store, useGameState } from '../store';
 import { money, num, pct } from '../format';
@@ -39,9 +40,10 @@ const paragraphs = (text: string) => text.split('\n\n').map((p, i) => <p key={i}
 
 export function ModalHost() {
   const s = useGameState();
-  const m = s.modals[0];
+  const blocking = s.modals.filter(isBlockingModal);
+  const m = blocking[0];
   if (!m) return null;
-  return <ModalFor s={s} m={m} key={JSON.stringify(m) + s.modals.length} />;
+  return <ModalFor s={s} m={m} key={JSON.stringify(m) + blocking.length} />;
 }
 
 function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
@@ -186,60 +188,6 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
         </Modal>
       );
     }
-    case 'yearReport': {
-      const y = s.years.find((x) => x.year === m.year);
-      if (!y) return null;
-      const rivals = s.rivals
-        .map((r) => ({ name: r.name, units: r.yearSold[m.year] ?? 0 }))
-        .filter((r) => r.units > 0)
-        .sort((a, b) => b.units - a.units)
-        .slice(0, 5);
-      const fresh = allTech().filter((t) => t.year === m.year + 1);
-      return (
-        <Modal title={`${m.year} yılı raporu`} icon="📊" actions={<Button kind="primary" onClick={close}>Yeni yıla geç</Button>}>
-          <div className="report-grid">
-            <div>
-              <span>Satış</span>
-              <b>{num(y.unitsSold)} araç</b>
-            </div>
-            <div>
-              <span>Ciro</span>
-              <b>{money(y.revenue)}</b>
-            </div>
-            <div>
-              <span>Faaliyet kârı</span>
-              <b className={y.profit < 0 ? 'tone-bad' : 'tone-good'}>{money(y.profit)}</b>
-            </div>
-            {MARKETS.map((mk) => (
-              <div key={mk.id}>
-                <span>
-                  {mk.flag} {mk.name} payı
-                </span>
-                <b>{pct(y.shareByMarket[mk.id], 2)}</b>
-              </div>
-            ))}
-          </div>
-          {rivals.length > 0 && (
-            <>
-              <h4>En çok satan rakipler</h4>
-              <ol className="rank">
-                {rivals.map((r) => (
-                  <li key={r.name}>
-                    {r.name} <span className="muted">{num(r.units)}</span>
-                  </li>
-                ))}
-              </ol>
-            </>
-          )}
-          {fresh.length > 0 && (
-            <>
-              <h4>{m.year + 1} yılında gelen yenilikler</h4>
-              <p className="muted">{fresh.map((t) => t.name).join(', ')}</p>
-            </>
-          )}
-        </Modal>
-      );
-    }
     case 'launch':
       return <LaunchShow s={s} modelId={m.modelId} venue={m.venue} facelift={m.facelift} />;
     case 'launchReport':
@@ -311,5 +259,111 @@ function GameOver({ s }: { s: GameState }) {
         </>
       )}
     </Modal>
+  );
+}
+
+/** What the year brought: sales, profit, shares, the best-selling rivals and next year's technology. */
+export function YearReportBody({ s, year }: { s: GameState; year: number }) {
+  const y = s.years.find((x) => x.year === year);
+  if (!y) return null;
+  const rivals = s.rivals
+    .map((r) => ({ name: r.name, units: r.yearSold[year] ?? 0 }))
+    .filter((r) => r.units > 0)
+    .sort((a, b) => b.units - a.units)
+    .slice(0, 5);
+  const fresh = allTech().filter((t) => t.year === year + 1);
+  return (
+    <>
+    <div className="report-grid">
+      <div>
+        <span>Satış</span>
+        <b>{num(y.unitsSold)} araç</b>
+      </div>
+      <div>
+        <span>Ciro</span>
+        <b>{money(y.revenue)}</b>
+      </div>
+      <div>
+        <span>Faaliyet kârı</span>
+        <b className={y.profit < 0 ? 'tone-bad' : 'tone-good'}>{money(y.profit)}</b>
+      </div>
+      {MARKETS.map((mk) => (
+        <div key={mk.id}>
+          <span>
+            {mk.flag} {mk.name} payı
+          </span>
+          <b>{pct(y.shareByMarket[mk.id], 2)}</b>
+        </div>
+      ))}
+    </div>
+    {rivals.length > 0 && (
+      <>
+        <h4>En çok satan rakipler</h4>
+        <ol className="rank">
+          {rivals.map((r) => (
+            <li key={r.name}>
+              {r.name} <span className="muted">{num(r.units)}</span>
+            </li>
+          ))}
+        </ol>
+      </>
+    )}
+    {fresh.length > 0 && (
+      <>
+        <h4>{year + 1} yılında gelen yenilikler</h4>
+        <p className="muted">{fresh.map((t) => t.name).join(', ')}</p>
+      </>
+    )}
+    </>
+  );
+}
+
+/**
+ * The year report does not stop the game: it waits in a corner for a while
+ * and opens in full on request.
+ */
+export function YearCard() {
+  const s = useGameState();
+  const item = s.modals.find((m) => m.kind === 'yearReport');
+  const year = item?.kind === 'yearReport' ? item.year : null;
+  const [open, setOpen] = useState(false);
+  useEffect(() => setOpen(false), [year]);
+  // Tucked away by itself after a while, unless the player is reading it.
+  useEffect(() => {
+    if (year === null || open) return;
+    const t = setTimeout(() => store.act(A.dismissYearReport), 25000);
+    return () => clearTimeout(t);
+  }, [year, open]);
+  if (year === null) return null;
+  const y = s.years.find((x) => x.year === year);
+  if (!y) return null;
+  const close = () => store.act(A.dismissYearReport);
+  if (open) {
+    return (
+      <Modal title={`${year} yılı raporu`} icon="📊" actions={<Button kind="primary" onClick={close}>Kapat</Button>}>
+        <YearReportBody s={s} year={year} />
+      </Modal>
+    );
+  }
+  return (
+    <aside className="year-card" aria-live="polite">
+      <div className="year-card-head">
+        <b>📊 {year} yılı kapandı</b>
+        <button type="button" className="year-card-x" aria-label="Kapat" onClick={close}>
+          ×
+        </button>
+      </div>
+      <div className="year-card-stats">
+        <span>
+          Satış <b>{num(y.unitsSold)}</b>
+        </span>
+        <span>
+          Kâr <b className={y.profit < 0 ? 'tone-bad' : 'tone-good'}>{money(y.profit)}</b>
+        </span>
+      </div>
+      <Button kind="ghost" onClick={() => setOpen(true)}>
+        Raporu aç
+      </Button>
+    </aside>
   );
 }
