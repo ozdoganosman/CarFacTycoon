@@ -32,7 +32,12 @@ test('generate saves', () => {
   writeFileSync(`${OUT}/save-ready.json`, serialize(s));
   const l = A.launchModel(s, r.id, { price: 1500, markets: ['usa', 'europe'], autoShow: true });
   if (!l.ok) throw new Error(l.error);
+  s.modals = s.modals.filter((m) => m.kind === 'launch');
   writeFileSync(`${OUT}/save-reviews.json`, serialize(s));
+  s.modals = [];
+  for (let i = 0; i < 4; i++) tick(s);
+  s.modals = s.modals.filter((m) => m.kind === 'launchReport');
+  writeFileSync(`${OUT}/save-report.json`, serialize(s));
   s.modals = [];
   for (let i = 0; i < 30; i++) { botStep(s, { segments: ['family', 'city'] }); tick(s); }
   s.modals = [{ kind: 'yearReport', year: s.years[s.years.length - 1].year }];

@@ -14,6 +14,7 @@ import { store, useGameState } from '../store';
 import { money, num, pct } from '../format';
 import { Button } from './ui';
 import { CardAnimation } from './CardAnimation';
+import { LaunchReportView, LaunchShow } from './LaunchShow';
 
 function Modal(props: { title: ReactNode; icon?: string; children: ReactNode; actions: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -239,6 +240,10 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
         </Modal>
       );
     }
+    case 'launch':
+      return <LaunchShow s={s} modelId={m.modelId} venue={m.venue} facelift={m.facelift} />;
+    case 'launchReport':
+      return <LaunchReportView s={s} modelId={m.modelId} report={m.report} />;
     case 'unlock':
       return (
         <Modal title={m.title} icon="🔓" actions={<Button kind="primary" onClick={close}>Harika</Button>}>

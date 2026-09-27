@@ -19,6 +19,13 @@ import { yearFloat } from './time';
 import type { CarModel, CarStats, GameState, MarketId, RivalModel, Scores, SegmentId } from './types';
 
 export const TAU = 7;
+/**
+ * Dealer reach has diminishing returns: a car only sold in a few showrooms still
+ * finds the enthusiasts who look for it, so a small specialist is not wiped out
+ * by a big maker's network.
+ */
+const REACH_EXP = 0.6;
+const offerWeight = (reach: number, utility: number) => Math.pow(reach, REACH_EXP) * Math.exp(utility / TAU);
 /** The many tiny coachbuilders and assemblers behave like an average car of the class. */
 const OTHERS_UTILITY = 50;
 
@@ -155,7 +162,7 @@ export function playerOffer(state: GameState, model: CarModel, market: MarketId)
     hype: model.hype,
     reach,
     utility,
-    weight: reach * Math.exp(utility / TAU),
+    weight: offerWeight(reach, utility),
   };
 }
 
@@ -182,7 +189,7 @@ export function rivalOffer(state: GameState, rm: RivalModel, market: MarketId): 
     hype,
     reach,
     utility,
-    weight: reach * Math.exp(utility / TAU),
+    weight: offerWeight(reach, utility),
   };
 }
 
@@ -204,7 +211,9 @@ export function segmentMarket(state: GameState, market: MarketId, segment: Segme
   for (const rm of state.rivalModels) {
     if (rm.active && rm.segment === segment && rm.markets.includes(market)) offers.push(rivalOffer(state, rm, market));
   }
-  const othersWeight = othersMass(yf) * Math.exp(OTHERS_UTILITY / TAU);
+  // Where few named rivals compete, the many small makers fill the gap.
+  const rivalCount = offers.filter((o) => o.kind === 'rival').length;
+  const othersWeight = othersMass(yf) * (1 + 0.35 * Math.max(0, 3 - rivalCount)) * Math.exp(OTHERS_UTILITY / TAU);
   const totalWeight = offers.reduce((s, o) => s + o.weight, 0) + othersWeight;
   return { demand: weeklySegmentDemand(market, segment, yf), offers, othersWeight, totalWeight };
 }

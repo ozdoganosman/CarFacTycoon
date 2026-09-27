@@ -151,6 +151,32 @@ export interface Defect {
 
 export type ProjectPhase = 'design' | 'development' | 'testing' | 'production' | 'ready';
 
+/**
+ * Engineers' estimate of how the car will score, before buyers see it.
+ * width = half-width of the range in score points; offsets bias the centre so the
+ * range does not simply give away the true value. Tests narrow the widths.
+ */
+export interface Estimate {
+  offsets: Record<AttrKey, number>;
+  width: Record<AttrKey, number>;
+}
+
+export interface LaunchReport {
+  weeks: number;
+  sold: number;
+  built: number;
+  demand: number;
+  capacity: number;
+  market: MarketId;
+  rank: number;
+  offers: number;
+  share: number;
+  praise: AttrKey[];
+  complaints: AttrKey[];
+  price: 'high' | 'low' | 'fair';
+  advice: string[];
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -177,6 +203,7 @@ export interface Project {
   tests: Record<TestId, { planned: number; done: number }>;
   testWeeks: number;
   suppliers: Record<ComponentKey, SupplierChoice>;
+  estimate?: Estimate;
   lineId?: string;
   productionReadyWeek?: number;
   toolingCost?: number;
@@ -243,6 +270,8 @@ export interface CarModel {
     appeal: Record<MarketId, number>;
   };
   lastDemand?: Record<MarketId, number>;
+  /** Week when the first-month launch report is due. */
+  launchReportWeek?: number;
 }
 
 export interface Platform {
@@ -316,6 +345,8 @@ export type ModalItem =
   | { kind: 'recall'; modelId: string; defectId: string }
   | { kind: 'service'; modelId: string; defectId: string }
   | { kind: 'reviews'; modelId: string }
+  | { kind: 'launch'; modelId: string; venue: string; facelift?: boolean }
+  | { kind: 'launchReport'; modelId: string; report: LaunchReport }
   | { kind: 'phase'; projectId: string; phase: ProjectPhase }
   | { kind: 'yearReport'; year: number }
   | { kind: 'unlock'; title: string; body: string }

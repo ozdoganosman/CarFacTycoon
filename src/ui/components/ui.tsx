@@ -212,3 +212,17 @@ export function NumberInput(props: { value: number; onChange: (v: number) => voi
     </div>
   );
 }
+
+/** An engineer's estimate: a shaded range on the 0-100 scale, class average marked at 50. */
+export function RangeBar(props: { lo: number; hi: number; rough?: boolean }) {
+  const lo = Math.max(0, Math.min(100, props.lo));
+  const hi = Math.max(lo, Math.min(100, props.hi));
+  const mid = (lo + hi) / 2;
+  const tone = mid >= 60 ? 'good' : mid <= 40 ? 'bad' : 'mid';
+  return (
+    <div className="scorebar rangebar" title={`Tahmin: ${Math.round(lo)}–${Math.round(hi)} (50 = sınıf ortalaması)`}>
+      <div className={`rangebar-band sb-${tone} ${props.rough ? 'is-rough' : ''}`} style={{ left: `${lo}%`, width: `${Math.max(2, hi - lo)}%` }} />
+      <div className="scorebar-mid" />
+    </div>
+  );
+}

@@ -19,12 +19,14 @@ import {
 } from './game';
 import { modelScores } from './market';
 import { stateRng } from './rng';
+import { newEstimate } from './estimate';
 import { TESTS, SUPPLIERS, expectedDefects, generateDefects } from './testing';
 import { yearFloat } from './time';
 import type {
   CarDesign,
   CarModel,
   ComponentKey,
+  DevBonus,
   FocusKey,
   GameState,
   MarketId,
@@ -125,6 +127,7 @@ export function startProject(s: GameState, o: StartProjectOptions): { ok: true; 
     tests: { dyno: { planned: 4, done: 0 }, road: { planned: 8, done: 0 }, crash: { planned: 0, done: 0 }, durability: { planned: 8, done: 0 } },
     testWeeks: 0,
     suppliers: { engine: 'quality', gearbox: 'quality', electrics: 'quality' },
+    estimate: newEstimate(stateRng(s)),
   };
   s.projects.push(p);
   return { ok: true, id };
@@ -155,6 +158,12 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
     tests: { dyno: { planned: 0, done: 0 }, road: { planned: 3, done: 0 }, crash: { planned: 0, done: 0 }, durability: { planned: 0, done: 0 } },
     testWeeks: 0,
     suppliers: { ...m.suppliers },
+    // Engineers already know the car well: a facelift starts with tighter estimates.
+    estimate: (() => {
+      const e = newEstimate(stateRng(s));
+      for (const k of Object.keys(e.width) as (keyof typeof e.width)[]) e.width[k] *= 0.6;
+      return e;
+    })(),
     lineId: s.lines.find((l) => l.modelId === m.id)?.id,
   });
   return { ok: true, id };
@@ -181,6 +190,16 @@ export function requiredWork(s: GameState, p: Project): number {
   const eng = p.engineRefId && s.engines.find((x) => x.id === p.engineRefId);
   if (eng && JSON.stringify(eng.design) === JSON.stringify(p.design.engine)) w *= 0.75;
   return w;
+}
+
+/** Bonus the car ends up with if development runs to 100% with the current focus. */
+export function projectedBonus(s: GameState, p: Project): DevBonus {
+  if (p.bonus) return p.bonus;
+  const required = p.phase === 'design' ? requiredWork(s, p) : p.dev.required;
+  const remaining = Math.max(0, required - p.dev.done);
+  const points = { ...p.dev.points };
+  for (const k of Object.keys(points) as FocusKey[]) points[k] += p.dev.focus[k] * remaining;
+  return bonusFromPoints(points, required, Math.max(p.dev.done, required), s.company.skill);
 }
 
 export function setProjectEngineers(s: GameState, pid: string, n: number): ActionResult {
@@ -328,6 +347,9 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
   const yf = yearFloat(s.week);
   const bonus = p.bonus ?? NO_BONUS;
   const stats = computeCarStats(p.design, yf, bonus);
+  const venue = o.autoShow
+    ? `${Math.floor(yf)} ${MARKETS.find((x) => x.id === (markets.includes(s.company.hq) ? s.company.hq : markets[0]))!.name} Otomobil Fuarı`
+    : 'Fabrika avlusunda basın günü';
   if (o.autoShow) {
     const cost = autoShowCost(s, markets);
     spend(s, cost, 'marketing');
@@ -355,7 +377,8 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
     m.hype += 3 + Math.max(0, m.reviewScore - 5) * 0.8 + (o.autoShow ? 2 : 0);
     s.projects = s.projects.filter((x) => x.id !== p.id);
     s.company.skill = clamp(s.company.skill + (100 - s.company.skill) * 0.02, 0, 100);
-    s.modals.push({ kind: 'reviews', modelId: m.id });
+    m.launchReportWeek = s.week + 4;
+    s.modals.push({ kind: 'launch', modelId: m.id, venue, facelift: true });
     log(s, `${m.name} makyajlı haliyle satışta.`, 'good');
     return { ok: true, modelId: m.id };
   }
@@ -466,7 +489,8 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
   s.company.modelsLaunched += 1;
   s.company.skill = clamp(s.company.skill + (100 - s.company.skill) * 0.06, 0, 100);
   s.company.reputation = clamp(s.company.reputation + (m.reviewScore - 5.5) * 1.5, 0, 100);
-  s.modals.push({ kind: 'reviews', modelId: m.id });
+  m.launchReportWeek = s.week + 4;
+  s.modals.push({ kind: 'launch', modelId: m.id, venue });
   log(s, `${m.name} piyasaya çıktı! Dergilerin ortalaması: ${m.reviewScore.toFixed(1)}/10.`, 'good');
 
   // Progressive unlocks.

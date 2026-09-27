@@ -3,7 +3,8 @@ import { costIndex, engineerSalary, overhead, creditTerms, DEALER_COMMISSION } f
 import { EVENTS } from '../data/events';
 import { MARKETS, marketScale } from '../data/markets';
 import { SEGMENTS } from '../data/segments';
-import { customerFeedback } from './feedback';
+import { buildLaunchReport, customerFeedback } from './feedback';
+import { ensureEstimate, narrowForTest } from './estimate';
 import { MILITARY_COMPLEXITY, emptyLine, lineReport, lineUpkeep, militaryMargin, stationPrice } from './factory';
 import { MARKET_IDS, SEGMENT_IDS, modelScores, priceNow, segmentMarket } from './market';
 import { makeRng, rand, stateRng } from './rng';
@@ -54,7 +55,7 @@ export function newGame(opts: NewGameOptions): GameState {
     company: {
       name: opts.companyName || 'Yeni Motor',
       hq: opts.hq,
-      cash: 30000,
+      cash: 40000,
       loan: 0,
       reputation: 30,
       engineers: 2,
@@ -168,6 +169,7 @@ export function tick(s: GameState): void {
   advanceProjects(s);
   produce(s);
   sell(s);
+  launchReports(s);
   field(s);
   fixedCosts(s);
   drift(s);
@@ -250,6 +252,7 @@ function advanceProjects(s: GameState) {
         running = true;
         plan.done += 1;
         p.testWeeks += 1;
+        narrowForTest(ensureEstimate(p), t.id);
         spend(s, t.costPerWeek * costIndex(yf) * (0.6 + 0.4 * p.design.size + 0.2 * p.design.engine.cylinders / 4), 'rnd');
         for (const d of p.defects) {
           if (d.found) continue;
@@ -380,6 +383,13 @@ function sell(s: GameState) {
   for (const m of MARKET_IDS) {
     const ms = s.markets[m];
     ms.awareness = clamp(ms.awareness * 0.996 + 0.0025 * Math.log1p(soldThisWeek[m]), 0, 1);
+  }
+}
+
+function launchReports(s: GameState) {
+  for (const m of s.models) {
+    if (m.status !== 'active' || m.launchReportWeek !== s.week) continue;
+    pushModal(s, { kind: 'launchReport', modelId: m.id, report: buildLaunchReport(s, m) });
   }
 }
 

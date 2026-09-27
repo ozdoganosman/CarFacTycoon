@@ -5,9 +5,10 @@ import { costIndex, labourShare } from '../../data/economy';
 import { ATTRS, ATTR_NAMES, importanceLabel, segmentDef } from '../../data/segments';
 import { activeTax } from '../../data/markets';
 import { computeCarStats } from '../../core/vehicle';
-import type { AttrKey, CarDesign, CarStats, DevBonus, GameState, SegmentId } from '../../core/types';
+import { estimateRange, isRough } from '../../core/estimate';
+import type { AttrKey, CarDesign, CarStats, DevBonus, Estimate, GameState, SegmentId } from '../../core/types';
 import { kmh, litres, money, secs } from '../format';
-import { ScoreBar } from './ui';
+import { RangeBar, ScoreBar } from './ui';
 
 export function useCarStats(design: CarDesign, yf: number, bonus?: DevBonus): CarStats {
   const key = JSON.stringify(design) + Math.floor(yf) + JSON.stringify(bonus ?? null);
@@ -52,6 +53,8 @@ export function StatsPanel(props: {
   targetPrice?: number;
   compact?: boolean;
   note?: string;
+  /** When given, show engineers' ranges instead of exact scores and keep the buyers' verdict hidden. */
+  estimate?: Estimate;
 }) {
   const { s, design, segment, yf } = props;
   const st = useCarStats(design, yf, props.bonus);
@@ -64,27 +67,44 @@ export function StatsPanel(props: {
   const ref = referencePrice(hq, segment, yf);
   const target = props.targetPrice ?? ref;
   const eu = activeTax('europe', yf);
+  const est = props.estimate;
+  const measurable = (k: AttrKey) => k === 'accel' || k === 'topSpeed' || k === 'economy';
   return (
     <div className="stats-panel">
       <div className="sp-head">
-        <div>
-          <span className="muted small">Çekicilik ({segmentDef(segment).name})</span>
-          <b className={`sp-appeal ${ap >= 55 ? 'tone-good' : ap < 45 ? 'tone-bad' : ''}`}>{ap.toFixed(0)}</b>
-          <span className="muted small"> / sınıf ort. 50</span>
-          {props.note && <div className="muted small">{props.note}</div>}
-        </div>
+        {est ? (
+          <div>
+            <b className="sp-estimate-title">Mühendis tahmini</b>
+            <div className="muted small">
+              Alıcıların {segmentDef(segment).name.toLowerCase()} için ne diyeceği lansmanda belli olur. Aralıklar sınıf ortalamasına (çizgi) göre; testler aralıkları daraltır.
+            </div>
+            {props.note && <div className="muted small">{props.note}</div>}
+          </div>
+        ) : (
+          <div>
+            <span className="muted small">Çekicilik ({segmentDef(segment).name})</span>
+            <b className={`sp-appeal ${ap >= 55 ? 'tone-good' : ap < 45 ? 'tone-bad' : ''}`}>{ap.toFixed(0)}</b>
+            <span className="muted small"> / sınıf ort. 50</span>
+            {props.note && <div className="muted small">{props.note}</div>}
+          </div>
+        )}
       </div>
       <div className="sp-rows">
-        {ATTRS.map((k) => (
-          <div key={k} className="sp-row">
-            <div className="sp-label">
-              <span>{ATTR_NAMES[k]}</span>
-              <Importance s={s} segment={segment} attr={k} />
+        {ATTRS.map((k) => {
+          const r = est ? estimateRange(est, k, scores[k]) : null;
+          return (
+            <div key={k} className="sp-row">
+              <div className="sp-label">
+                <span>{ATTR_NAMES[k]}</span>
+                <Importance s={s} segment={segment} attr={k} />
+              </div>
+              <div className="sp-raw">
+                {!est ? rawValue(k, st, yf, segment) : measurable(k) ? `${isRough(est, k) ? '≈ ' : ''}${rawValue(k, st, yf, segment)}` : isRough(est, k) ? 'kaba tahmin' : 'ölçüldü'}
+              </div>
+              {r ? <RangeBar lo={r.lo} hi={r.hi} rough={isRough(est!, k)} /> : <ScoreBar value={scores[k]} />}
             </div>
-            <div className="sp-raw">{rawValue(k, st, yf, segment)}</div>
-            <ScoreBar value={scores[k]} />
-          </div>
-        ))}
+          );
+        })}
       </div>
       {!props.compact && (
         <div className="sp-facts">

@@ -132,4 +132,4 @@ export function marketScale(id: MarketId, year: number): number {
 
 /** Share of buyers who still pick one of many tiny makers (industry consolidation over time). */
 export const othersMass = (year: number) =>
-  interp([[1900, 4], [1910, 3], [1920, 2], [1930, 1.1], [1940, 0.6], [1960, 0.4]], year);
+  interp([[1900, 3.5], [1910, 3], [1920, 2], [1930, 1.1], [1940, 0.6], [1960, 0.4]], year);

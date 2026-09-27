@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import * as A from '../../core/actions';
 import { enginePresets, withStrokeRatio } from '../../core/ai';
 import { displacementCc, knockLimit } from '../../core/engine';
-import { bonusFromPoints, evenFocus, productivity } from '../../core/development';
-import { engineersBusy } from '../../core/game';
+import { newEstimate } from '../../core/estimate';
 import { yearFloat } from '../../core/time';
 import { engineCurve, gearSpeeds, tractionCurves, rollingResistance } from '../../core/vehicle';
 import {
@@ -23,17 +22,11 @@ import type { CarDesign, EngineDesign, FeatureId, Project } from '../../core/typ
 import { store, useGameState } from '../store';
 import { kmh, litres, money, secs } from '../format';
 import { inYear } from '../format';
-import { Button, Choice, Panel, Slider, Toggle } from '../components/ui';
+import { Button, Choice, Slider, Toggle } from '../components/ui';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { CarSVG } from '../viz/CarSVG';
 import { LineChart } from '../viz/LineChart';
 import { FourStroke } from '../cards/animations';
-
-/** What an evenly focused, fully developed car would get: lets the design screen show realistic numbers. */
-function expectedBonus(skill: number) {
-  const f = evenFocus();
-  return bonusFromPoints({ performance: f.performance, efficiency: f.efficiency, comfort: f.comfort, safety: f.safety, cost: f.cost }, 1, 1, skill);
-}
 
 type Tab = 'chassis' | 'body' | 'engine' | 'gearbox' | 'suspension' | 'safety' | 'equipment';
 const TABS: { id: Tab; label: string }[] = [
@@ -59,6 +52,7 @@ export function Designer({ project, readOnly }: { project: Project; readOnly?: b
     store.act((st) => A.updateDesign(st, project.id, { ...d, ...patch }));
   };
   const setEngine = (e: EngineDesign) => set({ engine: e });
+  const neutral = useMemo(() => newEstimate(() => 0.5), []);
 
   return (
     <div className="designer">
@@ -73,6 +67,7 @@ export function Designer({ project, readOnly }: { project: Project; readOnly?: b
             </button>
           ))}
         </div>
+        {readOnly && <p className="note design-locked">Geliştirme başladı: tasarım kilitli. Değişiklik için makyaj ya da yeni kuşak projesi gerekir.</p>}
         <fieldset className="tab-body" disabled={readOnly}>
           {tab === 'chassis' && (
             <>
@@ -185,9 +180,10 @@ export function Designer({ project, readOnly }: { project: Project; readOnly?: b
           design={d}
           segment={project.segment}
           yf={yf}
-          bonus={project.bonus ?? expectedBonus(s.company.skill)}
+          bonus={A.projectedBonus(s, project)}
           targetPrice={project.targetPrice}
-          note="Dengeli bir geliştirme sonrası tahmini"
+          estimate={project.estimate ?? neutral}
+          note="Geliştirme mevcut odak dağılımıyla biterse."
         />
       </aside>
     </div>
@@ -516,37 +512,5 @@ function GearboxTab({ d, yf, bonus, onChange }: { d: CarDesign; yf: number; bonu
       />
       <p className="muted small">Eğrilerin yol direncini kestiği yer son hızdır. Vites sayısı arttıkça eğriler birbirine yaklaşır ve motor güçlü olduğu devirde kalır.</p>
     </>
-  );
-}
-
-/** Footer shown under the designer in the design phase. */
-export function DesignFooter({ project }: { project: Project }) {
-  const s = useGameState();
-  const free = s.company.engineers - engineersBusy(s);
-  const work = A.requiredWork(s, project);
-  const eng = Math.max(1, Math.min(project.engineers, free));
-  const weeks = work / (eng * productivity(s.company.skill));
-  return (
-    <Panel className="design-footer">
-      <div className="footer-row">
-        <Slider
-          label="Mühendis sayısı"
-          value={eng}
-          min={1}
-          max={Math.max(1, free)}
-          onChange={(v) => store.act((st) => A.setProjectEngineers(st, project.id, v))}
-          format={(v) => `${v} / ${s.company.engineers}`}
-          disabled={free < 1}
-        />
-        <div className="footer-info">
-          <span className="muted small">Tahmini geliştirme süresi</span>
-          <b>{free < 1 ? 'Boşta mühendis yok' : `${Math.ceil(weeks)} hafta`}</b>
-          <span className="muted small">İş yükü: {Math.round(work)} mühendis-hafta</span>
-        </div>
-        <Button kind="primary" disabled={free < 1} onClick={() => store.try((st) => A.beginDevelopment(st, project.id), 'Geliştirme başladı')}>
-          Geliştirmeyi başlat
-        </Button>
-      </div>
-    </Panel>
   );
 }
