@@ -373,12 +373,25 @@ export function toolingQuote(s: GameState, p: Project, lineId: string, tier: Too
   return { cost, weeks, leadWeeks, sharedPlatform: shared };
 }
 
-export function startTooling(s: GameState, pid: string, lineId: string, tier: ToolingTier = 'standard'): ActionResult {
+/** Surcharge the die-makers ask to be paid later, out of sales. */
+export const VENDOR_CREDIT = 0.15;
+
+/**
+ * Order the dies. With `vendorCredit` the die-maker is paid later: the price plus a surcharge is
+ * added to the company's debt instead of coming out of the till (a way out when the till is empty).
+ */
+export function startTooling(s: GameState, pid: string, lineId: string, tier: ToolingTier = 'standard', o: { vendorCredit?: boolean } = {}): ActionResult {
   const p = project(s, pid);
   if (p.phase !== 'production') return fail('Proje üretim hazırlığında değil.');
   if (p.productionReadyWeek !== undefined) return fail('Kalıp hazırlığı zaten başladı.');
   const q = toolingQuote(s, p, lineId, tier);
-  if (s.company.cash < q.cost) return fail(`Kalıplar için ${money(q.cost)} gerekiyor.`);
+  if (o.vendorCredit) {
+    if (s.company.reputation < 5) return fail('Kalıpçılar bu itibarla vadeli iş kabul etmiyor.');
+    const owed = q.cost * (1 + VENDOR_CREDIT);
+    s.company.loan += owed;
+    s.company.cash += q.cost;
+    log(s, `${p.name}: kalıpçı vadeli sipariş kabul etti; ${money(owed)} borca eklendi.`, 'warn');
+  } else if (s.company.cash < q.cost) return fail(`Kalıplar için ${money(q.cost)} gerekiyor.`);
   spend(s, q.cost, 'investment');
   p.lineId = lineId;
   p.tooling = tier;

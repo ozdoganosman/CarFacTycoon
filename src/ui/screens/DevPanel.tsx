@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import * as A from '../../core/actions';
 import { FOCUS_HINTS, FOCUS_KEYS, FOCUS_NAMES, evenFocus, productivity } from '../../core/development';
 import { unknownTech } from '../../core/research';
+import { budgetVerdict, launchBudget } from '../../core/budget';
+import { money } from '../format';
+import { BudgetLine } from '../components/BudgetLine';
 import type { FocusKey, Project } from '../../core/types';
 import { store, useGameState } from '../store';
 import { Button, Progress, Slider } from '../components/ui';
@@ -53,6 +56,7 @@ export function DevBar({ project: p }: { project: Project }) {
           </>
         )}
       </div>
+      {!done && <BudgetLine b={launchBudget(s, p)} />}
       {developing && (
         <div className="dev-bar-progress">
           <Progress value={Math.min(p.dev.done, required * 1.6)} max={done ? required * 1.6 : required} tone={done ? 'good' : 'accent'} label={`%${pct}`} />
@@ -60,7 +64,24 @@ export function DevBar({ project: p }: { project: Project }) {
       )}
       <div className="dev-bar-actions">
         {!developing ? (
-          <Button kind="primary" disabled={missing.length > 0} onClick={() => store.try((st) => A.beginDevelopment(st, p.id), 'Geliştirme başladı')}>
+          <Button
+            kind="primary"
+            disabled={missing.length > 0}
+            onClick={async () => {
+              // A project the company cannot see through to launch deserves a second thought.
+              const b = launchBudget(s, p);
+              if (budgetVerdict(b) === 'short') {
+                const go = await store.ask({
+                  title: 'Bu proje kasayı aşıyor',
+                  body: `Lansmana kadar ~${money(Math.max(0, b.need))} gerekiyor; kasa ${money(b.cash)} ve banka kredisi ${money(b.creditRoom)} birlikte yetmiyor. Kalıp parası bittiğinde araba satışa çıkamaz. Daha küçük ya da ucuz bir tasarım, kısa bir test planı ya da önce satıştaki arabalardan para kazanmak daha güvenli.`,
+                  confirm: 'Yine de başlat',
+                  danger: true,
+                });
+                if (!go) return;
+              }
+              store.try((st) => A.beginDevelopment(st, p.id), 'Geliştirme başladı');
+            }}
+          >
             Geliştirmeyi başlat
           </Button>
         ) : done ? (

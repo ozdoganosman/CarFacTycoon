@@ -289,7 +289,15 @@ export function LaunchReportView({ s, modelId, report: r }: { s: GameState; mode
   if (!m) return null;
   const close = () => store.act(A.dismissModal);
   const headline =
-    r.rank === 1 ? 'Segmentinin lideri!' : r.rank <= 3 && r.rank > 0 ? 'Güçlü bir başlangıç' : r.demand > r.capacity ? 'Bayilerde kuyruk var' : 'Zorlu bir başlangıç';
+    r.capacity < 0.05
+      ? 'Üretim durmuş'
+      : r.rank === 1
+        ? 'Segmentinin lideri!'
+        : r.rank <= 3 && r.rank > 0
+          ? 'Güçlü bir başlangıç'
+          : r.demand > r.capacity * 1.3
+            ? 'Bayilerde kuyruk var'
+            : 'Zorlu bir başlangıç';
   return (
     <div className="modal-backdrop">
       <div className="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="report-title">

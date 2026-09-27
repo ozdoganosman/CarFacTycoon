@@ -92,7 +92,10 @@ function CapacityPlanner() {
   const usesBlack = s.lines.some((l) => l.stations.paint.some((id) => stationDef(id).blackOnly));
   const [black, setBlack] = useState(usesBlack);
   const allowBlack = blackOption && black;
-  const m = active.find((x) => x.id === pick) ?? active[0];
+  // Without a choice, the car buyers are waiting for most (never a model nobody wants).
+  const demandOf = (x: (typeof active)[number]) => Object.values(x.lastDemand ?? {}).reduce((a, b) => a + b, 0);
+  const suggested = [...active].sort((a, b) => demandOf(b) - modelCapacity(s, b) - (demandOf(a) - modelCapacity(s, a)) || demandOf(b) - demandOf(a))[0];
+  const m = active.find((x) => x.id === pick) ?? suggested;
   const perLine = (b: boolean) =>
     lineReport(s, { ...emptyLine('plan', 'plan'), slots: MAX_SLOTS, stations: planBalancedLine(yf, b) }, m?.stats.complexity ?? 1).throughput;
   const each = turnkeyLineCost(s.week, allowBlack) + (m ? A.retoolCost(s, m) : 0);

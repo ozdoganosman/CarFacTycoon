@@ -45,7 +45,7 @@ export const EVENTS: GameEventDef[] = [
     title: 'Atölyen açıldı',
     icon: '🔧',
     body: (s) =>
-      `1900 yılı. ${s.company.hq === 'usa' ? 'Detroit' : 'Coventry'}’de küçük bir atölyen, iki mühendisin ve biraz paran var. ` +
+      `1900 yılı. ${s.company.hq === 'usa' ? 'Detroit’te' : 'Coventry’de'} küçük bir atölyen, ${s.company.engineers} mühendisin ve biraz paran var. ` +
       'Amacın 1960’a kadar dünya çapında bir otomobil markası kurmak.\n\n' +
       'İlk adım: Projeler ekranında yeni bir araç projesi başlat. Segmentini seç, aracı modüllerden tasarla, geliştir, test et, üret ve sat.\n\n' +
       'İpucu: Hangi alıcının neye önem verdiği gizli. Satış raporları ve dergi yorumları zamanla bunu sana öğretecek.',

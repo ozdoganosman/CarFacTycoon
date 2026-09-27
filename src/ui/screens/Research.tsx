@@ -3,7 +3,7 @@ import * as A from '../../core/actions';
 import { missingRequirements, queueHold, researchCost, researchDef, researchDefs, researchSlots, researchSpeed, researchWeeks, rivalAdoption, techState, type ResearchDef } from '../../core/research';
 import { yearFloat } from '../../core/time';
 import { store, useGameState } from '../store';
-import { money } from '../format';
+import { money, pctOf } from '../format';
 import { inYear } from '../format';
 import { Badge, Button, Info, Panel, Progress, Stat } from '../components/ui';
 
@@ -178,7 +178,7 @@ export function Research() {
                         <b>Önce:</b> {missing.map((m) => m.name).join(', ')}
                       </p>
                     )}
-                    {st !== 'future' && <p className="small">{share > 0 ? `Rakip araçların %${Math.round(share * 100)}’i kullanıyor.` : 'Rakiplerde henüz yok.'}</p>}
+                    {st !== 'future' && <p className="small">{share > 0 ? `Rakip araçların ${pctOf(share)} kullanıyor.` : 'Rakiplerde henüz yok.'}</p>}
                     {st === 'known' && <Badge tone="good">Biliniyor</Badge>}
                     {st === 'future' && <p className="muted small">{inYear(d.year)} ortaya çıkar.</p>}
                     {st === 'researching' && active && <Progress value={active.weeks - active.weeksLeft} max={active.weeks} label={`${active.weeksLeft} hf`} />}

@@ -120,6 +120,44 @@ export function idleEngineers(s: GameState): number {
   return working ? 0 : s.company.engineers;
 }
 
+/** Why engineers are idle, in words (the idle count is idleEngineers). */
+export function idleReason(s: GameState): string {
+  if (s.projects.some((p) => p.phase === 'production' || p.phase === 'ready'))
+    return 'proje üretim hazırlığında ya da lansman bekliyor; o aşamada mühendis çalışmaz, geliştirme ya da araştırma da yok';
+  if (s.projects.some((p) => p.phase === 'design')) return 'proje tasarım masasında, geliştirme henüz başlamadı; araştırma da yok';
+  return 'ne geliştirmede bir proje var ne de araştırma';
+}
+
+export interface ModelMargin {
+  id: string;
+  name: string;
+  /** Cars built per week lately. */
+  built: number;
+  net: number;
+  material: number;
+  /** Line labour per car at today's output (per week when nothing is built). */
+  labour: number;
+  labourWeek: number;
+  margin: number;
+}
+
+/** What each car on sale earns or loses per car at the rate it is being built. */
+export function modelMargins(s: GameState): ModelMargin[] {
+  return s.models
+    .filter((m) => m.status === 'active')
+    .map((m) => {
+      const h = m.history.slice(-8);
+      const built = h.length ? h.reduce((a, x) => a + x.built, 0) / h.length : 0;
+      const lines = s.lines.filter((l) => l.modelId === m.id && !l.military);
+      const cap = lines.reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
+      const labourWeek = lines.reduce((a, l) => a + lineUpkeep(s, l, cap > 0 ? built / cap : 0), 0);
+      const net = priceNow(m, s.week) * (1 - DEALER_COMMISSION);
+      const material = materialUnitCost(s, m);
+      const labour = built > 0.05 ? labourWeek / built : labourWeek;
+      return { id: m.id, name: m.name, built, net, material, labour, labourWeek, margin: built > 0.05 ? net - material - labour : -labourWeek };
+    });
+}
+
 export interface CashReport {
   /** Last 52 weeks. */
   revenue: number;
@@ -209,9 +247,21 @@ export function companyValue(s: GameState): number {
 
 export interface FinalScore {
   total: number;
-  parts: { label: string; value: string; points: number }[];
+  max: number;
+  parts: { label: string; value: string; points: number; max: number }[];
   rank: number;
+  /** Where the total stands on the scale. */
+  tier: string;
 }
+
+/** Score tiers from the top down; a good campaign reaches "Büyük üretici", a great one "Sanayi devi". */
+export const SCORE_TIERS: { min: number; name: string }[] = [
+  { min: 1400, name: 'Efsane' },
+  { min: 1150, name: 'Sanayi devi' },
+  { min: 900, name: 'Büyük üretici' },
+  { min: 650, name: 'Saygın marka' },
+  { min: 0, name: 'Butik atölye' },
+];
 
 /** The end-of-campaign score: sales rank, company value, reputation, best magazine verdict, racing wins. */
 export function finalScore(s: GameState): FinalScore {
@@ -221,13 +271,15 @@ export function finalScore(s: GameState): FinalScore {
   const best = s.models.reduce((a, m) => Math.max(a, m.reviewScore), 0);
   const wins = s.racing?.wins ?? 0;
   const parts = [
-    { label: 'Tüm zamanların satış sırası', value: `${rank}.`, points: Math.max(0, Math.round(400 * (1 - (rank - 1) / 10))) },
-    { label: 'Şirket değeri', value: money(value), points: Math.max(0, Math.round(50 * Math.log10(Math.max(1, value)))) },
-    { label: 'İtibar', value: `${Math.round(s.company.reputation)}/100`, points: Math.round(3 * s.company.reputation) },
-    { label: 'En iyi dergi puanı', value: `${best.toFixed(1)}/10`, points: Math.round(30 * best) },
-    { label: 'Yarış zaferleri', value: String(wins), points: Math.min(200, 20 * wins) },
+    { label: 'Tüm zamanların satış sırası', value: `${rank}.`, points: Math.max(0, Math.round(400 * (1 - (rank - 1) / 10))), max: 400 },
+    // $1 mn → 300, $1 mr → 450, $10 mr and more → 500
+    { label: 'Şirket değeri', value: money(value), points: Math.min(500, Math.max(0, Math.round(50 * Math.log10(Math.max(1, value))))), max: 500 },
+    { label: 'İtibar', value: `${Math.round(s.company.reputation)}/100`, points: Math.round(3 * s.company.reputation), max: 300 },
+    { label: 'En iyi dergi puanı', value: `${best.toFixed(1)}/10`, points: Math.round(30 * best), max: 300 },
+    { label: 'Yarış zaferleri', value: String(wins), points: Math.min(200, 20 * wins), max: 200 },
   ];
-  return { total: parts.reduce((a, p) => a + p.points, 0), parts, rank };
+  const total = parts.reduce((a, p) => a + p.points, 0);
+  return { total, max: parts.reduce((a, p) => a + p.max, 0), parts, rank, tier: SCORE_TIERS.find((t) => total >= t.min)!.name };
 }
 
 export function credit(s: GameState) {

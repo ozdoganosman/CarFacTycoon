@@ -1,9 +1,13 @@
 import { money, num } from '../core/util';
+import { pctWith } from '../core/turkish';
 import type { FinanceWeek, GameState } from '../core/types';
 
 export { money, num };
 
 export const pct = (v: number, digits = 1) => `%${(v * 100).toFixed(digits)}`;
+
+/** A share with the possessive suffix, read as Turkish: pctOf(0.06) → "%6’sı", pctOf(0.025, 1) → "%2,5’i". */
+export const pctOf = (v: number, digits = 0) => pctWith(v, 'poss', digits);
 
 export function signedMoney(v: number) {
   return `${v >= 0 ? '+' : ''}${money(v)}`;

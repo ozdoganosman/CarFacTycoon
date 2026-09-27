@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { newProjectBudget } from '../../core/budget';
+import { BudgetLine } from '../components/BudgetLine';
 import { MARKETS } from '../../data/markets';
 import * as A from '../../core/actions';
 import { availableSegments, gates } from '../../core/game';
@@ -49,6 +51,8 @@ function NewProject({ onDone }: { onDone: () => void }) {
   const [replaces, setReplaces] = useState('');
   const g = gates(s);
   const sameSeg = s.models.filter((m) => m.status === 'active' && m.segment === segment);
+  // What such a project would cost before launch, worked out on a copy of the game.
+  const budget = useMemo(() => newProjectBudget(s, segment, replaces || undefined), [segment, replaces, s.week]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const pickSegment = (id: SegmentId) => {
     setSegment(id);
@@ -134,6 +138,12 @@ function NewProject({ onDone }: { onDone: () => void }) {
             ))}
           </select>
         </label>
+      )}
+      {budget && (
+        <>
+          <p className="muted small">Şirketin son arabasına benzer bir tasarımla ve varsayılan test planıyla bu proje:</p>
+          <BudgetLine b={budget} />
+        </>
       )}
       <div className="row-end">
         <Button kind="ghost" onClick={onDone}>

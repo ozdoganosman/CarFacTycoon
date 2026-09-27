@@ -490,7 +490,7 @@ export interface GameState {
   research?: { known: string[]; active: { id: string; weeksLeft: number; weeks: number }[]; queue?: string[] };
   cardsSeen: string[];
   /** The racing team: budget level 0-3 and the fame its results earned. */
-  racing?: { level: number; fame: number; wins?: number; last?: { year: number; race: string; result: 'win' | 'podium' | 'none'; model: string } };
+  racing?: { level: number; fame: number; wins?: number; paused?: boolean; dry?: number; last?: { year: number; race: string; result: 'win' | 'podium' | 'none'; model: string } };
   /** Rival companies the player has bought. */
   acquired?: string[];
   /** modeChosen: the player picked the engine designer mode themselves (older saves defaulted to the simple one). */

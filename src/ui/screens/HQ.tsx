@@ -1,5 +1,6 @@
-import { engineersBusy, idleEngineers } from '../../core/game';
+import { engineersBusy, idleEngineers, idleReason } from '../../core/game';
 import { engineerSalary } from '../../data/economy';
+import { racingOutlook, racingPaused } from '../../core/racing';
 import { lineReport } from '../../core/factory';
 import { formatDate, formatShort, yearFloat, yearOf } from '../../core/time';
 import { queueHold, researchDef, researchDefs, rivalAdoption, techState } from '../../core/research';
@@ -59,11 +60,21 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
         go: () => store.go({ id: 'research' }),
       });
   }
+  // A racing team burning money with a car that cannot win.
+  const rt = s.racing;
+  if (rt?.level && !racingPaused(s.company.hq, yearFloat(s.week))) {
+    const o = racingOutlook(s, rt.level);
+    if (o && (o.podium < 0.2 || (rt.dry ?? 0) >= 2))
+      out.push({
+        text: `Yarış takımı ${o.model} ile yarışıyor (${Math.floor(o.age)} yaşında, ilk üç şansı %${Math.round(o.podium * 100)}): bütçe boşa gidiyor. Daha güçlü bir araba çıkar ya da takımı küçült.`,
+        go: () => store.go({ id: 'company' }),
+      });
+  }
   // Engineers on salary with nothing to do.
   const idle = idleEngineers(s);
   if (idle > 0 && s.models.length)
     out.push({
-      text: `${idle} mühendis boşta ama haftada ${money(idle * engineerSalary(yearFloat(s.week)))} maaş alıyor: yeni bir proje ya da Ar-Ge başlat, gerekirse bir kısmını çıkar.`,
+      text: `${idle} mühendis boşta (${idleReason(s)}) ama haftada ${money(idle * engineerSalary(yearFloat(s.week)))} maaş alıyor: yeni bir proje ya da Ar-Ge başlat, gerekirse bir kısmını çıkar.`,
       go: () => store.go({ id: 'research' }),
     });
   if (s.company.cash < 0) out.unshift({ text: 'Kasa ekside! Kredi al ya da masrafları kıs.', go: () => store.go({ id: 'finance' }) });

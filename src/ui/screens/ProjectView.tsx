@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as A from '../../core/actions';
-import { dealerUpkeep, gates, materialUnitCost, protoUnitCost } from '../../core/game';
+import { credit, dealerUpkeep, gates, materialUnitCost, protoUnitCost } from '../../core/game';
 import { lineReport, lineUpkeep, turnkeyLineCost } from '../../core/factory';
 import { MARKET_IDS, consumerPrice, demandAtPrice, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
 import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, defectRange, defectText, expectedRemaining, riskLabel, testTuning, testWeekCost, type Tuning } from '../../core/testing';
@@ -12,10 +12,12 @@ import { STAGES } from '../../data/stations';
 import { TOOLING, toolingDef } from '../../data/tooling';
 import type { ComponentKey, MarketId, Project, ProjectPhase, TestId, ToolingTier } from '../../core/types';
 import { store, useGameState } from '../store';
-import { money, num, recentProfit } from '../format';
+import { money, num, pctOf, recentProfit } from '../format';
 import { inYear } from '../format';
 import { Badge, Button, Choice, NumberInput, Panel, Progress, Slider, Toggle } from '../components/ui';
 import { newEstimate } from '../../core/estimate';
+import { launchBudget } from '../../core/budget';
+import { BudgetLine } from '../components/BudgetLine';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { Designer } from './Designer';
 import { DevBar, FocusPanel } from './DevPanel';
@@ -117,7 +119,21 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
       : d < cap * 0.8
         ? `Hat orta tahminin ${(cap / Math.max(0.1, d)).toFixed(1)} katını üretebilir: fiyatı düşürmeyi ya da daha küçük bir hattı düşün.`
         : 'Orta tahmine göre talep ve kapasite dengeli.';
-  const options = [0.9, 1, 1.1, 1.2].map((f) => Math.round((ref * f) / 10) * 10);
+  const weeklyProfit = (pr: number) => Math.min(demandAt(pr), cap) * (pr * net - unit - labour);
+  // The price that earns most per week with this line (demand beyond the line's output is not sold).
+  let best = ref;
+  let bestProfit = -Infinity;
+  for (let f = 0.7; f <= 2.21; f += 0.05) {
+    const pr = Math.round((ref * f) / 10) * 10;
+    const pf = weeklyProfit(pr);
+    if (pf > bestProfit) {
+      best = pr;
+      bestProfit = pf;
+    }
+  }
+  const base = [0.85, 1, 1.15, 1.3, 1.5].map((f) => Math.round((ref * f) / 10) * 10);
+  const options = [...base, ...(base.some((x) => Math.abs(x - best) / best < 0.03) ? [] : [best])].sort((a, b) => a - b);
+  const bestShown = options.reduce((a, b) => (Math.abs(b - best) < Math.abs(a - best) ? b : a));
   const steep = steepPriceRatio(p.segment, s.company.hq, yf);
   const pct = (pr: number) => {
     const v = Math.round((pr / ref - 1) * 100);
@@ -146,7 +162,7 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
         <tbody>
           {options.map((pr) => {
             const dm = demandAt(pr);
-            const profit = Math.min(dm, cap) * (pr * net - unit - labour);
+            const profit = weeklyProfit(pr);
             return (
               <tr key={pr} className={Math.abs(pr - price) < 5 ? 'is-mine' : ''}>
                 <td>
@@ -155,6 +171,7 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
                   </button>{' '}
                   <span className="muted small">
                     {pr === Math.round(ref / 10) * 10 ? 'sınıf fiyatı' : pct(pr)}
+                    {pr === bestShown && <b className="tone-good"> · bu hatla en kârlı</b>}
                     {pr > ref * steep && ' · dergiler “iddialı” der'}
                   </span>
                 </td>
@@ -213,6 +230,7 @@ function Testing({ p }: { p: Project }) {
   return (
     <div className="grid-2 wide-left">
       <Panel title="Test programı">
+        <BudgetLine b={launchBudget(s, p)} />
         <p className="muted small">Testler her hafta paralel ilerler ve bulunan kusurlar hemen giderilir. Test haftalarını azaltırsan araç daha erken çıkar ama gizli kusurlar sahada patlar.</p>
         {TESTS.map((t) => {
           const plan = p.tests[t.id];
@@ -492,6 +510,8 @@ function Production({ p }: { p: Project }) {
           label="Satışa çıkınca talebi otomatik karşıla"
           sub="Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır. Sonradan Model ve Fabrika ekranlarından değiştirebilirsin."
         />
+        {!lineId && <p className="note">Kalıpları sipariş etmek için önce arabanın üretileceği hattı seç.</p>}
+        {lineId && quote && s.company.cash < quote.cost && <ToolingShort p={p} lineId={lineId} tier={tier} setTier={setTier} cost={quote.cost} />}
         <div className="row-end">
           <Button kind="primary" disabled={!lineId || (quote ? s.company.cash < quote.cost : true)} onClick={() => lineId && store.try((st2) => A.startTooling(st2, p.id, lineId, tier))}>
             {toolingDef(tier).name}: sipariş et{quote ? ` (${money(quote.cost)})` : ''}
@@ -499,6 +519,60 @@ function Production({ p }: { p: Project }) {
         </div>
       </Panel>
     </>
+  );
+}
+
+/** The dies cost more than the till holds: say so, and show the ways out. */
+function ToolingShort({ p, lineId, tier, setTier, cost }: { p: Project; lineId: string; tier: ToolingTier; setTier: (t: ToolingTier) => void; cost: number }) {
+  const s = useGameState();
+  const shortfall = cost - s.company.cash;
+  const room = Math.max(0, credit(s).limit - s.company.loan);
+  const cheaper = TOOLING.map((t) => ({ t, q: A.toolingQuote(s, p, lineId, t.id) })).filter((x) => x.t.id !== tier && x.q.cost <= s.company.cash);
+  const borrow = Math.ceil((shortfall * 1.05) / 100) * 100;
+  return (
+    <div className="note tooling-short">
+      <p>
+        <b>Neden sipariş edilemiyor?</b> {toolingDef(tier).name} {money(cost)} tutuyor, kasada {money(s.company.cash)} var: {money(shortfall)} eksik.
+      </p>
+      <div className="row">
+        {cheaper.map(({ t, q }) => (
+          <Button key={t.id} small onClick={() => setTier(t.id)}>
+            {t.name} seç ({money(q.cost)}, kasaya yetiyor)
+          </Button>
+        ))}
+        {room >= borrow && (
+          <Button
+            small
+            kind="primary"
+            onClick={() =>
+              store.try((st2) => {
+                const r = A.takeLoan(st2, borrow);
+                return r.ok ? A.startTooling(st2, p.id, lineId, tier) : r;
+              }, `${money(borrow)} kredi alındı, kalıplar sipariş edildi`)
+            }
+          >
+            Eksiği krediyle karşıla ({money(borrow)} kredi)
+          </Button>
+        )}
+        {s.company.reputation >= 5 && (
+          <Button
+            small
+            onClick={() =>
+              store.ask({
+                title: 'Kalıpçıya vadeli sipariş',
+                body: `Kalıpçı parayı sonra, satışlardan almayı kabul ediyor ama %${Math.round(A.VENDOR_CREDIT * 100)} fazlasını istiyor: ${money(cost * (1 + A.VENDOR_CREDIT))} şirketin borcuna eklenir ve faiz işler. Bankanın kredi limiti bu borcu da sayar.`,
+                confirm: 'Vadeli sipariş et',
+              }).then((yes) => yes && store.try((st2) => A.startTooling(st2, p.id, lineId, tier, { vendorCredit: true }), 'Kalıplar vadeli sipariş edildi'))
+            }
+          >
+            Kalıpçıya vadeli sipariş et (+%{Math.round(A.VENDOR_CREDIT * 100)}, borca eklenir)
+          </Button>
+        )}
+      </div>
+      {!cheaper.length && room < borrow && (
+        <p className="small muted">Kasa ve banka kredisi yetmiyor. Vadeli sipariş son çıkış yolu; ya da satıştaki arabalardan para gelmesini bekle, gereksiz mühendisleri çıkar.</p>
+      )}
+    </div>
   );
 }
 
@@ -564,7 +638,7 @@ function Launch({ p }: { p: Project }) {
           sub={
             <>
               {money(showCost)} ·{' '}
-              <span className={showShare > 0.25 ? 'tone-bad' : ''}>kasanın %{Math.round(showShare * 100)}’i</span> · bilinirlik ve lansman heyecanı artar
+              <span className={showShare > 0.25 ? 'tone-bad' : ''}>kasanın {pctOf(showShare)}</span> · bilinirlik ve lansman heyecanı artar
             </>
           }
         />

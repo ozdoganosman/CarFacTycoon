@@ -54,16 +54,55 @@ function bestCar(s: GameState): { m: CarModel; perf: number } | null {
   return best;
 }
 
+/** No racing at home while the country is at war (the Indianapolis 500 and the Grands Prix stopped). */
+export function racingPaused(home: MarketId, yf: number): boolean {
+  if (home === 'usa') return (yf >= 1917.3 && yf < 1919) || (yf >= 1942 && yf < 1946);
+  return (yf >= 1914.6 && yf < 1919) || (yf >= 1939.7 && yf < 1946);
+}
+
+export interface RacingOutlook {
+  model: string;
+  /** Years since the car was launched or facelifted. */
+  age: number;
+  win: number;
+  podium: number;
+}
+
+/** Chances for the coming season with the company's best car at a given budget level. */
+export function racingOutlook(s: GameState, level: number): RacingOutlook | null {
+  const car = bestCar(s);
+  if (!car || level <= 0) return null;
+  const strength = teamStrength(s, car.perf, level);
+  // The field is uniform between its floor and floor + FIELD_SPAN.
+  const p = (x: number) => clamp((x - FIELD_LO[level]) / FIELD_SPAN, 0, 1);
+  return { model: car.m.name, age: (s.week - car.m.refreshWeek) / 52, win: p(strength - WIN_MARGIN), podium: p(strength) };
+}
+
+/**
+ * Bigger races draw stronger fields: a hill climb is won by a good road car, a Grand Prix needs a
+ * fast, reliable car and a strong team on top of the money.
+ */
+const FIELD_LO = [0, 38, 46, 54];
+const FIELD_SPAN = 18;
+const WIN_MARGIN = 7;
+const teamStrength = (s: GameState, perf: number, level: number) => 0.5 * perf + 0.3 * s.company.skill + 4 * level;
+
 /** Weekly: pay the team, let fame fade a little and bring people to the showroom. */
 export function racingWeek(s: GameState) {
   const r = s.racing;
   if (!r) return;
+  const yf = yearFloat(s.week);
   r.fame *= 0.997; // about 15% a year
-  if (r.level > 0 && yearFloat(s.week) >= RACING_YEAR) spend(s, racingBudget(s, r.level) / 52, 'marketing');
+  const paused = racingPaused(s.company.hq, yf);
+  if (r.level > 0 && paused !== !!r.paused) {
+    r.paused = paused;
+    log(s, paused ? 'Savaş yüzünden yarışlar yapılmıyor: takım bekliyor, yarış bütçesi harcanmıyor.' : 'Savaş bitti, yarışlar yeniden başlıyor: takım sezona hazırlanıyor.', 'info');
+  }
+  if (r.level > 0 && yf >= RACING_YEAR && !paused) spend(s, racingBudget(s, r.level) / 52, 'marketing');
   const hq = s.markets[s.company.hq];
   hq.awareness = clamp(hq.awareness + 0.0004 * r.fame, 0, 1);
   // Race season: once a year, in September.
-  if (r.level > 0 && weekOfYear(s.week) === 38 && yearFloat(s.week) >= RACING_YEAR) raceSeason(s);
+  if (r.level > 0 && weekOfYear(s.week) === 38 && yf >= RACING_YEAR && !paused) raceSeason(s);
 }
 
 export function raceSeason(s: GameState) {
@@ -73,10 +112,11 @@ export function raceSeason(s: GameState) {
   if (!car) return;
   const race = raceName(s.company.hq, year, r.level);
   // Team strength against the field: the car, the engineers, and how much money is behind it.
-  const strength = 0.45 * car.perf + 0.25 * s.company.skill + 12 * r.level;
-  const field = 58 + 16 * rand(s);
+  const strength = teamStrength(s, car.perf, r.level);
+  const field = FIELD_LO[r.level] + FIELD_SPAN * rand(s);
   const margin = strength - field;
-  const result: 'win' | 'podium' | 'none' = margin > 10 ? 'win' : margin > 0 ? 'podium' : 'none';
+  const result: 'win' | 'podium' | 'none' = margin > WIN_MARGIN ? 'win' : margin > 0 ? 'podium' : 'none';
+  r.dry = result === 'none' ? (r.dry ?? 0) + 1 : 0;
   r.last = { year, race, result, model: car.m.name };
   if (result === 'win') {
     r.fame += FAME.win[r.level];
@@ -89,7 +129,12 @@ export function raceSeason(s: GameState) {
     log(s, `🏁 ${race}: ${car.m.name} ilk üçe girdi.`, 'good');
   } else {
     r.fame += 0.2;
-    log(s, `🏁 ${race}: ${car.m.name} dereceye giremedi. Daha güçlü bir araba ya da daha büyük bir takım gerekiyor.`, 'info');
+    const age = (s.week - car.m.refreshWeek) / 52;
+    log(
+      s,
+      `🏁 ${race}: ${car.m.name} dereceye giremedi.${age > 5 ? ` Araba ${Math.floor(age)} yaşında; yeni ve güçlü bir araba olmadan takım para yakıyor.` : ' Daha güçlü bir araba ya da daha büyük bir takım gerekiyor.'}`,
+      (r.dry ?? 0) >= 2 ? 'warn' : 'info',
+    );
   }
 }
 

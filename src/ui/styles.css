@@ -3440,3 +3440,69 @@ fieldset {
   background: color-mix(in srgb, var(--bad) 8%, transparent);
   border-radius: 6px;
 }
+
+/* ---------- project budget ---------- */
+.budget-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border-left: 3px solid var(--line);
+  background: color-mix(in srgb, var(--line) 25%, transparent);
+  margin: 6px 0;
+}
+.budget-line.tone-good-soft {
+  border-left-color: var(--good);
+}
+.budget-line.tone-warn-soft {
+  border-left-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+.budget-line.tone-bad-soft {
+  border-left-color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 10%, transparent);
+}
+.tooling-short .row {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.dev-bar .budget-line {
+  flex-basis: 100%;
+  order: 10;
+  margin: 0;
+}
+.score-scale {
+  position: relative;
+  display: flex;
+  margin: 6px 0 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  font-size: 0.75rem;
+}
+.score-scale span {
+  padding: 4px 6px;
+  display: grid;
+  background: color-mix(in srgb, var(--line) 30%, transparent);
+  border-right: 1px solid var(--line);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.score-scale span.is-on {
+  background: color-mix(in srgb, var(--good) 22%, transparent);
+  font-weight: 700;
+}
+.score-scale small {
+  opacity: 0.7;
+}
+.score-scale i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  margin-left: -1px;
+  background: var(--ink);
+}

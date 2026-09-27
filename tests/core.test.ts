@@ -7,7 +7,9 @@ import { KNOWHOW } from '../src/data/knowhow';
 import { costIndex } from '../src/data/economy';
 import { lineReport } from '../src/core/factory';
 import { credit, finalScore, materialUnitCost, newGame, tick } from '../src/core/game';
-import { setRacingLevel } from '../src/core/racing';
+import { racingOutlook, racingPaused, setRacingLevel } from '../src/core/racing';
+import { pctWith, withSuffix } from '../src/core/turkish';
+import { budgetVerdict, launchBudget } from '../src/core/budget';
 import { acquisitionTargets } from '../src/core/acquisitions';
 import { datedPenalty, modelAgeYears, priceNow, segmentMarket } from '../src/core/market';
 import { makeRng } from '../src/core/rng';
@@ -242,6 +244,52 @@ describe('game', () => {
   }, 60_000);
 });
 
+describe('project money', () => {
+  it('estimates what a project costs until launch and offers supplier credit when the till is empty', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 11 });
+    s.modals = [];
+    const r = A.startProject(s, { name: 'T', segment: 'family', targetPrice: 0 });
+    if (!r.ok) throw new Error(r.error);
+    const p = s.projects[0];
+    const b = launchBudget(s, p);
+    expect(b.weeks).toBeGreaterThan(10);
+    expect(b.protos).toBeGreaterThan(0);
+    expect(b.tests).toBeGreaterThan(0);
+    expect(b.tooling).toBeGreaterThan(0);
+    expect(b.need).toBeGreaterThan(b.protos + b.tests + b.tooling); // salaries and rent come on top while nothing sells
+    expect(budgetVerdict({ ...b, cash: b.need * 2 })).toBe('ok');
+    expect(budgetVerdict({ ...b, cash: 0, creditRoom: 0 })).toBe('short');
+    // Take the project to production prep and empty the till.
+    expect(A.beginDevelopment(s, p.id).ok).toBe(true);
+    p.dev.done = p.dev.required;
+    expect(A.finishDevelopment(s, p.id).ok).toBe(true);
+    expect(A.finishTesting(s, p.id).ok).toBe(true);
+    s.company.cash = 0;
+    const line = s.lines[0].id;
+    expect(A.startTooling(s, p.id, line).ok).toBe(false);
+    const q = A.toolingQuote(s, p, line);
+    const loan = s.company.loan;
+    expect(A.startTooling(s, p.id, line, 'standard', { vendorCredit: true }).ok).toBe(true);
+    expect(s.company.loan).toBeCloseTo(loan + q.cost * (1 + A.VENDOR_CREDIT), 3);
+    expect(s.company.cash).toBeCloseTo(0, 3);
+    expect(p.productionReadyWeek).toBeDefined();
+  });
+});
+
+describe('Turkish', () => {
+  it('suffixes follow how the number is read', () => {
+    expect(pctWith(0.06, 'poss')).toBe('%6’sı');
+    expect(pctWith(0.1, 'poss')).toBe('%10’u');
+    expect(pctWith(0.25, 'poss')).toBe('%25’i');
+    expect(pctWith(0.4, 'poss')).toBe('%40’ı');
+    expect(pctWith(0.67, 'poss')).toBe('%67’si');
+    expect(pctWith(0.025, 'poss', 1)).toBe('%2,5’i');
+    expect(pctWith(0.011, 'possAcc', 1)).toBe('%1,1’ini');
+    expect(pctWith(0.03, 'possAcc')).toBe('%3’ünü');
+    expect(withSuffix(1904, 'abl')).toBe('1.904’ten');
+  });
+});
+
 describe('what the money is for', () => {
   it('a racing team costs money every week and earns fame from the season race', () => {
     const s = newGame({ companyName: 'Test', hq: 'usa', seed: 5 });
@@ -256,7 +304,17 @@ describe('what the money is for', () => {
     expect(s.racing!.last).toBeDefined();
     expect(s.racing!.fame).toBeGreaterThan(0);
     expect(s.finance.slice(-52).reduce((a, f) => a + f.marketing, 0)).toBeGreaterThan(before);
-    expect(finalScore(s).total).toBeGreaterThan(0);
+    const score = finalScore(s);
+    expect(score.total).toBeGreaterThan(0);
+    expect(score.total).toBeLessThanOrEqual(score.max);
+    expect(score.tier.length).toBeGreaterThan(0);
+    // No racing at home in wartime.
+    expect(racingPaused('usa', 1943)).toBe(true);
+    expect(racingPaused('europe', 1916)).toBe(true);
+    expect(racingPaused('usa', 1930)).toBe(false);
+    const o = racingOutlook(s, 3)!;
+    expect(o.win).toBeLessThanOrEqual(o.podium);
+    expect(racingOutlook(s, 1)!.podium).toBeLessThanOrEqual(o.podium);
   }, 30_000);
 
   it('buying a smaller rival withdraws its cars and brings its engineers', () => {

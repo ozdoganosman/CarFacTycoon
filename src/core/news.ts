@@ -8,6 +8,7 @@ import type { ResearchDef } from './research';
 import { yearFloat, yearOf } from './time';
 import type { AttrKey, CarModel, GameState, MarketId, NewsIssue, NewsStoryData } from './types';
 import { money, pushModal } from './util';
+import { pctWith } from './turkish';
 
 // Front pages: the day new technology appears in the world, and the day one of
 // the player's cars takes off. Issues are kept for the archive and shown as a
@@ -46,7 +47,7 @@ function marketLine(s: GameState, year: number): NewsStoryData | undefined {
   const name = MARKETS.find((x) => x.id === m)?.name ?? m;
   return {
     headline: `${name} Pazarı: Geçen Yılın Satışları`,
-    body: `Geçen yıl ${name} pazarında ${fmt(total)} yeni otomobil satıldı. ${mine > 0 ? `${s.company.name} bunun %${((mine / total) * 100).toFixed(1)}’ini aldı.` : 'Yeni firmalar pazarda yer açmaya çalışıyor.'}`,
+    body: `Geçen yıl ${name} pazarında ${fmt(total)} yeni otomobil satıldı. ${mine > 0 ? `${s.company.name} bunun ${pctWith(mine / total, 'possAcc', 1)} aldı.` : 'Yeni firmalar pazarda yer açmaya çalışıyor.'}`,
   };
 }
 
@@ -156,7 +157,7 @@ export function boomIssue(s: GameState, m: CarModel, reason: { kind: 'units'; un
       ? `${s.company.name}, ${marketName} pazarında rakiplerini geride bıraktı; bayilerde kuyruk var`
       : `${s.company.name} otomobiline talep durmak bilmiyor: haftada ${fmt(weekly)} sipariş`;
   const paragraphs = [
-    `${s.company.name} fabrikasından çıkan ${m.name}, ${marketName} pazarındaki ${seg.name.toLowerCase()} sınıfında ${st.of} otomobil arasında ${st.rank}. sıraya yükseldi ve sınıfın %${(st.share * 100).toFixed(1)}’ini aldı. Şimdiye kadar ${fmt(m.unitsSold)} adet satıldı.`,
+    `${s.company.name} fabrikasından çıkan ${m.name}, ${marketName} pazarındaki ${seg.name.toLowerCase()} sınıfında ${st.of} otomobil arasında ${st.rank}. sıraya yükseldi ve sınıfın ${pctWith(st.share, 'possAcc', 1)} aldı. Şimdiye kadar ${fmt(m.unitsSold)} adet satıldı.`,
     `Bayiler müşterilerin en çok ${best.map((k) => ATTR_NAMES[k].toLowerCase()).join(', ')} konusundaki üstünlüğünü övdüğünü anlatıyor. Otomobil dergilerinin ortalama notu ${m.reviewScore.toFixed(1)}.`,
     cap > 0
       ? `Fabrika ${lines.length} hatta haftada ${fmt(cap)} otomobil üretebiliyor. ${weekly > cap * 1.1 ? 'Siparişler üretimi aşıyor; alıcılar teslimat için haftalarca bekliyor.' : 'Şirket yetkilileri talebi karşılayabildiklerini söylüyor.'}`

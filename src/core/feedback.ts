@@ -188,7 +188,9 @@ export function buildLaunchReport(state: GameState, model: CarModel): LaunchRepo
   for (const k of [...praise, ...complaints]) learn(state, model, k);
   const price: LaunchReport['price'] = !offer ? 'fair' : offer.priceTerm < -PRICE_REMARK ? 'high' : offer.priceTerm > PRICE_REMARK ? 'low' : 'fair';
   const advice: string[] = [];
-  if (demand > capacity * 1.3 && capacity > 0) advice.push('Talep üretimi aşıyor: bayilerde kuyruk var. Fiyatı artırabilir ya da fabrikaya hat ekleyebilirsin.');
+  if (capacity < 0.05)
+    advice.push('Araba şu an üretilmiyor: hattı yok, hat başka işte ya da üretim hızı sıfır. Fabrika ekranından bir hat ata; aksi halde bayilere araba gitmez.');
+  else if (demand > capacity * 1.3) advice.push('Talep üretimi aşıyor: bayilerde kuyruk var. Fiyatı artırabilir ya da fabrikaya hat ekleyebilirsin.');
   if (model.inventory > Math.max(6, demand * 6)) advice.push('Stok birikiyor: fiyatı düşür ya da üretim hızını kıs.');
   if (price === 'high') advice.push('Alıcılar aracı pahalı buluyor.');
   if (price === 'low' && demand > capacity) advice.push('Fiyatın rakiplerin çok altında: daha pahalıya da satabilirsin.');

@@ -4,7 +4,7 @@ import { cardDef } from '../../data/cards';
 import { eventDef } from '../../data/events';
 import { MARKETS } from '../../data/markets';
 import { segmentDef } from '../../data/segments';
-import { cashReport, companyValue, finalScore, rescueLoan, type CashReport } from '../../core/game';
+import { SCORE_TIERS, cashReport, companyValue, finalScore, idleReason, modelMargins, rescueLoan, type CashReport } from '../../core/game';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { allTech } from '../../core/techtree';
 import { isBlockingModal } from '../../core/util';
@@ -241,9 +241,23 @@ function CashFacts({ r, s }: { r: CashReport; s: GameState }) {
         <li>
           Bankanın hâlâ verebileceği kredi: <b>{money(r.room)}</b> (yıllık faiz %{(r.rate * 100).toFixed(0)}).
         </li>
+        {modelMargins(s)
+          .filter((x) => x.margin < 0)
+          .map((x) =>
+            x.built > 0.05 ? (
+              <li key={x.id} className="tone-bad">
+                <b>{x.name}</b> araç başına <b>{money(-x.margin)}</b> zarar ediyor: bayiden sonra {money(x.net)} kalıyor, malzeme {money(x.material)}, işçilik {money(x.labour)} (haftada{' '}
+                {x.built.toFixed(1)} araç).
+              </li>
+            ) : (
+              <li key={x.id} className="tone-bad">
+                <b>{x.name}</b> üretilmiyor ama hattı haftada {money(x.labourWeek)} işçilik gideri çıkarıyor.
+              </li>
+            ),
+          )}
         {r.idle > 0 && (
           <li className="tone-bad">
-            {r.idle} mühendis boşta: ne proje var ne araştırma, ama haftada {money(r.idleWeekly)} maaş alıyorlar.
+            {r.idle} mühendis boşta ({idleReason(s)}), ama haftada {money(r.idleWeekly)} maaş alıyorlar.
           </li>
         )}
         {(s.company.idleSalary ?? 0) > 0 && r.idle === 0 && s.gameOver && (
@@ -306,21 +320,11 @@ function GameOver({ s }: { s: GameState }) {
   const totalSold = s.models.reduce((a, m) => a + m.unitsSold, 0);
   const value = companyValue(s);
   const score = finalScore(s);
-  const summary = `CarFacTycoon 1960 · ${s.company.name}: ${bankrupt ? 'iflas' : ''}${num(totalSold)} araç, şirket değeri ${money(value)}, itibar ${Math.round(s.company.reputation)}, puan ${score.total}.`;
+  const summary = `CarFacTycoon 1960 · ${s.company.name}: ${num(totalSold)} araç, şirket değeri ${money(value)}, itibar ${Math.round(s.company.reputation)}, puan ${score.total}/${score.max} (${score.tier}).`;
   const table = [
     { name: s.company.name, units: totalSold, me: true },
     ...s.rivals.map((r) => ({ name: r.name, units: r.unitsSold, me: false })),
   ].sort((a, b) => b.units - a.units);
-  const rank = table.findIndex((x) => x.me) + 1;
-  const title = bankrupt
-    ? 'İflas'
-    : rank === 1
-      ? 'Sanayi devi'
-      : rank <= 3
-        ? 'Büyük üretici'
-        : rank <= 6
-          ? 'Saygın marka'
-          : 'Butik atölye';
   return (
     <Modal
       title={bankrupt ? 'Şirket iflas etti' : 'Kampanya tamamlandı: 1960'}
@@ -340,12 +344,26 @@ function GameOver({ s }: { s: GameState }) {
       <p>
         {bankrupt
           ? 'Kasa 12 hafta boyunca ekside kaldı ve bankalar kapıyı kapattı. Paranın nereye gittiği:'
-          : `Unvanın: ${title}. Toplam ${num(totalSold)} araç sattın; şirket değeri ${money(value)}.`}
+          : `Unvanın: ${score.tier}. Toplam ${num(totalSold)} araç sattın; şirket değeri ${money(value)}.`}
       </p>
       {bankrupt && <CashFacts r={cashReport(s)} s={s} />}
       {!bankrupt && (
         <>
-          <h4>Oyun sonu puanı: {score.total}</h4>
+          <h4>
+            Oyun sonu puanı: {score.total} / {score.max} · <span className="tone-good">{score.tier}</span>
+          </h4>
+          <div className="score-scale" aria-hidden>
+            {[...SCORE_TIERS].reverse().map((t, i, arr) => {
+              const next = arr[i + 1]?.min ?? score.max;
+              return (
+                <span key={t.name} className={score.tier === t.name ? 'is-on' : ''} style={{ flex: next - t.min }}>
+                  {t.name}
+                  <small>{t.min}+</small>
+                </span>
+              );
+            })}
+            <i style={{ left: `${Math.min(100, (score.total / score.max) * 100)}%` }} />
+          </div>
           <table className="table compact">
             <tbody>
               {score.parts.map((p) => (
@@ -353,7 +371,7 @@ function GameOver({ s }: { s: GameState }) {
                   <td>{p.label}</td>
                   <td className="al-r">{p.value}</td>
                   <td className="al-r">
-                    <b>+{p.points}</b>
+                    <b>+{p.points}</b> <span className="muted small">/ {p.max}</span>
                   </td>
                 </tr>
               ))}
@@ -363,7 +381,7 @@ function GameOver({ s }: { s: GameState }) {
             <Button
               small
               onClick={() => {
-                const text = `${summary.replace('iflas', '')} Unvan: ${title}.`;
+                const text = summary;
                 void navigator.clipboard?.writeText(text).then(
                   () => store.showToast('Sonuç panoya kopyalandı', 'good'),
                   () => store.showToast(text, 'info'),
