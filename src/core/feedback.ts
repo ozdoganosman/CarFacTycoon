@@ -1,5 +1,5 @@
 import { ATTRS, ATTR_NAMES, segmentDef } from '../data/segments';
-import { modelScores, playerOffer, rivalScores, segmentMarket } from './market';
+import { PRICE_REMARK, modelScores, playerOffer, rivalScores, segmentMarket } from './market';
 import { lineReport } from './factory';
 import type { Rng } from './rng';
 import { segmentWeights } from './scoring';
@@ -76,7 +76,8 @@ export function writeReviews(state: GameState, model: CarModel, rng: Rng): Revie
       wsum += w;
     }
     biased /= wsum;
-    let score = 5.5 + (biased - rivalAvg) / 5 + offer.priceTerm / 5 + (rng() - 0.5) * 1.4;
+    // Price counts, but a car a little dearer than its class is not a scandal.
+    let score = 6 + (biased - rivalAvg) / 5 + offer.priceTerm / 9 + (rng() - 0.5) * 1.4;
     if (siblings > 3) score -= 0.6 * (siblings - 3);
     score = Math.round(Math.min(10, Math.max(1, score)) * 2) / 2;
     // Quote what this magazine's readers care about, avoiding what the others already said.
@@ -108,8 +109,8 @@ export function writeReviews(state: GameState, model: CarModel, rng: Rng): Revie
       used.add(worst.k);
     }
     if (siblings > 3) parts.push('Kardeş modellerinden ayırt etmek zor: hepsi aynı araba!');
-    if (offer.priceTerm < -4) parts.push('Fiyatı fazla iddialı.');
-    else if (offer.priceTerm > 4) parts.push('Bu paraya kaçırılmaz.');
+    if (offer.priceTerm < -PRICE_REMARK) parts.push('Fiyatı fazla iddialı.');
+    else if (offer.priceTerm > PRICE_REMARK) parts.push('Bu paraya kaçırılmaz.');
     if (!parts.length) parts.push('Sınıfının ortalamasında, sağlam ama sıradan bir araç.');
     reviews.push({ magazine: mag.name, score, quote: parts.join(' ') });
     if (best) learn(state, model, best.k);
@@ -154,8 +155,10 @@ export function customerFeedback(state: GameState, model: CarModel, rng: Rng): F
     learn(state, model, k);
   }
   const offer = playerOffer(state, model, market);
-  if (offer.priceTerm < -5) lines.push({ text: `${buyers} ${model.name} modelini pahalı buluyor.`, tone: 'bad' });
-  else if (offer.priceTerm > 5) lines.push({ text: `${buyers} ${model.name} modelinin fiyatını çok uygun buluyor.`, tone: 'good' });
+  if (offer.priceTerm < -PRICE_REMARK) lines.push({ text: `${buyers} ${model.name} modelini pahalı buluyor.`, tone: 'bad' });
+  else if (offer.priceTerm > PRICE_REMARK) lines.push({ text: `${buyers} ${model.name} modelinin fiyatını çok uygun buluyor.`, tone: 'good' });
+  if (offer.age <= -12) lines.push({ text: `${buyers} ${model.name} modelini artık eski moda buluyor; yeni modellere yöneliyorlar.`, tone: 'bad' });
+  else if (offer.age <= -4) lines.push({ text: `${model.name} yaşlanıyor: rakiplerin yeni modelleri alıcıların ilgisini çekiyor.`, tone: 'bad' });
   return lines;
 }
 
@@ -183,7 +186,7 @@ export function buildLaunchReport(state: GameState, model: CarModel): LaunchRepo
   const praise = contrib.filter((c) => c.v > 0.6).slice(0, 2).map((c) => c.k);
   const complaints = contrib.filter((c) => c.v < -0.6).slice(-2).reverse().map((c) => c.k);
   for (const k of [...praise, ...complaints]) learn(state, model, k);
-  const price: LaunchReport['price'] = !offer ? 'fair' : offer.priceTerm < -4 ? 'high' : offer.priceTerm > 4 ? 'low' : 'fair';
+  const price: LaunchReport['price'] = !offer ? 'fair' : offer.priceTerm < -PRICE_REMARK ? 'high' : offer.priceTerm > PRICE_REMARK ? 'low' : 'fair';
   const advice: string[] = [];
   if (demand > capacity * 1.3 && capacity > 0) advice.push('Talep üretimi aşıyor: bayilerde kuyruk var. Fiyatı artırabilir ya da fabrikaya hat ekleyebilirsin.');
   if (model.inventory > Math.max(6, demand * 6)) advice.push('Stok birikiyor: fiyatı düşür ya da üretim hızını kıs.');

@@ -100,7 +100,13 @@ export function newGame(opts: NewGameOptions): GameState {
 export const currentYear = (s: GameState) => yearFloat(s.week);
 
 export function engineersBusy(s: GameState): number {
-  return s.projects.filter((p) => p.phase === 'development').reduce((a, p) => a + p.engineers, 0);
+  return Math.round(s.projects.filter((p) => p.phase === 'development').reduce((a, p) => a + p.engineers, 0));
+}
+
+/** Every engineer works: projects in development share the whole team equally. */
+export function shareEngineers(s: GameState) {
+  const dev = s.projects.filter((p) => p.phase === 'development');
+  for (const p of dev) p.engineers = s.company.engineers / dev.length;
 }
 
 export function materialUnitCost(s: GameState, model: Pick<CarModel, 'stats' | 'suppliers' | 'unitsBuilt'>): number {
@@ -243,6 +249,7 @@ function closeYear(s: GameState, year: number) {
 
 function advanceProjects(s: GameState) {
   const yf = yearFloat(s.week);
+  shareEngineers(s);
   const rng = stateRng(s);
   for (const p of s.projects) {
     if (p.phase === 'development') {

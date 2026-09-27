@@ -35,7 +35,6 @@ export function botStep(s: GameState, o: BotOptions = {}) {
   const yf = yearFloat(s.week);
   for (const p of [...s.projects]) {
     if (p.phase === 'design') {
-      A.setProjectEngineers(s, p.id, s.company.engineers);
       A.beginDevelopment(s, p.id);
     } else if (p.phase === 'development' && p.dev.done >= p.dev.required * 1.1) A.finishDevelopment(s, p.id);
     else if (p.phase === 'testing' && o.testWeeks !== undefined && o.testWeeks === 0) A.finishTesting(s, p.id);
@@ -64,7 +63,7 @@ export function botStep(s: GameState, o: BotOptions = {}) {
     for (const seg of segs) {
       const current = s.models.filter((m) => m.status === 'active' && m.segment === seg);
       const newest = current.sort((a, b) => b.launchWeek - a.launchWeek)[0];
-      if (!newest || (s.week - newest.launchWeek) / 52 > 6) {
+      if (!newest || (s.week - newest.launchWeek) / 52 > 4) {
         const r = A.startProject(s, { name: `${seg}-${Math.floor(yf)}`, segment: seg, targetPrice: 0, replacesModelId: newest?.id });
         // The bot is a yardstick, not a player: it designs the class's typical car itself.
         if (r.ok) {

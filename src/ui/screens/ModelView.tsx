@@ -9,6 +9,7 @@ import { formatDate, formatShort, yearFloat } from '../../core/time';
 import { MARKETS } from '../../data/markets';
 import { RIVALS } from '../../data/rivals';
 import { segmentDef } from '../../data/segments';
+import { costIndex } from '../../data/economy';
 import type { MarketId } from '../../core/types';
 import { store, useGameState } from '../store';
 import { money, num, pct } from '../format';
@@ -152,6 +153,12 @@ export function ModelView({ modelId }: { modelId: string }) {
             <p className="muted small">
               Şu anki fiyat {money(priceNow(m, s.week))} · birim malzeme {money(materialUnitCost(s, m))}
             </p>
+            {(s.week - m.launchWeek) / 52 < 3 && m.priceCeiling !== undefined && draftPrice > m.priceCeiling * costIndex(yearFloat(s.week)) * (1 + A.HIKE_TOLERANCE) && (
+              <p className="small tone-warn">
+                Bu, lansmandan beri en yüksek fiyatına göre %{Math.round(A.HIKE_TOLERANCE * 100)}’den büyük bir zam (enflasyon hariç). Basın bunu fark eder: dergiler puanı yeniden
+                yazar, lansman heyecanı söner, itibar düşer.
+              </p>
+            )}
             <Toggle
               checked={m.indexPrice}
               onChange={(v) => store.act(() => void (m.indexPrice = v))}
@@ -271,7 +278,7 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
       }
     >
       <p className="muted small">
-        Alıcılar her aracı çekiciliğine (tasarım puanları × segmentin gizli önceliklerine), fiyatına, markaya ve yeniliğine göre tartar. Bayi ağın ve bilinirliğin, aracını kaç
+        Alıcılar her aracı çekiciliğine (tasarım puanları × segmentin gizli önceliklerine), fiyatına, markaya ve yaşına göre tartar: iki yıldan sonra her araç eskir. Bayi ağın ve bilinirliğin, aracını kaç
         alıcının görebileceğini belirler. Segment toplamı: {sm.demand.toFixed(0)} araç/hafta.
       </p>
       {mine && (
@@ -289,8 +296,12 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
             <b className={mine.brand < 0 ? 'tone-bad' : 'tone-good'}>{mine.brand.toFixed(1)}</b>
           </div>
           <div>
-            <span>Yenilik</span>
+            <span>Lansman heyecanı</span>
             <b>+{mine.hype.toFixed(1)}</b>
+          </div>
+          <div title="İki yıldan sonra her yıl alıcı gözünde eskir; makyaj ya da yeni kuşak tazeler.">
+            <span>Yaş</span>
+            <b className={mine.age < 0 ? 'tone-bad' : ''}>{mine.age.toFixed(1)}</b>
           </div>
           <div>
             <span>Erişim</span>
@@ -299,8 +310,8 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
         </div>
       )}
       <Table
-        head={['Model', 'Üretici', 'Çekicilik', 'Alıcı fiyatı', 'Fiyat', 'Marka', 'Erişim', 'Pay']}
-        align={['l', 'l', 'r', 'r', 'r', 'r', 'r', 'r']}
+        head={['Model', 'Üretici', 'Çekicilik', 'Alıcı fiyatı', 'Fiyat', 'Marka', 'Yaş', 'Erişim', 'Pay']}
+        align={['l', 'l', 'r', 'r', 'r', 'r', 'r', 'r', 'r']}
         className="compact"
         rows={[
           ...rows.map((o) => [
@@ -310,10 +321,11 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
             money(o.price),
             o.priceTerm.toFixed(1),
             o.brand.toFixed(1),
+            o.age.toFixed(1),
             pct(o.reach, 0),
             pct(o.weight / sm.totalWeight),
           ]),
-          ['Küçük üreticiler', '—', '—', '—', '—', '—', '—', pct(others)],
+          ['Küçük üreticiler', '—', '—', '—', '—', '—', '—', '—', pct(others)],
         ]}
       />
     </Panel>

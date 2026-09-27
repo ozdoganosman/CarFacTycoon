@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as A from '../../core/actions';
 import { FOCUS_HINTS, FOCUS_KEYS, FOCUS_NAMES, productivity } from '../../core/development';
-import { engineersBusy } from '../../core/game';
 import type { FocusKey, Project } from '../../core/types';
 import { store, useGameState } from '../store';
 import { Button, Panel, Progress, Slider } from '../components/ui';
@@ -20,9 +19,9 @@ interface Bubble {
 export function DevPanel({ project: p }: { project: Project }) {
   const s = useGameState();
   const developing = p.phase === 'development';
-  const busyElsewhere = engineersBusy(s) - (developing ? p.engineers : 0);
-  const free = Math.max(0, s.company.engineers - busyElsewhere);
-  const eng = Math.max(1, Math.min(p.engineers, Math.max(1, free)));
+  // Every engineer works: projects in development share the whole team.
+  const others = s.projects.filter((x) => x.phase === 'development' && x.id !== p.id).length;
+  const eng = s.company.engineers / (others + 1);
   const required = developing ? p.dev.required : A.requiredWork(s, p);
   const rate = eng * productivity(s.company.skill);
   const remaining = Math.max(0, required - p.dev.done);
@@ -95,19 +94,15 @@ export function DevPanel({ project: p }: { project: Project }) {
       {developing && <Progress value={Math.min(p.dev.done, required * 1.6)} max={required * 1.6} label={`%${pct}`} />}
 
       <div className="dev-top">
-        <Slider
-          label="Mühendis sayısı"
-          value={eng}
-          min={1}
-          max={Math.max(1, free)}
-          onChange={(v) => store.act((st) => A.setProjectEngineers(st, p.id, v))}
-          format={(v) => `${v} / ${s.company.engineers}`}
-          disabled={free < 1}
-          hint="Daha çok mühendis daha hızlı bitirir. Finans ekranından işe alabilirsin."
-        />
+        <div>
+          <b>
+            {others ? `${s.company.engineers} mühendis ${others + 1} projeye bölünüyor (bu projede ~${eng.toFixed(1)})` : `Bütün mühendislerin (${s.company.engineers}) bu projede`}
+          </b>
+          <p className="muted small">Daha çok mühendis daha hızlı bitirir. Finans ekranından işe alabilirsin.</p>
+        </div>
         <div className="footer-info">
           <span className="muted small">{developing ? 'Kalan süre' : 'Tahmini geliştirme süresi'}</span>
-          <b>{free < 1 && !developing ? 'Boşta mühendis yok' : done ? 'Bitti' : `~${Math.ceil(remaining / Math.max(0.1, rate))} hafta`}</b>
+          <b>{done ? 'Bitti' : `~${Math.ceil(remaining / Math.max(0.1, rate))} hafta`}</b>
           <span className="muted small">İş yükü: {Math.round(required)} mühendis-hafta</span>
         </div>
       </div>
@@ -147,7 +142,7 @@ export function DevPanel({ project: p }: { project: Project }) {
 
       <div className="row-end">
         {!developing ? (
-          <Button kind="primary" disabled={free < 1} onClick={() => store.try((st) => A.beginDevelopment(st, p.id), 'Geliştirme başladı')}>
+          <Button kind="primary" onClick={() => store.try((st) => A.beginDevelopment(st, p.id), 'Geliştirme başladı')}>
             Geliştirmeyi başlat
           </Button>
         ) : (

@@ -169,17 +169,32 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
           icon={m.phase === 'production' ? '🎉' : '📐'}
           actions={
             <>
+              {m.phase === 'development' && (
+                <Button kind="ghost" onClick={close}>
+                  Cilalamaya devam et
+                </Button>
+              )}
+              {m.phase !== 'production' && (
+                <Button
+                  kind="ghost"
+                  onClick={() => {
+                    store.act(A.dismissModal);
+                    store.go({ id: 'project', projectId: p.id });
+                  }}
+                >
+                  Projeye bak
+                </Button>
+              )}
               <Button
                 kind="primary"
                 onClick={() => {
                   store.act(A.dismissModal);
+                  if (m.phase === 'development') store.try((st) => A.finishDevelopment(st, p.id));
+                  else if (m.phase === 'testing') store.try((st) => A.finishTesting(st, p.id));
                   store.go({ id: 'project', projectId: p.id });
                 }}
               >
-                Projeye git
-              </Button>
-              <Button kind="ghost" onClick={close}>
-                Sonra
+                {m.phase === 'development' ? 'Prototipleri yap, teste geç' : m.phase === 'testing' ? 'Üretim hazırlığına geç' : 'Lansmana git'}
               </Button>
             </>
           }

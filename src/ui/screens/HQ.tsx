@@ -32,7 +32,7 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
     const cap = lines.reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0) * m.productionRate;
     if (lines.length && demand > cap * 1.25 && m.inventory < cap) out.push({ text: `${m.name} için talep üretimi aşıyor. Darboğazı çöz ya da hat ekle.`, go: () => store.go({ id: 'factory' }) });
     if (m.inventory > Math.max(8, demand * 12)) out.push({ text: `${m.name} stokları birikiyor. Fiyatı ya da üretim hızını düşür.`, go: () => store.go({ id: 'model', modelId: m.id }) });
-    if ((s.week - m.refreshWeek) / 52 > 4) out.push({ text: `${m.name} ${Math.floor((s.week - m.refreshWeek) / 52)} yaşında; makyaj ya da yeni kuşak düşün.`, go: () => store.go({ id: 'model', modelId: m.id }) });
+    if ((s.week - m.refreshWeek) / 52 > 3) out.push({ text: `${m.name} ${Math.floor((s.week - m.refreshWeek) / 52)} yaşında ve her yıl eskiyor; makyaj ya da yeni kuşak düşün.`, go: () => store.go({ id: 'model', modelId: m.id }) });
   }
   if (s.company.cash < 0) out.push({ text: 'Kasa ekside! Kredi al ya da masrafları kıs.', go: () => store.go({ id: 'finance' }) });
   return out.slice(0, 6);

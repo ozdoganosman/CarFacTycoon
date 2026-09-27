@@ -45,7 +45,6 @@ test('generate saves', () => {
   const r = A.startProject(s, { name: 'Yıldız', segment: 'sport', targetPrice: 1500 });
   if (!r.ok) throw new Error(r.error);
   writeFileSync(`${OUT}/save-design.json`, serialize(s));
-  A.setProjectEngineers(s, r.id, 99);
   A.beginDevelopment(s, r.id);
   for (let i = 0; i < 200 && s.projects.find((p) => p.id === r.id)!.dev.done < s.projects.find((p) => p.id === r.id)!.dev.required * 1.05; i++) { tick(s); s.modals = []; }
   writeFileSync(`${OUT}/save-dev.json`, serialize(s));

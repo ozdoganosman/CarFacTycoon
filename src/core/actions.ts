@@ -10,6 +10,7 @@ import { displacementCc } from './engine';
 import { writeReviews } from './feedback';
 import { emptyLine, lineReport, modernizeQuote, planBalancedLine, stationPrice, stationResale, turnkeyLineCost } from './factory';
 import {
+  shareEngineers,
   availableSegments,
   credit,
   dealerUpgradeCost,
@@ -17,7 +18,7 @@ import {
   gates,
   materialUnitCost,
 } from './game';
-import { modelScores, referencePrice } from './market';
+import { modelScores, priceNow, referencePrice } from './market';
 import { stateRng } from './rng';
 import { experienceFactor, newEstimate } from './estimate';
 import { TESTS, SUPPLIERS, expectedDefects, generateDefects } from './testing';
@@ -70,8 +71,6 @@ export function hireEngineers(s: GameState, n: number): ActionResult {
 }
 
 export function fireEngineers(s: GameState, n: number): ActionResult {
-  const free = s.company.engineers - engineersBusy(s);
-  if (n > free) return fail('Projelerde çalışan mühendisler çıkarılamaz. Önce projeden al.');
   if (s.company.engineers - n < 1) return fail('En az bir mühendis kalmalı.');
   s.company.engineers -= n;
   s.company.reputation = clamp(s.company.reputation - 0.2 * n, 0, 100);
@@ -220,30 +219,23 @@ export function projectedBonus(s: GameState, p: Project): DevBonus {
   return bonusFromPoints(points, required, Math.max(p.dev.done, required), s.company.skill);
 }
 
-export function setProjectEngineers(s: GameState, pid: string, n: number): ActionResult {
-  const p = project(s, pid);
-  const busyElsewhere = engineersBusy(s) - (p.phase === 'development' ? p.engineers : 0);
-  p.engineers = clamp(Math.round(n), 1, Math.max(1, s.company.engineers - busyElsewhere));
-  decide(s, 'engineers:' + pid, `${p.name}: ${p.engineers} mühendis`);
-  return ok;
-}
-
 export function setFocus(s: GameState, pid: string, focus: Record<FocusKey, number>) {
   project(s, pid).dev.focus = normalizeFocus(focus);
   const p = project(s, pid);
   decide(s, 'focus:' + pid, `${p.name}: odak ${FOCUS_KEYS.map((k) => `${k} %${Math.round(p.dev.focus[k] * 100)}`).join(', ')}`);
 }
 
+/** Shared engineers can be a fraction of a person per project. */
+const fmtEngineers = (n: number) => String(Math.round(n * 10) / 10);
+
 export function beginDevelopment(s: GameState, pid: string): ActionResult {
   const p = project(s, pid);
   if (p.phase !== 'design') return fail('Proje zaten geliştirmede.');
-  const free = s.company.engineers - engineersBusy(s);
-  if (free < 1) return fail('Boşta mühendis yok. Mühendis işe al ya da başka projeden çek.');
-  p.engineers = clamp(p.engineers, 1, free);
   p.dev.required = requiredWork(s, p);
   p.phase = 'development';
-  log(s, `${p.name}: geliştirme başladı (${p.engineers} mühendis).`);
-  decide(s, 'dev:' + pid, `${p.name}: geliştirme başladı, ${p.engineers} mühendis · ${designSummary(p.design)}`);
+  shareEngineers(s);
+  log(s, `${p.name}: geliştirme başladı (${fmtEngineers(p.engineers)} mühendis).`);
+  decide(s, 'dev:' + pid, `${p.name}: geliştirme başladı, ${fmtEngineers(p.engineers)} mühendis · ${designSummary(p.design)}`);
   return ok;
 }
 
@@ -405,6 +397,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
     m.reviews = reviews;
     m.reviewScore = reviews.reduce((a, r) => a + r.score, 0) / reviews.length;
     m.hype += 3 + Math.max(0, m.reviewScore - 5) * 0.8 + (o.autoShow ? 2 : 0);
+    m.priceCeiling = o.price / costIndex(yf);
     s.projects = s.projects.filter((x) => x.id !== p.id);
     s.company.skill = clamp(s.company.skill + (100 - s.company.skill) * 0.02, 0, 100);
     m.launchReportWeek = s.week + 4;
@@ -518,6 +511,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
   m.reviews = reviews;
   m.reviewScore = reviews.reduce((a, r) => a + r.score, 0) / reviews.length;
   m.hype = Math.max(0, 3 + (m.reviewScore - 5) * 1.2 + (o.autoShow ? 3 : 0));
+  m.priceCeiling = o.price / costIndex(yf);
   s.company.modelsLaunched += 1;
   s.company.skill = clamp(s.company.skill + (100 - s.company.skill) * 0.06, 0, 100);
   s.company.reputation = clamp(s.company.reputation + (m.reviewScore - 5.5) * 1.5, 0, 100);
@@ -565,11 +559,36 @@ function retire(s: GameState, m: CarModel, reason: string) {
 
 // ---------------- Models on sale ----------------
 
+/** Price rise above the launch level (after inflation) that the press lets pass in a car's first years. */
+export const HIKE_TOLERANCE = 0.08;
+
 export function setModelPrice(s: GameState, id: string, price: number) {
   const m = model(s, id);
+  const ci = costIndex(yearFloat(s.week));
+  const before = priceNow(m, s.week);
   m.price = Math.max(1, price);
   m.priceWeek = s.week;
   decide(s, 'price:' + id, `${m.name}: fiyat ${money(m.price)} (sınıf ${money(referencePrice(s.company.hq, m.segment, yearFloat(s.week)))})`);
+  // Launching cheap for good reviews and raising the price later is noticed.
+  const ceiling = m.priceCeiling ?? before / ci;
+  const real = m.price / ci;
+  if ((s.week - m.launchWeek) / 52 < 3 && real > ceiling * (1 + HIKE_TOLERANCE)) {
+    m.priceCeiling = real;
+    const old = m.reviewScore;
+    const reviews = writeReviews(s, m, stateRng(s));
+    const fresh = reviews.reduce((a, r) => a + r.score, 0) / reviews.length;
+    if (fresh < old) {
+      m.reviews = reviews;
+      m.reviewScore = fresh;
+    }
+    s.company.reputation = clamp(s.company.reputation - Math.max(0.5, (old - m.reviewScore) * 1.5), 0, 100);
+    m.hype = 0;
+    log(
+      s,
+      `Basın ${m.name} modeline gelen %${Math.round((real / ceiling - 1) * 100)} zammı eleştirdi: dergi ortalaması ${old.toFixed(1)} → ${m.reviewScore.toFixed(1)}. Lansman heyecanı söndü.`,
+      'warn',
+    );
+  }
 }
 
 export function setModelMarkets(s: GameState, id: string, markets: MarketId[]) {

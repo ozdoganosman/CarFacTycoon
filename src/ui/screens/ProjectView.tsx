@@ -2,12 +2,12 @@ import { useState } from 'react';
 import * as A from '../../core/actions';
 import { gates, materialUnitCost } from '../../core/game';
 import { lineReport, lineUpkeep } from '../../core/factory';
-import { consumerPrice, referencePrice, weeklySegmentDemand } from '../../core/market';
+import { consumerPrice, demandAtPrice, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
 import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, defectRange, defectText, expectedRemaining, riskLabel, testTuning, type Tuning } from '../../core/testing';
 import { yearFloat } from '../../core/time';
-import { DEALER_COMMISSION, costIndex, shopCost } from '../../data/economy';
+import { DEALER_COMMISSION, costIndex, engineerSalary, shopCost } from '../../data/economy';
 import { MARKETS } from '../../data/markets';
-import { segmentDef } from '../../data/segments';
+import { ATTRS, segmentDef } from '../../data/segments';
 import type { ComponentKey, MarketId, Project, ProjectPhase, TestId } from '../../core/types';
 import { store, useGameState } from '../store';
 import { money } from '../format';
@@ -69,6 +69,7 @@ export function ProjectView({ projectId }: { projectId: string }) {
           </li>
         ))}
       </ol>
+      <NextStep p={p} />
       {(p.phase === 'design' || p.phase === 'development') && (
         <>
           <Designer project={p} readOnly={p.phase === 'development'} />
@@ -82,12 +83,134 @@ export function ProjectView({ projectId }: { projectId: string }) {
   );
 }
 
+/**
+ * Something to decide the price with: what rivals charge, and what demand and
+ * weekly profit the engineers expect at a few prices (as a range, since how
+ * buyers will like the car is only known at launch).
+ */
+function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) => void; markets: MarketId[]; cap: number; unit: number; labour: number }) {
+  const { p, price, setPrice, markets, cap, unit, labour } = props;
+  const s = useGameState();
+  const yf = yearFloat(s.week);
+  const ref = referencePrice(s.company.hq, p.segment, yf);
+  const est = p.estimate;
+  const avgW = est ? ATTRS.reduce((a, k) => a + est.width[k], 0) / ATTRS.length : 6;
+  const spread = Math.exp((0.6 * avgW) / 7);
+  const demandAt = (pr: number) => {
+    const pm = A.previewModel(s, p, pr, markets);
+    return markets.reduce((a, mk) => a + demandAtPrice(s, pm, mk, pr), 0);
+  };
+  const net = s.markets[s.company.hq].dealerLevel > 0 ? 1 - DEALER_COMMISSION : 1;
+  const rivalPrices = segmentMarket(s, s.company.hq, p.segment)
+    .offers.filter((o) => o.kind === 'rival')
+    .map((o) => o.price)
+    .sort((a, b) => a - b);
+  const d = demandAt(price);
+  const lo = d / spread;
+  const hi = d * spread;
+  const verdict =
+    lo > cap * 1.2
+      ? 'Talep büyük olasılıkla hattı aşar: fiyatı biraz yükseltebilir ya da kapasite ekleyebilirsin.'
+      : hi < cap * 0.8
+        ? 'Hat bu talepten fazlasını üretebilir: fiyatı düşürmeyi düşün.'
+        : 'Talep ve kapasite kabaca dengeli.';
+  const options = [0.9, 1, 1.1, 1.2].map((f) => Math.round((ref * f) / 10) * 10);
+  const steep = steepPriceRatio(p.segment, s.company.hq, yf);
+  const pct = (pr: number) => {
+    const v = Math.round((pr / ref - 1) * 100);
+    return v < 0 ? `−%${-v}` : `+%${v}`;
+  };
+  return (
+    <div className="price-guide">
+      <h4>Fiyat rehberi</h4>
+      {rivalPrices.length > 0 && (
+        <p className="small">
+          Rakiplerin alıcı fiyatları: en ucuz {money(rivalPrices[0])} · ortanca {money(rivalPrices[Math.floor(rivalPrices.length / 2)])} · en pahalı{' '}
+          {money(rivalPrices[rivalPrices.length - 1])}.
+        </p>
+      )}
+      <p className="small">
+        Bu fiyatta tahmini talep: <b>{lo.toFixed(1)}–{hi.toFixed(1)} araç/hafta</b> · hat {cap.toFixed(1)} araç/hafta. {verdict}
+      </p>
+      <table className="table compact">
+        <thead>
+          <tr>
+            <th>Fiyat</th>
+            <th className="al-r">Talep (orta)</th>
+            <th className="al-r">Haftalık brüt kâr</th>
+          </tr>
+        </thead>
+        <tbody>
+          {options.map((pr) => {
+            const dm = demandAt(pr);
+            const profit = Math.min(dm, cap) * (pr * net - unit - labour);
+            return (
+              <tr key={pr} className={Math.abs(pr - price) < 5 ? 'is-mine' : ''}>
+                <td>
+                  <button type="button" className="link-btn" onClick={() => setPrice(pr)}>
+                    {money(pr)}
+                  </button>{' '}
+                  <span className="muted small">
+                    {pr === Math.round(ref / 10) * 10 ? 'sınıf fiyatı' : pct(pr)}
+                    {pr > ref * steep && ' · dergiler “iddialı” der'}
+                  </span>
+                </td>
+                <td className="al-r">{dm.toFixed(1)}</td>
+                <td className={`al-r ${profit < 0 ? 'tone-bad' : ''}`}>{money(profit)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p className="muted small">
+        Dergiler fiyatı sınıfa göre tartar: sınıf fiyatının üstüne çıktıkça puan azar azar düşer, bu sınıfta %{Math.round((steep - 1) * 100)} üstünde “iddialı” derler. Ucuz başlayıp
+        sonra zam yapmak işe yaramaz: lansmandan sonraki üç yılda %{Math.round(A.HIKE_TOLERANCE * 100)}’den büyük bir zam dergilerin yeniden yazmasına ve itibar kaybına yol açar.
+      </p>
+    </div>
+  );
+}
+
+/** When a stage is finished, its next step sits right under the stepper, not at the bottom of the page. */
+function NextStep({ p }: { p: Project }) {
+  const devDone = p.phase === 'development' && p.dev.done >= p.dev.required;
+  const testsDone = p.phase === 'testing' && TESTS.every((t) => p.tests[t.id].done >= p.tests[t.id].planned);
+  if (!devDone && !testsDone) return null;
+  return (
+    <div className="next-step" role="status">
+      <span>
+        {devDone ? (
+          <>
+            <b>Geliştirme bitti.</b> Zaman akarsa araç cilalanmaya devam eder; hazırsan prototipleri yap.
+          </>
+        ) : (
+          <>
+            <b>Test programı bitti.</b> Sırada tedarikçiler ve üretim hattı var.
+          </>
+        )}
+      </span>
+      <Button kind="primary" onClick={() => store.try((st) => (devDone ? A.finishDevelopment(st, p.id) : A.finishTesting(st, p.id)))}>
+        {devDone ? 'Prototipleri yap, teste geç' : 'Üretim hazırlığına geç'}
+      </Button>
+    </div>
+  );
+}
+
 function Testing({ p }: { p: Project }) {
   const s = useGameState();
   const yf = yearFloat(s.week);
   const planned = Object.fromEntries(TESTS.map((t) => [t.id, p.tests[t.id].planned])) as Record<TestId, number>;
   const exp = expectedRemaining(p.defectPrior, planned);
   const startRange = defectRange(p.defectPrior);
+  // What the plan costs in time and money, and what its last weeks buy.
+  const weekCost = (t: (typeof TESTS)[number]) => t.costPerWeek * costIndex(yf) * (0.6 + 0.4 * p.design.size + (0.2 * p.design.engine.cylinders) / 4);
+  const weeksLeft = Math.max(0, ...TESTS.map((t) => p.tests[t.id].planned - p.tests[t.id].done));
+  const testCostLeft = TESTS.reduce((a, t) => a + Math.max(0, p.tests[t.id].planned - p.tests[t.id].done) * weekCost(t), 0);
+  // While the car is in testing its engineers are paid whether or not they have anything else to do.
+  const fixedWeekly = s.company.engineers * engineerSalary(yf);
+  const shorter = Object.fromEntries(TESTS.map((t) => [t.id, Math.max(p.tests[t.id].done, p.tests[t.id].planned - 5)])) as Record<TestId, number>;
+  const shorterWeeks = Math.max(0, ...TESTS.map((t) => shorter[t.id] - p.tests[t.id].done));
+  const shorterSaves = TESTS.reduce((a, t) => a + (p.tests[t.id].planned - shorter[t.id]) * weekCost(t), 0) + (weeksLeft - shorterWeeks) * fixedWeekly;
+  const extraDefects = expectedRemaining(p.defectPrior, shorter) - exp;
   const risk = riskLabel(exp);
   const found = p.defects.filter((d) => d.found);
   const running = TESTS.some((t) => p.tests[t.id].done < p.tests[t.id].planned);
@@ -159,6 +282,23 @@ function Testing({ p }: { p: Project }) {
                 </li>
               ))}
             </ul>
+          )}
+          <h4>Planın bedeli</h4>
+          <p className="small">
+            {weeksLeft > 0 ? (
+              <>
+                <b>{weeksLeft} hafta</b> daha: test gideri ~{money(testCostLeft)}, mühendis maaşları ~{money(weeksLeft * fixedWeekly)}. Araç
+                o kadar geç satışa çıkar.
+              </>
+            ) : (
+              'Plan tamamlandı.'
+            )}
+          </p>
+          {weeksLeft - shorterWeeks > 0 && (
+            <p className="small muted">
+              Her testi 5 hafta kısaltsan: ~{extraDefects.toFixed(1)} kusur daha sahaya çıkar, ama araç {weeksLeft - shorterWeeks} hafta erken satışa çıkar ve ~{money(shorterSaves)} tasarruf
+              edersin.
+            </p>
           )}
           <h4>Testlerin araca katkısı</h4>
           <p className="small">
@@ -372,6 +512,7 @@ function Launch({ p }: { p: Project }) {
             <b className={margin < 0 ? 'tone-bad' : 'tone-good'}>{money(margin)}</b>
           </div>
         </div>
+        <PriceGuide p={p} price={price} setPrice={setPrice} markets={markets} cap={cap} unit={unit} labour={labour} />
         <p className="muted small">
           Alıcıların aracını nasıl karşılayacağını lansmanda göreceksin: dergi puanları, rakiplerle karşılaştırma ve dört hafta sonra ilk ay raporu.
         </p>

@@ -107,10 +107,10 @@ function playerShareLastYear(state: GameState, market: MarketId, seg: SegmentId)
   return total > 0 ? mine / total : 0;
 }
 
+/** Years between a rival's new models: cars date quickly, so rivals keep them fresh. */
 function cycleYears(yf: number): number {
-  if (yf < 1930) return 7;
-  if (yf < 1946) return 6;
-  return 4.5;
+  if (yf < 1946) return 5;
+  return 4;
 }
 
 export interface RivalNews {

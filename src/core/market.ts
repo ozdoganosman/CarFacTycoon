@@ -78,6 +78,15 @@ export function priceTerm(segment: SegmentId, market: MarketId, consumer: number
   return -sens * PRICE_COEF * Math.log(consumer / referencePrice(market, segment, yf));
 }
 
+/** Past this many utility points either way, magazines and buyers talk about the price. */
+export const PRICE_REMARK = 8;
+
+/** How far above the class price (as a ratio) a car can go before it is called steep. */
+export function steepPriceRatio(segment: SegmentId, market: MarketId, yf: number): number {
+  const sens = segmentDef(segment).priceSens * eraMods(market, yf).priceSens;
+  return Math.exp(PRICE_REMARK / (sens * PRICE_COEF));
+}
+
 export const brandTerm = (reputation: number, segment: SegmentId) => (reputation - 50) * 0.12 * segmentDef(segment).brandSens;
 
 export function playerReach(state: GameState, market: MarketId): number {
@@ -152,6 +161,21 @@ export function rivalPriceNow(rm: RivalModel, week: number): number {
 
 // ---- offers & shares ----
 
+/**
+ * Buyers tire of a design: after two years on sale a car starts to look dated,
+ * more so every year, whatever its specification.
+ */
+export const DATED_PER_YEAR = 3;
+export function datedPenalty(ageYears: number): number {
+  return -Math.min(20, Math.max(0, ageYears - 2) * DATED_PER_YEAR);
+}
+
+/** How old a model looks: a facelift takes about two thirds of the years off. */
+export function modelAgeYears(model: Pick<CarModel, 'launchWeek' | 'refreshWeek'>, week: number): number {
+  const refresh = model.refreshWeek ?? model.launchWeek;
+  return (week - refresh) / 52 + 0.35 * ((refresh - model.launchWeek) / 52);
+}
+
 export interface Offer {
   kind: 'player' | 'rival';
   id: string;
@@ -162,6 +186,8 @@ export interface Offer {
   priceTerm: number;
   brand: number;
   hype: number;
+  /** Negative: how dated the design looks. */
+  age: number;
   reach: number;
   utility: number;
   weight: number;
@@ -176,7 +202,8 @@ export function playerOffer(state: GameState, model: CarModel, market: MarketId)
   const brand = brandTerm(state.company.reputation, model.segment);
   const reach = playerReach(state, market);
   const hype = model.hype * HYPE_WEIGHT;
-  const utility = ap[market] + pt + brand + hype;
+  const age = datedPenalty(modelAgeYears(model, state.week));
+  const utility = ap[market] + pt + brand + hype + age;
   return {
     kind: 'player',
     id: model.id,
@@ -187,6 +214,7 @@ export function playerOffer(state: GameState, model: CarModel, market: MarketId)
     priceTerm: pt,
     brand,
     hype,
+    age,
     reach,
     utility,
     weight: offerWeight(reach, utility),
@@ -203,7 +231,8 @@ export function rivalOffer(state: GameState, rm: RivalModel, market: MarketId): 
   const brand = brandTerm(rivalReputation(rm.companyId), rm.segment);
   const hype = 4 * HYPE_WEIGHT * Math.exp(-(state.week - rm.launchWeek) / 40);
   const reach = rivalSize(rm.companyId, yf) * (isImport ? 0.45 : 1);
-  const utility = ap[market] + pt + brand + hype;
+  const age = datedPenalty((state.week - rm.launchWeek) / 52);
+  const utility = ap[market] + pt + brand + hype + age;
   return {
     kind: 'rival',
     id: rm.id,
@@ -214,6 +243,7 @@ export function rivalOffer(state: GameState, rm: RivalModel, market: MarketId): 
     priceTerm: pt,
     brand,
     hype,
+    age,
     reach,
     utility,
     weight: offerWeight(reach, utility),

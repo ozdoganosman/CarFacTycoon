@@ -257,6 +257,8 @@ export interface CarModel {
   markets: MarketId[];
   /** Share of its lines' throughput to use, 0..1. Lines point at models via ProductionLine.modelId. */
   productionRate: number;
+  /** Highest price (in 1900 dollars) the press has accepted; a big jump above it soon after launch is punished. */
+  priceCeiling?: number;
   /** Let the factory follow demand: add capacity while buyers wait, give it back when they don't. */
   autoCapacity?: boolean;
   lowDemandMonths?: number;

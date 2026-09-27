@@ -4,7 +4,7 @@ import { aiDesign, referenceBonus, referenceDesigns } from '../src/core/ai';
 import { computeEngine, displacementCc, racHp } from '../src/core/engine';
 import { lineReport } from '../src/core/factory';
 import { newGame, tick } from '../src/core/game';
-import { segmentMarket } from '../src/core/market';
+import { datedPenalty, modelAgeYears, priceNow, segmentMarket } from '../src/core/market';
 import { makeRng } from '../src/core/rng';
 import { deserialize, serialize } from '../src/core/save';
 import { eraReference, scoreStats } from '../src/core/scoring';
@@ -315,6 +315,42 @@ describe('engineering', () => {
     autoCapacity(s, () => 100);
     const cap = s.lines.filter((l) => l.modelId === m.id).reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
     expect(cap).toBeGreaterThan(45);
+  });
+});
+
+describe('market pressure', () => {
+  it('a model looks dated after two years and a facelift takes most of that away', () => {
+    expect(datedPenalty(1.5)).toBe(-0);
+    expect(datedPenalty(5)).toBeLessThan(-8);
+    expect(datedPenalty(30)).toBe(-20);
+    const aged = modelAgeYears({ launchWeek: 0, refreshWeek: 0 }, 52 * 8);
+    const faced = modelAgeYears({ launchWeek: 0, refreshWeek: 52 * 7 }, 52 * 8);
+    expect(faced).toBeLessThan(aged / 2);
+  });
+
+  it('a big price rise soon after launch costs reviews, buzz and reputation', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 13 });
+    runBot(s, 52 * 2, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active' && (s.week - x.launchWeek) / 52 < 2)!;
+    m.hype = 5;
+    const rep = s.company.reputation;
+    A.setModelPrice(s, m.id, priceNow(m, s.week) * 1.03);
+    expect(m.hype).toBe(5);
+    A.setModelPrice(s, m.id, priceNow(m, s.week) * 1.3);
+    expect(m.hype).toBe(0);
+    expect(s.company.reputation).toBeLessThan(rep);
+  });
+
+  it('every engineer works on the projects in development', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 14 });
+    s.company.engineers = 6;
+    const a = A.startProject(s, { name: 'A', segment: 'family', targetPrice: 0 });
+    const b = A.startProject(s, { name: 'B', segment: 'city', targetPrice: 0 });
+    if (!a.ok || !b.ok) throw new Error('projects');
+    A.beginDevelopment(s, a.id);
+    expect(s.projects.find((p) => p.id === a.id)!.engineers).toBe(6);
+    A.beginDevelopment(s, b.id);
+    expect(s.projects.find((p) => p.id === a.id)!.engineers).toBe(3);
   });
 });
 
