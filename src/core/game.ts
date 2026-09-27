@@ -110,6 +110,57 @@ export function engineersBusy(s: GameState): number {
   return Math.round(s.projects.filter((p) => p.phase === 'development').reduce((a, p) => a + p.engineers, 0));
 }
 
+/** Engineers drawing a salary with nothing to do: no project in development or testing, no research. */
+export function idleEngineers(s: GameState): number {
+  const working = s.projects.some((p) => p.phase === 'development' || p.phase === 'testing') || (s.research?.active.length ?? 0) > 0;
+  return working ? 0 : s.company.engineers;
+}
+
+export interface CashReport {
+  /** Last 52 weeks. */
+  revenue: number;
+  costs: { key: (typeof COST_KEYS)[number]; amount: number }[];
+  /** Average cash flow of the last eight weeks, investments included. */
+  weeklyNet: number;
+  /** Credit the bank would still give. */
+  room: number;
+  rate: number;
+  idle: number;
+  idleWeekly: number;
+  /** Weeks left to get the till back above zero. */
+  weeksLeft: number;
+}
+
+/** Where the money goes: the year's costs, the recent cash flow, spare credit and idle engineers. */
+export function cashReport(s: GameState): CashReport {
+  const yf = yearFloat(s.week);
+  const last = s.finance.slice(-52);
+  const costs = COST_KEYS.map((key) => ({ key, amount: last.reduce((a, f) => a + f[key], 0) }))
+    .filter((c) => c.amount > 0)
+    .sort((a, b) => b.amount - a.amount);
+  const recent = s.finance.slice(-8);
+  const weeklyNet = recent.length ? recent.reduce((a, f) => a + f.revenue - COST_KEYS.reduce((b, k) => b + f[k], 0), 0) / recent.length : 0;
+  const c = credit(s);
+  const idle = idleEngineers(s);
+  return {
+    revenue: last.reduce((a, f) => a + f.revenue, 0),
+    costs,
+    weeklyNet,
+    room: Math.max(0, c.limit - s.company.loan),
+    rate: c.rate,
+    idle,
+    idleWeekly: idle * engineerSalary(yf),
+    weeksLeft: Math.max(0, 13 - s.company.negativeWeeks),
+  };
+}
+
+/** A loan that closes the gap and carries two months of the current losses. */
+export function rescueLoan(s: GameState): number {
+  const r = cashReport(s);
+  const need = Math.max(0, -s.company.cash) + Math.max(0, -r.weeklyNet) * 8 + 1000 * costIndex(yearFloat(s.week));
+  return Math.min(Math.floor(r.room / 500) * 500, Math.ceil(need / 500) * 500);
+}
+
 /** Every engineer works: projects in development share the whole team equally. */
 export function shareEngineers(s: GameState) {
   const dev = s.projects.filter((p) => p.phase === 'development');
@@ -502,6 +553,7 @@ function field(s: GameState) {
 function fixedCosts(s: GameState) {
   const yf = yearFloat(s.week);
   spend(s, s.company.engineers * engineerSalary(yf), 'salaries');
+  s.company.idleSalary = (s.company.idleSalary ?? 0) + idleEngineers(s) * engineerSalary(yf);
   spend(s, overhead(yf, s.lines.length), 'other');
   for (const m of MARKET_IDS) {
     spend(s, dealerUpkeep(s, m), 'dealers');
@@ -547,8 +599,15 @@ function checkSolvency(s: GameState) {
     return;
   }
   s.company.negativeWeeks += 1;
-  if (s.company.negativeWeeks === 1) log(s, 'Kasa eksiye düştü! 12 hafta içinde toparlanmazsan şirket iflas eder. Banka kredisi alabilir, masrafları kısabilirsin.', 'bad');
-  if (s.company.negativeWeeks === 8) log(s, 'Son uyarı: 4 hafta içinde kasa artıya geçmezse iflas!', 'bad');
+  // Both warnings stop the clock: at 3x speed twelve weeks pass in seconds.
+  if (s.company.negativeWeeks === 1) {
+    log(s, 'Kasa eksiye düştü! 12 hafta içinde toparlanmazsan şirket iflas eder. Banka kredisi alabilir, masrafları kısabilirsin.', 'bad');
+    pushModal(s, { kind: 'insolvency', stage: 'first' });
+  }
+  if (s.company.negativeWeeks === 8) {
+    log(s, `Son uyarı: ${cashReport(s).weeksLeft} hafta içinde kasa artıya geçmezse iflas!`, 'bad');
+    pushModal(s, { kind: 'insolvency', stage: 'last' });
+  }
   if (s.company.negativeWeeks > 12) {
     s.gameOver = { reason: 'bankrupt', week: s.week };
     s.modals.push({ kind: 'gameOver' });

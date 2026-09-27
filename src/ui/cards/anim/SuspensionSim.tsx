@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import type { SuspensionTypeId } from '../../../core/types';
+import type { BodyId, SuspensionTypeId } from '../../../core/types';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Readout, Slider } from './controls';
@@ -20,6 +20,8 @@ export interface SuspensionSimProps {
   /** Know-how the design carries (dampers, tyres, anti-roll bar). */
   knowhow?: string[];
   year: number;
+  /** Body style: the car on the test road looks like the one being designed. */
+  body?: BodyId;
 }
 
 const G = 9.81;
@@ -68,6 +70,79 @@ function latG(x: number, v: number): number {
   return ramp * Math.min(0.6, (v * v) / (40 * G));
 }
 
+type Pt = [number, number];
+
+/** Outline of the car in the style of its year and body (m; x forward, y up from the ground at rest). */
+interface BodyShape {
+  side: Pt[];
+  glass: Pt[][];
+  heads: Pt[];
+  /** The windscreen of an open car. */
+  screen?: [Pt, Pt];
+  /** Separate wings over the wheels (gone with the flat-sided bodies of the 1940s). */
+  wings: boolean;
+  front: Pt[];
+  frontGlass?: Pt[];
+  frontHeads: Pt[];
+  lampY: number;
+}
+
+export function bodyShape(body: BodyId | undefined, year: number): BodyShape {
+  const early = year < 1925;
+  const pontoon = year >= 1942;
+  if (body === 'phaeton' || body === 'roadster' || body === undefined) {
+    const roadster = body === 'roadster';
+    const screen: [Pt, Pt] | undefined = year >= 1906 ? [[roadster ? 0.45 : 0.55, 1.08], [roadster ? 0.4 : 0.48, 1.45]] : undefined;
+    return {
+      side: roadster
+        ? [[-1.9, 0.62], [2.0, 0.62], [2.0, 0.98], [0.75, 1.0], [0.45, 1.06], [-0.55, 1.06], [-1.0, 0.95], [-1.9, 0.88]]
+        : [[-2.0, 0.62], [2.0, 0.62], [2.0, 1.0], [0.85, 1.02], [0.55, 1.1], [-0.25, 1.1], [-0.35, 1.16], [-1.85, 1.16], [-2.0, 1.05]],
+      glass: [],
+      heads: roadster ? [[-0.15, 1.3]] : [[0.05, 1.32], [-1.0, 1.36]],
+      screen,
+      wings: true,
+      front: [[-0.82, 0.6], [0.82, 0.6], [0.86, 1.06], [-0.86, 1.06]],
+      frontGlass: screen ? [[-0.62, 1.06], [0.62, 1.06], [0.6, 1.42], [-0.6, 1.42]] : undefined,
+      frontHeads: roadster ? [[-0.25, 1.3]] : [[-0.3, 1.3], [0.3, 1.3]],
+      lampY: 1.0,
+    };
+  }
+  const tail = body === 'station' || body === 'suv' ? -1.95 : body === 'coupe' ? -0.8 : body === 'pickup' ? -0.35 : -1.55;
+  let side: Pt[];
+  let glass: Pt[][];
+  let front: Pt[];
+  let frontGlass: Pt[];
+  if (pontoon) {
+    const top = body === 'suv' ? 1.72 : 1.47;
+    side =
+      body === 'pickup'
+        ? [[-2.15, 0.52], [2.15, 0.52], [2.15, 1.0], [0.95, 1.04], [0.5, top], [-0.35, top], [-0.4, 1.04], [-2.15, 1.04]]
+        : [[-2.15, 0.48], [2.15, 0.48], [2.15, 0.98], [0.95, 1.02], [0.5, top], [tail < -1.5 ? -2.05 : tail, top], [tail < -1.5 ? -2.12 : tail - 0.5, 1.05], [-2.15, 1.0]];
+    glass = [[[0.4, 1.12], [0.44, top - 0.08], [-0.3, top - 0.08], [-0.3, 1.12]]];
+    if (tail < -0.9) glass.push([[-0.42, 1.12], [-0.42, top - 0.08], [Math.max(tail, -1.9) + 0.15, top - 0.08], [Math.max(tail, -1.9) + 0.35, 1.12]]);
+    front = [[-0.92, 0.48], [0.92, 0.48], [0.94, 1.0], [0.62, 1.08], [0.52, top], [-0.52, top], [-0.62, 1.08], [-0.94, 1.0]];
+    frontGlass = [[-0.46, 1.12], [0.46, 1.12], [0.42, top - 0.07], [-0.42, top - 0.07]];
+  } else {
+    const top = early ? 1.8 : 1.57;
+    const lean = early ? 0.05 : 0.3;
+    side = [[-2.05, 0.62], [2.05, 0.62], [2.05, 1.02], [0.8, 1.06], [0.5 + lean * 0.3, 1.1], [0.5 - lean, top], [tail, top], [tail - (body === 'coupe' && !early ? 0.9 : 0.05), 1.1], ...(body === 'pickup' ? ([[-2.05, 1.08]] as Pt[]) : ([[-2.05, 1.08]] as Pt[]))];
+    glass = [[[0.42 - lean * 0.2, 1.2], [0.44 - lean, top - 0.12], [-0.3, top - 0.12], [-0.3, 1.2]]];
+    if (tail < -0.9) glass.push([[-0.42, 1.2], [-0.42, top - 0.12], [tail + 0.15, top - 0.12], [tail + 0.15, 1.2]]);
+    front = [[-0.82, 0.6], [0.82, 0.6], [0.86, 1.06], [0.62, 1.1], [0.56, top], [-0.56, top], [-0.62, 1.1], [-0.86, 1.06]];
+    frontGlass = [[-0.46, 1.18], [0.46, 1.18], [0.44, top - 0.1], [-0.44, top - 0.1]];
+  }
+  return {
+    side,
+    glass,
+    heads: tail < -0.9 ? [[0.0, 1.33], [-1.1, 1.35]] : [[0.0, 1.33]],
+    wings: !pontoon,
+    front,
+    frontGlass,
+    frontHeads: [[-0.28, 1.32]],
+    lampY: pontoon ? 0.82 : early ? 1.0 : 0.92,
+  };
+}
+
 type Damper = 'none' | 'friction' | 'hydraulic';
 
 export interface SuspParams {
@@ -87,6 +162,7 @@ export interface SuspParams {
   fRoll: number;
   coupling: number;
   antiRoll: boolean;
+  shape: BodyShape;
 }
 
 export function suspParams(p: SuspensionSimProps): SuspParams {
@@ -129,6 +205,7 @@ export function suspParams(p: SuspensionSimProps): SuspParams {
     fRoll: (fric[0] + fric[1]) * 0.25,
     coupling: front === 'solid' ? 0.55 : 0.25,
     antiRoll,
+    shape: bodyShape(p.body, p.year),
   };
 }
 
@@ -342,8 +419,8 @@ function drawSim(ctx: Ctx, w: number, h: number, c: ThemeColors, s: Sim, p: Susp
     }
   }
 
-  // body: a tourer of the day, drawn in body coordinates (m, y up from the ground at rest)
-  const poly = (pts: [number, number][]) => {
+  // body in the style of its year, drawn in body coordinates (m, y up from the ground at rest)
+  const poly = (pts: Pt[]) => {
     ctx.beginPath();
     pts.forEach(([bx, by], i) => {
       const [X, Y] = toBody(bx, by);
@@ -352,48 +429,56 @@ function drawSim(ctx: Ctx, w: number, h: number, c: ThemeColors, s: Sim, p: Susp
     });
     ctx.closePath();
   };
+  const sh = p.shape;
   ctx.strokeStyle = c.ink;
   ctx.lineWidth = 1.5;
-  poly([
-    [-2.05, 0.62],
-    [2.05, 0.62],
-    [2.05, 1.05],
-    [0.75, 1.12],
-    [0.45, 1.55],
-    [-1.55, 1.58],
-    [-2.05, 1.12],
-  ]);
+  poly(sh.side);
   ctx.fillStyle = alpha(c.accent, 0.6);
   ctx.fill();
   ctx.stroke();
-  poly([
-    [0.38, 1.16],
-    [0.5, 1.47],
-    [-0.35, 1.49],
-    [-0.35, 1.16],
-  ]);
-  ctx.fillStyle = alpha(c.panel, 0.8);
-  ctx.fill();
-  ctx.stroke();
-  // fenders
-  for (const ax of [A, -B]) {
-    const [fx, fy] = toBody(ax, 0.62);
-    ctx.beginPath();
-    ctx.arc(fx, fy + 0.08 * k, (R + 0.08) * k, Math.PI + 0.25 - pitch, -0.25 - pitch);
-    ctx.strokeStyle = c.ink;
-    ctx.lineWidth = 3;
+  for (const g of sh.glass) {
+    poly(g);
+    ctx.fillStyle = alpha(c.panel, 0.8);
+    ctx.fill();
     ctx.stroke();
   }
-  // the passenger: head bobs with the body
-  {
-    const [hx, hy] = toBody(-0.1, 1.33);
+  if (sh.screen) {
+    const [a1, a2] = [toBody(...sh.screen[0]), toBody(...sh.screen[1])];
+    ctx.beginPath();
+    ctx.moveTo(a1[0], a1[1]);
+    ctx.lineTo(a2[0], a2[1]);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+  if (sh.wings) {
+    for (const ax of [A, -B]) {
+      const [fx, fy] = toBody(ax, 0.62);
+      ctx.beginPath();
+      ctx.arc(fx, fy + 0.08 * k, (R + 0.08) * k, Math.PI + 0.25 - pitch, -0.25 - pitch);
+      ctx.strokeStyle = c.ink;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+  }
+  // the passengers: heads bob with the body
+  sh.heads.forEach(([bx, by], i) => {
+    // shoulders: down to the seat in an open car, only what the window shows in a closed one
+    const deep = sh.glass.length ? 0.2 : 0.36;
+    poly([
+      [bx - 0.12, by - deep],
+      [bx + 0.08, by - deep],
+      [bx + 0.07, by - 0.1],
+      [bx - 0.1, by - 0.1],
+    ]);
+    ctx.fillStyle = mix(c.ink, c.panel, 0.35);
+    ctx.fill();
+    const [hx, hy] = toBody(bx, by);
     ctx.beginPath();
     ctx.arc(hx, hy, 0.1 * k, 0, TAU);
     ctx.fillStyle = mix(c.panel, c.ink, 0.35);
     ctx.fill();
-    const rms = Math.sqrt(s.acc2);
-    if (rms > 2.6) text(ctx, '!', hx + 0.16 * k, hy - 0.1 * k, { size: f + 2, weight: 700, color: c.bad, align: 'center', baseline: 'middle' });
-  }
+    if (i === 0 && Math.sqrt(s.acc2) > 2.6) text(ctx, '!', hx + 0.16 * k, hy - 0.1 * k, { size: f + 2, weight: 700, color: c.bad, align: 'center', baseline: 'middle' });
+  });
 
   // suspension, drawn over wheels and body as if the car were see-through
   for (let i = 0; i < 2; i++) {
@@ -631,7 +716,7 @@ function drawFront(ctx: Ctx, box: { x: number; y: number; w: number; h: number }
     ctx.restore();
   }
   // body
-  const poly = (pts: [number, number][]) => {
+  const poly = (pts: Pt[]) => {
     ctx.beginPath();
     pts.forEach(([bx, by], i) => {
       const [px, py] = body(bx, by);
@@ -640,36 +725,42 @@ function drawFront(ctx: Ctx, box: { x: number; y: number; w: number; h: number }
     });
     ctx.closePath();
   };
-  poly([
-    [-0.82, 0.6],
-    [0.82, 0.6],
-    [0.86, 1.08],
-    [0.6, 1.12],
-    [0.52, 1.56],
-    [-0.52, 1.56],
-    [-0.6, 1.12],
-    [-0.86, 1.08],
-  ]);
+  const sh = p.shape;
+  poly(sh.front);
   ctx.fillStyle = alpha(c.accent, 0.85);
   ctx.fill();
   ctx.strokeStyle = c.ink;
   ctx.lineWidth = 1.5;
   ctx.stroke();
-  poly([
-    [-0.44, 1.16],
-    [0.44, 1.16],
-    [0.4, 1.48],
-    [-0.4, 1.48],
-  ]);
-  ctx.fillStyle = alpha(c.panel, 0.8);
-  ctx.fill();
-  ctx.stroke();
+  if (sh.frontGlass) {
+    poly(sh.frontGlass);
+    ctx.fillStyle = alpha(c.panel, 0.7);
+    ctx.fill();
+    ctx.stroke();
+  }
+  for (const [hx0, hy0] of sh.frontHeads) {
+    const deep = sh.glass.length ? 0.16 : 0.34;
+    poly([
+      [hx0 - 0.15, hy0 - deep],
+      [hx0 + 0.15, hy0 - deep],
+      [hx0 + 0.12, hy0 - 0.1],
+      [hx0 - 0.12, hy0 - 0.1],
+    ]);
+    ctx.fillStyle = mix(c.ink, c.panel, 0.35);
+    ctx.fill();
+    const [hx, hy] = body(hx0, hy0);
+    ctx.beginPath();
+    ctx.arc(hx, hy, 0.1 * k, 0, TAU);
+    ctx.fillStyle = mix(c.panel, c.ink, 0.35);
+    ctx.fill();
+  }
   for (const sx of [-0.6, 0.6]) {
-    const [lx, ly] = body(sx, 0.92);
+    const [lx, ly] = body(sx, sh.lampY);
     ctx.beginPath();
     ctx.arc(lx, ly, 0.08 * k, 0, TAU);
     ctx.fillStyle = c.panel;
     ctx.fill();
+    ctx.strokeStyle = c.ink;
     ctx.stroke();
   }
   // the bend: sideways push and how far the body leans

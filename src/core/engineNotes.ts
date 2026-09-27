@@ -136,6 +136,12 @@ function refDesigns(year: number, segment: SegmentId): CarDesign[] {
   return referenceDesigns(y, seg);
 }
 
+/** The class's usual comfort/grip setting of the suspension (0 soft … 1 stiff). */
+export function typicalSuspBalance(year: number, segment: SegmentId): number {
+  const refs = refDesigns(year, segment);
+  return refs.reduce((a, r) => a + r.suspBalance, 0) / refs.length;
+}
+
 /** The same car with each typical design's part swapped in. */
 function withTypical(d: CarDesign, refs: CarDesign[], year: number, bonus: DevBonus | undefined, patch: (ref: CarDesign) => Partial<CarDesign>): CarStats[] {
   return refs.map((ref) => computeCarStats({ ...d, ...patch(ref) }, year, bonus));

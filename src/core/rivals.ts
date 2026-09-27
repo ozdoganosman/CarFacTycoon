@@ -1,4 +1,4 @@
-import { costIndex, labourShare, priceMarkup } from '../data/economy';
+import { labourShare, priceLevel, priceMarkup } from '../data/economy';
 import { RIVALS, type RivalDef } from '../data/rivals';
 import { segmentDef } from '../data/segments';
 import { aiDesign } from './ai';
@@ -78,7 +78,7 @@ export function launchRivalModel(
   const { design, bonus } = aiDesign(seg, year + lead, { style: def.style, skill: Math.min(95, def.skill + skillBonus), market: def.home }, rng);
   const stats = computeCarStats(design, yf, bonus);
   const labour = def.massProduction && yf >= def.massProduction ? Math.min(0.2, labourShare(yf)) : labourShare(yf);
-  const price = stats.unitCost * costIndex(yf) * (1 + labour) * priceMarkup(yf) * STYLE_MARKUP[def.style] * (special?.priceMult ?? 1) * (0.95 + rng() * 0.1);
+  const price = stats.unitCost * priceLevel(yf) * (1 + labour) * priceMarkup(yf) * STYLE_MARKUP[def.style] * (special?.priceMult ?? 1) * (0.95 + rng() * 0.1);
   const markets: MarketId[] = [def.home];
   for (const ex of def.exports ?? []) {
     if (yf >= ex.from && (!ex.segments || ex.segments.includes(seg))) markets.push(ex.market);
@@ -92,7 +92,7 @@ export function launchRivalModel(
     design,
     stats,
     price,
-    priceIndexAtLaunch: costIndex(yf),
+    priceIndexAtLaunch: priceLevel(yf),
     markets,
     active: true,
     unitsSold: 0,

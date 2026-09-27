@@ -2854,6 +2854,28 @@ fieldset {
 .news-card.is-boom {
   border-top-color: #a8432c;
 }
+.news-card.is-compact {
+  width: auto;
+  padding: 4px 8px 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-top-width: 3px;
+}
+.news-card-tab {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 2px 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.news-card-tab:hover span {
+  text-decoration: underline;
+}
 .news-card-head {
   display: flex;
   justify-content: space-between;
@@ -3319,4 +3341,18 @@ fieldset {
 }
 .letter-stars-off {
   color: var(--line);
+}
+
+/* ---------- insolvency and post-mortem ---------- */
+.cash-facts {
+  margin: 8px 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.class-gaps {
+  margin-top: 6px;
+  display: grid;
+  gap: 2px;
 }

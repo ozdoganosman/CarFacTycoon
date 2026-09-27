@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import * as A from '../src/core/actions';
 import { aiDesign, referenceBonus, referenceDesigns } from '../src/core/ai';
 import { computeEngine, displacementCc, eraRpmCap, racHp } from '../src/core/engine';
-import { researchCost, researchDef, researchDefs, unknownTech } from '../src/core/research';
+import { researchCost, researchDef, researchDefs, researchScale, unknownTech } from '../src/core/research';
 import { KNOWHOW } from '../src/data/knowhow';
+import { costIndex } from '../src/data/economy';
 import { lineReport } from '../src/core/factory';
 import { materialUnitCost, newGame, tick } from '../src/core/game';
 import { datedPenalty, modelAgeYears, priceNow, segmentMarket } from '../src/core/market';
@@ -385,7 +386,7 @@ describe('research', () => {
     const s = newGame({ companyName: 'Test', hq: 'usa', seed: 3 });
     s.modals = [];
     s.week = 52 * 6; // 1906
-    s.company.cash = 200000;
+    s.company.cash = 2_000_000;
     const r = A.startProject(s, { name: 'T', segment: 'family', targetPrice: 0 });
     if (!r.ok) throw new Error(r.error);
     const p = s.projects[0];
@@ -393,7 +394,11 @@ describe('research', () => {
     expect(unknownTech(s, s.projects[0].design)).toContain('Üstten supap (OHV)');
     expect(A.beginDevelopment(s, r.id).ok).toBe(false);
     const ohv = researchDef('vt:ohv')!;
-    expect(researchCost(ohv, 1904)).toBeGreaterThan(researchCost(ohv, 1914) * 1.4);
+    // being first costs more; later, the industry's size makes all research dearer
+    const base = (y: number) => researchCost(ohv, y) / (researchScale(y) * costIndex(y));
+    expect(base(1904)).toBeGreaterThan(base(1914) * 1.4);
+    expect(researchScale(1905)).toBe(1);
+    expect(researchScale(1925)).toBe(10);
     const cash = s.company.cash;
     expect(A.startResearch(s, 'vt:ohv').ok).toBe(true);
     expect(s.company.cash).toBeLessThan(cash);

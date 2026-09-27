@@ -1,5 +1,5 @@
 import { money, num } from '../core/util';
-import type { GameState } from '../core/types';
+import type { FinanceWeek, GameState } from '../core/types';
 
 export { money, num };
 
@@ -35,3 +35,17 @@ export function inYear(year: number): string {
   else word = 'de';
   return `${n}’${word}`;
 }
+
+/** Names of the cost lines in the books. */
+export const COST_NAMES: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue'>, string> = {
+  materials: 'Malzeme ve parça',
+  labor: 'Hat işçiliği',
+  salaries: 'Mühendis maaşları',
+  dealers: 'Bayi komisyonu ve gideri',
+  marketing: 'Reklam ve fuar',
+  rnd: 'Prototip, test ve Ar-Ge',
+  warranty: 'Garanti ve geri çağırma',
+  interest: 'Kredi faizi',
+  other: 'Genel gider, nakliye, depo',
+  investment: 'Yatırım (hat, kalıp, bayi)',
+};

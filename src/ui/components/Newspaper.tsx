@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { formatDate, yearOf } from '../../core/time';
 import type { CarModel, GameState, NewsArt, NewsIssue } from '../../core/types';
 import { store, useGameState } from '../store';
@@ -28,15 +28,36 @@ export function NewsCard() {
   const item = s.modals.find((m) => m.kind === 'news');
   const issue = item?.kind === 'news' ? s.news?.find((n) => n.id === item.newsId) : undefined;
   const stacked = s.modals.some((m) => m.kind === 'yearReport');
-  // Tucked away by itself after a while.
+  // Folds into a small tab after a few seconds so it does not cover the page, and goes away later.
+  const [compact, setCompact] = useState(false);
   useEffect(() => {
     if (!issue) return;
-    const t = setTimeout(() => store.act((st) => void (st.modals = st.modals.filter((m) => m.kind !== 'news'))), 40000);
-    return () => clearTimeout(t);
+    setCompact(false);
+    const fold = setTimeout(() => setCompact(true), 8000);
+    const t = setTimeout(() => store.act((st) => void (st.modals = st.modals.filter((m) => m.kind !== 'news'))), 60000);
+    return () => {
+      clearTimeout(fold);
+      clearTimeout(t);
+    };
   }, [issue?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!issue) return null;
   const era = eraOf(yearOf(issue.week));
   const dismiss = () => store.act((st) => void (st.modals = st.modals.filter((m) => m.kind !== 'news')));
+  const read = () => {
+    dismiss();
+    store.openNews(issue.id);
+  };
+  if (compact)
+    return (
+      <aside className={`news-card is-compact ${stacked ? 'is-stacked' : ''} ${issue.kind === 'boom' ? 'is-boom' : ''}`}>
+        <button type="button" className="news-card-tab" onClick={read} title={issue.lead.headline}>
+          📰 <span className={`mast-${era}`}>{MAST[era].name}</span>
+        </button>
+        <button type="button" className="year-card-x" aria-label="Kapat" onClick={dismiss}>
+          ×
+        </button>
+      </aside>
+    );
   return (
     <aside className={`news-card ${stacked ? 'is-stacked' : ''} ${issue.kind === 'boom' ? 'is-boom' : ''}`} aria-live="polite">
       <div className="news-card-head">
@@ -46,14 +67,8 @@ export function NewsCard() {
         </button>
       </div>
       <b className="news-card-headline">{issue.lead.headline}</b>
-      <Button
-        kind={issue.kind === 'boom' ? 'primary' : 'ghost'}
-        onClick={() => {
-          dismiss();
-          store.openNews(issue.id);
-        }}
-      >
-        📰 Gazeteyi oku
+      <Button kind={issue.kind === 'boom' ? 'primary' : 'ghost'} onClick={read}>
+        📰 Gazeteyi oku (oyun durur)
       </Button>
     </aside>
   );

@@ -15,7 +15,7 @@ export interface ResearchDef {
   category: 'Motor' | 'Şanzıman' | 'Şasi ve süspansiyon' | 'Güvenlik' | 'Donanım';
   year: number;
   desc: string;
-  /** Mature price in 1900 dollars. */
+  /** Mature price in 1900 dollars, before researchScale. */
   cost: number;
   /** Mature duration in weeks for a team of about ten engineers. */
   weeks: number;
@@ -167,8 +167,14 @@ export function knownKnowhow(s: GameState): string[] {
 /** First in the field pays for it: twice the mature price at release, falling over about five years. */
 const pioneer = (def: ResearchDef, yf: number) => Math.exp(-Math.max(0, yf - def.year) / 5);
 
+/**
+ * Research grows into a company-sized investment. A workshop of 1905 pays the table price; once
+ * the industry has big firms (from about 1918) the same knowledge costs ten times as much.
+ */
+export const researchScale = (yf: number) => 1 + 9 * Math.min(1, Math.max(0, (yf - 1906) / 12));
+
 export function researchCost(def: ResearchDef, yf: number): number {
-  return def.cost * (1 + pioneer(def, yf)) * costIndex(yf);
+  return def.cost * researchScale(yf) * (1 + pioneer(def, yf)) * costIndex(yf);
 }
 
 /** A bigger engineering department learns faster. */

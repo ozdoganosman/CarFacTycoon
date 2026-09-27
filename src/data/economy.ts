@@ -35,7 +35,14 @@ export const labourShare = (year: number) =>
   interp([[1900, 0.35], [1913, 0.32], [1920, 0.22], [1930, 0.18], [1960, 0.15]], year);
 
 /** Typical industry margin on cost: early cars were rich men's toys, mass production squeezed margins. */
-export const priceMarkup = (year: number) => interp([[1900, 1.3], [1915, 1.22], [1930, 1.16], [1960, 1.15]], year);
+/**
+ * The Great War put steel and everything made of it up by a quarter (1914-1918); car prices followed
+ * for everyone, so they are part of the price level along with ordinary inflation.
+ */
+export const warPrice = (year: number) => (year >= 1914.6 && year < 1919 ? 1.18 : 1);
+export const priceLevel = (year: number) => costIndex(year) * warPrice(year);
+
+export const priceMarkup = (year: number) => interp([[1900, 1.42], [1908, 1.32], [1915, 1.22], [1930, 1.16], [1960, 1.15]], year);
 
 /** Tooling (dies, jigs) cost as a multiple of the car's material cost. */
 export const toolingMultiple = (year: number) => interp([[1900, 6], [1920, 10], [1950, 14]], year);

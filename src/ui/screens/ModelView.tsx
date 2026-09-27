@@ -9,7 +9,7 @@ import { formatDate, formatShort, yearFloat } from '../../core/time';
 import { MARKETS } from '../../data/markets';
 import { RIVALS } from '../../data/rivals';
 import { segmentDef } from '../../data/segments';
-import { costIndex } from '../../data/economy';
+import { priceLevel } from '../../data/economy';
 import type { CarModel, MarketId } from '../../core/types';
 import { store, useGameState } from '../store';
 import { customerLetters } from '../../core/letters';
@@ -154,7 +154,7 @@ export function ModelView({ modelId }: { modelId: string }) {
             <p className="muted small">
               Şu anki fiyat {money(priceNow(m, s.week))} · birim malzeme {money(materialUnitCost(s, m))}
             </p>
-            {(s.week - m.launchWeek) / 52 < 3 && m.priceCeiling !== undefined && draftPrice > m.priceCeiling * costIndex(yearFloat(s.week)) * (1 + A.HIKE_TOLERANCE) && (
+            {(s.week - m.launchWeek) / 52 < 3 && m.priceCeiling !== undefined && draftPrice > m.priceCeiling * priceLevel(yearFloat(s.week)) * (1 + A.HIKE_TOLERANCE) && (
               <p className="small tone-warn">
                 Bu, lansmandan beri en yüksek fiyatına göre %{Math.round(A.HIKE_TOLERANCE * 100)}’den büyük bir zam (enflasyon hariç). Basın bunu fark eder: dergiler puanı yeniden
                 yazar, lansman heyecanı söner, itibar düşer.

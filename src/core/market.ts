@@ -1,4 +1,4 @@
-import { costIndex, labourShare, priceMarkup } from '../data/economy';
+import { costIndex, labourShare, priceLevel, priceMarkup } from '../data/economy';
 import {
   MARKETS,
   activeTax,
@@ -33,7 +33,7 @@ const OTHERS_UTILITY = 50;
 /** Base price adjusted for inflation since it was set (if indexing is on). */
 export function priceNow(model: Pick<CarModel, 'price' | 'priceWeek' | 'indexPrice'>, week: number): number {
   if (!model.indexPrice) return model.price;
-  return (model.price * costIndex(yearFloat(week))) / costIndex(yearFloat(model.priceWeek));
+  return (model.price * priceLevel(yearFloat(week))) / priceLevel(yearFloat(model.priceWeek));
 }
 
 /** Ownership tax capitalised into the purchase decision (e.g. the British RAC horsepower tax). */
@@ -61,7 +61,7 @@ export function consumerPrice(base: number, market: MarketId, isImport: boolean,
 export function referencePrice(market: MarketId, segment: SegmentId, yf: number): number {
   const ref = eraReference(yf, segment).byMarket[market];
   const segFactor = { city: 1, family: 1.02, sport: 1.18, luxury: 1.28, pickup: 1, suv: 1.02 }[segment];
-  const base = ref.unitCost * costIndex(yf) * (1 + labourShare(yf)) * priceMarkup(yf) * segFactor;
+  const base = ref.unitCost * priceLevel(yf) * (1 + labourShare(yf)) * priceMarkup(yf) * segFactor;
   return base + ownershipTax(market, { engine: { taxHp: ref.taxHp, displacementCc: ref.displacementCc } as CarStats['engine'] }, yf);
 }
 
@@ -166,7 +166,7 @@ export function rivalScores(state: GameState, rm: RivalModel): { scores: Scores;
 }
 
 export function rivalPriceNow(rm: RivalModel, week: number): number {
-  return (rm.price * costIndex(yearFloat(week))) / rm.priceIndexAtLaunch;
+  return (rm.price * priceLevel(yearFloat(week))) / rm.priceIndexAtLaunch;
 }
 
 // ---- offers & shares ----

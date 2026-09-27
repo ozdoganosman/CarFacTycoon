@@ -3,7 +3,7 @@ import * as A from '../../core/actions';
 import { enginePresets, withStrokeRatio } from '../../core/ai';
 import { DIESEL_COMPRESSION, DIESEL_YEAR, displacementCc, eraRpmCap, isDiesel, knockLimit } from '../../core/engine';
 import { newEstimate } from '../../core/estimate';
-import { engineNotes, gearboxNotes, suspensionNotes } from '../../core/engineNotes';
+import { engineNotes, gearboxNotes, suspensionNotes, typicalSuspBalance } from '../../core/engineNotes';
 import { knownMaxGears, techState, unknownTech } from '../../core/research';
 import { effectsText, knowhowDef } from '../../data/knowhow';
 import { yearFloat } from '../../core/time';
@@ -902,6 +902,7 @@ function SuspensionTab({
   onChange: (p: Partial<CarDesign>) => void;
 }) {
   const notes = useMemo(() => suspensionNotes(d, yf, segment, bonus), [d, yf, segment, bonus]);
+  const typBal = useMemo(() => typicalSuspBalance(yf, segment), [yf, segment]);
   const gate = useTechGate();
   return (
     <>
@@ -951,9 +952,9 @@ function SuspensionTab({
         onChange={(v) => onChange({ suspBalance: v })}
         left="Konfor"
         right="Yol tutuş"
-        format={(v) => (v < 0.4 ? 'Yumuşak' : v > 0.6 ? 'Sert' : 'Dengeli')}
+        format={(v) => (Math.abs(v - typBal) <= 0.07 ? 'Sınıfın olağan ayarı' : v < typBal ? 'Olağandan yumuşak' : 'Olağandan sert')}
       />
-      <SuspensionSim suspension={d.suspension} balance={d.suspBalance} knowhow={d.knowhow} year={yf} />
+      <SuspensionSim suspension={d.suspension} balance={d.suspBalance} knowhow={d.knowhow} year={yf} body={d.body} />
       <ProsCons intro="Aynı arabaya sınıfın tipik süspansiyonu takılsaydı:" pros={notes.pros} cons={notes.cons} />
     </>
   );

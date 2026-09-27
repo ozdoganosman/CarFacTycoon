@@ -347,7 +347,8 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
       ctx.lineTo(fx + fwd - 1, yy);
     }
     ctx.stroke();
-    text(ctx, 'Volan', Math.min(fx + fwd / 2, w - 20), cy + fr + 3, { size: f - 2, color: c.muted, align: 'center', baseline: 'top' });
+    // label above the wheel: below it would run into the torque strip's heading
+    text(ctx, 'Volan', Math.min(fx + fwd / 2, w - 20), cy - fr - 3, { size: f - 2, color: c.muted, align: 'center', baseline: 'bottom' });
   }
 
   const labels: { x: number; y: number; cyl: Cyl; l: number }[] = [];

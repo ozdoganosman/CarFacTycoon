@@ -4,22 +4,10 @@ import { credit, engineersBusy, COST_KEYS } from '../../core/game';
 import { yearFloat } from '../../core/time';
 import { costIndex, engineerSalary } from '../../data/economy';
 import { store, useGameState } from '../store';
-import { money, signedMoney } from '../format';
+import { COST_NAMES, money, signedMoney } from '../format';
 import { Button, NumberInput, Panel, Stat, Table } from '../components/ui';
 import { BarChart } from '../viz/LineChart';
 
-const COST_NAMES: Record<(typeof COST_KEYS)[number], string> = {
-  materials: 'Malzeme ve parça',
-  labor: 'Hat işçiliği',
-  salaries: 'Mühendis maaşları',
-  dealers: 'Bayi komisyonu ve gideri',
-  marketing: 'Reklam ve fuar',
-  rnd: 'Prototip ve test',
-  warranty: 'Garanti ve geri çağırma',
-  interest: 'Kredi faizi',
-  other: 'Genel gider, nakliye, depo',
-  investment: 'Yatırım (hat, kalıp, bayi)',
-};
 
 export function Finance() {
   const s = useGameState();

@@ -202,7 +202,7 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
           </thead>
           <tbody>
             {rows.map((o) => {
-              const st = o.kind === 'player' ? m.stats : s.rivalModels.find((r) => r.id === o.id)!.stats;
+              const st = o.kind === 'player' ? (s.models.find((x) => x.id === o.id)?.stats ?? m.stats) : s.rivalModels.find((r) => r.id === o.id)!.stats;
               const c = specCells(st, yf, m.segment);
               return (
                 <tr key={o.id} className={o.kind === 'player' ? 'is-mine' : ''}>

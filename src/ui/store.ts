@@ -6,7 +6,7 @@ import { isBlockingModal, recordError } from '../core/util';
 import type { ModalItem } from '../core/types';
 
 /** After these the player has work to do, so the clock stays stopped once they are closed. */
-const STAY_PAUSED = new Set<ModalItem['kind']>(['phase', 'launch', 'launchReport', 'gameOver']);
+const STAY_PAUSED = new Set<ModalItem['kind']>(['phase', 'launch', 'launchReport', 'gameOver', 'insolvency']);
 import type { GameState } from '../core/types';
 
 // A tiny external store: the simulation mutates GameState in place and bumps a
@@ -44,6 +44,8 @@ class GameStore {
   private weeksSinceSave = 0;
   /** Speed to return to once the decision that stopped the clock is answered. */
   private resumeSpeed: Exclude<Speed, 0> | null = null;
+  /** Speed to return to when the newspaper is closed. */
+  private newsResume: Exclude<Speed, 0> | null = null;
 
   subscribe = (fn: () => void) => {
     this.listeners.add(fn);
@@ -52,13 +54,21 @@ class GameStore {
 
   getVersion = () => this.version;
 
+  /** Reading the paper stops the clock; closing it carries on at the same speed. */
   openNews(id: string) {
     this.newsOpen = id;
+    if (this.speed !== 0) {
+      this.newsResume = this.speed;
+      this.run(0);
+    }
     this.notify();
   }
 
   closeNews() {
     this.newsOpen = null;
+    const speed = this.newsResume;
+    this.newsResume = null;
+    if (speed && this.state && !this.state.gameOver && !this.state.modals.some(isBlockingModal)) this.run(speed);
     this.notify();
   }
 
@@ -166,6 +176,7 @@ class GameStore {
   /** The player's own choice of speed (also cancels a pending auto-resume). */
   setSpeed(speed: Speed) {
     this.resumeSpeed = null;
+    this.newsResume = null;
     this.run(speed);
   }
 

@@ -106,6 +106,7 @@ export function StatsPanel(props: {
               <div className="small tone-warn">Ekibin ilk arabalarından biri: tahminler kaba ve yanılabilir. Her yeni model ekibini keskinleştirir.</div>
             )}
             {props.note && <div className="muted small">{props.note}</div>}
+            <ClassGaps est={est} scores={scores} />
           </div>
         ) : (
           <div>
@@ -183,6 +184,36 @@ export function StatsPanel(props: {
               <b>{money(consumerPrice(target, 'europe', true, st, yf).total)}</b>
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Where the engineers' middle estimate puts the car well behind or ahead of the class average:
+ * what the buyers weigh stays hidden, but a plain gap should not wait for the launch.
+ */
+function ClassGaps({ est, scores }: { est: Estimate; scores: Record<AttrKey, number> }) {
+  const behind: AttrKey[] = [];
+  const ahead: AttrKey[] = [];
+  for (const k of ATTRS) {
+    const r = estimateRange(est, k, scores[k]);
+    const mid = (r.lo + r.hi) / 2;
+    if (mid <= 40) behind.push(k);
+    else if (mid >= 60) ahead.push(k);
+  }
+  if (!behind.length && !ahead.length) return null;
+  return (
+    <div className="class-gaps small">
+      {behind.length > 0 && (
+        <div className="tone-warn">
+          Mühendislere göre sınıf ortalamasının gerisinde kalabilir: <b>{behind.map((k) => ATTR_NAMES[k].toLowerCase()).join(', ')}</b>.
+        </div>
+      )}
+      {ahead.length > 0 && (
+        <div className="tone-good">
+          Mühendislere göre sınıf ortalamasının önünde: <b>{ahead.map((k) => ATTR_NAMES[k].toLowerCase()).join(', ')}</b>.
         </div>
       )}
     </div>

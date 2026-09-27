@@ -5,7 +5,7 @@ import { designTech, missingRequirements, researchCost, researchDefs, researchSl
 import { maxGears } from '../src/data/tech';
 import { STATIONS } from '../src/data/stations';
 import { availableSegments, credit, dealerUpgradeCost, materialUnitCost, tick } from '../src/core/game';
-import { newLineCost } from '../src/data/economy';
+import { costIndex, newLineCost } from '../src/data/economy';
 import { lineReport, lineUpkeep, modernizeQuote, stationPrice, turnkeyLineCost, planBalancedLine, emptyLine } from '../src/core/factory';
 import { demandAtPrice, referencePrice } from '../src/core/market';
 import { MAX_SLOTS, DEALER_COMMISSION } from '../src/data/economy';
@@ -35,7 +35,11 @@ export function botStep(s: GameState, o: BotOptions = {}) {
       const affordable = s.company.cash + (credit(s).limit - s.company.loan) > 1.5 * A.recallCost(s, m.modelId, m.defectId);
       A.recallDecision(s, m.modelId, m.defectId, affordable ? 'recall' : 'ignore');
     }
-    else if (m.kind === 'gameOver') return;
+    else if (m.kind === 'insolvency') {
+      // What the warning offers: borrow enough to get back above zero.
+      A.borrowToCover(s);
+      A.dismissModal(s);
+    } else if (m.kind === 'gameOver') return;
     else A.dismissModal(s);
   }
   const yf = yearFloat(s.week);
@@ -139,7 +143,7 @@ export function botStep(s: GameState, o: BotOptions = {}) {
     const selling = s.models.some((m) => m.status === 'active' && m.markets.includes(mk));
     if (selling && s.company.cash > c * (mk === s.company.hq ? 8 : 15) && s.markets[mk].dealerLevel < 10) A.upgradeDealers(s, mk);
   }
-  // Research: first what the class's typical car already uses, then the cheapest of the rest.
+  // Research: first what the class's typical car already uses, then the cheapest know-how.
   const r = s.research;
   if (r && r.active.length < researchSlots(s.company.engineers)) {
     const open = researchDefs().filter((d) => d.year <= yf && !r.known.includes(d.id) && !r.active.some((a) => a.id === d.id));
@@ -152,9 +156,12 @@ export function botStep(s: GameState, o: BotOptions = {}) {
     const byCost = (a: (typeof open)[number], b: (typeof open)[number]) => researchCost(a, yf) - researchCost(b, yf);
     const ready = open.filter((d) => missingRequirements(s, d.id).length === 0);
     const want = ready.filter((d) => needed.has(d.id)).sort(byCost)[0];
-    const other = ready.sort(byCost)[0];
-    if (want && researchCost(want, yf) < 0.5 * s.company.cash) A.startResearch(s, want.id);
-    else if (other && researchCost(other, yf) < 0.1 * s.company.cash) A.startResearch(s, other.id);
+    // Research is dear: beyond what the class needs, only cheap know-how, and only from a full till.
+    const other = ready.filter((d) => d.passive).sort(byCost)[0];
+    const spare = s.company.cash - 150_000 * costIndex(yf); // a year's cushion stays in the bank
+    const affordable = (d: typeof want, share: number) => !!d && researchCost(d, yf) < share * s.company.cash && researchCost(d, yf) < spare;
+    if (affordable(want, 0.15)) A.startResearch(s, want!.id);
+    else if (affordable(other, 0.02)) A.startResearch(s, other!.id);
   }
   // Engineers: grow with the company.
   const wantEng = Math.min(60, 2 + Math.floor(s.company.cash / 40000));

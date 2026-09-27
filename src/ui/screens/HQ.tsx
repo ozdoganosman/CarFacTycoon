@@ -1,4 +1,5 @@
-import { engineersBusy } from '../../core/game';
+import { engineersBusy, idleEngineers } from '../../core/game';
+import { engineerSalary } from '../../data/economy';
 import { lineReport } from '../../core/factory';
 import { formatDate, formatShort, yearFloat, yearOf } from '../../core/time';
 import { researchDefs, rivalAdoption, techState } from '../../core/research';
@@ -29,7 +30,10 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
   }
   for (const m of s.models.filter((x) => x.status === 'active')) {
     const lines = s.lines.filter((l) => l.modelId === m.id);
-    if (!lines.length) out.push({ text: `${m.name} hiçbir hatta üretilmiyor.`, go: () => store.go({ id: 'factory' }) });
+    // With no line and nothing left in stock the model only occupies the list: offer to retire it.
+    if (!lines.length && m.inventory < 1)
+      out.push({ text: `${m.name} artık üretilmiyor ve stoku bitti. Üretimden kaldır ya da bir hatta ata.`, go: () => store.go({ id: 'model', modelId: m.id }) });
+    else if (!lines.length) out.push({ text: `${m.name} hiçbir hatta üretilmiyor; stoktan satılıyor.`, go: () => store.go({ id: 'factory' }) });
     const demand = Object.values(m.lastDemand ?? {}).reduce((a, b) => a + b, 0);
     const cap = lines.reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0) * m.productionRate;
     if (lines.length && demand > cap * 1.25 && m.inventory < cap) out.push({ text: `${m.name} için talep üretimi aşıyor. Darboğazı çöz ya da hat ekle.`, go: () => store.go({ id: 'factory' }) });
@@ -51,7 +55,14 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
         go: () => store.go({ id: 'research' }),
       });
   }
-  if (s.company.cash < 0) out.push({ text: 'Kasa ekside! Kredi al ya da masrafları kıs.', go: () => store.go({ id: 'finance' }) });
+  // Engineers on salary with nothing to do.
+  const idle = idleEngineers(s);
+  if (idle > 0 && s.models.length)
+    out.push({
+      text: `${idle} mühendis boşta ama haftada ${money(idle * engineerSalary(yearFloat(s.week)))} maaş alıyor: yeni bir proje ya da Ar-Ge başlat, gerekirse bir kısmını çıkar.`,
+      go: () => store.go({ id: 'research' }),
+    });
+  if (s.company.cash < 0) out.unshift({ text: 'Kasa ekside! Kredi al ya da masrafları kıs.', go: () => store.go({ id: 'finance' }) });
   return out.slice(0, 6);
 }
 
@@ -79,7 +90,12 @@ export function HQ() {
         <Stat label="Haftalık kâr" value={signedMoney(weekly)} tone={weekly < 0 ? 'bad' : 'good'} sub="son 4 hafta ort." />
         <Stat label={`${year} satışı`} value={num(thisYear)} sub="araç" />
         <Stat label="İtibar" value={Math.round(s.company.reputation)} sub="/ 100" />
-        <Stat label="Mühendis" value={`${engineersBusy(s)}/${s.company.engineers}`} sub={`beceri ${Math.round(s.company.skill)}`} />
+        <Stat
+          label="Mühendis"
+          value={`${engineersBusy(s)}/${s.company.engineers}`}
+          tone={idleEngineers(s) > 0 && s.models.length ? 'bad' : undefined}
+          sub={idleEngineers(s) > 0 ? `${idleEngineers(s)} kişi boşta` : `projede · beceri ${Math.round(s.company.skill)}`}
+        />
       </div>
 
       <div className="grid-2">

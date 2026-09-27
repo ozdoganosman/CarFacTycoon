@@ -394,6 +394,7 @@ export type ModalItem =
   | { kind: 'yearReport'; year: number }
   | { kind: 'news'; newsId: string }
   | { kind: 'unlock'; title: string; body: string }
+  | { kind: 'insolvency'; stage: 'first' | 'last' }
   | { kind: 'gameOver' };
 
 export interface LogEntry {
@@ -438,6 +439,8 @@ export interface Company {
   shops: Record<ComponentKey, boolean>;
   modelsLaunched: number;
   negativeWeeks: number;
+  /** Salary paid to engineers with nothing to do (no project, test or research), for the post-mortem. */
+  idleSalary?: number;
   highWages: boolean;
 }
 

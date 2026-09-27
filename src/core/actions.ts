@@ -1,4 +1,4 @@
-import { costIndex, newLineCost, shopCost, slotCost, toolingMultiple, MAX_SLOTS } from '../data/economy';
+import { costIndex, newLineCost, priceLevel, shopCost, slotCost, toolingMultiple, MAX_SLOTS } from '../data/economy';
 import { eventDef } from '../data/events';
 import { MARKETS, marketScale, MAX_DEALER_LEVEL } from '../data/markets';
 import { segmentDef } from '../data/segments';
@@ -18,6 +18,7 @@ import {
   engineersBusy,
   gates,
   materialUnitCost,
+  rescueLoan,
 } from './game';
 import { modelScores, priceNow, referencePrice } from './market';
 import { stateRng } from './rng';
@@ -67,6 +68,8 @@ export function hireEngineers(s: GameState, n: number): ActionResult {
   if (s.company.cash < cost) return fail('Yeterli para yok.');
   spend(s, cost, 'other');
   s.company.engineers += n;
+  // The newcomers join the projects under way at once.
+  shareEngineers(s);
   // New hires dilute experience a little.
   s.company.skill = clamp(s.company.skill - n * 0.3, 10, 100);
   decide(s, 'staff', `${n} mühendis işe alındı (toplam ${s.company.engineers})`);
@@ -76,6 +79,7 @@ export function hireEngineers(s: GameState, n: number): ActionResult {
 export function fireEngineers(s: GameState, n: number): ActionResult {
   if (s.company.engineers - n < 1) return fail('En az bir mühendis kalmalı.');
   s.company.engineers -= n;
+  shareEngineers(s);
   s.company.reputation = clamp(s.company.reputation - 0.2 * n, 0, 100);
   decide(s, 'staff', `${n} mühendis çıkarıldı (toplam ${s.company.engineers})`);
   return ok;
@@ -579,7 +583,8 @@ export const HIKE_TOLERANCE = 0.08;
 
 export function setModelPrice(s: GameState, id: string, price: number) {
   const m = model(s, id);
-  const ci = costIndex(yearFloat(s.week));
+  // Prices following inflation (and the wartime rise every maker made) are not a hike.
+  const ci = priceLevel(yearFloat(s.week));
   const before = priceNow(m, s.week);
   m.price = Math.max(1, price);
   m.priceWeek = s.week;
@@ -816,6 +821,13 @@ export function takeLoan(s: GameState, amount: number): ActionResult {
   s.company.cash += amount;
   decide(s, 'loan', `Kredi: ${money(amount)}, toplam borç ${money(s.company.loan)}`);
   return ok;
+}
+
+/** Borrow enough to close the gap (and carry two months of losses), if the bank allows it. */
+export function borrowToCover(s: GameState): ActionResult {
+  const amount = rescueLoan(s);
+  if (amount <= 0) return fail('Banka daha fazla kredi vermiyor.');
+  return takeLoan(s, amount);
 }
 
 export function repayLoan(s: GameState, amount: number): ActionResult {

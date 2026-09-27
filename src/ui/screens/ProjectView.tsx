@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import * as A from '../../core/actions';
-import { gates, materialUnitCost, protoUnitCost } from '../../core/game';
+import { dealerUpkeep, gates, materialUnitCost, protoUnitCost } from '../../core/game';
 import { lineReport, lineUpkeep, turnkeyLineCost } from '../../core/factory';
-import { consumerPrice, demandAtPrice, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
+import { MARKET_IDS, consumerPrice, demandAtPrice, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
 import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, defectRange, defectText, expectedRemaining, riskLabel, testTuning, testWeekCost, type Tuning } from '../../core/testing';
 import { yearFloat } from '../../core/time';
-import { DEALER_COMMISSION, costIndex, engineerSalary, shopCost } from '../../data/economy';
+import { DEALER_COMMISSION, costIndex, engineerSalary, overhead, shopCost } from '../../data/economy';
 import { MARKETS } from '../../data/markets';
 import { ATTRS, ATTR_NAMES, segmentDef } from '../../data/segments';
 import { STAGES } from '../../data/stations';
 import { TOOLING, toolingDef } from '../../data/tooling';
 import type { ComponentKey, MarketId, Project, ProjectPhase, TestId, ToolingTier } from '../../core/types';
 import { store, useGameState } from '../store';
-import { money } from '../format';
+import { money, recentProfit } from '../format';
 import { inYear } from '../format';
 import { Badge, Button, Choice, NumberInput, Panel, Progress, Slider, Toggle } from '../components/ui';
 import { newEstimate } from '../../core/estimate';
@@ -110,12 +110,13 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
   const d = demandAt(price);
   const lo = d / spread;
   const hi = d * spread;
+  // Judged on the middle estimate: the range is wide enough to cover almost any line.
   const verdict =
-    lo > cap * 1.2
-      ? 'Talep büyük olasılıkla hattı aşar: fiyatı biraz yükseltebilir ya da kapasite ekleyebilirsin.'
-      : hi < cap * 0.8
-        ? 'Hat bu talepten fazlasını üretebilir: fiyatı düşürmeyi düşün.'
-        : 'Talep ve kapasite kabaca dengeli.';
+    d > cap * 1.2
+      ? `Orta tahmin hattın ${(d / Math.max(0.1, cap)).toFixed(1)} katı: fiyatı biraz yükseltebilir ya da kapasite ekleyebilirsin.`
+      : d < cap * 0.8
+        ? `Hat orta tahminin ${(cap / Math.max(0.1, d)).toFixed(1)} katını üretebilir: fiyatı düşürmeyi ya da daha küçük bir hattı düşün.`
+        : 'Orta tahmine göre talep ve kapasite dengeli.';
   const options = [0.9, 1, 1.1, 1.2].map((f) => Math.round((ref * f) / 10) * 10);
   const steep = steepPriceRatio(p.segment, s.company.hq, yf);
   const pct = (pr: number) => {
@@ -508,7 +509,8 @@ function Launch({ p }: { p: Project }) {
   const unlocked = MARKETS.filter((m) => s.markets[m.id].unlocked).map((m) => m.id);
   const [price, setPrice] = useState(() => Math.round(p.kind === 'facelift' ? p.targetPrice : referencePrice(s.company.hq, p.segment, yf)));
   const [markets, setMarkets] = useState<MarketId[]>(unlocked);
-  const [autoShow, setAutoShow] = useState(true);
+  // A show can cost a young firm half its till: the player turns it on, never by default.
+  const [autoShow, setAutoShow] = useState(false);
   const preview = A.previewModel(s, p, price, markets);
   const line = s.lines.find((l) => l.id === p.lineId);
   const cap = line ? lineReport(s, line, st.complexity).throughput : 0;
@@ -517,6 +519,18 @@ function Launch({ p }: { p: Project }) {
   const segmentWeekly = markets.reduce((a, m) => a + weeklySegmentDemand(m, p.segment, yf), 0);
   const net = price * (s.markets[s.company.hq].dealerLevel > 0 ? 1 - DEALER_COMMISSION : 1);
   const margin = net - unit - labour;
+  // A week at the middle demand estimate: what the car brings in against what the firm costs to run.
+  const demand = markets.reduce((a, mk) => a + demandAtPrice(s, preview, mk, price), 0);
+  const sold = Math.min(demand, cap);
+  const labourWeek = line ? lineUpkeep(s, line, cap > 0 ? sold / cap : 0) : 0;
+  const contribution = sold * (net - unit) - labourWeek;
+  const fixed = s.company.engineers * engineerSalary(yf) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, m) => a + dealerUpkeep(s, m), 0);
+  const weeklyNet = contribution - fixed;
+  const others = s.models.some((m) => m.status === 'active' && m.id !== p.replacesModelId);
+  // With other cars on sale their profit already carries the fixed costs.
+  const now = recentProfit(s, 8);
+  const showCost = A.autoShowCost(s, markets);
+  const showShare = s.company.cash > 0 ? showCost / s.company.cash : 1;
   return (
     <div className="grid-2">
       <Panel title="Fiyat ve pazarlar">
@@ -547,7 +561,12 @@ function Launch({ p }: { p: Project }) {
           checked={autoShow}
           onChange={setAutoShow}
           label="Otomobil fuarında tanıt"
-          sub={`${money(A.autoShowCost(s, markets))} · bilinirlik ve lansman heyecanı artar`}
+          sub={
+            <>
+              {money(showCost)} ·{' '}
+              <span className={showShare > 0.25 ? 'tone-bad' : ''}>kasanın %{Math.round(showShare * 100)}’i</span> · bilinirlik ve lansman heyecanı artar
+            </>
+          }
         />
       </Panel>
       <Panel title="Lansman özeti">
@@ -569,10 +588,41 @@ function Launch({ p }: { p: Project }) {
             <b>{money(labour)}</b>
           </div>
           <div>
-            <span>Araç başı brüt kâr</span>
+            <span>Araç başı brüt kâr (tam kapasite)</span>
             <b className={margin < 0 ? 'tone-bad' : 'tone-good'}>{money(margin)}</b>
           </div>
+          <div>
+            <span>Beklenen satış (orta tahmin)</span>
+            <b>{sold.toFixed(1)} araç/hafta</b>
+          </div>
+          <div>
+            <span>Aracın haftalık katkısı</span>
+            <b className={contribution < 0 ? 'tone-bad' : ''}>{money(contribution)}</b>
+          </div>
+          <div>
+            <span>Sabit giderler (maaş, genel gider, bayi)</span>
+            <b>{money(-fixed)}</b>
+          </div>
+          {others ? (
+            <div>
+              <span>Şirketin haftalık kârı: şimdi → bu araçla</span>
+              <b className={now + contribution < 0 ? 'tone-bad' : 'tone-good'}>
+                {money(now)} → {money(now + contribution)}
+              </b>
+            </div>
+          ) : (
+            <div>
+              <span>Haftalık net</span>
+              <b className={weeklyNet < 0 ? 'tone-bad' : 'tone-good'}>{money(weeklyNet)}</b>
+            </div>
+          )}
         </div>
+        {weeklyNet < 0 && !others && (
+          <p className="small tone-bad">
+            Bu fiyatta ve beklenen talepte şirket haftada {money(-weeklyNet)} kaybeder. Hat işçiliği az üretimde de ödenir; fiyatı, hattı ya da mühendis sayısını gözden
+            geçir.
+          </p>
+        )}
         <PriceGuide p={p} price={price} setPrice={setPrice} markets={markets} cap={cap} unit={unit} labour={labour} />
         <p className="muted small">
           Alıcıların aracını nasıl karşılayacağını lansmanda göreceksin: dergi puanları, rakiplerle karşılaştırma ve dört hafta sonra ilk ay raporu.

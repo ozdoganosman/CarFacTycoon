@@ -82,7 +82,7 @@ export const EVENTS: GameEventDef[] = [
       {
         id: 'raise',
         label: 'Ücretleri artır',
-        desc: 'Hat işçilik maliyeti +%40, verimlilik +%15, itibar +3.',
+        desc: 'Hat işçiliği +%40, ama işçi kaçmadığı için verim +%30: araç başına işçilik ~%8 artar, hatlar daha çok üretir. İtibar +3.',
         apply: (s) => {
           s.company.highWages = true;
           s.company.reputation = Math.min(100, s.company.reputation + 3);

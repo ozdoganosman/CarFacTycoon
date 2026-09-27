@@ -4,13 +4,13 @@ import { cardDef } from '../../data/cards';
 import { eventDef } from '../../data/events';
 import { MARKETS } from '../../data/markets';
 import { segmentDef } from '../../data/segments';
-import { companyAssets } from '../../core/game';
+import { cashReport, companyAssets, rescueLoan, type CashReport } from '../../core/game';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { allTech } from '../../core/techtree';
 import { isBlockingModal } from '../../core/util';
 import type { GameState, ModalItem } from '../../core/types';
 import { store, useGameState } from '../store';
-import { money, num, pct } from '../format';
+import { COST_NAMES, money, num, pct, signedMoney } from '../format';
 import { Button } from './ui';
 import { CardAnimation } from './CardAnimation';
 import { LaunchReportView, LaunchShow } from './LaunchShow';
@@ -210,9 +210,95 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
           {paragraphs(m.body)}
         </Modal>
       );
+    case 'insolvency':
+      return <Insolvency s={s} stage={m.stage} />;
     case 'gameOver':
       return <GameOver s={s} />;
   }
+}
+
+/** Where the money went: the year's three biggest costs, the weekly cash flow, spare credit, idle engineers. */
+function CashFacts({ r, s }: { r: CashReport; s: GameState }) {
+  return (
+    <>
+      <ul className="cash-facts">
+        <li>
+          Son 8 haftada kasa haftada ortalama <b className={r.weeklyNet < 0 ? 'tone-bad' : 'tone-good'}>{signedMoney(r.weeklyNet)}</b> değişti.
+        </li>
+        {r.costs.length > 0 && (
+          <li>
+            Son 52 haftanın en büyük giderleri (ciro {money(r.revenue)}):{' '}
+            {r.costs.slice(0, 3).map((c, i) => (
+              <span key={c.key}>
+                {i > 0 && ', '}
+                {COST_NAMES[c.key].toLowerCase()} <b>{money(c.amount)}</b>
+                {r.revenue > 0 && <span className="muted"> ({pct(c.amount / r.revenue, 0)})</span>}
+              </span>
+            ))}
+            .
+          </li>
+        )}
+        <li>
+          Bankanın hâlâ verebileceği kredi: <b>{money(r.room)}</b> (yıllık faiz %{(r.rate * 100).toFixed(0)}).
+        </li>
+        {r.idle > 0 && (
+          <li className="tone-bad">
+            {r.idle} mühendis boşta: ne proje var ne araştırma, ama haftada {money(r.idleWeekly)} maaş alıyorlar.
+          </li>
+        )}
+        {(s.company.idleSalary ?? 0) > 0 && r.idle === 0 && s.gameOver && (
+          <li>Şirket boyunca boştaki mühendislere toplam {money(s.company.idleSalary ?? 0)} maaş ödendi.</li>
+        )}
+      </ul>
+    </>
+  );
+}
+
+function Insolvency({ s, stage }: { s: GameState; stage: 'first' | 'last' }) {
+  const r = cashReport(s);
+  const loan = rescueLoan(s);
+  return (
+    <Modal
+      title={stage === 'first' ? 'Kasa eksiye düştü' : `Son uyarı: iflasa ${r.weeksLeft} hafta`}
+      icon={stage === 'first' ? '⚠️' : '🚨'}
+      actions={
+        <>
+          {loan > 0 && (
+            <Button
+              kind="primary"
+              onClick={() =>
+                store.act((st) => {
+                  A.borrowToCover(st);
+                  A.dismissModal(st);
+                })
+              }
+            >
+              Açığı kapatacak kadar kredi al ({money(loan)})
+            </Button>
+          )}
+          <Button
+            onClick={() => {
+              store.act(A.dismissModal);
+              store.go({ id: 'finance' });
+            }}
+          >
+            Finans ekranına git
+          </Button>
+          <Button kind="ghost" onClick={() => store.act(A.dismissModal)}>
+            Kendim hallederim
+          </Button>
+        </>
+      }
+    >
+      <p>
+        Kasa <b className="tone-bad">{money(s.company.cash)}</b>. {r.weeksLeft} hafta içinde artıya geçmezse bankalar kapıyı kapatır ve şirket iflas eder.
+      </p>
+      <CashFacts r={r} s={s} />
+      <p className="muted small">
+        Kredi zaman kazandırır ama zararı durdurmaz: fiyatı, üretim hızını ve boştaki hatları da gözden geçir. Oyun sen devam ettirene kadar durur.
+      </p>
+    </Modal>
+  );
 }
 
 function GameOver({ s }: { s: GameState }) {
@@ -251,9 +337,10 @@ function GameOver({ s }: { s: GameState }) {
     >
       <p>
         {bankrupt
-          ? 'Kasa 12 hafta boyunca ekside kaldı ve bankalar kapıyı kapattı. Bir dahaki sefere nakit akışını gözünü dört açarak izle.'
+          ? 'Kasa 12 hafta boyunca ekside kaldı ve bankalar kapıyı kapattı. Paranın nereye gittiği:'
           : `Unvanın: ${title}. Toplam ${num(totalSold)} araç sattın; şirket değeri ${money(value)}.`}
       </p>
+      {bankrupt && <CashFacts r={cashReport(s)} s={s} />}
       {!bankrupt && (
         <>
           <h4>Tüm zamanların satış sıralaması</h4>

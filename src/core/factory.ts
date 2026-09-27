@@ -17,7 +17,7 @@ export interface LineReport {
 
 /** Wage policy (1914 "five dollar day") raises productivity. */
 export const labourEfficiency = (state: GameState) =>
-  (state.company.highWages ? 1.15 : 1) * (state.flags.layoffs ? 0.85 : 1);
+  (state.company.highWages ? 1.3 : 1) * (state.flags.layoffs ? 0.85 : 1);
 
 export function lineReport(state: GameState, line: ProductionLine, complexity: number): LineReport {
   const eff = labourEfficiency(state);
