@@ -17,9 +17,9 @@ Tek dosyalık sürüm (sunucu gerekmez, dosyayı tarayıcıda açman yeterli):
 npm run build:single # dist-single/index.html
 ```
 
-Kısayollar: **boşluk** duraklat/devam, **1-2-3** hız. Karar isteyen olaylar zamanı durdurur, karar verilince oyun kaldığı hızda sürer; yıl raporu zamanı durdurmaz, köşede bekler. Oyun her çeyrekte tarayıcıya otomatik kaydedilir. Ayarlar ekranından kayıt kodunu kopyalayıp yükleyebilirsin.
+Kısayollar: **boşluk** duraklat/devam, **1-2-3** hız. Karar isteyen olaylar zamanı durdurur, karar verilince oyun kaldığı hızda sürer. Proje aşaması bittiğinde (geliştirme, test, üretim hazırlığı) ve lansmanda oyun durur ve sen devam ettirene kadar bekler. Yıl raporu zamanı durdurmaz, köşede bekler. Oyun her çeyrekte tarayıcıya otomatik kaydedilir. Ayarlar ekranından kayıt kodunu kopyalayıp yükleyebilirsin.
 
-claude.ai içinde menüdeki **Claude’a gönder** düğmesi oyunun o anki hâlini (sıkıştırılmış kayıt, kısa özet ve oyuncunun notu) sayfanın veritabanındaki `playtests` koleksiyonuna yazar. `node scripts/playtest.mjs <klasör> <id>` indirilen parçaları yeniden kayda çevirir.
+claude.ai içinde oyuncu izin verirse oyun kendi kaydını sayfanın veritabanındaki `playtests/g<seed>` belgesine kendiliğinden yazar (üç oyun ayında bir, en fazla dakikada bir; hata olunca hemen). Menüdeki **Claude’a gönder** düğmesi notlu ayrı bir kopya ekler. Kayıtta oyuncunun önemli kararlarının zaman çizelgesi (`decisions`) ve yakalanan hatalar (`errors`) da vardır. `node scripts/playtest.mjs <klasör> <id>` indirilen parçaları yeniden kayda çevirir.
 
 ## Ana döngü
 
@@ -39,8 +39,9 @@ Oyun her tasarımdan 0-100 (erken dönemde 0-50), son hız, tüketim, konfor, yo
 | Kapsam çok büyük | Yalnız 1900-1960, yalnız ABD ve Avrupa. Fabrika serbest harita değil: pres, gövde, boya ve montajdan oluşan dört istasyonlu hatlar; darboğaz kırmızı yanar. |
 | Motor simülatörü yeni oyuncu için ağır | Varsayılan olarak hazır motorlar ve tek bir “karakter (strok/çap)” kaydırıcısı. Silindir, çap, strok, sıkıştırma, supap, yakıt sistemi ve kompresör **Mühendis modu**nda. |
 | Gizli ağırlıklar rastgele hissettirebilir | Aylık müşteri yorumları (“Pikap alıcıları güvenilirlikten şikâyetçi”), dergi alıntıları, doldurulan segment bilgisi tablosu, ücretli pazar araştırması ve model ekranında “Neden bu kadar satıyor?” dökümü (çekicilik, fiyat, marka, yenilik, erişim, rakipler). |
+| Tasarım hayal gücüne yer bırakmalı | Yeni proje sınıfın tipik aracıyla değil, şirketin son aracıyla (ilk projede sade bir atölye arabasıyla) başlar. Tasarım ve test sırasında önem noktaları gösterilmez; segment metinleri alıcının ne istediğini değil kim olduğunu anlatır. |
 | Puanlar döneme göre olmalı | Her puan o yılın aynı sınıftaki ortalama aracına göre hesaplanır (50 = ortalama). Eski modeller kendiliğinden eskir. |
-| Rakipler gerekli | 17 kurgusal üretici; 1900’den itibaren her pazarda her segmentte en az bir isimli rakip var (testle korunur). Araçları oyuncunun kullandığı hesaplayıcıyla bir yapay tasarımcı üretir. |
+| Rakipler gerekli | 17 büyük ve 44 küçük kurgusal üretici. Küçükler 1900-1915 arasında dalgalar hâlinde kurulur, çoğu Buhran’a kadar kapanır. 1900’den itibaren her pazarda her segmentte isimli rakip var (testle korunur). Bir segmentte payın büyürse rakipler yeni modellerini erken ve daha iyi çıkarır. Araçları oyuncunun kullandığı hesaplayıcıyla bir yapay tasarımcı üretir. |
 | Sistemler kademeli açılmalı | İhracat ve yap-ya-da-al ikinci modelle, platform ve motor paylaşımı üçüncü modelle açılır. |
 
 ### Tarihten mekaniğe

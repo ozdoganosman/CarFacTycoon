@@ -1,4 +1,5 @@
 import type { MarketId, SegmentId } from '../core/types';
+import { MINOR_RIVALS } from './minorRivals';
 
 // Fictional rival manufacturers, loosely inspired by the real history of the industry.
 
@@ -23,7 +24,8 @@ export interface RivalDef {
   special?: { seg: SegmentId; year: number; name: string; life: number; priceMult: number; note: string }[];
 }
 
-export const RIVALS: RivalDef[] = [
+/** The companies that shape the story; many small makers are added in minorRivals.ts. */
+const MAJOR_RIVALS: RivalDef[] = [
   {
     id: 'hartwell',
     name: 'Hartwell Motor Co.',
@@ -323,3 +325,5 @@ export const RIVALS: RivalDef[] = [
     names: ['Kugel', 'Lastesel', 'Export'],
   },
 ];
+
+export const RIVALS: RivalDef[] = [...MAJOR_RIVALS, ...MINOR_RIVALS];

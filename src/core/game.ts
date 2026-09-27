@@ -85,6 +85,8 @@ export function newGame(opts: NewGameOptions): GameState {
     cardsSeen: CARDS.filter((c) => c.year <= 1900).map((c) => c.id),
     settings: { engineerMode: false, autoPauseCards: true },
     nextId: 1,
+    decisions: [],
+    errors: [],
   };
   updateRivals(state, makeRng(seed ^ 0x5eed), true);
   log(state, `${state.company.name} kuruldu. Bol şans!`, 'good');

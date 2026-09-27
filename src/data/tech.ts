@@ -74,10 +74,10 @@ export interface BodyDef {
 
 export const BODIES: BodyDef[] = [
   { id: 'phaeton', name: 'Faeton (açık)', year: 1900, desc: 'Brandalı açık gövde. Hafif ve ucuz; yağmurda herkes ıslanır.', mass: 150, cd: 0.86, area: 0, comfort: 0, practicality: 10, prestige: 0, safety: 0, cog: 0, closed: false, cost: 80, complexity: 0 },
-  { id: 'roadster', name: 'Roadster', year: 1900, desc: 'İki kişilik, alçak, açık gövde. Spor ve gösterişli, pratik değil.', mass: 120, cd: 0.74, area: -0.25, comfort: -3, practicality: -10, prestige: 7, safety: 0, cog: 6, closed: false, cost: 78, complexity: 0 },
+  { id: 'roadster', name: 'Roadster', year: 1900, desc: 'İki kişilik, alçak, açık gövde. Hafif ve gösterişli, pratik değil.', mass: 120, cd: 0.74, area: -0.25, comfort: -3, practicality: -10, prestige: 7, safety: 0, cog: 6, closed: false, cost: 78, complexity: 0 },
   { id: 'coupe', name: 'Coupé', year: 1905, desc: 'Kapalı, iki kapılı, zarif gövde.', mass: 210, cd: 0.64, area: -0.1, comfort: 10, practicality: 0, prestige: 9, safety: 8, cog: 5, closed: true, cost: 125, complexity: 0.1 },
-  { id: 'sedan', name: 'Sedan', year: 1910, desc: 'Dört kapılı kapalı gövde. Aileler için konforlu ve güvenli.', mass: 250, cd: 0.7, area: 0.1, comfort: 15, practicality: 14, prestige: 4, safety: 8, cog: 0, closed: true, cost: 130, complexity: 0.15 },
-  { id: 'pickup', name: 'Pikap', year: 1913, desc: 'Kabinli, arkası açık kasa. Çiftçinin ve esnafın aracı.', mass: 220, cd: 0.8, area: 0.15, comfort: 2, practicality: 28, prestige: -10, safety: 4, cog: -3, closed: true, cost: 95, complexity: 0 },
+  { id: 'sedan', name: 'Sedan', year: 1910, desc: 'Dört kapılı kapalı gövde. Konforlu ve güvenli ama ağır ve pahalı.', mass: 250, cd: 0.7, area: 0.1, comfort: 15, practicality: 14, prestige: 4, safety: 8, cog: 0, closed: true, cost: 130, complexity: 0.15 },
+  { id: 'pickup', name: 'Pikap', year: 1913, desc: 'Kabinli, arkası açık kasa. Yük taşır; zarif değildir.', mass: 220, cd: 0.8, area: 0.15, comfort: 2, practicality: 28, prestige: -10, safety: 4, cog: -3, closed: true, cost: 95, complexity: 0 },
   { id: 'station', name: 'Station (woodie)', year: 1923, desc: 'Uzun tavanlı, geniş bagajlı gövde. Ahşap panelli.', mass: 280, cd: 0.72, area: 0.15, comfort: 12, practicality: 26, prestige: 0, safety: 8, cog: -1, closed: true, cost: 145, complexity: 0.2 },
   { id: 'suv', name: 'Arazi (4x4)', year: 1946, desc: 'Savaşın cipinden doğan yüksek, sağlam gövde. Her yola gider.', mass: 330, cd: 0.78, area: 0.4, comfort: 8, practicality: 24, prestige: 4, safety: 10, cog: -8, closed: true, cost: 150, complexity: 0.2 },
 ];
@@ -223,7 +223,7 @@ export const FEATURES: FeatureDef[] = [
   { id: 'electricStart', name: 'Elektrikli marş', year: 1912, group: 'equipment', desc: 'Kolla motor çevirmeye son. Herkes araba kullanabilir.', comfort: 5, practicality: 12, prestige: 2, reliability: -1, cost: 35, electric: true, mass: 20, complexity: 0.04, cardId: 'electricStarter' },
   { id: 'electricLights', name: 'Elektrikli farlar', year: 1912, group: 'equipment', desc: 'Asetilen lambaların yerine elektrikli farlar.', safety: 3, practicality: 4, cost: 18, electric: true, mass: 6, complexity: 0.02 },
   { id: 'heater', name: 'Kalorifer', year: 1926, group: 'equipment', desc: 'Motor ısısıyla kabini ısıtır.', comfort: 5, practicality: 2, cost: 15, mass: 5, complexity: 0.02 },
-  { id: 'radio', name: 'Radyo', year: 1930, group: 'equipment', desc: 'Lambalı araç radyosu. Lüks bir oyuncak.', comfort: 4, prestige: 4, cost: 40, electric: true, mass: 8, complexity: 0.03, reliability: -1 },
+  { id: 'radio', name: 'Radyo', year: 1930, group: 'equipment', desc: 'Lambalı araç radyosu. Pahalı bir oyuncak.', comfort: 4, prestige: 4, cost: 40, electric: true, mass: 8, complexity: 0.03, reliability: -1 },
   { id: 'powerSteering', name: 'Hidrolik direksiyon', year: 1951, group: 'equipment', desc: 'Park ederken bile direksiyon tüy gibi.', comfort: 4, handling: 1, practicality: 3, prestige: 2, cost: 55, mass: 12, complexity: 0.04, reliability: -1 },
   { id: 'airCon', name: 'Klima', year: 1953, group: 'equipment', desc: 'Sıcak yaz günlerinde serin kabin.', comfort: 8, prestige: 5, cost: 120, electric: true, mass: 45, complexity: 0.08, reliability: -2 },
 ];

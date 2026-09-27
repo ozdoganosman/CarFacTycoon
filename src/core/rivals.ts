@@ -13,8 +13,8 @@ export function rivalDef(id: string): RivalDef {
   return RIVALS.find((r) => r.id === id)!;
 }
 
-export function initRivals(): RivalCompany[] {
-  return RIVALS.map((r) => ({
+export function initRival(r: RivalDef): RivalCompany {
+  return {
     id: r.id,
     name: r.name,
     home: r.home,
@@ -27,7 +27,16 @@ export function initRivals(): RivalCompany[] {
     color: r.color,
     unitsSold: 0,
     yearSold: {},
-  }));
+  };
+}
+
+export function initRivals(): RivalCompany[] {
+  return RIVALS.map(initRival);
+}
+
+/** Saves from older versions lack companies added since: give them a fresh record. */
+export function ensureRivals(state: GameState) {
+  for (const def of RIVALS) if (!state.rivals.some((c) => c.id === def.id)) state.rivals.push(initRival(def));
 }
 
 export const isRivalActive = (def: RivalDef, yf: number) => def.founded <= yf && (!def.closes || yf < def.closes);
@@ -52,10 +61,11 @@ export function launchRivalModel(
   week: number,
   rng: Rng,
   special?: { name: string; priceMult: number },
+  skillBonus = 0,
 ): RivalModel {
   const yf = yearFloat(week);
   const year = Math.floor(yf);
-  const { design, bonus } = aiDesign(seg, year, { style: def.style, skill: def.skill, market: def.home }, rng);
+  const { design, bonus } = aiDesign(seg, year, { style: def.style, skill: Math.min(95, def.skill + skillBonus), market: def.home }, rng);
   const stats = computeCarStats(design, yf, bonus);
   const labour = def.massProduction && yf >= def.massProduction ? Math.min(0.2, labourShare(yf)) : labourShare(yf);
   const price = stats.unitCost * costIndex(yf) * (1 + labour) * priceMarkup(yf) * STYLE_MARKUP[def.style] * (special?.priceMult ?? 1) * (0.95 + rng() * 0.1);
@@ -81,6 +91,14 @@ export function launchRivalModel(
   return rm;
 }
 
+/** The player's share of a class in a market last year (0..1). */
+function playerShareLastYear(state: GameState, market: MarketId, seg: SegmentId): number {
+  const y = yearOf(state.week) - 1;
+  const total = state.segmentSales[`${y}:${market}:${seg}`] ?? 0;
+  const mine = state.segmentSales[`${y}:${market}:${seg}:p`] ?? 0;
+  return total > 0 ? mine / total : 0;
+}
+
 function cycleYears(yf: number): number {
   if (yf < 1930) return 7;
   if (yf < 1946) return 6;
@@ -100,6 +118,7 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
   const news: RivalNews[] = [];
   const week = state.week;
   const yf = yearFloat(week);
+  ensureRivals(state);
   for (const def of RIVALS) {
     const company = state.rivals.find((c) => c.id === def.id)!;
     const active = isRivalActive(def, yf);
@@ -148,10 +167,14 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
       if (special && current.some((m) => m.name === special.name)) continue;
       const newest = current.reduce((a, b) => (a.launchWeek > b.launchWeek ? a : b));
       const age = (week - newest.launchWeek) / 52;
-      if (age > cycleYears(yf) && rng() < 0.2) {
+      // Rivals answer a player who takes their buyers: earlier and better new models.
+      const pressure = Math.min(0.5, playerShareLastYear(state, def.home, entry.seg) * 2.5);
+      if (age > cycleYears(yf) * (1 - pressure) && rng() < 0.2 + pressure * 0.4) {
         current.forEach((m) => (m.active = false));
-        const rm = launchRivalModel(state, def, entry.seg, week, rng);
-        news.push({ text: `${def.name}, ${newest.name} modelinin yerine ${rm.name} modelini getirdi.`, tone: 'info' });
+        const rm = launchRivalModel(state, def, entry.seg, week, rng, undefined, Math.round(pressure * 16));
+        if (pressure > 0.2 && age < cycleYears(yf))
+          news.push({ text: `${def.name}, ${segmentDef(entry.seg).name.toLowerCase()} pazarında kaybettiği alıcılar için ${rm.name} modelini erkenden çıkardı.`, tone: 'warn' });
+        else news.push({ text: `${def.name}, ${newest.name} modelinin yerine ${rm.name} modelini getirdi.`, tone: 'info' });
       }
     }
 

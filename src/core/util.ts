@@ -72,3 +72,23 @@ export function money(v: number): string {
 export function num(v: number): string {
   return Math.round(v).toLocaleString('tr-TR');
 }
+
+/**
+ * Note a player decision for playtest analysis. Repeated tweaks of the same
+ * thing in the same week (a price slider) collapse into one entry.
+ */
+export function decide(state: GameState, key: string, text: string) {
+  const list = (state.decisions ??= []);
+  const last = list[list.length - 1];
+  if (last && last.key === key && last.week === state.week) last.text = text;
+  else list.push({ week: state.week, key, text });
+  if (list.length > 600) list.splice(0, list.length - 600);
+}
+
+/** Keep an error the game survived, so it reaches the bug report. */
+export function recordError(state: GameState, at: string, e: unknown) {
+  const err = e instanceof Error ? e : new Error(String(e));
+  const list = (state.errors ??= []);
+  list.push({ week: state.week, at, message: err.message, stack: err.stack?.split('\n').slice(0, 8).join('\n') });
+  if (list.length > 30) list.splice(0, list.length - 30);
+}

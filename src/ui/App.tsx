@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { store, useGame } from './store';
+import { syncTick } from './claudeLink';
+import { ShareBar } from './components/SendToClaude';
 import { StartScreen } from './screens/StartScreen';
 import { TopBar } from './components/TopBar';
 import { Nav } from './components/Nav';
@@ -42,11 +44,19 @@ export function App() {
       }
     };
     const onHide = () => store.save();
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden' && store.state) {
+        store.save();
+        syncTick(store.state, 'hidden');
+      }
+    };
     window.addEventListener('keydown', onKey);
     window.addEventListener('beforeunload', onHide);
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('beforeunload', onHide);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 
@@ -93,6 +103,7 @@ export function App() {
       <div className="app-body">
         <Nav />
         <main className="main" ref={mainRef}>
+          <ShareBar />
           <PauseBanner />
           {body}
         </main>

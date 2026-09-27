@@ -96,7 +96,7 @@ export function StatsPanel(props: {
             <div key={k} className="sp-row">
               <div className="sp-label">
                 <span>{ATTR_NAMES[k]}</span>
-                <Importance s={s} segment={segment} attr={k} />
+                {!est && <Importance s={s} segment={segment} attr={k} />}
               </div>
               <div className="sp-raw">
                 {!est ? rawValue(k, st, yf, segment) : measurable(k) ? `${isRough(est, k) ? '≈ ' : ''}${rawValue(k, st, yf, segment)}` : isRough(est, k) ? 'kaba tahmin' : 'ölçüldü'}

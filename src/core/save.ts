@@ -1,4 +1,5 @@
 import { SAVE_VERSION } from './game';
+import { ensureRivals } from './rivals';
 import type { GameState } from './types';
 
 const KEY = 'carfactycoon.save.v1';
@@ -11,7 +12,15 @@ export function deserialize(json: string): GameState {
   const s = JSON.parse(json) as GameState;
   if (!s || typeof s !== 'object' || typeof s.week !== 'number' || !s.company) throw new Error('Geçersiz kayıt dosyası');
   if (s.version !== SAVE_VERSION) throw new Error('Bu kayıt oyunun farklı bir sürümüne ait');
+  migrate(s);
   return s;
+}
+
+/** Bring a save from an older build of the same version up to date. */
+function migrate(s: GameState) {
+  ensureRivals(s);
+  s.errors ??= [];
+  s.decisions ??= [];
 }
 
 /** Browser storage can be unavailable (private mode, blocked site data); never let that break the game. */

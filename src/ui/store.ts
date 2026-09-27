@@ -1,7 +1,12 @@
 import { useSyncExternalStore } from 'react';
 import { newGame, tick, type NewGameOptions } from '../core/game';
 import { loadLocal, saveLocal } from '../core/save';
-import { isBlockingModal } from '../core/util';
+import { syncTick } from './claudeLink';
+import { isBlockingModal, recordError } from '../core/util';
+import type { ModalItem } from '../core/types';
+
+/** After these the player has work to do, so the clock stays stopped once they are closed. */
+const STAY_PAUSED = new Set<ModalItem['kind']>(['phase', 'launch', 'launchReport', 'gameOver']);
 import type { GameState } from '../core/types';
 
 // A tiny external store: the simulation mutates GameState in place and bumps a
@@ -86,7 +91,13 @@ class GameStore {
   /** Run a mutation against the game state, then re-render. */
   act<T>(fn: (s: GameState) => T): T | undefined {
     if (!this.state) return undefined;
-    const r = fn(this.state);
+    let r: T;
+    try {
+      r = fn(this.state);
+    } catch (e) {
+      this.fail('action', e);
+      return undefined;
+    }
     // The decision that stopped the clock has been answered: carry on.
     if (this.resumeSpeed && !this.state.gameOver && !this.state.modals.some(isBlockingModal)) {
       const speed = this.resumeSpeed;
@@ -154,11 +165,24 @@ class GameStore {
     this.notify();
   }
 
-  /** Stop the clock for a decision, remembering how fast it was running. */
+  /** Stop the clock for a decision, remembering how fast it was running (unless the player has work to do next). */
   private holdForDecision() {
     if (this.speed === 0) return;
-    this.resumeSpeed = this.speed;
+    const stay = this.state?.modals.some((m) => isBlockingModal(m) && STAY_PAUSED.has(m.kind));
+    this.resumeSpeed = stay ? null : this.speed;
     this.run(0);
+  }
+
+  /** Something broke: stop the clock, keep the error for the bug report and tell the player. */
+  fail(at: string, e: unknown) {
+    console.error(e);
+    if (this.state) {
+      recordError(this.state, at, e);
+      syncTick(this.state);
+    }
+    this.resumeSpeed = null;
+    this.run(0);
+    this.showToast('Oyunda bir hata oluştu ve oyun durdu. Hata kaydedildi; Claude’a gönderilecek.', 'bad');
   }
 
   togglePause() {
@@ -177,9 +201,15 @@ class GameStore {
       this.holdForDecision();
       return;
     }
-    tick(s);
+    try {
+      tick(s);
+    } catch (e) {
+      this.fail('tick', e);
+      return;
+    }
     this.weeksSinceSave++;
     if (this.weeksSinceSave >= 13) this.save();
+    syncTick(s);
     if (s.gameOver) this.setSpeed(0);
     else if (s.modals.some(isBlockingModal)) this.holdForDecision();
     this.notify();

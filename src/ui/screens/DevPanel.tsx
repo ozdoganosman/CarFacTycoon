@@ -113,7 +113,7 @@ export function DevPanel({ project: p }: { project: Project }) {
 
       <h4>Mühendislik odağı</h4>
       <p className="muted small">
-        Toplam her zaman %100. Sağdaki değerler, geliştirme bu dağılımla biterse aracın kazanacağı iyileştirmeler. Hangi alanın önemli olduğu segmente bağlı.
+        Toplam her zaman %100. Sağdaki değerler, geliştirme bu dağılımla biterse aracın kazanacağı iyileştirmeler. Neye ağırlık vereceğin senin fikrin: bu araba kimin için?
       </p>
       {FOCUS_KEYS.map((k) => (
         <div key={k} className="focus-row">

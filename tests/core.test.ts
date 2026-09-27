@@ -141,6 +141,20 @@ describe('game', () => {
     }
   });
 
+  it('a save from before new rivals were added keeps running', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 9 });
+    for (let i = 0; i < 30; i++) tick(s);
+    s.rivals = s.rivals.filter((r) => !r.id.startsWith('minor-') && r.id !== 'oakley');
+    s.rivalModels = s.rivalModels.filter((m) => !m.companyId.startsWith('minor-') && m.companyId !== 'oakley');
+    delete s.decisions;
+    delete s.errors;
+    const back = deserialize(serialize(s));
+    expect(() => {
+      for (let i = 0; i < 60; i++) tick(back);
+    }).not.toThrow();
+    expect(back.rivals.length).toBe(RIVALS.length);
+  });
+
   it('market shares add up to 100%', () => {
     const s = newGame({ companyName: 'Test', hq: 'europe', seed: 2 });
     for (let i = 0; i < 52 * 15; i++) tick(s);
@@ -247,7 +261,14 @@ describe('clock', () => {
     store.step();
     expect(s.week).toBe(week + 1);
     expect(store.speed).toBe(3);
+    // A finished project stage leaves the clock stopped: the player has work to do.
+    s.modals = [{ kind: 'phase', projectId: 'p1', phase: 'development' }];
+    store.setSpeed(2);
+    store.step();
+    store.act(A.dismissModal);
+    expect(store.speed).toBe(0);
     // A pause the player chose is not undone by closing a pop-up.
+    store.setSpeed(3);
     s.modals = [{ kind: 'unlock', title: 'x', body: 'y' }];
     store.step();
     store.setSpeed(0);

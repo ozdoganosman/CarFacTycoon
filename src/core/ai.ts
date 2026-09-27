@@ -221,11 +221,11 @@ export function enginePresets(year: number): EnginePreset[] {
     const design = aiEngine(cc, seg, year, { style, skill: 50, market }, constant);
     presets.push({ id, name, desc, design });
   };
-  mk('eco', 'Ekonomik', 'Küçük hacim, az yakıt, ucuz. Şehir arabaları için.', eco, 'city', 'mass', 'europe');
-  mk('mid', 'Dengeli', 'Orta hacim. Aile arabası için her işi görür.', mid, 'family', 'mass', 'europe');
-  mk('big', 'Güçlü', 'Büyük hacim, bol tork. Ağır gövdeleri rahat çeker.', big, 'family', 'mass', 'usa');
-  mk('lux', 'Prestij', 'Çok silindirli, ipek gibi çalışan büyük motor.', lux, 'luxury', 'premium', 'usa');
-  if (year >= 1912) mk('race', 'Yarış', 'Üstten kamlı, yüksek devirli spor motoru.', interp([[1912, 3.0], [1960, 2.5]], year) * 1000, 'sport', 'sport', 'europe');
+  mk('eco', 'Ekonomik', 'Küçük hacim, az yakıt, ucuz; gücü sınırlı.', eco, 'city', 'mass', 'europe');
+  mk('mid', 'Dengeli', 'Orta hacim: güç, tüketim ve maliyet arasında denge.', mid, 'family', 'mass', 'europe');
+  mk('big', 'Güçlü', 'Büyük hacim, bol tork. Ağır gövdeleri rahat çeker ama çok yakar.', big, 'family', 'mass', 'usa');
+  mk('lux', 'Prestij', 'Çok silindirli, ipek gibi çalışan büyük motor. Pahalı.', lux, 'luxury', 'premium', 'usa');
+  if (year >= 1912) mk('race', 'Yarış', 'Üstten kamlı, yüksek devirli motor. Güçlü ama hassas.', interp([[1912, 3.0], [1960, 2.5]], year) * 1000, 'sport', 'sport', 'europe');
   return presets;
 }
 

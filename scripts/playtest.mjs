@@ -20,9 +20,11 @@ const body = (file) => {
 };
 const main = body(join(dir, 'playtests', `${id}.json`));
 const chunkDir = join(dir, 'playtests', id, 'chunks');
+// The game's own document is rewritten in place: older, longer saves may leave extra pieces behind.
 const pieces = readdirSync(chunkDir)
   .filter((f) => f.endsWith('.json'))
   .map((f) => body(join(chunkDir, f)))
+  .filter((p) => p.i < main.chunks)
   .sort((a, b) => a.i - b.i);
 if (pieces.length !== main.chunks) throw new Error(`expected ${main.chunks} pieces, found ${pieces.length}`);
 const text = pieces.map((p) => p.data).join('');

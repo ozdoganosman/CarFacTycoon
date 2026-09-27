@@ -64,9 +64,18 @@ export function referencePrice(market: MarketId, segment: SegmentId, yf: number)
   return base + ownershipTax(market, { engine: { taxHp: ref.taxHp, displacementCc: ref.displacementCc } as CarStats['engine'] }, yf);
 }
 
+/**
+ * Utility points per unit of log price. With TAU = 7 a small maker's own-price
+ * elasticity is about priceSens × PRICE_COEF / TAU (family car ≈ 7): charging
+ * far above the class price loses most buyers, so profit comes from volume.
+ */
+export const PRICE_COEF = 40;
+/** Launch buzz counts, but less than the car itself. */
+const HYPE_WEIGHT = 0.6;
+
 export function priceTerm(segment: SegmentId, market: MarketId, consumer: number, yf: number): number {
   const sens = segmentDef(segment).priceSens * eraMods(market, yf).priceSens;
-  return -sens * 22 * Math.log(consumer / referencePrice(market, segment, yf));
+  return -sens * PRICE_COEF * Math.log(consumer / referencePrice(market, segment, yf));
 }
 
 export const brandTerm = (reputation: number, segment: SegmentId) => (reputation - 50) * 0.12 * segmentDef(segment).brandSens;
@@ -149,7 +158,8 @@ export function playerOffer(state: GameState, model: CarModel, market: MarketId)
   const pt = priceTerm(model.segment, market, price, yf);
   const brand = brandTerm(state.company.reputation, model.segment);
   const reach = playerReach(state, market);
-  const utility = ap[market] + pt + brand + model.hype;
+  const hype = model.hype * HYPE_WEIGHT;
+  const utility = ap[market] + pt + brand + hype;
   return {
     kind: 'player',
     id: model.id,
@@ -159,7 +169,7 @@ export function playerOffer(state: GameState, model: CarModel, market: MarketId)
     price,
     priceTerm: pt,
     brand,
-    hype: model.hype,
+    hype,
     reach,
     utility,
     weight: offerWeight(reach, utility),
@@ -174,7 +184,7 @@ export function rivalOffer(state: GameState, rm: RivalModel, market: MarketId): 
   const price = consumerPrice(rivalPriceNow(rm, state.week), market, isImport, rm.stats, yf).total;
   const pt = priceTerm(rm.segment, market, price, yf);
   const brand = brandTerm(rivalReputation(rm.companyId), rm.segment);
-  const hype = 4 * Math.exp(-(state.week - rm.launchWeek) / 40);
+  const hype = 4 * HYPE_WEIGHT * Math.exp(-(state.week - rm.launchWeek) / 40);
   const reach = rivalSize(rm.companyId, yf) * (isImport ? 0.45 : 1);
   const utility = ap[market] + pt + brand + hype;
   return {

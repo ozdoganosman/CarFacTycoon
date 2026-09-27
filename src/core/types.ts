@@ -429,4 +429,8 @@ export interface GameState {
   settings: { engineerMode: boolean; autoPauseCards: boolean };
   gameOver?: { reason: 'bankrupt' | 'end'; week: number };
   nextId: number;
+  /** The player's key decisions, newest last (read when a playtest is studied). */
+  decisions?: { week: number; key: string; text: string }[];
+  /** Errors caught while the game ran, for bug reports. */
+  errors?: { week: number; at: string; message: string; stack?: string }[];
 }
