@@ -856,6 +856,7 @@ export function recallDecision(s: GameState, modelId: string, defectId: string, 
 
 export function setEngineerMode(s: GameState, on: boolean) {
   s.settings.engineerMode = on;
+  s.settings.modeChosen = true;
 }
 
 export function setAutoPauseCards(s: GameState, on: boolean) {

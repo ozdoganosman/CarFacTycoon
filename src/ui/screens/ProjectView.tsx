@@ -16,7 +16,7 @@ import { Badge, Button, Choice, NumberInput, Panel, Progress, Slider, Toggle } f
 import { newEstimate } from '../../core/estimate';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { Designer } from './Designer';
-import { DevPanel } from './DevPanel';
+import { DevBar, FocusPanel } from './DevPanel';
 
 const STEPS: { label: string; phases: ProjectPhase[] }[] = [
   { label: 'Tasarım ve geliştirme', phases: ['design', 'development'] },
@@ -72,8 +72,8 @@ export function ProjectView({ projectId }: { projectId: string }) {
       <NextStep p={p} />
       {(p.phase === 'design' || p.phase === 'development') && (
         <>
-          <Designer project={p} readOnly={p.phase === 'development'} />
-          <DevPanel project={p} />
+          <DevBar project={p} />
+          <Designer project={p} readOnly={p.phase === 'development'} below={<FocusPanel project={p} />} />
         </>
       )}
       {p.phase === 'testing' && <Testing p={p} />}
@@ -170,26 +170,17 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
   );
 }
 
-/** When a stage is finished, its next step sits right under the stepper, not at the bottom of the page. */
+/** When testing is finished, its next step sits right under the stepper, not at the bottom of the page. */
 function NextStep({ p }: { p: Project }) {
-  const devDone = p.phase === 'development' && p.dev.done >= p.dev.required;
   const testsDone = p.phase === 'testing' && TESTS.every((t) => p.tests[t.id].done >= p.tests[t.id].planned);
-  if (!devDone && !testsDone) return null;
+  if (!testsDone) return null;
   return (
     <div className="next-step" role="status">
       <span>
-        {devDone ? (
-          <>
-            <b>Geliştirme bitti.</b> Zaman akarsa araç cilalanmaya devam eder; hazırsan prototipleri yap.
-          </>
-        ) : (
-          <>
-            <b>Test programı bitti.</b> Sırada tedarikçiler ve üretim hattı var.
-          </>
-        )}
+        <b>Test programı bitti.</b> Sırada tedarikçiler ve üretim hattı var.
       </span>
-      <Button kind="primary" onClick={() => store.try((st) => (devDone ? A.finishDevelopment(st, p.id) : A.finishTesting(st, p.id)))}>
-        {devDone ? 'Prototipleri yap, teste geç' : 'Üretim hazırlığına geç'}
+      <Button kind="primary" onClick={() => store.try((st) => A.finishTesting(st, p.id))}>
+        Üretim hazırlığına geç
       </Button>
     </div>
   );

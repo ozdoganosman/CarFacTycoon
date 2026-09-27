@@ -233,17 +233,20 @@ export interface CylinderOption {
   layout: 'inline' | 'v';
   year: number;
   label: string;
+  desc: string;
 }
 
 export const CYLINDER_OPTIONS: CylinderOption[] = [
-  { cylinders: 1, layout: 'inline', year: 1900, label: 'Tek silindir' },
-  { cylinders: 2, layout: 'inline', year: 1900, label: '2 silindir sıra' },
-  { cylinders: 4, layout: 'inline', year: 1900, label: '4 silindir sıra' },
-  { cylinders: 6, layout: 'inline', year: 1903, label: '6 silindir sıra' },
-  { cylinders: 8, layout: 'v', year: 1914, label: 'V8' },
-  { cylinders: 8, layout: 'inline', year: 1919, label: '8 silindir sıra' },
-  { cylinders: 12, layout: 'v', year: 1915, label: 'V12' },
-  { cylinders: 16, layout: 'v', year: 1930, label: 'V16' },
+  { cylinders: 1, layout: 'inline', year: 1900, label: 'Tek silindir', desc: 'En ucuz ve hafif. İki turda bir ateşler: çok sarsıntılı, büyüdükçe devri tıkanır.' },
+  { cylinders: 2, layout: 'inline', year: 1900, label: '2 silindir sıra', desc: 'Ucuz ve basit. Tek silindirden yumuşak ama hâlâ titrek; küçük motorlar için.' },
+  { cylinders: 3, layout: 'inline', year: 1904, label: '3 silindir sıra', desc: 'Küçük motorlar için orta yol: 2 silindirden yumuşak, 4 silindirden ucuz ve hafif. Biraz sallanır.' },
+  { cylinders: 4, layout: 'inline', year: 1900, label: '4 silindir sıra', desc: 'Dönemin standardı: dengeli ve makul fiyatlı. Büyük hacimlerde titreşimi artar.' },
+  { cylinders: 6, layout: 'inline', year: 1903, label: '6 silindir sıra', desc: 'Kendini dengeler: ipek gibi ve sessiz. Uzun, ağır ve pahalı.' },
+  { cylinders: 6, layout: 'v', year: 1950, label: 'V6', desc: 'Altı silindir kısa bir blokta: kaputa sığar, sıra altıdan hafif; onun kadar yumuşak değil.' },
+  { cylinders: 8, layout: 'v', year: 1914, label: 'V8', desc: 'Kısa, güçlü ve yumuşak; büyük hacim için ideal. Pahalı ve çok yakar.' },
+  { cylinders: 8, layout: 'inline', year: 1919, label: '8 silindir sıra', desc: 'Çok yumuşak ve prestijli. Çok uzun, ağır ve pahalı.' },
+  { cylinders: 12, layout: 'v', year: 1915, label: 'V12', desc: 'Lüksün simgesi, en pürüzsüz motorlardan. Çok pahalı ve ağır, bakımı zor.' },
+  { cylinders: 16, layout: 'v', year: 1930, label: 'V16', desc: 'Gösteriş için: devasa ve pürüzsüz. Maliyet ve güvenilirlik ciddi sorun.' },
 ];
 
 /** Max compression usable with the fuel of the era (octane rating). */

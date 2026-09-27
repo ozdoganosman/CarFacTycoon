@@ -299,7 +299,7 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
     25 * design.styling +
     body.prestige +
     12 * design.size +
-    (design.engine.cylinders >= 16 ? 20 : design.engine.cylinders >= 12 ? 16 : design.engine.cylinders >= 8 ? 10 : design.engine.cylinders >= 6 ? 5 : design.engine.cylinders <= 2 ? -5 : 0) +
+    (design.engine.cylinders >= 16 ? 20 : design.engine.cylinders >= 12 ? 16 : design.engine.cylinders >= 8 ? 10 : design.engine.cylinders >= 6 ? 5 : design.engine.cylinders <= 2 ? -5 : design.engine.cylinders === 3 ? -2 : 0) +
     15 * design.interior +
     gb.prestige +
     sum('prestige');

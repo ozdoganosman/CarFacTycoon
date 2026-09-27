@@ -85,7 +85,7 @@ export function newGame(opts: NewGameOptions): GameState {
     segmentSales: {},
     unlockedTech: allTech().filter((t) => t.year <= 1900).map((t) => t.id),
     cardsSeen: CARDS.filter((c) => c.year <= 1900).map((c) => c.id),
-    settings: { engineerMode: false, autoPauseCards: true },
+    settings: { engineerMode: true, autoPauseCards: true, modeChosen: false },
     nextId: 1,
     decisions: [],
     errors: [],

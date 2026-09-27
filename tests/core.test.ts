@@ -18,6 +18,8 @@ import { inYear } from '../src/ui/format';
 import { FOCUS_KEYS, bonusFromPoints } from '../src/core/development';
 import { experienceFactor } from '../src/core/estimate';
 import { autoCapacity } from '../src/core/autocap';
+import { engineNotes } from '../src/core/engineNotes';
+import { CYLINDER_OPTIONS } from '../src/data/tech';
 import type { FocusKey } from '../src/core/types';
 import { store } from '../src/ui/store';
 import { runBot } from '../scripts/bot';
@@ -159,6 +161,16 @@ describe('game', () => {
     expect(back.rivals.length).toBe(RIVALS.length);
   });
 
+  it('opens the full engine designer by default, unless the player chose the simple one', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 9 });
+    expect(s.settings.engineerMode).toBe(true);
+    // Older saves defaulted to the simple designer without anyone choosing it.
+    s.settings = { engineerMode: false, autoPauseCards: true };
+    expect(deserialize(serialize(s)).settings.engineerMode).toBe(true);
+    A.setEngineerMode(s, false);
+    expect(deserialize(serialize(s)).settings.engineerMode).toBe(false);
+  });
+
   it('market shares add up to 100%', () => {
     const s = newGame({ companyName: 'Test', hq: 'europe', seed: 2 });
     for (let i = 0; i < 52 * 15; i++) tick(s);
@@ -283,6 +295,27 @@ describe('clock', () => {
 });
 
 describe('engineering', () => {
+  it('three-cylinder and V6 engines exist and sit where they should', () => {
+    expect(CYLINDER_OPTIONS.find((c) => c.cylinders === 3)?.year).toBe(1904);
+    expect(CYLINDER_OPTIONS.find((c) => c.cylinders === 6 && c.layout === 'v')?.year).toBe(1950);
+    const base = { layout: 'inline' as const, bore: 70, stroke: 80, compression: 4.2, valvetrain: 'sv' as const, fuelSystem: 'carb' as const, aspiration: 'na' as const };
+    const smooth = (cylinders: number) => computeEngine({ ...base, cylinders }, 1910).smoothness;
+    expect(smooth(3)).toBeGreaterThan(smooth(2));
+    expect(smooth(3)).toBeLessThan(smooth(4));
+    const v6 = computeEngine({ ...base, cylinders: 6, layout: 'v', compression: 7 }, 1952);
+    const i6 = computeEngine({ ...base, cylinders: 6, compression: 7 }, 1952);
+    expect(v6.smoothness).toBeLessThan(i6.smoothness);
+  });
+
+  it('explains what an engine is good and bad at', () => {
+    const typical = aiDesign('family', 1925, { style: 'mass', skill: 55, market: 'usa' }, () => 0.5).design.engine;
+    const tiny = engineNotes({ ...typical, cylinders: 2, bore: 60, stroke: 70 }, 1925, 'family');
+    expect(tiny.cons.some((x) => x.includes('güçsüz'))).toBe(true);
+    expect(tiny.pros.some((x) => x.includes('az yakar'))).toBe(true);
+    const knocking = engineNotes({ ...typical, compression: 9 }, 1925, 'family');
+    expect(knocking.cons.some((x) => x.includes('Vuruntu'))).toBe(true);
+  });
+
   it('a diesel burns far less fuel but makes less power', () => {
     const { design } = aiDesign('family', 1950, { style: 'mass', skill: 55, market: 'europe' }, () => 0.5);
     const petrol = computeCarStats(design, 1950);

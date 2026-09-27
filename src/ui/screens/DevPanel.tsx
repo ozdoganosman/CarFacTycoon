@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import * as A from '../../core/actions';
-import { FOCUS_HINTS, FOCUS_KEYS, FOCUS_NAMES, productivity } from '../../core/development';
+import { FOCUS_HINTS, FOCUS_KEYS, FOCUS_NAMES, evenFocus, productivity } from '../../core/development';
 import type { FocusKey, Project } from '../../core/types';
 import { store, useGameState } from '../store';
-import { Button, Panel, Progress, Slider } from '../components/ui';
+import { Button, Progress, Slider } from '../components/ui';
 
 interface Bubble {
   id: number;
@@ -11,12 +11,8 @@ interface Bubble {
   text: string;
 }
 
-/**
- * Engineering team, focus split and progress for the combined
- * "design and development" step. While development runs, points pop out of
- * each focus area like in Game Dev Tycoon.
- */
-export function DevPanel({ project: p }: { project: Project }) {
+/** Team, time and the one action of the design step, kept above the designer so it never needs scrolling to. */
+export function DevBar({ project: p }: { project: Project }) {
   const s = useGameState();
   const developing = p.phase === 'development';
   // Every engineer works: projects in development share the whole team.
@@ -30,6 +26,58 @@ export function DevPanel({ project: p }: { project: Project }) {
   const bonus = A.projectedBonus(s, p);
   const polish = bonus.reliability - (s.company.skill - 50) * 0.08;
   const paused = store.speed === 0;
+  const team = others ? `${s.company.engineers} mühendis ${others + 1} projeye bölünüyor (bu projede ~${eng.toFixed(1)})` : `${s.company.engineers} mühendisin hepsi bu projede`;
+
+  return (
+    <div className={`dev-bar ${done ? 'is-done' : ''}`}>
+      <div className="dev-bar-text">
+        {!developing ? (
+          <>
+            <b>Geliştirme:</b> tahmini <b>~{Math.ceil(remaining / Math.max(0.1, rate))} hafta</b> · {team}
+            <span className="muted small">Aracı tasarla, mühendislik odağını seç, sonra başlat. Başlayınca tasarım kilitlenir; odak her zaman değişebilir.</span>
+          </>
+        ) : done ? (
+          <>
+            <b>Geliştirme bitti.</b> Zaman akarsa araç cilalanmaya devam eder (güvenilirlik şu an +{Math.max(0, polish).toFixed(1)}, en fazla %160’a kadar).
+          </>
+        ) : (
+          <>
+            <b>Geliştirme %{pct}</b> · kalan ~{Math.ceil(remaining / Math.max(0.1, rate))} hafta · {team}
+            <span className="muted small">Her hafta odak alanlarına puan birikir.</span>
+          </>
+        )}
+      </div>
+      {developing && (
+        <div className="dev-bar-progress">
+          <Progress value={Math.min(p.dev.done, required * 1.6)} max={done ? required * 1.6 : required} tone={done ? 'good' : 'accent'} label={`%${pct}`} />
+        </div>
+      )}
+      <div className="dev-bar-actions">
+        {!developing ? (
+          <Button kind="primary" onClick={() => store.try((st) => A.beginDevelopment(st, p.id), 'Geliştirme başladı')}>
+            Geliştirmeyi başlat
+          </Button>
+        ) : done ? (
+          <Button kind="primary" onClick={() => store.try((st) => A.finishDevelopment(st, p.id))}>
+            Prototipleri yap, teste geç
+          </Button>
+        ) : paused ? (
+          <Button kind="primary" onClick={() => store.setSpeed(store.lastSpeed)}>
+            ▶ Zamanı başlat
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * How the engineers split their time. While development runs, points pop out
+ * of each focus area like in Game Dev Tycoon.
+ */
+export function FocusPanel({ project: p }: { project: Project }) {
+  const s = useGameState();
+  const bonus = A.projectedBonus(s, p);
 
   // Point bubbles: compare with the previous render's points.
   const last = useRef({ ...p.dev.points });
@@ -67,90 +115,57 @@ export function DevPanel({ project: p }: { project: Project }) {
   };
 
   return (
-    <Panel title={developing ? 'Geliştirme sürüyor' : 'Mühendislik ekibi ve odak'} className="dev-panel">
-      <div className="howto">
-        {!developing ? (
-          <p>
-            <b>Ne yapmalıyım?</b> Yukarıda aracı tasarla, burada mühendislerin zamanını alanlara böl ve geliştirmeyi başlat. Başladıktan sonra tasarım kilitlenir; odağı
-            ise istediğin zaman değiştirebilirsin.
-          </p>
-        ) : done ? (
-          <p>
-            <b>Geliştirme bitti.</b> Teste geçebilirsin. Zamanı biraz daha akıtırsan araç cilalanır ve güvenilirliği artar (şu an +{Math.max(0, polish).toFixed(1)}, en fazla
-            %160’a kadar).
-          </p>
-        ) : (
-          <p>
-            <b>Mühendisler çalışıyor.</b> Her hafta odak alanlarına puan birikir. Çubuk %100 olunca teste geçebilirsin.
-          </p>
-        )}
-        {developing && paused && (
-          <Button kind="primary" onClick={() => store.setSpeed(store.lastSpeed)}>
-            ▶ Zamanı başlat
-          </Button>
-        )}
-      </div>
-
-      {developing && <Progress value={Math.min(p.dev.done, required * 1.6)} max={required * 1.6} label={`%${pct}`} />}
-
-      <div className="dev-top">
+    <section className="focus-panel" aria-label="Mühendislik odağı">
+      <div className="focus-head">
         <div>
-          <b>
-            {others ? `${s.company.engineers} mühendis ${others + 1} projeye bölünüyor (bu projede ~${eng.toFixed(1)})` : `Bütün mühendislerin (${s.company.engineers}) bu projede`}
-          </b>
-          <p className="muted small">Daha çok mühendis daha hızlı bitirir. Finans ekranından işe alabilirsin.</p>
+          <h3>Mühendislik odağı</h3>
+          <p className="muted small">
+            Mühendislerin zamanını alanlara böl (toplam %100). Her kartın altındaki değer, geliştirme bu dağılımla biterse aracın kazanacağı iyileştirme; sağdaki tahmin de
+            buna göre. Neye ağırlık vereceğin senin fikrin: bu araba kimin için?
+          </p>
         </div>
-        <div className="footer-info">
-          <span className="muted small">{developing ? 'Kalan süre' : 'Tahmini geliştirme süresi'}</span>
-          <b>{done ? 'Bitti' : `~${Math.ceil(remaining / Math.max(0.1, rate))} hafta`}</b>
-          <span className="muted small">İş yükü: {Math.round(required)} mühendis-hafta</span>
-        </div>
+        <Button small kind="ghost" onClick={() => store.act((st) => A.setFocus(st, p.id, evenFocus()))}>
+          Eşit dağıt
+        </Button>
       </div>
-
-      <h4>Mühendislik odağı</h4>
-      <p className="muted small">
-        Toplam her zaman %100. Sağdaki değerler, geliştirme bu dağılımla biterse aracın kazanacağı iyileştirmeler. Neye ağırlık vereceğin senin fikrin: bu araba kimin için?
-      </p>
-      {FOCUS_KEYS.map((k) => (
-        <div key={k} className="focus-row">
-          <Slider
-            label={
-              <>
-                {FOCUS_NAMES[k]} <span className="muted small">({FOCUS_HINTS[k]})</span>
-              </>
-            }
-            value={Math.round(p.dev.focus[k] * 100)}
-            min={0}
-            max={100}
-            onChange={(v) => setFocus(k, v / 100)}
-            format={(v) => `%${v}`}
-          />
-          <span className="focus-effect">
-            {effect[k]}
-            <span className="bubbles" aria-hidden>
-              {bubbles
-                .filter((b) => b.key === k)
-                .map((b) => (
-                  <span key={b.id} className={`bubble bubble-${k}`}>
-                    {b.text}
-                  </span>
-                ))}
-            </span>
-          </span>
-        </div>
-      ))}
-
-      <div className="row-end">
-        {!developing ? (
-          <Button kind="primary" onClick={() => store.try((st) => A.beginDevelopment(st, p.id), 'Geliştirme başladı')}>
-            Geliştirmeyi başlat
-          </Button>
-        ) : (
-          <Button kind="primary" disabled={!done} onClick={() => store.try((st) => A.finishDevelopment(st, p.id))}>
-            {done ? 'Prototipleri yap, teste geç' : `Geliştirme sürüyor (%${pct})`}
-          </Button>
-        )}
+      <div className="focus-bar" aria-hidden>
+        {FOCUS_KEYS.map((k) => (
+          <span key={k} className={`focus-seg fc-${k}`} style={{ width: `${p.dev.focus[k] * 100}%` }} title={`${FOCUS_NAMES[k]} %${Math.round(p.dev.focus[k] * 100)}`} />
+        ))}
       </div>
-    </Panel>
+      <div className="focus-grid">
+        {FOCUS_KEYS.map((k) => (
+          <div key={k} className={`focus-card fc-${k}`}>
+            <Slider
+              label={
+                <>
+                  <span className="focus-dot" aria-hidden /> {FOCUS_NAMES[k]}
+                </>
+              }
+              value={Math.round(p.dev.focus[k] * 100)}
+              min={0}
+              max={100}
+              onChange={(v) => setFocus(k, v / 100)}
+              format={(v) => `%${v}`}
+            />
+            <div className="focus-foot">
+              <span className="focus-effect">
+                {effect[k]}
+                <span className="bubbles" aria-hidden>
+                  {bubbles
+                    .filter((b) => b.key === k)
+                    .map((b) => (
+                      <span key={b.id} className={`bubble bubble-${k}`}>
+                        {b.text}
+                      </span>
+                    ))}
+                </span>
+              </span>
+              <span className="muted small">{FOCUS_HINTS[k]}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

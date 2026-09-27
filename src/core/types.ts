@@ -444,7 +444,8 @@ export interface GameState {
   segmentSales: Record<string, number>;
   unlockedTech: string[];
   cardsSeen: string[];
-  settings: { engineerMode: boolean; autoPauseCards: boolean };
+  /** modeChosen: the player picked the engine designer mode themselves (older saves defaulted to the simple one). */
+  settings: { engineerMode: boolean; autoPauseCards: boolean; modeChosen?: boolean };
   gameOver?: { reason: 'bankrupt' | 'end'; week: number };
   nextId: number;
   /** The player's key decisions, newest last (read when a playtest is studied). */

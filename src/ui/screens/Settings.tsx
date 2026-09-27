@@ -60,7 +60,7 @@ export function Settings() {
           checked={s.settings.engineerMode}
           onChange={(v) => store.act((st) => A.setEngineerMode(st, v))}
           label="Mühendis modu"
-          sub="Motor tasarımında silindir çapı, strok, sıkıştırma oranı, supap düzeni, yakıt sistemi ve kompresör ayrı ayrı ayarlanır. Kapalıyken hazır motorlar ve tek bir karakter kaydırıcısı kullanılır."
+          sub="Açıkken (varsayılan) motorun silindir düzeni, çapı, stroku, sıkıştırma oranı, supap düzeni, yakıt sistemi ve kompresörü ayrı ayrı ayarlanır ve her ayarın ne işe yaradığı yazar. Karışık gelirse kapat: hazır motorlar ve tek bir karakter kaydırıcısıyla çalışırsın."
         />
         <Toggle
           checked={s.settings.autoPauseCards}

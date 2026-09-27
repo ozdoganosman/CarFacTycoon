@@ -26,6 +26,8 @@ function migrate(s: GameState) {
     p.dev.points.quality ??= 0;
     p.dev.focus.quality ??= 0;
   }
+  // The full engine designer became the default; saves that never chose a mode get it too.
+  if (!s.settings.modeChosen) s.settings.engineerMode = true;
 }
 
 /** Browser storage can be unavailable (private mode, blocked site data); never let that break the game. */

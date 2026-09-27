@@ -78,7 +78,7 @@ export function curveFor(e: EngineDesign, year: number, powerMult = 1): TorqueCu
   return { tmax, x0: vt.x0, c, redline };
 }
 
-const SMOOTHNESS: Record<number, number> = { 1: -9, 2: -5, 4: 0, 6: 7, 8: 9, 12: 12, 16: 13 };
+const SMOOTHNESS: Record<number, number> = { 1: -9, 2: -5, 3: -2, 4: 0, 6: 7, 8: 9, 12: 12, 16: 13 };
 
 export function computeEngine(e: EngineDesign, year: number, powerMult = 1): EngineStats {
   const vt = byId(VALVETRAINS, e.valvetrain);
@@ -134,7 +134,8 @@ export function computeEngine(e: EngineDesign, year: number, powerMult = 1): Eng
     massKg: mass,
     cost,
     // Diesel knock: rattly at idle, shaking in town.
-    smoothness: (SMOOTHNESS[e.cylinders] ?? 0) - (diesel ? 7 : 0),
+    // A V6 is not self-balancing like a straight six.
+    smoothness: (SMOOTHNESS[e.cylinders] ?? 0) - (e.cylinders === 6 && e.layout === 'v' ? 3 : 0) - (diesel ? 7 : 0),
     knockLimit: kl,
     knocking,
     taxHp: racHp(e),
