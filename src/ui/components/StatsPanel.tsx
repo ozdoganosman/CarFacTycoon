@@ -189,7 +189,7 @@ export function StatsPanel(props: {
           )}
         </div>
       )}
-      {!props.compact && <CostBreakdown design={design} st={st} ci={ci} yf={yf} rough={!!est} />}
+      {!props.compact && <CostBreakdown design={design} st={st} ci={ci} yf={yf} rough={!!est} segment={segment} hq={hq} />}
     </div>
   );
 }

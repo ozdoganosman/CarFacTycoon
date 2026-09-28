@@ -14,6 +14,7 @@ import type { ComponentKey, GameState, MarketId, Project, ProjectPhase, TestId, 
 import { store, useGameState } from '../store';
 import { money, num, pctOf, recentProfit } from '../format';
 import { inYear } from '../format';
+import { pctWith } from '../../core/turkish';
 import { Badge, Button, Choice, NumberInput, Panel, Progress, Slider, Toggle } from '../components/ui';
 import { newEstimate } from '../../core/estimate';
 import { launchBudget } from '../../core/budget';
@@ -81,7 +82,7 @@ export function ProjectView({ projectId }: { projectId: string }) {
         </>
       )}
       {p.phase === 'testing' && <Testing p={p} />}
-      {p.phase === 'production' && <Production p={p} />}
+      {p.phase === 'production' && <Production key={p.id} p={p} />}
       {p.phase === 'ready' && (s.lines.some((l) => l.id === p.lineId) ? <Launch key={p.id} p={p} /> : <NoLine p={p} />)}
     </div>
   );
@@ -111,6 +112,7 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
     .sort((a, b) => a - b);
   // Without a line (or one still being built) every car the buyers want is counted.
   const noLine = cap <= 0.01;
+  const segWeekly = markets.reduce((a, mk) => a + weeklySegmentDemand(mk, p.segment, yf), 0);
   const d = demandAt(price);
   const lo = d / spread;
   const hi = d * spread;
@@ -152,7 +154,9 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
         </p>
       )}
       <p className="small">
-        Bu fiyatta tahmini talep: <b>{lo.toFixed(1)}–{hi.toFixed(1)} araç/hafta</b> · hat {cap.toFixed(1)} araç/hafta. {verdict}
+        Bu fiyatta tahmini talep: <b>{lo.toFixed(1)}–{hi.toFixed(1)} araç/hafta</b>
+        {segWeekly > 0 && ` (sınıfın ~${pctWith(d / segWeekly, 'poss')})`} · hat {cap.toFixed(1)} araç/hafta. {verdict}
+        {segWeekly > 0 && d / segWeekly > 0.4 && ' Sınıfın bu kadarını tek bir araba nadiren alır: bayiler, üretim ve rakiplerin yanıtı payı sınırlar; tahmini iyimser say.'}
       </p>
       <table className="table compact">
         <thead>
@@ -379,7 +383,13 @@ function Production({ p }: { p: Project }) {
   const workshop = workshopLineCost(s.week);
   const reserved = reservedLines(s, p.id);
   // Build a line and pick it for this car at once.
-  const buildAndPick = (build: (st: GameState) => { ok: boolean; error?: string }, msg: string) => {
+  const buildAndPick = async (build: (st: GameState) => { ok: boolean; error?: string }, msg: string, what: string, cost: number, weeks: number) => {
+    const yes = await store.ask({
+      title: `${what} kurulsun mu?`,
+      body: `${money(cost)} şimdi ödenir; hat ${weeks} haftada kurulur ve bu arabaya seçilir. Kalıplar da bu sürede hazırlanabilir.`,
+      confirm: 'Kur',
+    });
+    if (!yes) return;
     if (store.try(build, msg)) {
       const lines = store.state?.lines ?? [];
       setLineId(lines[lines.length - 1]?.id);
@@ -495,10 +505,10 @@ function Production({ p }: { p: Project }) {
           })()}
           {!suggestedLine(s, p) && <p className="note small">Boşta hat yok: bütün hatlarda satıştaki bir araba ya da başka bir proje var. Bu araba için yeni bir hat kur.</p>}
           <div className="line-build">
-            <Button small kind="ghost" disabled={s.company.cash < workshop} onClick={() => buildAndPick((st2) => A.buildWorkshopLine(st2, undefined), 'Atölye hattı kuruluyor')}>
+            <Button small kind="ghost" disabled={s.company.cash < workshop} onClick={() => buildAndPick((st2) => A.buildWorkshopLine(st2, undefined), 'Atölye hattı kuruluyor', 'Küçük atölye hattı', workshop, Math.max(3, Math.round(lineBuildWeeks(yf) / 2)))}>
               + Küçük atölye hattı ({money(workshop)})
             </Button>
-            <Button small kind="ghost" disabled={s.company.cash < turnkey} onClick={() => buildAndPick((st2) => A.buildTurnkeyLines(st2, 1, undefined, false), 'Yeni hat kuruluyor')}>
+            <Button small kind="ghost" disabled={s.company.cash < turnkey} onClick={() => buildAndPick((st2) => A.buildTurnkeyLines(st2, 1, undefined, false), 'Yeni hat kuruluyor', 'Dengeli yeni hat', turnkey, lineBuildWeeks(yf))}>
               + Dengeli yeni hat ({money(turnkey)}, {lineBuildWeeks(yf)} hf)
             </Button>
           </div>

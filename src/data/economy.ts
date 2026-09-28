@@ -51,7 +51,7 @@ export const labourShare = (year: number) =>
 export const warPrice = (year: number) => (year >= 1914.6 && year < 1919 ? 1.18 : 1);
 export const priceLevel = (year: number) => costIndex(year) * warPrice(year);
 
-export const priceMarkup = (year: number) => interp([[1900, 1.42], [1908, 1.32], [1915, 1.22], [1930, 1.16], [1960, 1.15]], year);
+export const priceMarkup = (year: number) => interp([[1900, 1.42], [1908, 1.32], [1915, 1.22], [1930, 1.18], [1960, 1.18]], year);
 
 /** Tooling (dies, jigs) cost as a multiple of the car's material cost. */
 export const toolingMultiple = (year: number) => interp([[1900, 6], [1910, 12], [1920, 25], [1950, 40]], year);

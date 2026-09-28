@@ -296,13 +296,21 @@ export interface CarModel {
   /** Net spent by automatic capacity on this model so far. */
   autoSpent?: number;
   /** Why automatic capacity is not growing although buyers wait (last month). */
-  autoHold?: 'war' | 'margin' | 'cash' | 'payback' | 'full';
+  autoHold?: 'war' | 'margin' | 'cash' | 'payback' | 'full' | 'successor';
+  /** What would make growth pay (set with autoHold 'payback'). */
+  autoHint?: string;
+  /** Buyers' demand smoothed over the last months (for building). */
+  demandTrend?: number;
+  /** The model's share of its class over the last months (all markets it is sold in). */
+  shareTrend?: number;
   lowDemandMonths?: number;
   inventory: number;
   suppliers: Record<ComponentKey, SupplierChoice>;
   defects: Defect[];
   testWeeks: number;
   unitsBuilt: number;
+  /** Production know-how carried over from the generation it replaced (counts like cars built for costs). */
+  experience?: number;
   unitsSold: number;
   soldByMarket: Record<MarketId, number>;
   revenueTotal: number;
@@ -411,7 +419,7 @@ export type ModalItem =
   | { kind: 'unlock'; title: string; body: string }
   | { kind: 'insolvency'; stage: 'first' | 'last' }
   /** The company stands still: a design left on the desk, or no new car coming while the range ages. Stops the clock. */
-  | { kind: 'stall'; reason: 'design' | 'idle'; projectId?: string }
+  | { kind: 'stall'; reason: 'design' | 'idle' | 'polish'; projectId?: string }
   /** Research finished (and what started next from the queue): a corner note that does not stop the clock. */
   | { kind: 'research'; done: string[]; started: string[] }
   | { kind: 'gameOver' };

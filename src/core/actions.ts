@@ -399,6 +399,8 @@ export function startTooling(s: GameState, pid: string, lineId: string, tier: To
   const p = project(s, pid);
   if (p.phase !== 'production') return fail('Proje üretim hazırlığında değil.');
   if (p.productionReadyWeek !== undefined) return fail('Kalıp hazırlığı zaten başladı.');
+  if (!s.lines.some((l) => l.id === lineId)) return fail('Hat bulunamadı.');
+  if (reservedLines(s, pid).has(lineId)) return fail('Bu hat başka bir projeye ayrıldı: başka bir hat seç ya da yeni hat kur.');
   const q = toolingQuote(s, p, lineId, tier);
   if (o.vendorCredit) {
     if (s.company.reputation < 5) return fail('Kalıpçılar bu itibarla vadeli iş kabul etmiyor.');
@@ -583,6 +585,9 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
       m.unitsBuilt = tp;
     }
   }
+  // The same works, suppliers and men: a new generation keeps part of what its predecessor learned.
+  const prev = p.replacesModelId ? s.models.find((x) => x.id === p.replacesModelId) : undefined;
+  if (prev) m.experience = 0.3 * (prev.unitsBuilt + (prev.experience ?? 0));
   s.models.push(m);
   s.projects = s.projects.filter((x) => x.id !== p.id);
   const reviews = writeReviews(s, m, rng);

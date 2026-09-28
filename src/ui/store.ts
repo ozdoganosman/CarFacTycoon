@@ -174,6 +174,13 @@ class GameStore {
     this.notify();
   }
 
+  /** The player goes on to work that needs the clock stopped (a project screen): forget any pending auto-resume. */
+  keepPaused() {
+    this.resumeSpeed = null;
+    this.newsResume = null;
+    if (this.speed !== 0) this.run(0);
+  }
+
   /** The player's own choice of speed (also cancels a pending auto-resume). */
   setSpeed(speed: Speed) {
     this.resumeSpeed = null;

@@ -175,6 +175,7 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
                 <Button
                   kind="ghost"
                   onClick={() => {
+                    store.keepPaused();
                     store.act(A.dismissModal);
                     store.go({ id: 'project', projectId: p.id });
                   }}
@@ -185,6 +186,8 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
               <Button
                 kind="primary"
                 onClick={() => {
+                  // The next step is work on the project screen: the clock stays stopped.
+                  store.keepPaused();
                   store.act(A.dismissModal);
                   if (m.phase === 'development') store.try((st) => A.finishDevelopment(st, p.id));
                   else if (m.phase === 'testing') store.try((st) => A.finishTesting(st, p.id));
@@ -271,9 +274,10 @@ function CashFacts({ r, s }: { r: CashReport; s: GameState }) {
 }
 
 /** The company stands still: a design waiting on the desk, or no successor while the cars age. */
-function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idle'; projectId?: string }) {
+function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idle' | 'polish'; projectId?: string }) {
   const close = () => store.act(A.dismissModal);
   const go = (to: Parameters<typeof store.go>[0]) => {
+    store.keepPaused();
     store.act(A.dismissModal);
     store.go(to);
   };
@@ -282,6 +286,34 @@ function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idl
   const age = newest ? Math.floor((s.week - newest.refreshWeek) / 52) : 0;
   const lastYear = s.years[s.years.length - 1];
   const best = s.years.reduce((a, y) => Math.max(a, y.unitsSold), 0);
+  if (reason === 'polish') {
+    const p = s.projects.find((x) => x.id === projectId);
+    return (
+      <Modal
+        title="Cilalama sınıra ulaştı"
+        icon="✨"
+        actions={
+          <>
+            {p && (
+              <Button kind="primary" onClick={() => go({ id: 'project', projectId: p.id })}>
+                Projeye git
+              </Button>
+            )}
+            <Button kind="ghost" onClick={close}>
+              Tamam
+            </Button>
+          </>
+        }
+      >
+        <p>
+          <b>{p?.name ?? 'Proje'}</b> hedeflenen işin %160’ına ulaştı. Bundan sonrası arabaya bir şey katmaz; mühendisler boşuna çalışıyor ve lansman gecikiyor.
+        </p>
+        <p>
+          Projede <b>Prototipleri yap, teste geç</b>’e bas.
+        </p>
+      </Modal>
+    );
+  }
   if (reason === 'design') {
     const p = s.projects.find((x) => x.id === projectId);
     const weeks = p ? s.week - p.createdWeek : 0;

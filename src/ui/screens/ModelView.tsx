@@ -134,7 +134,7 @@ export function ModelView({ modelId }: { modelId: string }) {
                     {m.autoCapacity && m.autoHold && (
                       <span className="tone-warn">
                         {' '}
-                        Alıcılar bekliyor ama büyütmüyor: {AUTO_HOLD_TEXT[m.autoHold]}.
+                        Alıcılar bekliyor ama büyütmüyor: {AUTO_HOLD_TEXT[m.autoHold]}.{m.autoHint && <b> Çıkış yolu: {m.autoHint}.</b>}
                       </span>
                     )}
                   </>
@@ -333,6 +333,12 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
             <span>Yaş</span>
             <b className={mine.age < 0 ? 'tone-bad' : ''}>{mine.age.toFixed(1)}</b>
           </div>
+          {(mine.exclusive ?? 0) < 0 && (
+            <div title="Lüks ve spor arabayı alıcı farklı olmak için alır: sınıfın dörtte birinden fazlası aynı modeli sürünce çekiciliği azalır.">
+              <span>Herkeste var</span>
+              <b className="tone-bad">{(mine.exclusive ?? 0).toFixed(1)}</b>
+            </div>
+          )}
           <div>
             <span>Erişim</span>
             <b>{pct(mine.reach, 0)}</b>

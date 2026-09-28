@@ -97,6 +97,14 @@ export function customerLetters(s: GameState, m: CarModel, count = 3, rng: Rng =
   const good = ranked.filter((x) => x.d > 6);
   const bad = ranked.filter((x) => x.d < -6);
   const letters: Letter[] = [];
+  // Several buyers never write the very same sentence.
+  const used = new Set<string>();
+  const fresh = (list: string[]) => {
+    const left = list.filter((x) => !used.has(x));
+    const t = pick(rng, left.length ? left : list);
+    used.add(t);
+    return t;
+  };
   for (let i = 0; i < count; i++) {
     const names = NAMES[pick(rng, m.markets.length ? m.markets : [market])];
     const parts: string[] = [];
@@ -104,11 +112,11 @@ export function customerLetters(s: GameState, m: CarModel, count = 3, rng: Rng =
     const g = good[i % Math.max(1, good.length)];
     const b = bad[i % Math.max(1, bad.length)];
     if (g && (rng() < 0.75 || !b)) {
-      parts.push(pick(rng, PRAISE[g.k]));
+      parts.push(fresh(PRAISE[g.k]));
       score += 1;
     }
     if (b && (rng() < 0.6 || !g)) {
-      parts.push(pick(rng, COMPLAINT[b.k]));
+      parts.push(fresh(COMPLAINT[b.k]));
       score -= 1;
     }
     if (surfaced.length && rng() < 0.5) {
@@ -127,7 +135,7 @@ export function customerLetters(s: GameState, m: CarModel, count = 3, rng: Rng =
       parts.push('Artık yollarda daha yeni ve modern arabalar görüyorum; bizimki biraz eskidi.');
       score -= 0.5;
     }
-    if (!parts.length) parts.push(pick(rng, ['İşimi görüyor; ne şikâyetim var ne de övecek bir şeyim.', 'Sıradan ama dürüst bir otomobil.']));
+    if (!parts.length) parts.push(fresh(['İşimi görüyor; ne şikâyetim var ne de övecek bir şeyim.', 'Sıradan ama dürüst bir otomobil.']));
     const stars = Math.max(1, Math.min(5, Math.round(score + (rng() - 0.5) * 0.8)));
     letters.push({
       name: `${pick(rng, names.first)} ${pick(rng, names.last)}`,

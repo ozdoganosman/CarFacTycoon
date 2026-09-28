@@ -205,6 +205,8 @@ export interface Offer {
   hype: number;
   /** Negative: how dated the design looks. */
   age: number;
+  /** Negative: a luxury or sports car everybody drives is no longer special. */
+  exclusive?: number;
   reach: number;
   utility: number;
   weight: number;
@@ -220,7 +222,8 @@ export function playerOffer(state: GameState, model: CarModel, market: MarketId)
   const reach = playerReach(state, market);
   const hype = model.hype * HYPE_WEIGHT;
   const age = datedPenalty(modelAgeYears(model, state.week));
-  const utility = appealUtility(ap[market]) + pt + brand + hype + age;
+  const exclusive = exclusivityPenalty(model);
+  const utility = appealUtility(ap[market]) + pt + brand + hype + age + exclusive;
   return {
     kind: 'player',
     id: model.id,
@@ -232,10 +235,21 @@ export function playerOffer(state: GameState, model: CarModel, market: MarketId)
     brand,
     hype,
     age,
+    exclusive,
     reach,
     utility,
     weight: offerWeight(reach, utility),
   };
+}
+
+/**
+ * A luxury or sports car is bought to stand out: once a quarter of the class drives the same model it
+ * loses its allure (on the model's share of the class over the last months).
+ */
+export function exclusivityPenalty(model: Pick<CarModel, 'segment' | 'shareTrend'>): number {
+  if (model.segment !== 'luxury' && model.segment !== 'sport') return 0;
+  const over = (model.shareTrend ?? 0) - 0.25;
+  return over > 0 ? -30 * over : 0;
 }
 
 export function rivalOffer(state: GameState, rm: RivalModel, market: MarketId): Offer {

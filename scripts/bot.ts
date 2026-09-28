@@ -6,7 +6,7 @@ import { maxGears } from '../src/data/tech';
 import { STATIONS } from '../src/data/stations';
 import { availableSegments, credit, dealerUpgradeCost, materialUnitCost, tick } from '../src/core/game';
 import { costIndex, newLineCost } from '../src/data/economy';
-import { lineReport, lineUpkeep, modernizeQuote, stationPrice, turnkeyLineCost, planBalancedLine, emptyLine } from '../src/core/factory';
+import { lineReport, lineUpkeep, modernizeQuote, reservedLines, stationPrice, turnkeyLineCost, planBalancedLine, emptyLine } from '../src/core/factory';
 import { demandAtPrice, referencePrice } from '../src/core/market';
 import { MAX_SLOTS, DEALER_COMMISSION } from '../src/data/economy';
 import { eventDef } from '../src/data/events';
@@ -50,8 +50,9 @@ export function botStep(s: GameState, o: BotOptions = {}) {
     else if (p.phase === 'testing' && o.testWeeks !== undefined && o.testWeeks === 0) A.finishTesting(s, p.id);
     else if (p.phase === 'testing' && Object.values(p.tests).every((t) => t.done >= t.planned)) A.finishTesting(s, p.id);
     else if (p.phase === 'production' && p.productionReadyWeek === undefined) {
-      let line = s.lines.find((l) => !s.models.some((m) => m.id === l.modelId && m.status === 'active'));
-      if (p.replacesModelId) line = s.lines.find((l) => l.modelId === p.replacesModelId) ?? line;
+      const taken = reservedLines(s, p.id);
+      let line = s.lines.find((l) => !taken.has(l.id) && !s.models.some((m) => m.id === l.modelId && m.status === 'active'));
+      if (p.replacesModelId) line = s.lines.find((l) => l.modelId === p.replacesModelId && !taken.has(l.id)) ?? line;
       if (!line) {
         if (A.buyLine(s).ok) line = s.lines[s.lines.length - 1];
         for (const stage of ['press', 'body', 'paint', 'assembly'] as const) {

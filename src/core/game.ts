@@ -215,14 +215,15 @@ export function protoUnitCost(p: Project, yf: number): number {
   return p.protoUnitCost ?? computeCarStats(p.design, yf, p.bonus).unitCost;
 }
 
-export function materialUnitCost(s: GameState, model: Pick<CarModel, 'stats' | 'suppliers' | 'unitsBuilt' | 'tooling'>): number {
+export function materialUnitCost(s: GameState, model: Pick<CarModel, 'stats' | 'suppliers' | 'unitsBuilt' | 'tooling' | 'experience'>): number {
   const yf = yearFloat(s.week);
   let cost = model.stats.unitCost * toolingDef(model.tooling).materialMult;
   for (const k of Object.keys(model.suppliers) as ComponentKey[]) {
     const mult = SUPPLIERS.find((x) => x.id === model.suppliers[k])!.costMult;
     cost += model.stats.componentCost[k] * (mult - 1);
   }
-  const learning = Math.max(0.9, Math.pow(1 + model.unitsBuilt / 2000, -0.04));
+  // Volume makes cars cheaper (jigs, purchasing, practice): a model built by the tens of thousands costs about 12% less.
+  const learning = Math.max(0.88, Math.pow(1 + (model.unitsBuilt + (model.experience ?? 0)) / 4000, -0.05));
   const war = s.flags.materialsUntil && yf < s.flags.materialsUntil && yf >= 1914.6 ? 1.25 : 1;
   return cost * costIndex(yf) * learning * war;
 }
@@ -433,7 +434,16 @@ function checkStall(s: GameState) {
     pushModal(s, { kind: 'stall', reason: 'design', projectId: waiting.id });
     return;
   }
+  // A car developed far past its target gains nothing more: the engineers could be testing it.
+  const polished = s.projects.find((p) => p.phase === 'development' && p.dev.done >= p.dev.required * 1.6);
+  if (polished && !s.flags[`stallPolish:${polished.id}`]) {
+    s.flags[`stallPolish:${polished.id}`] = s.week;
+    pushModal(s, { kind: 'stall', reason: 'polish', projectId: polished.id });
+    return;
+  }
   if (s.projects.length) return;
+  // While the lines work for the army there is no civilian car to bring out.
+  if ((s.flags.militaryUntil ?? 0) > yearFloat(s.week)) return;
   const active = s.models.filter((m) => m.status === 'active');
   const newest = active.length ? Math.max(...active.map((m) => m.refreshWeek)) : -1;
   const aging = active.length ? s.week - newest >= 4 * 52 : s.week >= 13;
@@ -755,7 +765,11 @@ function monthly(s: GameState) {
     if (model.status !== 'active') continue;
     const recent = modelFieldUnits(model, 4);
     if (recent <= 0) continue;
-    for (const line of customerFeedback(s, model, rng)) log(s, line.text, line.tone === 'info' ? 'info' : line.tone, 'buyers');
+    // One entry per car a month: what its buyers say, together.
+    const lines = customerFeedback(s, model, rng);
+    if (!lines.length) continue;
+    const tone = lines.some((l) => l.tone === 'bad') ? (lines.some((l) => l.tone === 'good') ? 'info' : 'bad') : lines.some((l) => l.tone === 'good') ? 'good' : 'info';
+    log(s, lines.map((l) => l.text).join(' '), tone, 'buyers');
   }
 }
 

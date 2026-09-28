@@ -26,7 +26,8 @@ import { FOCUS_KEYS, bonusFromPoints, teamOutput } from '../src/core/development
 import { experienceFactor } from '../src/core/estimate';
 import { autoCapacity } from '../src/core/autocap';
 import { stationDef } from '../src/data/stations';
-import { appealUtility } from '../src/core/market';
+import { appealUtility, exclusivityPenalty } from '../src/core/market';
+import { customerLetters } from '../src/core/letters';
 import { engineNotes, gearboxNotes } from '../src/core/engineNotes';
 import { CYLINDER_OPTIONS } from '../src/data/tech';
 import type { FocusKey } from '../src/core/types';
@@ -496,11 +497,18 @@ describe('engineering', () => {
     runBot(s, 52 * 2, { segments: ['family'] });
     const m = s.models.find((x) => x.status === 'active')!;
     A.setModelAutoCapacity(s, m.id, true);
-    m.lastDemand = { usa: 60, europe: 0 };
     s.company.cash = 5e6;
+    const capOf = () => s.lines.filter((l) => l.modelId === m.id).reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
+    // A sudden spike (launch buzz) is not built for at once...
+    m.lastDemand = { usa: 60, europe: 0 };
+    m.demandTrend = 5;
+    const before = capOf();
     autoCapacity(s, () => 100);
-    const cap = s.lines.filter((l) => l.modelId === m.id).reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
-    expect(cap).toBeGreaterThan(45);
+    expect(capOf()).toBeLessThan(before + 10);
+    // ...demand that lasts is.
+    m.demandTrend = 60;
+    autoCapacity(s, () => 100);
+    expect(capOf()).toBeGreaterThan(45);
   });
 });
 
@@ -760,3 +768,61 @@ describe('money that matters', () => {
     expect(sales.points).toBeLessThanOrEqual(400);
   });
 });
+
+describe('report fb96772', () => {
+  it('dies cannot be ordered for a line another project has claimed', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 31 });
+    s.modals = [];
+    runBot(s, 52 * 2, { segments: ['family'] });
+    const r = A.startProject(s, { name: 'İkinci', segment: 'city', targetPrice: 0 });
+    const p = s.projects.find((x) => r.ok && x.id === r.id)!;
+    p.phase = 'production';
+    const claimed = s.lines[0];
+    s.projects.push({ ...p, id: 'pOther', lineId: claimed.id } as (typeof s.projects)[number]);
+    const res = A.startTooling(s, p.id, claimed.id);
+    expect(res.ok).toBe(false);
+  });
+
+  it('a luxury car most of the class drives loses its allure; a family car does not', () => {
+    expect(exclusivityPenalty({ segment: 'luxury', shareTrend: 0.2 })).toBe(0);
+    expect(exclusivityPenalty({ segment: 'luxury', shareTrend: 0.7 })).toBeLessThan(-10);
+    expect(exclusivityPenalty({ segment: 'family', shareTrend: 0.7 })).toBe(0);
+  });
+
+  it('volume makes a car cheaper, up to about 12%', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 32 });
+    runBot(s, 52 * 3, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active')!;
+    const at = (units: number) => materialUnitCost(s, { ...m, unitsBuilt: units, experience: 0 });
+    expect(at(30_000) / at(0)).toBeLessThan(0.92);
+    expect(at(5_000_000) / at(0)).toBeCloseTo(0.88, 5);
+  });
+
+  it('buyers writing in the same month do not repeat each other', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 33 });
+    runBot(s, 52 * 3, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active')!;
+    for (let k = 0; k < 20; k++) {
+      s.week += 4;
+      const sentences = customerLetters(s, m, 3).flatMap((l) => l.text.split(/(?<=[.!?])\s+/));
+      const counted = sentences.filter((x) => !x.startsWith('Bir derdim var'));
+      expect(new Set(counted).size).toBe(counted.length);
+    }
+  });
+
+  it('the standing-still warning keeps quiet while the lines work for the army', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 34 });
+    runBot(s, 52 * 3, { segments: ['family'] });
+    s.projects = [];
+    s.modals = [];
+    for (const m of s.models) m.refreshWeek = s.week - 5 * 52;
+    s.flags.militaryUntil = yearFloatOf(s.week) + 2;
+    s.flags.stallIdle = -1e6;
+    for (let i = 0; i < 8; i++) tick(s);
+    expect(s.modals.some((m) => m.kind === 'stall')).toBe(false);
+  });
+});
+
+function yearFloatOf(week: number) {
+  return 1900 + week / 52;
+}

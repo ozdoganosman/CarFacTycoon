@@ -1,6 +1,7 @@
 import { labourShare } from '../../data/economy';
 import { BODIES, CHASSIS, FEATURES, GEARBOX_TYPES, SUSPENSIONS, VALVETRAINS, byId } from '../../data/tech';
-import type { CarDesign, CarStats, CostPart } from '../../core/types';
+import type { CarDesign, CarStats, CostPart, MarketId, SegmentId } from '../../core/types';
+import { eraReference } from '../../core/scoring';
 import { money } from '../format';
 import { Info } from './ui';
 
@@ -42,7 +43,11 @@ function drivers(design: CarDesign, st: CarStats): Record<CostPart, string> {
 }
 
 /** The unit cost taken apart, biggest first, so the designer sees where money can be saved. */
-export function CostBreakdown({ design, st, ci, yf, rough }: { design: CarDesign; st: CarStats; ci: number; yf: number; rough: boolean }) {
+export function CostBreakdown({ design, st, ci, yf, rough, segment, hq }: { design: CarDesign; st: CarStats; ci: number; yf: number; rough: boolean; segment: SegmentId; hq: MarketId }) {
+  // The class's typical car: what the rivals' prices are built on.
+  const typical = eraReference(yf, segment).byMarket[hq].unitCost * ci;
+  const mine = st.unitCost * ci;
+  const vsClass = mine / typical - 1;
   const parts = (Object.keys(st.costParts) as CostPart[]).map((k) => ({ k, v: st.costParts[k] * ci })).filter((p) => p.v > 0.5);
   const labour = st.unitCost * ci * labourShare(yf) * 0.8;
   const total = parts.reduce((a, p) => a + p.v, 0) + labour;
@@ -59,7 +64,13 @@ export function CostBreakdown({ design, st, ci, yf, rough }: { design: CarDesign
           {' '}
           en büyük kalem: {top ? `${NAMES[top.k].toLowerCase()} (${pct(top.v / total)})` : '—'}
         </span>
+        <span className={`small cost-bd-class ${vsClass > 0.1 ? 'tone-bad' : vsClass < -0.05 ? 'tone-good' : 'muted'}`}>
+          {' '}
+          · sınıfın tipik arabası ~{money(typical)} malzeme, seninki {approx}
+          {money(mine)} ({vsClass >= 0 ? '+' : '−'}%{Math.round(Math.abs(vsClass) * 100)})
+        </span>
         <Info>
+          <p>Rakiplerin fiyatları kendi maliyetlerine göre konur: malzemesi sınıfın tipik arabasından çok pahalı bir araba, sınıf fiyatında satılırsa az kâr bırakır ya da zarar eder.</p>
           <p>Mühendislerin orta tahmini, araç başına ve bugünün fiyatlarıyla. Bir kalemi düşürmek için yanında yazan seçimi değiştir.</p>
           <p>Kesin rakamı üretim hazırlığında tedarikçiler verir; ucuz tedarikçi ya da kendi atölyen motor, şanzıman ve elektriği ucuzlatır. İşçiliği hattaki makineler ve üretim zorluğu belirler.</p>
         </Info>
