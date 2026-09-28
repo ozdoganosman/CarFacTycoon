@@ -9,6 +9,8 @@ import { money, num, pctOf } from '../format';
 import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table } from '../components/ui';
 
 /** What the money is for: a racing team, buying rivals, and the company's worth. */
+import { TeamPanel } from '../components/TeamPanel';
+
 export function Company() {
   const s = useGameState();
   const yf = yearFloat(s.week);
@@ -24,7 +26,7 @@ export function Company() {
       <div className="screen-head">
         <div>
           <h1>Şirket</h1>
-          <p className="muted">Kazandığın parayı markayı büyütmek için kullan: yarışlarda ün kazan, küçük rakipleri satın al.</p>
+          <p className="muted">Mühendis al, kazandığın parayı markayı büyütmek için kullan: yarışlarda ün kazan, küçük rakipleri satın al.</p>
         </div>
       </div>
       <div className="stats-row">
@@ -44,6 +46,7 @@ export function Company() {
         <Stat label="Yarış ünü" value={r.fame.toFixed(1)} sub={`bütün modellere prestij +${racingPrestige(s).toFixed(1)}`} />
         <Stat label="Yarış zaferi" value={r.wins ?? 0} />
       </div>
+      <TeamPanel />
       <div className="grid-2">
         <Panel title="Yarış takımı">
           {!racingOpen ? (

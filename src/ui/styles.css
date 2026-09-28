@@ -3796,3 +3796,27 @@ fieldset {
 .line-taken .line-pick {
   margin-top: 6px;
 }
+.team-head {
+  margin-top: 0;
+}
+.team-count {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+}
+.team-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.hq-side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  min-width: 0;
+}
+.dev-bar-hire-btns {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}

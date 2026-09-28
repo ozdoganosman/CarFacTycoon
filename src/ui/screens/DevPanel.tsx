@@ -64,15 +64,31 @@ export function DevBar({ project: p }: { project: Project }) {
           </>
         )}
       </div>
-      {!done && faster && weeksNow >= 8 && (
+      {!done && (
         <div className="dev-bar-hire small">
           <span>
-            <b>Daha çabuk:</b> +{faster.n} mühendisle ~{faster.weeks} hafta ({weeksNow} yerine). Maaşları yılda ~{money(faster.n * engineerSalary(yf) * 52)}, işe alma{' '}
-            {money(faster.n * 40 * costIndex(yf))}. Kalabalık ekip orantılı hızlanmaz: bir arabada bir düzineden fazlası birbirini bekler.
+            <b>Ekip: {s.company.engineers} mühendis.</b>{' '}
+            {faster && weeksNow >= 8 ? (
+              <>
+                +{faster.n} mühendisle ~{faster.weeks} hafta ({weeksNow} yerine); maaşları yılda ~{money(faster.n * engineerSalary(yf) * 52)}.
+              </>
+            ) : (
+              <>Daha çok mühendis geliştirmeyi hızlandırır; bir arabada bir düzineden fazlası orantılı hızlandırmaz.</>
+            )}
           </span>
-          <Button small disabled={s.company.cash < faster.n * 40 * costIndex(yf)} onClick={() => store.try((st) => A.hireEngineers(st, faster.n), `${faster.n} mühendis işe alındı`)}>
-            +{faster.n} mühendis al
-          </Button>
+          <span className="dev-bar-hire-btns">
+            <Button small disabled={s.company.cash < 40 * costIndex(yf)} onClick={() => store.try((st) => A.hireEngineers(st, 1), '1 mühendis işe alındı')}>
+              +1 mühendis al
+            </Button>
+            <Button
+              small
+              kind={faster && weeksNow >= 8 ? 'primary' : undefined}
+              disabled={s.company.cash < (faster?.n ?? 5) * 40 * costIndex(yf)}
+              onClick={() => store.try((st) => A.hireEngineers(st, faster?.n ?? 5), `${faster?.n ?? 5} mühendis işe alındı`)}
+            >
+              +{faster?.n ?? 5}
+            </Button>
+          </span>
         </div>
       )}
       {!done && <BudgetLine b={launchBudget(s, p)} />}

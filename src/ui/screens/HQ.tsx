@@ -13,6 +13,8 @@ import { Badge, Button, Empty, Panel, Progress, Stat, Table } from '../component
 import { LineChart } from '../viz/LineChart';
 import { NewsArchive } from '../components/Newspaper';
 import { PHASE_LABEL, projectProgress } from './Projects';
+import { TeamPanel } from '../components/TeamPanel';
+import { devWeeksLeft } from '../../core/budget';
 
 export function weeklySold(m: CarModel, weeks = 4) {
   const h = m.history.slice(-weeks);
@@ -26,6 +28,11 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
   }
   for (const p of s.projects) {
     if (p.phase === 'design') out.push({ text: `${p.name}: tasarımı bitir ve geliştirmeyi başlat.`, go: () => store.go({ id: 'project', projectId: p.id }) });
+    // A long development with a small team: say how much sooner more engineers would finish it.
+    const left = devWeeksLeft(s, p);
+    const faster = devWeeksLeft(s, p, 5);
+    if (left >= 26 && faster <= left * 0.75)
+      out.push({ text: `${p.name} geliştirmesi ~${left} hafta sürecek; 5 mühendis daha alırsan ~${faster} hafta. Mühendisleri bu sayfadaki “Mühendislik ekibi” kutusundan al.` });
     if (p.phase === 'development' && p.dev.done >= p.dev.required) out.push({ text: `${p.name}: geliştirme bitti, teste geç.`, go: () => store.go({ id: 'project', projectId: p.id }) });
     if (p.phase === 'production' && p.productionReadyWeek === undefined) out.push({ text: `${p.name}: tedarikçileri ve üretim hattını seç.`, go: () => store.go({ id: 'project', projectId: p.id }) });
     if (p.phase === 'ready') out.push({ text: `${p.name}: lansman zamanı!`, go: () => store.go({ id: 'project', projectId: p.id }) });
@@ -176,6 +183,7 @@ export function HQ() {
           )}
         </Panel>
 
+        <div className="hq-side">
         <Panel title="Projeler" actions={<Button small onClick={() => store.go({ id: 'projects' })}>Tümü</Button>}>
           {s.projects.length ? (
             <div className="mini-list">
@@ -198,6 +206,8 @@ export function HQ() {
             </Empty>
           )}
         </Panel>
+        <TeamPanel compact />
+        </div>
       </div>
 
       <Panel title="Satıştaki modeller" actions={<Button small onClick={() => store.go({ id: 'models' })}>Ayrıntılar</Button>}>

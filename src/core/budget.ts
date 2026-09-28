@@ -40,17 +40,19 @@ export function operatingWeekly(s: GameState): number {
   return recent.reduce((a, f) => a + f.revenue - keys.reduce((b, k) => b + (f[k] ?? 0), 0), 0) / recent.length;
 }
 
+/** Weeks of development left for a project, with `extra` engineers hired (the whole team shares the projects in development). */
+export function devWeeksLeft(s: GameState, p: Project, extra = 0): number {
+  if (p.phase !== 'design' && p.phase !== 'development') return 0;
+  const sharing = s.projects.filter((x) => x.phase === 'development' && x.id !== p.id).length + 1;
+  const rate = devRate((s.company.engineers + extra) / sharing, s.company.skill);
+  const required = p.phase === 'design' ? requiredWork(s, p) : p.dev.required;
+  return Math.ceil(Math.max(0, required - p.dev.done) / Math.max(0.1, rate));
+}
+
 export function launchBudget(s: GameState, p: Project): LaunchBudget {
   const yf = yearFloat(s.week);
   const stats = computeCarStats(p.design, yf, p.bonus ?? NO_BONUS);
-  // Development: the whole team shares the projects in development.
-  let devWeeks = 0;
-  if (p.phase === 'design' || p.phase === 'development') {
-    const sharing = s.projects.filter((x) => x.phase === 'development' && x.id !== p.id).length + 1;
-    const rate = devRate(s.company.engineers / sharing, s.company.skill);
-    const required = p.phase === 'design' ? requiredWork(s, p) : p.dev.required;
-    devWeeks = Math.ceil(Math.max(0, required - p.dev.done) / Math.max(0.1, rate));
-  }
+  const devWeeks = devWeeksLeft(s, p);
   const protos = p.phase === 'design' || p.phase === 'development' ? (p.kind === 'facelift' ? 1 : 3) * materialUnitCost(s, { stats, suppliers: p.suppliers, unitsBuilt: 0 }) : 0;
   // Tests run side by side; each costs its weeks.
   let tests = 0;

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import * as A from '../../core/actions';
-import { credit, engineersBusy, COST_KEYS } from '../../core/game';
+import { credit, COST_KEYS } from '../../core/game';
 import { yearFloat } from '../../core/time';
-import { costIndex, engineerSalary } from '../../data/economy';
+import { costIndex } from '../../data/economy';
 import { store, useGameState } from '../store';
 import { COST_NAMES, money, signedMoney } from '../format';
+import { TeamPanel } from '../components/TeamPanel';
 import { Button, NumberInput, Panel, Stat, Table } from '../components/ui';
 import { BarChart } from '../viz/LineChart';
 
@@ -19,7 +20,6 @@ export function Finance() {
   const revenue = last.reduce((a, f) => a + f.revenue, 0);
   const auto = last.reduce((a, f) => a + (f.auto ?? 0), 0);
   const operating = revenue - COST_KEYS.filter((k) => k !== 'investment').reduce((a, k) => a + sums[k], 0);
-  const busy = engineersBusy(s);
   return (
     <div className="screen">
       <div className="screen-head">
@@ -44,19 +44,7 @@ export function Finance() {
           </div>
           <p className="muted small">Kasa 12 hafta üst üste ekside kalırsa şirket iflas eder. Buhran yıllarında (1930-33) bankalar limiti yarıya indirir ve faizi artırır.</p>
         </Panel>
-        <Panel title="Personel">
-          <p>
-            <b>{s.company.engineers}</b> mühendis ({busy} projede) · maaş {money(engineerSalary(yf))}/hafta · beceri <b>{Math.round(s.company.skill)}</b>
-          </p>
-          <div className="row">
-            <Button onClick={() => store.try((st) => A.hireEngineers(st, 1))}>+1 işe al ({money(40 * costIndex(yf))})</Button>
-            <Button onClick={() => store.try((st) => A.hireEngineers(st, 5))}>+5 işe al</Button>
-            <Button kind="ghost" onClick={() => store.try((st) => A.fireEngineers(st, 1))}>
-              −1 çıkar
-            </Button>
-          </div>
-          <p className="muted small">Beceri her lansmanla artar. Çok hızlı büyümek yeni gelenler yüzünden ortalama tecrübeyi biraz düşürür.</p>
-        </Panel>
+        <TeamPanel compact />
       </div>
       <Panel title="Yıllık faaliyet kârı">
         <BarChart
