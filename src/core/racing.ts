@@ -121,6 +121,7 @@ export function raceSeason(s: GameState) {
   if (result === 'win') {
     r.fame += FAME.win[r.level];
     r.wins = (r.wins ?? 0) + 1;
+    (r.winYears ??= []).push(year);
     s.company.reputation = clamp(s.company.reputation + [0, 0.5, 1.5, 3][r.level], 0, 100);
     log(s, `🏁 ${s.company.name} ${car.m.name} ile ${race}’i kazandı! Marka ünü arttı.`, 'good');
     if (r.level >= 2) publishWin(s, car.m, race);

@@ -126,7 +126,7 @@ export function botStep(s: GameState, o: BotOptions = {}) {
     const stage = r.bottleneck;
     const best = STATIONS.filter((x) => x.stage === stage && x.year <= yf).sort((a, b) => b.capacity - a.capacity)[0];
     const cost = stationPrice(best.id, s.week);
-    if (s.company.cash > cost * 2.5) {
+    if (s.company.cash - (s.company.taxOwed ?? 0) > cost * 2.5) {
       if (line.stations[stage].length >= line.slots) {
         const worst = line.stations[stage].map((id, i) => ({ id, i, cap: STATIONS.find((x) => x.id === id)!.capacity })).sort((a, b) => a.cap - b.cap)[0];
         if (worst && worst.cap < best.capacity) {
@@ -153,13 +153,13 @@ export function botStep(s: GameState, o: BotOptions = {}) {
         return [...designTech(typical), ...(typical.knowhow ?? [])];
       }),
     );
-    const byCost = (a: (typeof open)[number], b: (typeof open)[number]) => researchCost(a, yf) - researchCost(b, yf);
+    const byCost = (a: (typeof open)[number], b: (typeof open)[number]) => researchCost(a, yf, s) - researchCost(b, yf, s);
     const ready = open.filter((d) => missingRequirements(s, d.id).length === 0);
     const want = ready.filter((d) => needed.has(d.id)).sort(byCost)[0];
     // Research is dear: beyond what the class needs, only cheap know-how, and only from a full till.
     const other = ready.filter((d) => d.passive).sort(byCost)[0];
     const spare = s.company.cash - 150_000 * costIndex(yf); // a year's cushion stays in the bank
-    const affordable = (d: typeof want, share: number) => !!d && researchCost(d, yf) < share * s.company.cash && researchCost(d, yf) < spare;
+    const affordable = (d: typeof want, share: number) => !!d && researchCost(d, yf, s) < share * s.company.cash && researchCost(d, yf, s) < spare;
     if (affordable(want, 0.15)) A.startResearch(s, want!.id);
     else if (affordable(other, 0.02)) A.startResearch(s, other!.id);
   }
@@ -230,7 +230,7 @@ function smartFactoryAndPrices(s: GameState) {
     const each = turnkeyLineCost(s.week, true) + A.retoolCost(s, m);
     const margin = m.price * (1 - DEALER_COMMISSION) - unit;
     const extra = Math.min(perLine, demand - soon);
-    if (extra > 0 && extra * margin * 52 > each && s.company.cash > each * 1.5) A.buildTurnkeyLines(s, 1, m.id, true);
+    if (extra > 0 && extra * margin * 52 > each && s.company.cash - (s.company.taxOwed ?? 0) > each * 1.5) A.buildTurnkeyLines(s, 1, m.id, true);
     if (demand > soon * 1.1) {
       for (const l of lines) {
         const q = modernizeQuote(l, s.week, true);

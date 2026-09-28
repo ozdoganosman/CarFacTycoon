@@ -79,7 +79,7 @@ export function Company() {
                 })}
               />
               <p className="small">Ün</p>
-              <Progress value={Math.min(8, r.fame)} max={8} label={`${r.fame.toFixed(1)} / 8`} />
+              <Progress value={Math.min(8, r.fame)} max={8} label={`${Math.min(8, r.fame).toFixed(1)} / 8${r.fame > 8 ? " (dolu)" : ""}`} />
               {r.last && (
                 <p className="small">
                   {r.last.year} sezonu, {r.last.race}: <b>{r.last.model}</b>{' '}

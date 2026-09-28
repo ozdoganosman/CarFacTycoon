@@ -30,6 +30,15 @@ export const skillFactor = (skill: number) => 0.6 + skill / 250;
 export const productivity = (skill: number) => 0.6 + skill / 100;
 
 /**
+ * A bigger team is faster, but not in proportion: past a dozen or so engineers on one car they wait
+ * for each other's drawings. Two engineers do the work of two; twenty the work of eight.
+ */
+export const teamOutput = (engineers: number) => (engineers <= 2 ? engineers : engineers / (1 + (engineers - 2) / 12));
+
+/** Work a project's team gets done per week. */
+export const devRate = (engineers: number, skill: number) => teamOutput(engineers) * productivity(skill);
+
+/**
  * Turns the development points spent per focus area into concrete improvements.
  * The effects are large (a car developed for power is a different car), with
  * diminishing returns per area; working past 100% keeps adding points.

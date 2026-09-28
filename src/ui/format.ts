@@ -51,5 +51,6 @@ export const COST_NAMES: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue' | 
   warranty: 'Garanti ve geri çağırma',
   interest: 'Kredi faizi',
   other: 'Genel gider, nakliye, depo',
+  tax: 'Kurumlar vergisi',
   investment: 'Yatırım (hat, kalıp, bayi)',
 };

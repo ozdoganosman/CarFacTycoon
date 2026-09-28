@@ -6,7 +6,7 @@ import { isBlockingModal, recordError } from '../core/util';
 import type { ModalItem } from '../core/types';
 
 /** After these the player has work to do, so the clock stays stopped once they are closed. */
-const STAY_PAUSED = new Set<ModalItem['kind']>(['phase', 'launch', 'launchReport', 'gameOver', 'insolvency']);
+const STAY_PAUSED = new Set<ModalItem['kind']>(['phase', 'launch', 'launchReport', 'gameOver', 'insolvency', 'stall']);
 import type { GameState } from '../core/types';
 
 // A tiny external store: the simulation mutates GameState in place and bumps a

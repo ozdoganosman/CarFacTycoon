@@ -12,7 +12,7 @@ export function BudgetLine({ b, compact }: { b: LaunchBudget; compact?: boolean 
       <span>
         <b>
           Lansmana kadar ~{b.weeks} hafta ·{' '}
-          {b.need > 0 ? `ihtiyaç ~${money(b.need)}` : `proje ~${money(b.protos + b.tests + b.tooling)}, satışlar karşılıyor`}
+          {b.need > 0 ? `ihtiyaç ~${money(b.need)}` : `proje ~${money(b.protos + b.tests + b.tooling + b.line)}, satışlar karşılıyor`}
         </b>
         <span className="muted small">
           {' '}
@@ -24,6 +24,7 @@ export function BudgetLine({ b, compact }: { b: LaunchBudget; compact?: boolean 
             {b.protos > 0 && <li>Prototipler: {money(b.protos)}</li>}
             {b.tests > 0 && <li>Test programı: {money(b.tests)}</li>}
             {b.tooling > 0 && <li>Kalıplar (seçili kalıp türüyle): {money(b.tooling)}</li>}
+            {b.line > 0 && <li>Yeni hat: boşta hat yok, en ucuzu küçük bir atölye hattı ({money(b.line)})</li>}
             <li>
               Bu {b.weeks} haftada şirketin kendi gideri ya da geliri: {running >= 0 ? `${money(running)} gider` : `${money(-running)} gelir`} (son iki ayın gidişatıyla: maaşlar, genel gider,
               satıştaki arabalar)

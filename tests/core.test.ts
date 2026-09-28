@@ -4,8 +4,8 @@ import { aiDesign, referenceBonus, referenceDesigns } from '../src/core/ai';
 import { computeEngine, displacementCc, eraRpmCap, racHp } from '../src/core/engine';
 import { researchCost, researchDef, researchDefs, researchScale, unknownTech } from '../src/core/research';
 import { KNOWHOW } from '../src/data/knowhow';
-import { costIndex } from '../src/data/economy';
-import { lineReport } from '../src/core/factory';
+import { capexScale, corporateTaxRate, costIndex } from '../src/data/economy';
+import { lineOffline, lineReport, nextLineName, reservedLines, stationPrice, suggestedLine } from '../src/core/factory';
 import { credit, finalScore, materialUnitCost, newGame, tick } from '../src/core/game';
 import { racingOutlook, racingPaused, setRacingLevel } from '../src/core/racing';
 import { pctWith, withSuffix } from '../src/core/turkish';
@@ -22,9 +22,11 @@ import type { CarDesign } from '../src/core/types';
 import { RIVALS } from '../src/data/rivals';
 import { SEGMENTS } from '../src/data/segments';
 import { inYear } from '../src/ui/format';
-import { FOCUS_KEYS, bonusFromPoints } from '../src/core/development';
+import { FOCUS_KEYS, bonusFromPoints, teamOutput } from '../src/core/development';
 import { experienceFactor } from '../src/core/estimate';
 import { autoCapacity } from '../src/core/autocap';
+import { stationDef } from '../src/data/stations';
+import { appealUtility } from '../src/core/market';
 import { engineNotes, gearboxNotes } from '../src/core/engineNotes';
 import { CYLINDER_OPTIONS } from '../src/data/tech';
 import type { FocusKey } from '../src/core/types';
@@ -642,5 +644,119 @@ describe('format', () => {
     expect(inYear(1940)).toBe('1940’ta');
     expect(inYear(1946)).toBe('1946’da');
     expect(inYear(1959)).toBe('1959’da');
+  });
+});
+
+describe('money that matters', () => {
+  it('plant gets dearer with mass production and a new line takes weeks to build', () => {
+    expect(capexScale(1900)).toBeLessThan(2);
+    expect(capexScale(1925)).toBeCloseTo(8, 5);
+    const week = 52 * 25;
+    expect(stationPrice('asm_moving', week) / (stationDef('asm_moving').cost * costIndex(1925))).toBeCloseTo(8, 5);
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 21 });
+    s.modals = [];
+    s.week = week;
+    s.company.cash = 1e8;
+    expect(A.buildTurnkeyLines(s, 1, undefined, false).ok).toBe(true);
+    const line = s.lines[s.lines.length - 1];
+    expect(lineOffline(s, line)).toBe(true);
+    s.week += 20;
+    expect(lineOffline(s, line)).toBe(false);
+  });
+
+  it('line names are never reused after a line is closed', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 22 });
+    s.company.cash = 1e7;
+    A.buyLine(s);
+    A.buyLine(s);
+    const second = s.lines[s.lines.length - 1].name;
+    s.lines = s.lines.filter((l) => l.name !== second);
+    expect(nextLineName(s)).not.toBe(s.lines[s.lines.length - 1].name);
+    const names = s.lines.map((l) => l.name);
+    expect(new Set(names).size).toBe(names.length);
+  });
+
+  it('corporate tax takes its share of a profitable year in instalments, and losses carry forward', () => {
+    expect(corporateTaxRate(1905, 'usa')).toBe(0);
+    expect(corporateTaxRate(1955, 'usa')).toBeCloseTo(0.52, 5);
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 23 });
+    s.modals = [];
+    s.years = [];
+    s.finance = [];
+    s.week = 52 * 20 - 1;
+    const f = (week: number, revenue: number, materials: number) => ({ week, revenue, materials, labor: 0, salaries: 0, dealers: 0, marketing: 0, rnd: 0, warranty: 0, interest: 0, other: 0, investment: 0, tax: 0 });
+    s.finance.push(f(52 * 19 + 10, 1_000_000, 500_000));
+    s.company.lossCarry = 100_000;
+    tick(s);
+    const taxable = 400_000;
+    const due = taxable * corporateTaxRate(1919, 'usa');
+    const paid = s.finance[s.finance.length - 1].tax;
+    expect(paid).toBeCloseTo(due / 4, 0);
+    expect(s.company.taxOwed).toBeCloseTo((due * 3) / 4, 0);
+    expect(s.company.lossCarry).toBe(0);
+  });
+
+  it('a bigger team is faster, but not in proportion', () => {
+    expect(teamOutput(2)).toBe(2);
+    expect(teamOutput(20)).toBeGreaterThan(7);
+    expect(teamOutput(20)).toBeLessThan(9);
+    expect(teamOutput(500)).toBeLessThan(12);
+  });
+
+  it('the cost breakdown adds up to the unit cost', () => {
+    const st = computeCarStats(A.defaultDesign(newGame({ companyName: 'Test', hq: 'usa', seed: 24 }), 'family'), 1925);
+    const sum = Object.values(st.costParts).reduce((a, b) => a + b, 0);
+    expect(sum).toBeCloseTo(st.unitCost, 6);
+  });
+
+  it('a great car still meets diminishing returns with buyers', () => {
+    expect(appealUtility(50)).toBeCloseTo(50, 6);
+    expect(appealUtility(90) - appealUtility(70)).toBeLessThan(8);
+    expect(appealUtility(30)).toBeGreaterThan(30);
+  });
+
+  it('a project without a free line is told so, and its budget pays for a small new one', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 25 });
+    s.modals = [];
+    runBot(s, 52 * 2, { segments: ['family'] });
+    const r = A.startProject(s, { name: 'İkinci', segment: 'city', targetPrice: 0 });
+    expect(r.ok).toBe(true);
+    const p = s.projects.find((x) => r.ok && x.id === r.id)!;
+    for (const l of s.lines) l.modelId = s.models.find((m) => m.status === 'active')!.id;
+    expect(suggestedLine(s, p)).toBeUndefined();
+    expect(launchBudget(s, p).line).toBeGreaterThan(0);
+  });
+
+  it('automatic capacity never sells a line a project has ordered its dies for', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 26 });
+    runBot(s, 52 * 3, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active')!;
+    s.company.cash = 1e7;
+    A.buildTurnkeyLines(s, 3, m.id, false);
+    s.week += 20;
+    A.setModelAutoCapacity(s, m.id, true);
+    const kept = s.lines.filter((l) => l.modelId === m.id)[0];
+    s.projects.push({ ...s.projects[0], id: 'pX', lineId: kept.id } as (typeof s.projects)[number]);
+    expect(reservedLines(s).has(kept.id)).toBe(true);
+    m.lastDemand = { usa: 0.1, europe: 0 };
+    for (let i = 0; i < 6; i++) autoCapacity(s, () => 100);
+    expect(s.lines.some((l) => l.id === kept.id)).toBe(true);
+  });
+
+  it('a design left on the desk stops the clock', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 27 });
+    s.modals = [];
+    const r = A.startProject(s, { name: 'Unutulan', segment: 'family', targetPrice: 0 });
+    expect(r.ok).toBe(true);
+    for (let i = 0; i < 20; i++) tick(s);
+    expect(s.modals.some((m) => m.kind === 'stall' && m.reason === 'design')).toBe(true);
+  });
+
+  it('the sales rank keeps counting beyond the top ten', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 28 });
+    runBot(s, 52 * 3, { segments: ['family'] });
+    const sales = finalScore(s).parts[0];
+    if (finalScore(s).rank > 10 && finalScore(s).rank < 40) expect(sales.points).toBeGreaterThan(0);
+    expect(sales.points).toBeLessThanOrEqual(400);
   });
 });

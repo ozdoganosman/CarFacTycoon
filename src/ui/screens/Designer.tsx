@@ -120,6 +120,9 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
   const facelift = project.kind === 'facelift';
   const platformLocked = !!project.platformId || facelift;
   const engineLocked = !!project.engineRefId || facelift;
+  // The replaced car's platform, to go back to after choosing a new one.
+  const replaced = project.replacesModelId ? s.models.find((m) => m.id === project.replacesModelId) : undefined;
+  const oldPlatform = replaced ? s.platforms.find((x) => x.id === replaced.platformId) : undefined;
   const set = (patch: Partial<CarDesign>) => {
     if (readOnly) return;
     store.act((st) => A.updateDesign(st, project.id, { ...d, ...patch }));
@@ -150,6 +153,22 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
                 {platformLocked && (
                   <p className="note">
                     {facelift ? 'Makyajda şasi değişmez.' : 'Mevcut bir platformu kullanıyorsun: şasi, boyut ve süspansiyon sabit. Geliştirme ve kalıp maliyeti düşük.'}
+                    {!facelift && !readOnly && (
+                      <>
+                        {' '}
+                        <Button small kind="ghost" onClick={() => store.try((st) => A.setProjectPlatform(st, project.id, undefined))}>
+                          Yeni platform tasarla
+                        </Button>
+                      </>
+                    )}
+                  </p>
+                )}
+                {!platformLocked && !readOnly && oldPlatform && (
+                  <p className="note">
+                    Yeni bir platform: şasi, boyut ve süspansiyon serbest, ama geliştirme ve kalıplar daha pahalı.{' '}
+                    <Button small kind="ghost" onClick={() => store.try((st) => A.setProjectPlatform(st, project.id, oldPlatform.id))}>
+                      {oldPlatform.name} ile devam et
+                    </Button>
                   </p>
                 )}
                 <Choice

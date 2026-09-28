@@ -10,7 +10,7 @@ import {
 } from '../data/tech';
 import { knowhowEffects } from '../data/knowhow';
 import { computeEngine, curveFor, torqueAt, type TorqueCurve } from './engine';
-import type { CarDesign, CarStats, DevBonus, EngineStats } from './types';
+import type { CarDesign, CarStats, CostPart, DevBonus, EngineStats } from './types';
 
 export const NO_BONUS: DevBonus = {
   powerMult: 1,
@@ -337,7 +337,20 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
     (20 + 200 * design.interior * design.interior) * sizeScale +
     60 * design.styling +
     otherFeatures;
-  const unitCost = baseCost * bonus.costMult * kh.cost;
+  const mult = bonus.costMult * kh.cost;
+  const unitCost = baseCost * mult;
+  const costParts: Record<CostPart, number> = {
+    engine: engine.cost * mult,
+    gearbox: gearboxCost * mult,
+    chassis: chassis.cost * sizeScale * mult,
+    body: body.cost * (has('steelBody') ? 1.2 : 1) * sizeScale * mult,
+    suspension: susp.cost * sizeScale * mult,
+    running: 70 * sizeScale * mult,
+    interior: (20 + 200 * design.interior * design.interior) * sizeScale * mult,
+    styling: 60 * design.styling * mult,
+    electrics: electricsCost * mult,
+    features: otherFeatures * mult,
+  };
 
   const complexity =
     0.75 +
@@ -387,6 +400,8 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
       gearbox: gearboxCost * bonus.costMult,
       electrics: electricsCost * bonus.costMult,
     },
+    costParts,
+    costMults: { focus: bonus.costMult, knowhow: kh.cost },
     complexity,
     devWork,
   };

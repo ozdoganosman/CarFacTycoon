@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import * as A from '../../core/actions';
 import { credit, dealerUpkeep, gates, materialUnitCost, protoUnitCost } from '../../core/game';
-import { lineReport, lineUpkeep, turnkeyLineCost } from '../../core/factory';
+import { lineReport, lineUpkeep, reservedLines, suggestedLine, turnkeyLineCost, workshopLineCost } from '../../core/factory';
 import { MARKET_IDS, consumerPrice, demandAtPrice, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
 import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, defectRange, defectText, expectedRemaining, riskLabel, testTuning, testWeekCost, type Tuning } from '../../core/testing';
 import { yearFloat } from '../../core/time';
-import { DEALER_COMMISSION, costIndex, engineerSalary, overhead, shopCost } from '../../data/economy';
+import { DEALER_COMMISSION, costIndex, engineerSalary, lineBuildWeeks, overhead, shopCost } from '../../data/economy';
 import { MARKETS } from '../../data/markets';
 import { ATTRS, ATTR_NAMES, segmentDef } from '../../data/segments';
 import { STAGES } from '../../data/stations';
 import { TOOLING, toolingDef } from '../../data/tooling';
-import type { ComponentKey, MarketId, Project, ProjectPhase, TestId, ToolingTier } from '../../core/types';
+import type { ComponentKey, GameState, MarketId, Project, ProjectPhase, TestId, ToolingTier } from '../../core/types';
 import { store, useGameState } from '../store';
 import { money, num, pctOf, recentProfit } from '../format';
 import { inYear } from '../format';
@@ -82,7 +82,7 @@ export function ProjectView({ projectId }: { projectId: string }) {
       )}
       {p.phase === 'testing' && <Testing p={p} />}
       {p.phase === 'production' && <Production p={p} />}
-      {p.phase === 'ready' && <Launch p={p} />}
+      {p.phase === 'ready' && (s.lines.some((l) => l.id === p.lineId) ? <Launch key={p.id} p={p} /> : <NoLine p={p} />)}
     </div>
   );
 }
@@ -109,17 +109,20 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
     .offers.filter((o) => o.kind === 'rival')
     .map((o) => o.price)
     .sort((a, b) => a - b);
+  // Without a line (or one still being built) every car the buyers want is counted.
+  const noLine = cap <= 0.01;
   const d = demandAt(price);
   const lo = d / spread;
   const hi = d * spread;
   // Judged on the middle estimate: the range is wide enough to cover almost any line.
-  const verdict =
-    d > cap * 1.2
+  const verdict = noLine
+    ? 'Hattın kapasitesi henüz belli değil: kâr, talebin tamamı üretilir diye hesaplandı.'
+    : d > cap * 1.2
       ? `Orta tahmin hattın ${(d / Math.max(0.1, cap)).toFixed(1)} katı: fiyatı biraz yükseltebilir ya da kapasite ekleyebilirsin.`
       : d < cap * 0.8
         ? `Hat orta tahminin ${(cap / Math.max(0.1, d)).toFixed(1)} katını üretebilir: fiyatı düşürmeyi ya da daha küçük bir hattı düşün.`
         : 'Orta tahmine göre talep ve kapasite dengeli.';
-  const weeklyProfit = (pr: number) => Math.min(demandAt(pr), cap) * (pr * net - unit - labour);
+  const weeklyProfit = (pr: number) => (noLine ? demandAt(pr) : Math.min(demandAt(pr), cap)) * (pr * net - unit - labour);
   // The price that earns most per week with this line (demand beyond the line's output is not sold).
   let best = ref;
   let bestProfit = -Infinity;
@@ -171,7 +174,7 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
                   </button>{' '}
                   <span className="muted small">
                     {pr === Math.round(ref / 10) * 10 ? 'sınıf fiyatı' : pct(pr)}
-                    {pr === bestShown && <b className="tone-good"> · bu hatla en kârlı</b>}
+                    {pr === bestShown && bestProfit > 0 && <b className="tone-good"> · {noLine ? 'en kârlı' : 'bu hatla en kârlı'}</b>}
                     {pr > ref * steep && ' · dergiler “iddialı” der'}
                   </span>
                 </td>
@@ -351,7 +354,7 @@ function Production({ p }: { p: Project }) {
   const yf = yearFloat(s.week);
   const st = useCarStats(p.design, yf, p.bonus);
   const g = gates(s);
-  const [lineId, setLineId] = useState(p.lineId ?? s.lines.find((l) => !l.modelId)?.id ?? s.lines[0]?.id);
+  const [lineId, setLineId] = useState<string | undefined>(() => suggestedLine(s, p)?.id);
   const [tier, setTier] = useState<ToolingTier>(p.tooling ?? 'standard');
   const started = p.productionReadyWeek !== undefined;
   if (started) {
@@ -370,8 +373,18 @@ function Production({ p }: { p: Project }) {
   const quote = lineId ? A.toolingQuote(s, p, lineId, tier) : null;
   const line = s.lines.find((l) => l.id === lineId);
   const report = line ? lineReport(s, line, st.complexity) : null;
-  const readyWeeks = quote ? Math.max(quote.weeks, quote.leadWeeks) : 0;
+  const buildLeft = line?.buildUntilWeek !== undefined ? Math.max(0, line.buildUntilWeek - s.week) : 0;
+  const readyWeeks = quote ? Math.max(quote.weeks, quote.leadWeeks, buildLeft) : 0;
   const turnkey = turnkeyLineCost(s.week, false);
+  const workshop = workshopLineCost(s.week);
+  const reserved = reservedLines(s, p.id);
+  // Build a line and pick it for this car at once.
+  const buildAndPick = (build: (st: GameState) => { ok: boolean; error?: string }, msg: string) => {
+    if (store.try(build, msg)) {
+      const lines = store.state?.lines ?? [];
+      setLineId(lines[lines.length - 1]?.id);
+    }
+  };
   const quoteFor = (x: ToolingTier) => (lineId ? A.toolingQuote(s, p, lineId, x) : null);
   return (
     <>
@@ -434,27 +447,61 @@ function Production({ p }: { p: Project }) {
             Bir hat aynı anda tek model üretir. Başka bir modelin hattını seçersen o model lansmanda hattını kaybeder. Kapasite, bu arabanın üretim zorluğuna göre
             hesaplandı.
           </p>
-          <div className="line-pick">
-            {s.lines.map((l) => {
+          {(() => {
+            const option = (l: (typeof s.lines)[number]) => {
               const r = lineReport(s, l, st.complexity);
               const occupant = s.models.find((m) => m.id === l.modelId && m.status === 'active');
+              const claimedBy = reserved.has(l.id) ? s.projects.find((x) => x.id !== p.id && x.lineId === l.id) : undefined;
+              const replaced = occupant && occupant.id === p.replacesModelId;
+              const building = l.buildUntilWeek !== undefined && s.week < l.buildUntilWeek;
               return (
-                <label key={l.id} className={`line-option ${lineId === l.id ? 'is-on' : ''}`}>
-                  <input type="radio" name="line" checked={lineId === l.id} onChange={() => setLineId(l.id)} />
+                <label key={l.id} className={`line-option ${lineId === l.id ? 'is-on' : ''} ${claimedBy ? 'is-off' : ''}`}>
+                  <input type="radio" name="line" checked={lineId === l.id} disabled={!!claimedBy} onChange={() => setLineId(l.id)} />
                   <span>
                     <b>{l.name}</b> · {r.throughput.toFixed(1)} araç/hafta
                     <br />
                     <span className="muted small">
-                      {occupant ? `Şu an: ${occupant.name}` : 'Boş'} · darboğaz: {STAGES.find((x) => x.id === r.bottleneck)?.name}
+                      {claimedBy
+                        ? `${claimedBy.name} projesine ayrıldı`
+                        : occupant
+                          ? replaced
+                            ? `Şu an: ${occupant.name} (yerine geçecek)`
+                            : `Şu an: ${occupant.name}; lansmanda bu hattı kaybeder`
+                          : building
+                            ? `İnşaatta: ${l.buildUntilWeek! - s.week} hafta`
+                            : 'Boş'}{' '}
+                      · darboğaz: {STAGES.find((x) => x.id === r.bottleneck)?.name}
                     </span>
                   </span>
                 </label>
               );
-            })}
+            };
+            const usable = s.lines.filter((l) => !l.military);
+            const live = (l: (typeof s.lines)[number]) => s.models.some((m) => m.id === l.modelId && m.status === 'active' && m.id !== p.replacesModelId);
+            // Lines of other cars on sale are a last resort: folded away unless one is picked.
+            const main = usable.filter((l) => !live(l) || l.id === lineId);
+            const taken = usable.filter((l) => live(l) && l.id !== lineId);
+            return (
+              <>
+                <div className="line-pick">{main.map(option)}</div>
+                {taken.length > 0 && (
+                  <details className="line-taken">
+                    <summary className="small">Satıştaki başka arabaların hatları ({taken.length}): seçersen o araba lansmanda hattını kaybeder</summary>
+                    <div className="line-pick">{taken.map(option)}</div>
+                  </details>
+                )}
+              </>
+            );
+          })()}
+          {!suggestedLine(s, p) && <p className="note small">Boşta hat yok: bütün hatlarda satıştaki bir araba ya da başka bir proje var. Bu araba için yeni bir hat kur.</p>}
+          <div className="line-build">
+            <Button small kind="ghost" disabled={s.company.cash < workshop} onClick={() => buildAndPick((st2) => A.buildWorkshopLine(st2, undefined), 'Atölye hattı kuruluyor')}>
+              + Küçük atölye hattı ({money(workshop)})
+            </Button>
+            <Button small kind="ghost" disabled={s.company.cash < turnkey} onClick={() => buildAndPick((st2) => A.buildTurnkeyLines(st2, 1, undefined, false), 'Yeni hat kuruluyor')}>
+              + Dengeli yeni hat ({money(turnkey)}, {lineBuildWeeks(yf)} hf)
+            </Button>
           </div>
-          <Button small kind="ghost" disabled={s.company.cash < turnkey} onClick={() => store.try((st2) => A.buildTurnkeyLines(st2, 1, undefined, false), 'Yeni hat kuruldu')}>
-            + Dengeli yeni hat kur ({money(turnkey)})
-          </Button>
           <p className="muted small">Kapasiteyi sonra Fabrika ekranından büyütebilir ya da “talebi otomatik karşıla” ile fabrikaya bırakabilirsin.</p>
         </Panel>
       </div>
@@ -573,6 +620,48 @@ function ToolingShort({ p, lineId, tier, setTier, cost }: { p: Project; lineId: 
         <p className="small muted">Kasa ve banka kredisi yetmiyor. Vadeli sipariş son çıkış yolu; ya da satıştaki arabalardan para gelmesini bekle, gereksiz mühendisleri çıkar.</p>
       )}
     </div>
+  );
+}
+
+/** The dies are ready but the line they were made for is gone (sold, or given to another car). */
+function NoLine({ p }: { p: Project }) {
+  const s = useGameState();
+  const yf = yearFloat(s.week);
+  const reserved = reservedLines(s, p.id);
+  const live = (id?: string) => s.models.some((m) => m.id === id && m.status === 'active');
+  const free = s.lines.filter((l) => !l.military && !reserved.has(l.id));
+  const workshop = workshopLineCost(s.week);
+  const turnkey = turnkeyLineCost(s.week, false);
+  const buildAndAssign = (build: (st: GameState) => { ok: boolean; error?: string }) => {
+    if (!store.try(build)) return;
+    const lines = store.state?.lines ?? [];
+    const id = lines[lines.length - 1]?.id;
+    if (id) store.try((st) => A.setProjectLine(st, p.id, id), 'Yeni hat bu arabaya ayrıldı');
+  };
+  return (
+    <Panel title="Bu arabanın hattı yok">
+      <p>Kalıplar hazır ama yapıldıkları hat artık yok (satıldı ya da başka bir arabaya verildi). Lansmandan önce arabanın üretileceği hattı seç ya da yeni bir hat kur.</p>
+      {free.length > 0 && (
+        <div className="line-pick">
+          {free.map((l) => (
+            <button key={l.id} type="button" className="line-option" onClick={() => store.try((st) => A.setProjectLine(st, p.id, l.id), `${l.name} seçildi`)}>
+              <span>
+                <b>{l.name}</b>{' '}
+                <span className="muted small">{live(l.modelId) ? `şu an ${s.models.find((m) => m.id === l.modelId)?.name}; lansmanda hattını kaybeder` : 'boş'}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="line-build">
+        <Button small disabled={s.company.cash < workshop} onClick={() => buildAndAssign((st) => A.buildWorkshopLine(st, undefined))}>
+          + Küçük atölye hattı ({money(workshop)})
+        </Button>
+        <Button small disabled={s.company.cash < turnkey} onClick={() => buildAndAssign((st) => A.buildTurnkeyLines(st, 1, undefined, false))}>
+          + Dengeli yeni hat ({money(turnkey)}, {lineBuildWeeks(yf)} hf)
+        </Button>
+      </div>
+    </Panel>
   );
 }
 

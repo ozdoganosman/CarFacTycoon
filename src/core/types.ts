@@ -152,9 +152,15 @@ export interface CarStats {
   practicality: number;
   unitCost: number; // materials & components, at cost index 1
   componentCost: Record<ComponentKey, number>;
+  /** What the unit cost is made of (sums to unitCost), for the designer's cost breakdown. */
+  costParts: Record<CostPart, number>;
+  /** Multipliers already in the parts: development focus (cost) and workshop know-how. */
+  costMults: { focus: number; knowhow: number };
   complexity: number; // production complexity multiplier (1 = typical)
   devWork: number; // engineer-weeks at productivity 1
 }
+
+export type CostPart = 'engine' | 'gearbox' | 'chassis' | 'body' | 'suspension' | 'running' | 'interior' | 'styling' | 'electrics' | 'features';
 
 export type Scores = Record<AttrKey, number>;
 
@@ -289,6 +295,8 @@ export interface CarModel {
   autoCapacity?: boolean;
   /** Net spent by automatic capacity on this model so far. */
   autoSpent?: number;
+  /** Why automatic capacity is not growing although buyers wait (last month). */
+  autoHold?: 'war' | 'margin' | 'cash' | 'payback' | 'full';
   lowDemandMonths?: number;
   inventory: number;
   suppliers: Record<ComponentKey, SupplierChoice>;
@@ -343,6 +351,8 @@ export interface ProductionLine {
   stations: Record<StageId, string[]>;
   modelId?: string;
   retoolUntilWeek?: number;
+  /** A new line is being built and equipped until this week. */
+  buildUntilWeek?: number;
   /** When a line is working on military orders during the war. */
   military?: boolean;
   /** Sections that also work a night shift. */
@@ -400,6 +410,8 @@ export type ModalItem =
   | { kind: 'news'; newsId: string }
   | { kind: 'unlock'; title: string; body: string }
   | { kind: 'insolvency'; stage: 'first' | 'last' }
+  /** The company stands still: a design left on the desk, or no new car coming while the range ages. Stops the clock. */
+  | { kind: 'stall'; reason: 'design' | 'idle'; projectId?: string }
   /** Research finished (and what started next from the queue): a corner note that does not stop the clock. */
   | { kind: 'research'; done: string[]; started: string[] }
   | { kind: 'gameOver' };
@@ -429,6 +441,8 @@ export interface FinanceWeek {
   interest: number;
   other: number;
   investment: number;
+  /** Corporate income tax paid (on the previous year's profit). Missing in old saves. */
+  tax: number;
 }
 
 export interface YearSummary {
@@ -454,6 +468,11 @@ export interface Company {
   negativeWeeks: number;
   /** Salary paid to engineers with nothing to do (no project, test or research), for the post-mortem. */
   idleSalary?: number;
+  /** Past losses not yet set against taxable profit. */
+  lossCarry?: number;
+  /** Last year's corporate tax still to pay, in quarterly instalments. */
+  taxOwed?: number;
+  taxInstalments?: number;
   highWages: boolean;
 }
 
@@ -490,13 +509,15 @@ export interface GameState {
   research?: { known: string[]; active: { id: string; weeksLeft: number; weeks: number }[]; queue?: string[] };
   cardsSeen: string[];
   /** The racing team: budget level 0-3 and the fame its results earned. */
-  racing?: { level: number; fame: number; wins?: number; paused?: boolean; dry?: number; last?: { year: number; race: string; result: 'win' | 'podium' | 'none'; model: string } };
+  racing?: { level: number; fame: number; wins?: number; winYears?: number[]; paused?: boolean; dry?: number; last?: { year: number; race: string; result: 'win' | 'podium' | 'none'; model: string } };
   /** Rival companies the player has bought. */
   acquired?: string[];
   /** modeChosen: the player picked the engine designer mode themselves (older saves defaulted to the simple one). */
   settings: { engineerMode: boolean; autoPauseCards: boolean; modeChosen?: boolean; difficulty?: DifficultyId };
   gameOver?: { reason: 'bankrupt' | 'end'; week: number };
   nextId: number;
+  /** Number for the next line's name, so names are never reused. */
+  nextLineNo?: number;
   /** The player's key decisions, newest last (read when a playtest is studied). */
   decisions?: { week: number; key: string; text: string }[];
   /** Errors caught while the game ran, for bug reports. */

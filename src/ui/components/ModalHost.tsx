@@ -4,7 +4,7 @@ import { cardDef } from '../../data/cards';
 import { eventDef } from '../../data/events';
 import { MARKETS } from '../../data/markets';
 import { segmentDef } from '../../data/segments';
-import { SCORE_TIERS, cashReport, companyValue, finalScore, idleReason, modelMargins, rescueLoan, type CashReport } from '../../core/game';
+import { SCORE_TIERS, cashReport, companyValue, finalScore, idleEngineers, idleReason, modelMargins, rescueLoan, type CashReport } from '../../core/game';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { allTech } from '../../core/techtree';
 import { isBlockingModal } from '../../core/util';
@@ -212,6 +212,8 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
       );
     case 'insolvency':
       return <Insolvency s={s} stage={m.stage} />;
+    case 'stall':
+      return <Stall s={s} reason={m.reason} projectId={m.projectId} />;
     case 'gameOver':
       return <GameOver s={s} />;
   }
@@ -265,6 +267,92 @@ function CashFacts({ r, s }: { r: CashReport; s: GameState }) {
         )}
       </ul>
     </>
+  );
+}
+
+/** The company stands still: a design waiting on the desk, or no successor while the cars age. */
+function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idle'; projectId?: string }) {
+  const close = () => store.act(A.dismissModal);
+  const go = (to: Parameters<typeof store.go>[0]) => {
+    store.act(A.dismissModal);
+    store.go(to);
+  };
+  const active = s.models.filter((m) => m.status === 'active').sort((a, b) => b.refreshWeek - a.refreshWeek);
+  const newest = active[0];
+  const age = newest ? Math.floor((s.week - newest.refreshWeek) / 52) : 0;
+  const lastYear = s.years[s.years.length - 1];
+  const best = s.years.reduce((a, y) => Math.max(a, y.unitsSold), 0);
+  if (reason === 'design') {
+    const p = s.projects.find((x) => x.id === projectId);
+    const weeks = p ? s.week - p.createdWeek : 0;
+    return (
+      <Modal
+        title="Proje tasarım masasında bekliyor"
+        icon="📐"
+        actions={
+          <>
+            {p && (
+              <Button kind="primary" onClick={() => go({ id: 'project', projectId: p.id })}>
+                Projeye git
+              </Button>
+            )}
+            <Button kind="ghost" onClick={close}>
+              Tamam
+            </Button>
+          </>
+        }
+      >
+        <p>
+          <b>{p?.name ?? 'Proje'}</b> {weeks} haftadır tasarım aşamasında. Geliştirme başlamadıkça mühendisler bu arabada çalışmaz: zaman geçiyor ama araba
+          ilerlemiyor.
+        </p>
+        <p>
+          Tasarımı bitir ve <b>Geliştirmeyi başlat</b>’a bas. Odak dağılımı geliştirme sırasında da değiştirilebilir.
+        </p>
+        {newest && age >= 3 && (
+          <p className="muted small">
+            Bu arada satıştaki en yeni araban {newest.name} {age} yaşında.
+          </p>
+        )}
+      </Modal>
+    );
+  }
+  return (
+    <Modal
+      title="Yolda yeni bir araba yok"
+      icon="🕰️"
+      actions={
+        <>
+          <Button kind="primary" onClick={() => go({ id: 'projects' })}>
+            Yeni proje başlat
+          </Button>
+          {newest && <Button onClick={() => go({ id: 'model', modelId: newest.id })}>{newest.name}: makyaj ya da yeni kuşak</Button>}
+          <Button kind="ghost" onClick={close}>
+            Tamam
+          </Button>
+        </>
+      }
+    >
+      {newest ? (
+        <p>
+          En yeni araban <b>{newest.name}</b> {age} yaşında ve arkasından gelen bir proje yok. Rakipler her dört-altı yılda yeni kuşak ya da makyaj çıkarır; eski
+          arabanın satışı her yıl biraz daha erir.
+        </p>
+      ) : (
+        <p>Satışta araban yok ve üzerinde çalışılan bir proje de yok.</p>
+      )}
+      <ul className="cash-facts">
+        {lastYear && (
+          <li>
+            Geçen yıl <b>{num(lastYear.unitsSold)}</b> araç satıldı{best > lastYear.unitsSold * 1.3 ? `; en iyi yılında ${num(best)}` : ''}.
+          </li>
+        )}
+        <li>
+          Kasada <b>{money(s.company.cash)}</b>, <b>{s.company.engineers}</b> mühendis{idleEngineers(s) > 0 ? ' boşta bekliyor' : ''}.
+        </li>
+      </ul>
+      <p className="muted small">Geliştirme bir iki yıl sürer; daha çok mühendis işi hızlandırır. Oyun sen devam ettirene kadar durur.</p>
+    </Modal>
   );
 }
 

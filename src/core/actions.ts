@@ -1,4 +1,4 @@
-import { costIndex, newLineCost, priceLevel, shopCost, slotCost, toolingMultiple, MAX_SLOTS } from '../data/economy';
+import { costIndex, lineBuildWeeks, newLineCost, priceLevel, shopCost, slotCost, toolingMultiple, MAX_SLOTS } from '../data/economy';
 import { eventDef } from '../data/events';
 import { MARKETS, marketScale, MAX_DEALER_LEVEL } from '../data/markets';
 import { segmentDef } from '../data/segments';
@@ -9,7 +9,7 @@ import { aiDesign } from './ai';
 import { FOCUS_KEYS, bonusFromPoints, evenFocus, normalizeFocus } from './development';
 import { displacementCc } from './engine';
 import { writeReviews } from './feedback';
-import { emptyLine, lineReport, modernizeQuote, planBalancedLine, stationPrice, stationResale, turnkeyLineCost, workshopLineCost, workshopPlan } from './factory';
+import { emptyLine, lineReport, modernizeQuote, nextLineName, planBalancedLine, reservedLines, retoolCost, stationPrice, stationResale, turnkeyLineCost, workshopLineCost, workshopPlan } from './factory';
 import {
   shareEngineers,
   availableSegments,
@@ -200,6 +200,21 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
   });
   decide(s, 'project:' + id, `Makyaj projesi: ${m.name}`);
   return { ok: true, id };
+}
+
+/**
+ * Build on an existing platform (chassis, size and suspension fixed; cheaper to develop and tool)
+ * or leave it for a new one. Only while the car is still on the drawing board.
+ */
+export function setProjectPlatform(s: GameState, pid: string, platformId: string | undefined): ActionResult {
+  const p = project(s, pid);
+  if (p.phase !== 'design' || p.kind === 'facelift') return fail('Platform yalnızca tasarım aşamasında seçilir.');
+  const plat = platformId ? s.platforms.find((x) => x.id === platformId) : undefined;
+  if (platformId && !plat) return fail('Platform bulunamadı.');
+  p.platformId = plat?.id;
+  if (plat) p.design = { ...p.design, chassis: plat.chassis, size: plat.size, suspension: plat.suspension };
+  decide(s, 'platform:' + pid, `${p.name}: ${plat ? `${plat.name} kullanılıyor` : 'yeni platform'}`);
+  return ok;
 }
 
 export function updateDesign(s: GameState, pid: string, design: CarDesign): ActionResult {
@@ -424,6 +439,7 @@ export function autoShowCost(s: GameState, markets: MarketId[]): number {
 export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: true; modelId: string } | { ok: false; error: string } {
   const p = project(s, pid);
   if (p.phase !== 'ready') return { ok: false, error: 'Üretim hattı henüz hazır değil.' };
+  if (!p.lineId || !s.lines.some((l) => l.id === p.lineId)) return { ok: false, error: 'Bu arabanın hattı yok: önce bir hat seç ya da kur.' };
   const markets = o.markets.filter((m) => s.markets[m].unlocked);
   if (!markets.length) return { ok: false, error: 'En az bir pazar seç.' };
   if (o.price <= 0) return { ok: false, error: 'Geçerli bir fiyat gir.' };
@@ -693,8 +709,17 @@ export function assignLine(s: GameState, lineId: string, modelId: string | undef
   return ok;
 }
 
-export function retoolCost(s: GameState, m: CarModel): number {
-  return 5 * m.stats.unitCost * costIndex(yearFloat(s.week)) * byId(CHASSIS, m.design.chassis).tooling;
+export { retoolCost };
+
+/** Move a finished project's dies to another line (its own was sold or given away). */
+export function setProjectLine(s: GameState, pid: string, lineId: string): ActionResult {
+  const p = project(s, pid);
+  const line = s.lines.find((l) => l.id === lineId);
+  if (!line) return fail('Hat bulunamadı.');
+  if (reservedLines(s, pid).has(lineId)) return fail('Bu hat başka bir projeye ayrıldı.');
+  p.lineId = lineId;
+  decide(s, 'projectLine:' + pid, `${p.name}: hattı ${line.name}`);
+  return ok;
 }
 
 // ---------------- Factory ----------------
@@ -703,8 +728,9 @@ export function buyLine(s: GameState): ActionResult {
   const cost = newLineCost(yearFloat(s.week));
   if (s.company.cash < cost) return fail(`Yeni hat için ${money(cost)} gerekiyor.`);
   spend(s, cost, 'investment');
-  const n = s.lines.length + 1;
-  s.lines.push(emptyLine(`L${s.nextId++}`, `Hat ${n}`));
+  const line = emptyLine(`L${s.nextId++}`, nextLineName(s));
+  line.buildUntilWeek = s.week + lineBuildWeeks(yearFloat(s.week));
+  s.lines.push(line);
   decide(s, 'buyLine', `Boş hat kuruldu (${money(cost)}), toplam ${s.lines.length} hat`);
   return ok;
 }
@@ -754,16 +780,15 @@ export function buildTurnkeyLines(s: GameState, count: number, modelId: string |
   const plan = planBalancedLine(yearFloat(s.week), allowBlack);
   for (let i = 0; i < count; i++) {
     spend(s, each, 'investment');
-    const line = emptyLine(`L${s.nextId++}`, `Hat ${s.lines.length + 1}`);
+    const line = emptyLine(`L${s.nextId++}`, nextLineName(s));
     line.slots = MAX_SLOTS;
     for (const st of STAGES) line.stations[st.id] = [...plan[st.id]];
-    if (m) {
-      line.modelId = m.id;
-      line.retoolUntilWeek = s.week + 3;
-    }
+    line.buildUntilWeek = s.week + lineBuildWeeks(yearFloat(s.week));
+    if (m) line.modelId = m.id;
     s.lines.push(line);
   }
   decide(s, 'turnkey', `${count} anahtar teslim hat${m ? ` (${m.name})` : ''}, ${money(total)}${allowBlack ? ', siyah boya' : ''}; toplam ${s.lines.length} hat`);
+  log(s, `${count} yeni hat inşa ediliyor (${money(total)}); ${lineBuildWeeks(yearFloat(s.week))} hafta sonra üretime başlar.`, 'info');
   return ok;
 }
 
@@ -798,13 +823,12 @@ export function buildWorkshopLine(s: GameState, modelId: string | undefined): Ac
   const cost = workshopLineCost(s.week) + (m ? retoolCost(s, m) : 0);
   if (s.company.cash < cost) return fail(`Atölye hattı için ${money(cost)} gerekiyor.`);
   spend(s, cost, 'investment');
-  const line = emptyLine(`L${s.nextId++}`, `Atölye ${s.lines.length + 1}`);
+  const line = emptyLine(`L${s.nextId++}`, nextLineName(s, 'Atölye'));
   const plan = workshopPlan(yearFloat(s.week));
   for (const st of STAGES) line.stations[st.id] = [...plan[st.id]];
-  if (m) {
-    line.modelId = m.id;
-    line.retoolUntilWeek = s.week + 3;
-  }
+  // A rented shed with benches is ready sooner than a factory hall.
+  line.buildUntilWeek = s.week + Math.max(3, Math.round(lineBuildWeeks(yearFloat(s.week)) / 2));
+  if (m) line.modelId = m.id;
   s.lines.push(line);
   decide(s, 'workshop', `Atölye hattı${m ? ` (${m.name})` : ''}, ${money(cost)}; toplam ${s.lines.length} hat`);
   return ok;
@@ -989,7 +1013,7 @@ export function startResearch(s: GameState, id: string): ActionResult {
   if (missing.length) return fail(`Önce şunlar bilinmeli: ${missing.map((m) => m.name).join(', ')}.`);
   if (r.active.length >= researchSlots(s.company.engineers))
     return fail('Mühendislerin aynı anda bu kadar konu araştırabiliyor. Daha çok mühendisle daha çok konu yürütülür.');
-  const cost = researchCost(def, yf);
+  const cost = researchCost(def, yf, s);
   if (s.company.cash < cost) return fail(`${def.name} araştırması için ${money(cost)} gerekiyor.`);
   beginResearch(s, def, yf);
   r.queue = (r.queue ?? []).filter((x) => x !== id);

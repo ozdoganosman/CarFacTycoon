@@ -1,5 +1,6 @@
 import { CARDS } from '../data/cards';
-import { costIndex, engineerSalary, overhead, creditTerms, DEALER_COMMISSION } from '../data/economy';
+import { costIndex, corporateTaxRate, engineerSalary, overhead, creditTerms, DEALER_COMMISSION } from '../data/economy';
+import { pctWith } from './turkish';
 import { EVENTS } from '../data/events';
 import { MARKETS, marketScale } from '../data/markets';
 import { SEGMENTS } from '../data/segments';
@@ -7,7 +8,7 @@ import { difficultyDef, type DifficultyId } from '../data/difficulty';
 import { toolingDef } from '../data/tooling';
 import { buildLaunchReport, customerFeedback } from './feedback';
 import { ensureEstimate, narrowForTest } from './estimate';
-import { MILITARY_COMPLEXITY, emptyLine, lineReport, lineUpkeep, militaryMargin, stationPrice } from './factory';
+import { MILITARY_COMPLEXITY, emptyLine, lineOffline, lineReport, lineUpkeep, militaryMargin, stationPrice } from './factory';
 import { MARKET_IDS, SEGMENT_IDS, modelScores, priceNow, segmentMarket } from './market';
 import { makeRng, rand, stateRng } from './rng';
 import { updateRivals, initRivals } from './rivals';
@@ -28,11 +29,11 @@ import {
   withTuning,
 } from './testing';
 import { isMonthStart, weekFor, weekOfYear, yearFloat, yearOf } from './time';
-import { productivity } from './development';
+import { devRate } from './development';
 import type { CarModel, ComponentKey, GameState, MarketId, Project, SegmentId, YearSummary } from './types';
 import { computeCarStats } from './vehicle';
 
-export const COST_KEYS = ['materials', 'labor', 'salaries', 'dealers', 'marketing', 'rnd', 'warranty', 'interest', 'other', 'investment'] as const;
+export const COST_KEYS = ['materials', 'labor', 'salaries', 'dealers', 'marketing', 'rnd', 'warranty', 'interest', 'other', 'tax', 'investment'] as const;
 import { clamp, earn, financeNow, log, money, pushModal, spend } from './util';
 
 export const SAVE_VERSION = 1;
@@ -177,11 +178,11 @@ export interface CashReport {
 export function cashReport(s: GameState): CashReport {
   const yf = yearFloat(s.week);
   const last = s.finance.slice(-52);
-  const costs = COST_KEYS.map((key) => ({ key, amount: last.reduce((a, f) => a + f[key], 0) }))
+  const costs = COST_KEYS.map((key) => ({ key, amount: last.reduce((a, f) => a + (f[key] ?? 0), 0) }))
     .filter((c) => c.amount > 0)
     .sort((a, b) => b.amount - a.amount);
   const recent = s.finance.slice(-8);
-  const weeklyNet = recent.length ? recent.reduce((a, f) => a + f.revenue - COST_KEYS.reduce((b, k) => b + f[k], 0), 0) / recent.length : 0;
+  const weeklyNet = recent.length ? recent.reduce((a, f) => a + f.revenue - COST_KEYS.reduce((b, k) => b + (f[k] ?? 0), 0), 0) / recent.length : 0;
   const c = credit(s);
   const idle = idleEngineers(s);
   return {
@@ -241,7 +242,7 @@ export function companyAssets(s: GameState): number {
  */
 export function companyValue(s: GameState): number {
   const last = s.finance.slice(-52);
-  const operating = last.reduce((a, f) => a + f.revenue - COST_KEYS.filter((k) => k !== 'investment').reduce((b, k) => b + f[k], 0), 0);
+  const operating = last.reduce((a, f) => a + f.revenue - COST_KEYS.filter((k) => k !== 'investment').reduce((b, k) => b + (f[k] ?? 0), 0), 0);
   return companyAssets(s) - s.company.loan + Math.max(0, operating) * 6;
 }
 
@@ -268,15 +269,21 @@ export function finalScore(s: GameState): FinalScore {
   const totalSold = s.models.reduce((a, m) => a + m.unitsSold, 0);
   const rank = [totalSold, ...s.rivals.map((r) => r.unitsSold)].sort((a, b) => b - a).indexOf(totalSold) + 1;
   const value = companyValue(s);
-  const best = s.models.reduce((a, m) => Math.max(a, m.reviewScore), 0);
-  const wins = s.racing?.wins ?? 0;
+  // Reviews and races count for the last years of the campaign: an early hit does not carry a whole career.
+  const recent = s.models.filter((m) => m.launchWeek >= s.week - 10 * 52);
+  const latest = [...s.models].sort((a, b) => b.launchWeek - a.launchWeek)[0];
+  const review = recent.length ? recent.reduce((a, m) => a + m.reviewScore, 0) / recent.length : latest ? latest.reviewScore * 0.7 : 0;
+  const year = yearOf(s.week);
+  const winYears = s.racing?.winYears ?? [];
+  const wins = winYears.filter((y) => y > year - 20).length;
   const parts = [
-    { label: 'Tüm zamanların satış sırası', value: `${rank}.`, points: Math.max(0, Math.round(400 * (1 - (rank - 1) / 10))), max: 400 },
+    // 1st → 400, 2nd → 325, 5th → 225, 10th → 150, 20th → 75, 40th → 0
+    { label: 'Tüm zamanların satış sırası', value: `${rank}.`, points: Math.max(0, Math.round(400 * (1 - Math.log(rank) / Math.log(40)))), max: 400 },
     // $1 mn → 300, $1 mr → 450, $10 mr and more → 500
     { label: 'Şirket değeri', value: money(value), points: Math.min(500, Math.max(0, Math.round(50 * Math.log10(Math.max(1, value))))), max: 500 },
     { label: 'İtibar', value: `${Math.round(s.company.reputation)}/100`, points: Math.round(3 * s.company.reputation), max: 300 },
-    { label: 'En iyi dergi puanı', value: `${best.toFixed(1)}/10`, points: Math.round(30 * best), max: 300 },
-    { label: 'Yarış zaferleri', value: String(wins), points: Math.min(200, 20 * wins), max: 200 },
+    { label: recent.length ? 'Son on yılın dergi puanı (ortalama)' : 'Son arabanın dergi puanı (eski)', value: `${review.toFixed(1)}/10`, points: Math.round(30 * review), max: 300 },
+    { label: 'Son yirmi yılın yarış zaferleri', value: String(wins), points: Math.min(200, 25 * wins), max: 200 },
   ];
   const total = parts.reduce((a, p) => a + p.points, 0);
   return { total, max: parts.reduce((a, p) => a + p.max, 0), parts, rank, tier: SCORE_TIERS.find((t) => total >= t.min)!.name };
@@ -325,8 +332,9 @@ export function tick(s: GameState): void {
   if (weekOfYear(s.week) === 0) {
     closeYear(s, yearOf(s.week) - 1);
     announceTech(s, yearOf(s.week));
-  }
+  } else if (weekOfYear(s.week) % 13 === 0) payTaxInstalment(s);
   if (isMonthStart(s.week)) {
+    checkStall(s);
     for (const n of updateRivals(s, stateRng(s))) log(s, n.text, n.tone, 'rival');
   }
   advanceProjects(s);
@@ -386,7 +394,7 @@ function closeYear(s: GameState, year: number) {
   const weeks = s.finance.filter((f) => yearOf(f.week) === year);
   const revenue = weeks.reduce((a, f) => a + f.revenue, 0);
   const costs = weeks.reduce(
-    (a, f) => a + f.materials + f.labor + f.salaries + f.dealers + f.marketing + f.rnd + f.warranty + f.interest + f.other,
+    (a, f) => a + f.materials + f.labor + f.salaries + f.dealers + f.marketing + f.rnd + f.warranty + f.interest + f.other + (f.tax ?? 0),
     0,
   );
   const shareByMarket = {} as Record<MarketId, number>;
@@ -402,13 +410,71 @@ function closeYear(s: GameState, year: number) {
     shareByMarket[m] = total > 0 ? mine / total : 0;
   }
   const breakdown = {} as YearSummary['costs'];
-  for (const k of COST_KEYS) breakdown[k] = weeks.reduce((a, f) => a + f[k], 0);
+  for (const k of COST_KEYS) breakdown[k] = weeks.reduce((a, f) => a + (f[k] ?? 0), 0);
   s.years.push({ year, revenue, profit: revenue - costs, unitsSold: units, shareByMarket, cashEnd: s.company.cash, costs: breakdown });
+  payCorporateTax(s, year, revenue - (costs - breakdown.tax) - 0.2 * breakdown.investment);
   if (year >= 1900 && s.week < s.endWeek) {
     // Only the latest year report is kept; it waits in a corner while time runs on.
     s.modals = s.modals.filter((m) => m.kind !== 'yearReport');
     pushModal(s, { kind: 'yearReport', year });
   }
+}
+
+/**
+ * Monthly: stop the clock when the company is standing still, which is easy to miss while time runs
+ * (players left designs on the desk for years, or let one car age a decade with no successor).
+ */
+function checkStall(s: GameState) {
+  if (s.modals.some((m) => m.kind === 'stall')) return;
+  const since = (k: string) => s.week - (s.flags[k] ?? -1e6);
+  const waiting = s.projects.find((p) => p.phase === 'design' && s.week - p.createdWeek >= 13);
+  if (waiting && since('stallDesign') >= 26) {
+    s.flags.stallDesign = s.week;
+    pushModal(s, { kind: 'stall', reason: 'design', projectId: waiting.id });
+    return;
+  }
+  if (s.projects.length) return;
+  const active = s.models.filter((m) => m.status === 'active');
+  const newest = active.length ? Math.max(...active.map((m) => m.refreshWeek)) : -1;
+  const aging = active.length ? s.week - newest >= 4 * 52 : s.week >= 13;
+  if (aging && since('stallIdle') >= 52) {
+    s.flags.stallIdle = s.week;
+    pushModal(s, { kind: 'stall', reason: 'idle' });
+  }
+}
+
+/**
+ * Corporate income tax on the year's profit (before last year's tax; a fifth of the year's investment
+ * is written off). Losses are carried forward against later profits.
+ */
+function payCorporateTax(s: GameState, year: number, taxable: number) {
+  let carry = s.company.lossCarry ?? 0;
+  if (taxable <= 0) {
+    s.company.lossCarry = carry - taxable;
+    return;
+  }
+  const base = Math.max(0, taxable - carry);
+  s.company.lossCarry = Math.max(0, carry - taxable);
+  const rate = corporateTaxRate(year, s.company.hq);
+  const tax = base * rate;
+  if (tax < 1) return;
+  // Paid in four instalments over the year (any unpaid rest of an older bill comes due now).
+  if (s.company.taxOwed) spend(s, s.company.taxOwed, 'tax');
+  s.company.taxOwed = tax;
+  s.company.taxInstalments = 4;
+  payTaxInstalment(s);
+  log(s, `${year} kurumlar vergisi: ${money(tax)} (vergilenen kârın ${pctWith(rate, 'poss', Number.isInteger(Math.round(rate * 1000) / 10) ? 0 : 1)}), dört taksitte ödenecek.${carry > 0 ? ' Önceki yılların zararı düşüldü.' : ''}`, 'info');
+}
+
+/** A quarter of the year's tax bill (called at the new year and every thirteen weeks). */
+function payTaxInstalment(s: GameState) {
+  const owed = s.company.taxOwed ?? 0;
+  const left = s.company.taxInstalments ?? 0;
+  if (owed <= 0 || left <= 0) return;
+  const part = owed / left;
+  spend(s, part, 'tax');
+  s.company.taxOwed = owed - part;
+  s.company.taxInstalments = left - 1;
 }
 
 function advanceResearch(s: GameState) {
@@ -444,7 +510,7 @@ function advanceProjects(s: GameState) {
   const rng = stateRng(s);
   for (const p of s.projects) {
     if (p.phase === 'development') {
-      const work = p.engineers * productivity(s.company.skill);
+      const work = devRate(p.engineers, s.company.skill);
       const before = p.dev.done;
       const cap = p.dev.required * 1.6;
       const add = Math.min(work, Math.max(0, cap - p.dev.done));
@@ -504,8 +570,7 @@ function produce(s: GameState) {
       continue;
     }
     const model = s.models.find((m) => m.id === line.modelId && m.status === 'active');
-    const retooling = line.retoolUntilWeek !== undefined && s.week < line.retoolUntilWeek;
-    if (!model || retooling) {
+    if (!model || lineOffline(s, line)) {
       spend(s, lineUpkeep(s, line, 0), 'labor');
       continue;
     }

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import * as A from '../../core/actions';
+import { AUTO_HOLD_TEXT } from '../../core/autocap';
 import {
   MILITARY_COMPLEXITY,
   NIGHT_SHIFT_COST,
   NIGHT_SHIFT_OUTPUT,
   blackPaintIsFaster,
   emptyLine,
+  lineOffline,
   lineReport,
   lineUpkeep,
   modernizeQuote,
@@ -16,7 +18,9 @@ import {
   workshopPlan,
 } from '../../core/factory';
 import { yearFloat } from '../../core/time';
-import { MAX_SLOTS, costIndex, newLineCost, realWage, shopCost, slotCost } from '../../data/economy';
+import { DEALER_COMMISSION, MAX_SLOTS, costIndex, lineBuildWeeks, newLineCost, realWage, shopCost, slotCost } from '../../data/economy';
+import { materialUnitCost } from '../../core/game';
+import { priceNow } from '../../core/market';
 import { STAGES, STATIONS, stationDef } from '../../data/stations';
 import type { CarModel, ComponentKey, GameState, ProductionLine, StageId } from '../../core/types';
 import { store, useGameState } from '../store';
@@ -74,7 +78,7 @@ export function Factory() {
 /** Weekly output of the lines that build this model (none while retooling). */
 function modelCapacity(s: GameState, m: CarModel): number {
   return s.lines
-    .filter((l) => l.modelId === m.id && !l.military && !(l.retoolUntilWeek !== undefined && s.week < l.retoolUntilWeek))
+    .filter((l) => l.modelId === m.id && !l.military && !lineOffline(s, l))
     .reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
 }
 
@@ -94,7 +98,9 @@ function CapacityPlanner() {
   const allowBlack = blackOption && black;
   // Without a choice, the car buyers are waiting for most (never a model nobody wants).
   const demandOf = (x: (typeof active)[number]) => Object.values(x.lastDemand ?? {}).reduce((a, b) => a + b, 0);
-  const suggested = [...active].sort((a, b) => demandOf(b) - modelCapacity(s, b) - (demandOf(a) - modelCapacity(s, a)) || demandOf(b) - demandOf(a))[0];
+  const gapOf = (x: (typeof active)[number]) => demandOf(x) - modelCapacity(s, x);
+  const short = active.filter((x) => gapOf(x) >= 0.5).sort((a, b) => gapOf(b) - gapOf(a));
+  const suggested = short[0] ?? [...active].sort((a, b) => demandOf(b) - demandOf(a))[0];
   const m = active.find((x) => x.id === pick) ?? suggested;
   const perLine = (b: boolean) =>
     lineReport(s, { ...emptyLine('plan', 'plan'), slots: MAX_SLOTS, stations: planBalancedLine(yf, b) }, m?.stats.complexity ?? 1).throughput;
@@ -108,6 +114,11 @@ function CapacityPlanner() {
     .filter(({ q }) => q.after > q.before * 1.02);
   const upgradeCost = upgrades.reduce((a, u) => a + Math.max(0, u.q.cost), 0);
   const affordable = Math.max(0, Math.floor(s.company.cash / each));
+  // What one more line earns if every car it builds is sold: years to pay for itself.
+  const planLine = { ...emptyLine('plan', 'plan'), slots: MAX_SLOTS, stations: planBalancedLine(yf, allowBlack) };
+  const margin = m ? priceNow(m, s.week) * (1 - DEALER_COMMISSION) - materialUnitCost(s, m) - lineUpkeep(s, planLine, 1) / Math.max(0.1, perLine(allowBlack)) : 0;
+  const payback = margin > 0 ? each / (margin * perLine(allowBlack) * 52) : Infinity;
+  const build = lineBuildWeeks(yf);
   return (
     <Panel title="Kapasite planlayıcı" className="planner">
       {active.length ? (
@@ -123,7 +134,8 @@ function CapacityPlanner() {
                     <span className="small">
                       talep ~{d.toFixed(0)}/hf · üretim {c.toFixed(1)}/hf
                     </span>
-                    {d > c * 1.1 && <span className="small tone-bad">~{(d - c).toFixed(0)} araç/hf kaçıyor</span>}
+                    {d > c * 1.1 && d - c >= 0.5 && <span className="small tone-bad">~{(d - c).toFixed(0)} araç/hf kaçıyor</span>}
+                    {x.autoCapacity && x.autoHold && d > c * 1.05 && <span className="small tone-warn">otomatik durdu: {AUTO_HOLD_TEXT[x.autoHold]}</span>}
                   </button>
                   <Toggle checked={!!x.autoCapacity} onChange={(v) => store.act((st) => A.setModelAutoCapacity(st, x.id, v))} label="Otomatik" title="Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır." />
                 </div>
@@ -134,14 +146,21 @@ function CapacityPlanner() {
             <div className="planner-form">
               <p>
                 <b>Anahtar teslim hat:</b> tam boy, bugünün en iyi makineleriyle ve dengeli kurulur (hiçbir bölüm darboğazın besleyebileceğinden fazla makine
-                almaz). {m.name} için hat başına <b>+{perLine(allowBlack).toFixed(1)} araç/hf</b>, kalıp dahil <b>{money(each)}</b>. 3 hafta içinde üretime
-                başlar.
+                almaz). {m.name} için hat başına <b>+{perLine(allowBlack).toFixed(1)} araç/hf</b>, kalıp dahil <b>{money(each)}</b>. Binası ve makineleri{' '}
+                <b>{build} haftada</b> kurulur.{' '}
+                {payback < Infinity ? (
+                  <>
+                    Ürettiği her araç satılırsa araç başına ~{money(margin)} kalır: hat kendini <b className={payback > 3 ? 'tone-warn' : ''}>~{payback < 1 ? `${Math.max(1, Math.round(payback * 12))} ayda` : `${payback.toFixed(1)} yılda`}</b> öder.
+                  </>
+                ) : (
+                  <span className="tone-bad">Bu fiyatla araç başına para kalmıyor: yeni hat kendini ödemez.</span>
+                )}
               </p>
               {blackOption && (
                 <Toggle
                   checked={black}
                   onChange={setBlack}
-                  label={`Siyah vernik fırını kullan: hat başına ${perLine(true).toFixed(1)} yerine ${perLine(false).toFixed(1)} araç/hf`}
+                  label={`Siyah vernik fırını kullan: hat başına ${perLine(false).toFixed(1)} yerine ${perLine(true).toFixed(1)} araç/hf`}
                   sub="Çok daha hızlı kurur ama araç yalnızca siyah olur: prestij −5."
                 />
               )}
@@ -174,7 +193,14 @@ function CapacityPlanner() {
                 <Button
                   kind="primary"
                   disabled={count > affordable}
-                  onClick={() => store.try((st) => A.buildTurnkeyLines(st, count, m.id, allowBlack), `${count} hat kuruldu: ${m.name}`)}
+                  onClick={async () => {
+                    const okd = await store.ask({
+                      title: `${count} yeni hat kurulsun mu?`,
+                      body: `${m.name} için ${count} anahtar teslim hat: ${money(each * count)} şimdi ödenir, hatlar ${build} hafta sonra üretime başlar (+${(perLine(allowBlack) * count).toFixed(0)} araç/hf). Talep şu an ~${demand.toFixed(0)}/hf, üretim ${cap.toFixed(1)}/hf.`,
+                      confirm: `${count} hat kur`,
+                    });
+                    if (okd) store.try((st) => A.buildTurnkeyLines(st, count, m.id, allowBlack), `${count} hat inşa ediliyor: ${m.name}`);
+                  }}
                 >
                   {count} hat kur
                 </Button>
@@ -193,7 +219,13 @@ function CapacityPlanner() {
           </span>
           <Button
             disabled={s.company.cash < upgradeCost}
-            onClick={() => {
+            onClick={async () => {
+              const okd = await store.ask({
+                title: `${upgrades.length} hat yenilensin mi?`,
+                body: `Eski makineler satılır, yerine bugünün makineleri gelir: net ${money(upgradeCost)}. Her hat kurulum sırasında 2 hafta üretmez.`,
+                confirm: 'Hepsini yenile',
+              });
+              if (!okd) return;
               for (const u of upgrades) store.try((st) => A.modernizeLine(st, u.l.id, allowBlack));
               store.showToast(`${upgrades.length} hat yenilendi`, 'good');
             }}
@@ -215,7 +247,8 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
   const complexity = isMilitary ? MILITARY_COMPLEXITY : model?.stats.complexity ?? 1;
   const r = lineReport(s, line, complexity);
   const retooling = line.retoolUntilWeek !== undefined && s.week < line.retoolUntilWeek;
-  const running = !!(isMilitary || (model && !retooling));
+  const building = line.buildUntilWeek !== undefined && s.week < line.buildUntilWeek;
+  const running = !!(isMilitary || (model && !retooling && !building));
   const rate = isMilitary ? 1 : model ? model.productionRate : 0;
   const upkeep = lineUpkeep(s, line, rate);
   const active = s.models.filter((m) => m.status === 'active');
@@ -229,7 +262,7 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
         <button type="button" className="line-title" onClick={() => setOpen(!open)} aria-expanded={open}>
           <span aria-hidden>{open ? '▾' : '▸'}</span> {line.name}{' '}
           <span className="muted small">
-            · {isMilitary ? 'askeri üretim' : model ? model.name : 'boş'} · {r.throughput.toFixed(1)} araç/hafta · işçilik {money(upkeep)}/hafta
+            · {isMilitary ? 'askeri üretim' : model ? model.name : 'boş'}{building ? ` · inşaatta (${line.buildUntilWeek! - s.week} hf)` : ''} · {r.throughput.toFixed(1)} araç/hafta · işçilik {money(upkeep)}/hafta
             {running && <> · darboğaz: {STAGES.find((x) => x.id === r.bottleneck)!.name}</>}
           </span>
         </button>
@@ -271,7 +304,7 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
         perStage={r.perStage}
         bottleneck={r.bottleneck}
         running={running}
-        label={retooling ? 'Kalıp değişimi sürüyor…' : 'Hat boşta: bir model ata'}
+        label={building ? `İnşaat sürüyor: ${line.buildUntilWeek! - s.week} hafta sonra üretime hazır` : retooling ? 'Kalıp değişimi sürüyor…' : 'Hat boşta: bir model ata'}
       />
       <div className="stages">
         {STAGES.map((st) => (

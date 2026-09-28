@@ -8,6 +8,7 @@ import { computeCarStats } from '../../core/vehicle';
 import { estimateRange, factRange, isRough, rawRange } from '../../core/estimate';
 import type { AttrKey, CarDesign, CarStats, DevBonus, Estimate, GameState, Scores, SegmentId } from '../../core/types';
 import { kmh, litres, money, secs } from '../format';
+import { CostBreakdown } from './CostBreakdown';
 import { Info, RangeBar, ScoreBar } from './ui';
 
 /** "lo–hi unit" for an engineers' range. */
@@ -188,6 +189,7 @@ export function StatsPanel(props: {
           )}
         </div>
       )}
+      {!props.compact && <CostBreakdown design={design} st={st} ci={ci} yf={yf} rough={!!est} />}
     </div>
   );
 }

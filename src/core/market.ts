@@ -29,6 +29,11 @@ const REACH_EXP = 0.6;
 const offerWeight = (reach: number, utility: number) => Math.pow(reach, REACH_EXP) * Math.exp(utility / TAU);
 /** The many tiny coachbuilders and assemblers behave like an average car of the class. */
 const OTHERS_UTILITY = 50;
+/**
+ * Buyers notice a better car, but the tenth improvement matters less than the first: past the class
+ * average appeal counts less and less (75 → 69, 90 → 73), so a great car cannot also charge anything.
+ */
+export const appealUtility = (ap: number) => 50 + 25 * Math.tanh((ap - 50) / 25);
 
 /** Base price adjusted for inflation since it was set (if indexing is on). */
 export function priceNow(model: Pick<CarModel, 'price' | 'priceWeek' | 'indexPrice'>, week: number): number {
@@ -215,7 +220,7 @@ export function playerOffer(state: GameState, model: CarModel, market: MarketId)
   const reach = playerReach(state, market);
   const hype = model.hype * HYPE_WEIGHT;
   const age = datedPenalty(modelAgeYears(model, state.week));
-  const utility = ap[market] + pt + brand + hype + age;
+  const utility = appealUtility(ap[market]) + pt + brand + hype + age;
   return {
     kind: 'player',
     id: model.id,
@@ -244,7 +249,7 @@ export function rivalOffer(state: GameState, rm: RivalModel, market: MarketId): 
   const hype = 4 * HYPE_WEIGHT * Math.exp(-(state.week - rm.launchWeek) / 40);
   const reach = rivalSize(rm.companyId, yf) * (isImport ? 0.45 : 1);
   const age = datedPenalty((state.week - rm.launchWeek) / 52);
-  const utility = ap[market] + pt + brand + hype + age;
+  const utility = appealUtility(ap[market]) + pt + brand + hype + age;
   return {
     kind: 'rival',
     id: rm.id,

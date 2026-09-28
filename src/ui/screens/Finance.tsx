@@ -15,7 +15,7 @@ export function Finance() {
   const c = credit(s);
   const [loan, setLoan] = useState(Math.round(Math.max(0, Math.min(c.limit - s.company.loan, 10000 * costIndex(yf)))));
   const last = s.finance.slice(-52);
-  const sums = Object.fromEntries(COST_KEYS.map((k) => [k, last.reduce((a, f) => a + f[k], 0)])) as Record<(typeof COST_KEYS)[number], number>;
+  const sums = Object.fromEntries(COST_KEYS.map((k) => [k, last.reduce((a, f) => a + (f[k] ?? 0), 0)])) as Record<(typeof COST_KEYS)[number], number>;
   const revenue = last.reduce((a, f) => a + f.revenue, 0);
   const auto = last.reduce((a, f) => a + (f.auto ?? 0), 0);
   const operating = revenue - COST_KEYS.filter((k) => k !== 'investment').reduce((a, k) => a + sums[k], 0);

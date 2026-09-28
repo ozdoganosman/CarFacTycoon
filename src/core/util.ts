@@ -2,8 +2,17 @@ import type { FinanceWeek, GameState, LogCategory, LogEntry, ModalItem } from '.
 
 export function log(state: GameState, text: string, tone: LogEntry['tone'] = 'info', cat?: LogCategory) {
   state.log.push(cat && cat !== 'company' ? { week: state.week, text, tone, cat } : { week: state.week, text, tone });
-  if (state.log.length > 300) state.log.splice(0, state.log.length - 300);
+  // Each kind of news keeps its own recent history, so a flood of buyer letters or rival launches
+  // never pushes the company's own warnings out.
+  const kind = cat ?? 'company';
+  const same = state.log.reduce((n, e) => n + ((e.cat ?? 'company') === kind ? 1 : 0), 0);
+  if (same > LOG_KEEP[kind]) {
+    const i = state.log.findIndex((e) => (e.cat ?? 'company') === kind);
+    state.log.splice(i, 1);
+  }
 }
+
+const LOG_KEEP: Record<LogCategory, number> = { company: 300, buyers: 80, rival: 150, tech: 80 };
 
 export function pushModal(state: GameState, modal: ModalItem) {
   state.modals.push(modal);
@@ -37,6 +46,7 @@ export function financeNow(state: GameState): FinanceWeek {
       rnd: 0,
       warranty: 0,
       interest: 0,
+      tax: 0,
       other: 0,
       investment: 0,
     };
@@ -50,7 +60,8 @@ export type CostCategory = Exclude<keyof FinanceWeek, 'week' | 'revenue'>;
 
 export function spend(state: GameState, amount: number, category: CostCategory) {
   state.company.cash -= amount;
-  financeNow(state)[category] += amount;
+  const f = financeNow(state);
+  f[category] = (f[category] ?? 0) + amount;
 }
 
 export function earn(state: GameState, amount: number) {

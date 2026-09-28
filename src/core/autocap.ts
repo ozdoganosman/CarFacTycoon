@@ -1,7 +1,6 @@
-import { MAX_SLOTS, costIndex, slotCost } from '../data/economy';
+import { MAX_SLOTS, costIndex, lineBuildWeeks, slotCost } from '../data/economy';
 import { STAGES, STATIONS, stationDef } from '../data/stations';
-import { CHASSIS, byId } from '../data/tech';
-import { emptyLine, lineReport, lineUpkeep, planBalancedLine, stationPrice, stationResale, turnkeyLineCost } from './factory';
+import { emptyLine, lineOffline, lineReport, lineUpkeep, nextLineName, planBalancedLine, reservedLines, retoolCost, stationPrice, stationResale, turnkeyLineCost } from './factory';
 import { DEALER_COMMISSION } from '../data/economy';
 import { priceNow } from './market';
 import { yearFloat } from './time';
@@ -13,7 +12,7 @@ import { earn, financeNow, log, money, spend } from './util';
 // cheapest extra capacity first (a station at the bottleneck, a wider line,
 // newer machines, then a whole new line) and always keeps a cash reserve.
 
-const isRetooling = (s: GameState, l: ProductionLine) => l.retoolUntilWeek !== undefined && s.week < l.retoolUntilWeek;
+const isRetooling = lineOffline;
 const demandOf = (m: CarModel) => Object.values(m.lastDemand ?? {}).reduce((a, b) => a + b, 0);
 const linesOf = (s: GameState, m: CarModel) => s.lines.filter((l) => l.modelId === m.id && !l.military);
 
@@ -25,7 +24,7 @@ function capacity(s: GameState, m: CarModel, lines: ProductionLine[], working: b
 function reserve(s: GameState): number {
   const recent = s.finance.slice(-4);
   const weekly = recent.length ? recent.reduce((a, f) => a + f.materials + f.labor + f.salaries + f.other, 0) / recent.length : 0;
-  return Math.max(4000 * costIndex(yearFloat(s.week)), 6 * weekly);
+  return Math.max(4000 * costIndex(yearFloat(s.week)), 6 * weekly) + (s.company.taxOwed ?? 0);
 }
 
 /** Weekly: build what sells and work a stock pile down. */
@@ -38,6 +37,40 @@ export function autoProductionRates(s: GameState) {
     m.productionRate = Math.min(1, Math.max(0, (d - (m.inventory - 2 * d) / 4) / cap));
   }
 }
+
+/** Sell a line's surplus machines, one at a time, while it still builds `keep` cars a week. Returns the money back. */
+function trimLine(s: GameState, m: CarModel, l: ProductionLine, keep: number): number {
+  let refund = 0;
+  for (let k = 0; k < 40; k++) {
+    let bestCut: { stage: StageId; i: number; saving: number } | null = null;
+    for (const st of STAGES) {
+      if (l.stations[st.id].length <= 1) continue;
+      l.stations[st.id].forEach((id, i) => {
+        const trial = { ...l, stations: { ...l.stations, [st.id]: l.stations[st.id].filter((_, j) => j !== i) } };
+        if (lineReport(s, trial, m.stats.complexity).throughput < keep) return;
+        const saving = stationDef(id).upkeep;
+        if (!bestCut || saving > bestCut.saving) bestCut = { stage: st.id, i, saving };
+      });
+    }
+    if (!bestCut) break;
+    const cut: { stage: StageId; i: number } = bestCut;
+    const id = l.stations[cut.stage][cut.i];
+    l.stations[cut.stage].splice(cut.i, 1);
+    const back = stationResale(id, s.week);
+    earn(s, back);
+    refund += back;
+  }
+  return refund;
+}
+
+/** Why automatic capacity stopped growing, in words. */
+export const AUTO_HOLD_TEXT: Record<NonNullable<CarModel['autoHold']>, string> = {
+  war: 'savaş sürerken fabrika büyütülmüyor',
+  margin: 'araç başına kâr %8’in altında: büyümek zararı büyütür, önce fiyatı ya da maliyeti düzelt',
+  cash: 'kasa yetmiyor (birkaç haftalık gider ve vergi taksiti yedekte tutuluyor)',
+  payback: 'sıradaki büyütme bu fiyatla bir buçuk yılda kendini ödemiyor',
+  full: 'hatlar dolu ve talep açığı yeni bir hat için küçük',
+};
 
 interface Option {
   cost: number;
@@ -106,15 +139,15 @@ function options(s: GameState, m: CarModel, lines: ProductionLine[], allowBlack:
   const plan = planBalancedLine(yf, allowBlack);
   const perLine = lineReport(s, { ...emptyLine('x', 'x'), slots: MAX_SLOTS, stations: plan }, m.stats.complexity).throughput;
   out.push({
-    cost: turnkeyLineCost(s.week, allowBlack) + 5 * m.stats.unitCost * costIndex(yf) * byId(CHASSIS, m.design.chassis).tooling,
+    cost: turnkeyLineCost(s.week, allowBlack) + retoolCost(s, m),
     gain: perLine,
     counts: { 'yeni hat': 1 },
     apply: () => {
-      const line = emptyLine(`L${s.nextId++}`, `Hat ${s.lines.length + 1}`);
+      const line = emptyLine(`L${s.nextId++}`, nextLineName(s));
       line.slots = MAX_SLOTS;
       for (const st of STAGES) line.stations[st.id] = [...plan[st.id]];
       line.modelId = m.id;
-      line.retoolUntilWeek = s.week + 3;
+      line.buildUntilWeek = s.week + lineBuildWeeks(yf);
       s.lines.push(line);
     },
   });
@@ -144,16 +177,23 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
     let margin = net - materialCost(m) - labourPerCar();
     let spent = 0;
     const done: Record<string, number> = {};
+    // Why it is not growing, when buyers wait: shown on the model and factory screens.
+    m.autoHold = undefined;
+    if (cap < d * 1.05) m.autoHold = wartime ? 'war' : margin <= 0.08 * net ? 'margin' : undefined;
     for (let i = 0; i < 24 && !wartime && cap < d * 1.05 && margin > 0.08 * net; i++) {
       const budget = s.company.cash - reserve(s);
       const gap = d * 1.05 - cap;
       // Judge each option by the part of its capacity that buyers would actually use,
       // and leave a small shortfall rather than build a whole line for it.
       const useful = (o: Option) => Math.min(o.gain, gap);
-      const opts = options(s, m, linesOf(s, m), allowBlack).filter(
-        (o) => o.cost <= budget && o.cost <= useful(o) * margin * 52 * 1.5 && (!o.counts['yeni hat'] || gap >= 0.35 * o.gain),
-      );
-      if (!opts.length) break;
+      const all = options(s, m, linesOf(s, m), allowBlack).filter((o) => !o.counts['yeni hat'] || gap >= 0.35 * o.gain);
+      const paying = all.filter((o) => o.cost <= useful(o) * margin * 52 * 1.5);
+      const opts = paying.filter((o) => o.cost <= budget);
+      if (!opts.length) {
+        m.autoHold = !all.length ? 'full' : !paying.length ? 'payback' : 'cash';
+        break;
+      }
+      m.autoHold = undefined;
       const pick = opts.reduce((a, b) => (useful(b) / Math.max(1, b.cost) > useful(a) / Math.max(1, a.cost) ? b : a));
       spend(s, pick.cost, 'investment');
       const f = financeNow(s);
@@ -172,12 +212,27 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
       log(s, `Otomatik kapasite: ${m.name} için ${what} (${money(spent)}). Kapasite ${cap.toFixed(1)} araç/hf, talep ${d.toFixed(1)}.`, 'info');
     }
     // Shrink: after two months with far more capacity than buyers, sell the smallest lines
-    // (at most a quarter of them a month) down to a quarter above demand.
+    // (at most a quarter of them a month) down to a quarter above demand. Lines a project has
+    // ordered its dies for, and the lines of a car whose successor is coming, are kept.
+    const successor = s.projects.some((p) => p.replacesModelId === m.id);
+    const reserved = reservedLines(s);
     const lines = linesOf(s, m);
-    if (!wartime && lines.length > 1 && cap > 1.5 * d) m.lowDemandMonths = (m.lowDemandMonths ?? 0) + 1;
+    const sellable = successor ? [] : lines.filter((l) => !reserved.has(l.id));
+    if (!wartime && cap > 1.5 * d) m.lowDemandMonths = (m.lowDemandMonths ?? 0) + 1;
     else m.lowDemandMonths = 0;
-    if ((m.lowDemandMonths ?? 0) >= 2) {
-      const bySize = [...lines].sort((a, b) => lineReport(s, a, m.stats.complexity).throughput - lineReport(s, b, m.stats.complexity).throughput);
+    if ((m.lowDemandMonths ?? 0) >= 2 && lines.length === 1 && !successor) {
+      // A single line gives back machines instead: the least useful ones, while it still builds a quarter above demand.
+      const refund = trimLine(s, m, lines[0], 1.25 * d);
+      if (refund > 0) {
+        const f = financeNow(s);
+        f.auto = (f.auto ?? 0) - refund;
+        m.autoSpent = (m.autoSpent ?? 0) - refund;
+        log(s, `Otomatik kapasite: ${m.name} için talep düştü; ${lines[0].name} hattındaki fazla makineler satıldı (${money(refund)}).`, 'warn');
+      }
+      m.lowDemandMonths = 0;
+    }
+    if ((m.lowDemandMonths ?? 0) >= 2 && sellable.length) {
+      const bySize = [...sellable].sort((a, b) => lineReport(s, a, m.stats.complexity).throughput - lineReport(s, b, m.stats.complexity).throughput);
       let sold = 0;
       let refund = 0;
       const limit = Math.max(1, Math.floor(lines.length / 4));

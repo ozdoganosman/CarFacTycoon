@@ -1,6 +1,7 @@
-import { MAX_SLOTS, costIndex, newLineCost, realWage, slotCost } from '../data/economy';
+import { MAX_SLOTS, capexScale, costIndex, newLineCost, realWage, slotCost, toolingMultiple } from '../data/economy';
 import { STAGES, STATIONS, stationDef, type StationDef } from '../data/stations';
-import type { GameState, ProductionLine, StageId } from './types';
+import { CHASSIS, byId } from '../data/tech';
+import type { CarModel, GameState, ProductionLine, Project, StageId } from './types';
 import { yearFloat } from './time';
 
 /** A night shift keeps a section working around the clock: more output, dearer labour. */
@@ -48,11 +49,49 @@ export function lineUpkeep(state: GameState, line: ProductionLine, utilisation: 
 }
 
 export function stationPrice(id: string, week: number): number {
-  return stationDef(id).cost * costIndex(yearFloat(week));
+  const yf = yearFloat(week);
+  return stationDef(id).cost * costIndex(yf) * capexScale(yf);
 }
 
 export function stationResale(id: string, week: number): number {
   return stationPrice(id, week) * 0.3;
+}
+
+/** Dies and fixtures to build a model on one more line (or to move it to another). */
+export function retoolCost(s: GameState, m: CarModel): number {
+  const yf = yearFloat(s.week);
+  return Math.max(5, 0.5 * toolingMultiple(yf)) * m.stats.unitCost * costIndex(yf) * byId(CHASSIS, m.design.chassis).tooling;
+}
+
+/** A line builds nothing while it is being put up or retooled. */
+export const lineOffline = (s: GameState, l: ProductionLine) => s.week < Math.max(l.retoolUntilWeek ?? -1, l.buildUntilWeek ?? -1);
+
+/** Lines other projects have already ordered their dies for. */
+export function reservedLines(s: GameState, exceptProjectId?: string): Set<string> {
+  return new Set(s.projects.filter((p) => p.id !== exceptProjectId && p.lineId).map((p) => p.lineId!));
+}
+
+/**
+ * The line a project would naturally go to: the one it has, the replaced car's, or a line no car and
+ * no other project uses. None when every line is taken: the project needs a new one.
+ */
+export function suggestedLine(s: GameState, p: Project): ProductionLine | undefined {
+  const own = p.lineId ? s.lines.find((l) => l.id === p.lineId) : undefined;
+  if (own) return own;
+  const reserved = reservedLines(s, p.id);
+  const open = (l: ProductionLine) => !l.military && !reserved.has(l.id);
+  const replaced = p.replacesModelId ? s.lines.find((l) => l.modelId === p.replacesModelId && open(l)) : undefined;
+  if (replaced) return replaced;
+  const live = (l: ProductionLine) => s.models.some((m) => m.id === l.modelId && m.status === 'active');
+  return s.lines.find((l) => open(l) && !live(l));
+}
+
+/** A name no line has had yet ("Hat 7"): numbers are not reused after a line is closed. */
+export function nextLineName(s: GameState, prefix = 'Hat'): string {
+  const used = s.lines.map((l) => Number(/(\d+)$/.exec(l.name)?.[1] ?? 0));
+  const n = Math.max(s.nextLineNo ?? 0, s.lines.length, ...used) + 1;
+  s.nextLineNo = n;
+  return `${prefix} ${n}`;
 }
 
 export function emptyLine(id: string, name: string): ProductionLine {

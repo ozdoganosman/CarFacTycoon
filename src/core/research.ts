@@ -1,4 +1,4 @@
-import { costIndex } from '../data/economy';
+import { costIndex, engineerSalary, overhead } from '../data/economy';
 import { KNOWHOW, effectsText } from '../data/knowhow';
 import { ASPIRATIONS, CHASSIS, CYLINDER_OPTIONS, FEATURES, FUEL_SYSTEMS, GEARBOX_TYPES, SUSPENSIONS, VALVETRAINS } from '../data/tech';
 import { DIESEL_YEAR, boreStrokeFor, displacementCc } from './engine';
@@ -174,8 +174,24 @@ const pioneer = (def: ResearchDef, yf: number) => Math.exp(-Math.max(0, yf - def
  */
 export const researchScale = (yf: number) => 1 + 9 * Math.min(1, Math.max(0, (yf - 1906) / 12));
 
-export function researchCost(def: ResearchDef, yf: number): number {
-  return def.cost * researchScale(yf) * (1 + pioneer(def, yf)) * costIndex(yf);
+/** A big maker's research is big too: a major subject (20 000 in the table) costs about 1.5% of a year's turnover. */
+export const REVENUE_SHARE = 0.015;
+
+/**
+ * Price of learning a subject: the era's table price, or — for a company that has grown large —
+ * a share of its turnover, whichever is higher. Being first doubles either.
+ */
+export function researchCost(def: ResearchDef, yf: number, s?: GameState): number {
+  const first = 1 + pioneer(def, yf);
+  const table = def.cost * researchScale(yf) * first * costIndex(yf);
+  if (!s) return table;
+  const revenue = s.finance.slice(-52).reduce((a, f) => a + f.revenue, 0);
+  return Math.max(table, (def.cost / 20000) * REVENUE_SHARE * revenue * first);
+}
+
+/** Cash the research queue leaves in the till: about six weeks of salaries and running costs. */
+export function researchReserve(s: GameState, yf: number): number {
+  return 6 * (s.company.engineers * engineerSalary(yf) + overhead(yf, s.lines.length)) + (s.company.taxOwed ?? 0);
 }
 
 /** A bigger engineering department learns faster. */
@@ -183,7 +199,7 @@ export const researchSpeed = (engineers: number) => 0.6 + Math.min(2.4, engineer
 
 /** Pay for a subject and put the engineers on it (checks are the caller's). */
 export function beginResearch(s: GameState, def: ResearchDef, yf: number): { cost: number; weeks: number } {
-  const cost = researchCost(def, yf);
+  const cost = researchCost(def, yf, s);
   spend(s, cost, 'rnd');
   const weeks = researchWeeks(def, yf, s.company.engineers);
   s.research!.active.push({ id: def.id, weeksLeft: weeks, weeks });
@@ -201,7 +217,7 @@ export function queueHold(s: GameState, yf: number): { id: string; reason: 'cash
   const next = q.find((id) => missingRequirements(s, id).length === 0);
   if (!next) return { id: q[0], reason: 'requires' };
   const def = researchDef(next)!;
-  if (s.company.cash < researchCost(def, yf)) return { id: next, reason: 'cash' };
+  if (s.company.cash - researchCost(def, yf, s) < researchReserve(s, yf)) return { id: next, reason: 'cash' };
   return null;
 }
 
@@ -219,7 +235,8 @@ export function pumpResearchQueue(s: GameState, yf: number): string[] {
     const id: string | undefined = r.queue.find((x) => researchDef(x)!.year <= yf && missingRequirements(s, x).length === 0);
     if (!id) break;
     const def = researchDef(id)!;
-    if (s.company.cash < researchCost(def, yf)) break;
+    // The queue never spends the money the company needs to keep running.
+    if (s.company.cash - researchCost(def, yf, s) < researchReserve(s, yf)) break;
     beginResearch(s, def, yf);
     r.queue = r.queue.filter((x: string) => x !== id);
     started.push(id);

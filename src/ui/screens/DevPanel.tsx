@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import * as A from '../../core/actions';
-import { FOCUS_HINTS, FOCUS_KEYS, FOCUS_NAMES, evenFocus, productivity } from '../../core/development';
+import { FOCUS_HINTS, FOCUS_KEYS, FOCUS_NAMES, devRate, evenFocus } from '../../core/development';
+import { costIndex, engineerSalary } from '../../data/economy';
+import { yearFloat } from '../../core/time';
 import { unknownTech } from '../../core/research';
 import { budgetVerdict, launchBudget } from '../../core/budget';
 import { money } from '../format';
@@ -23,8 +25,14 @@ export function DevBar({ project: p }: { project: Project }) {
   const others = s.projects.filter((x) => x.phase === 'development' && x.id !== p.id).length;
   const eng = s.company.engineers / (others + 1);
   const required = developing ? p.dev.required : A.requiredWork(s, p);
-  const rate = eng * productivity(s.company.skill);
+  const rate = devRate(eng, s.company.skill);
   const remaining = Math.max(0, required - p.dev.done);
+  // How much sooner the car would be ready with more engineers (they join all projects in development).
+  const weeksNow = Math.ceil(remaining / Math.max(0.1, rate));
+  const yf = yearFloat(s.week);
+  const faster = [3, 6, 12]
+    .map((n) => ({ n, weeks: Math.ceil(remaining / Math.max(0.1, devRate((s.company.engineers + n) / (others + 1), s.company.skill))) }))
+    .find((o) => o.weeks <= weeksNow * 0.75);
   const done = developing && p.dev.done >= p.dev.required;
   const pct = required > 0 ? Math.round((p.dev.done / required) * 100) : 0;
   const bonus = A.projectedBonus(s, p);
@@ -56,6 +64,17 @@ export function DevBar({ project: p }: { project: Project }) {
           </>
         )}
       </div>
+      {!done && faster && weeksNow >= 8 && (
+        <div className="dev-bar-hire small">
+          <span>
+            <b>Daha çabuk:</b> +{faster.n} mühendisle ~{faster.weeks} hafta ({weeksNow} yerine). Maaşları yılda ~{money(faster.n * engineerSalary(yf) * 52)}, işe alma{' '}
+            {money(faster.n * 40 * costIndex(yf))}. Kalabalık ekip orantılı hızlanmaz: bir arabada bir düzineden fazlası birbirini bekler.
+          </span>
+          <Button small disabled={s.company.cash < faster.n * 40 * costIndex(yf)} onClick={() => store.try((st) => A.hireEngineers(st, faster.n), `${faster.n} mühendis işe alındı`)}>
+            +{faster.n} mühendis al
+          </Button>
+        </div>
+      )}
       {!done && <BudgetLine b={launchBudget(s, p)} />}
       {developing && (
         <div className="dev-bar-progress">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import * as A from '../../core/actions';
+import { AUTO_HOLD_TEXT } from '../../core/autocap';
 import { materialUnitCost } from '../../core/game';
 import { lineReport } from '../../core/factory';
 import { consumerPrice, demandAtPrice, modelScores, priceNow, segmentMarket } from '../../core/market';
@@ -129,6 +130,12 @@ export function ModelView({ modelId }: { modelId: string }) {
                         {' '}
                         <b>Bu model için şimdiye kadar net {money(m.autoSpent ?? 0)} harcadı.</b> Harcamalar Finans’ta ayrı satırda görünür.
                       </>
+                    )}
+                    {m.autoCapacity && m.autoHold && (
+                      <span className="tone-warn">
+                        {' '}
+                        Alıcılar bekliyor ama büyütmüyor: {AUTO_HOLD_TEXT[m.autoHold]}.
+                      </span>
                     )}
                   </>
                 }

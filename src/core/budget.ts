@@ -1,6 +1,7 @@
 import { requiredWork, startProject as startProjectFn, toolingQuote } from './actions';
-import { productivity } from './development';
-import { engineerSalary, overhead } from '../data/economy';
+import { devRate } from './development';
+import { engineerSalary, lineBuildWeeks, overhead } from '../data/economy';
+import { suggestedLine, workshopLineCost } from './factory';
 import { COST_KEYS, credit, dealerUpkeep, materialUnitCost } from './game';
 import { MARKET_IDS } from './market';
 import { TESTS, testWeekCost } from './testing';
@@ -17,6 +18,8 @@ export interface LaunchBudget {
   protos: number;
   tests: number;
   tooling: number;
+  /** A new line, when every existing one is taken (a small workshop line: the cheapest way in). */
+  line: number;
   /** The company's cash flow per week meanwhile, before project costs (negative while nothing sells). */
   weeklyNet: number;
   /** Money needed on top of what the company earns in the meantime. */
@@ -33,8 +36,8 @@ export function operatingWeekly(s: GameState): number {
     const yf = yearFloat(s.week);
     return -(s.company.engineers * engineerSalary(yf) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, m) => a + dealerUpkeep(s, m), 0));
   }
-  const keys = COST_KEYS.filter((k) => k !== 'investment' && k !== 'rnd');
-  return recent.reduce((a, f) => a + f.revenue - keys.reduce((b, k) => b + f[k], 0), 0) / recent.length;
+  const keys = COST_KEYS.filter((k) => k !== 'investment' && k !== 'rnd' && k !== 'tax');
+  return recent.reduce((a, f) => a + f.revenue - keys.reduce((b, k) => b + (f[k] ?? 0), 0), 0) / recent.length;
 }
 
 export function launchBudget(s: GameState, p: Project): LaunchBudget {
@@ -44,7 +47,7 @@ export function launchBudget(s: GameState, p: Project): LaunchBudget {
   let devWeeks = 0;
   if (p.phase === 'design' || p.phase === 'development') {
     const sharing = s.projects.filter((x) => x.phase === 'development' && x.id !== p.id).length + 1;
-    const rate = (s.company.engineers / sharing) * productivity(s.company.skill);
+    const rate = devRate(s.company.engineers / sharing, s.company.skill);
     const required = p.phase === 'design' ? requiredWork(s, p) : p.dev.required;
     devWeeks = Math.ceil(Math.max(0, required - p.dev.done) / Math.max(0.1, rate));
   }
@@ -61,22 +64,24 @@ export function launchBudget(s: GameState, p: Project): LaunchBudget {
       testWeeks = Math.max(testWeeks, left);
     }
   }
-  // Tooling on the line the car would most likely go to.
+  // Tooling on the line the car would most likely go to; without a free line, a small new one too.
   let tooling = 0;
   let toolWeeks = 0;
+  let lineCost = 0;
   if (p.phase !== 'ready' && p.productionReadyWeek === undefined) {
-    const replaced = p.replacesModelId ? s.lines.find((l) => l.modelId === p.replacesModelId) : undefined;
-    const line = s.lines.find((l) => l.id === p.lineId) ?? replaced ?? s.lines.find((l) => !l.modelId) ?? s.lines[0];
-    if (line) {
-      const q = toolingQuote(s, p, line.id, p.tooling ?? 'standard');
-      tooling = q.cost;
-      toolWeeks = Math.max(q.weeks, q.leadWeeks);
-    }
+    const line = suggestedLine(s, p);
+    const q = toolingQuote(s, p, line?.id ?? '', p.tooling ?? 'standard');
+    tooling = q.cost;
+    toolWeeks = Math.max(q.weeks, q.leadWeeks);
+    if (!line) {
+      lineCost = workshopLineCost(s.week);
+      toolWeeks = Math.max(toolWeeks, Math.max(3, Math.round(lineBuildWeeks(yf) / 2)));
+    } else if (line.buildUntilWeek !== undefined) toolWeeks = Math.max(toolWeeks, line.buildUntilWeek - s.week);
   } else if (p.productionReadyWeek !== undefined) toolWeeks = Math.max(0, p.productionReadyWeek - s.week);
   const weeks = devWeeks + testWeeks + toolWeeks;
   const weeklyNet = operatingWeekly(s);
-  const need = protos + tests + tooling - weeklyNet * weeks;
-  return { weeks, protos, tests, tooling, weeklyNet, need, cash: s.company.cash, creditRoom: Math.max(0, credit(s).limit - s.company.loan) };
+  const need = protos + tests + tooling + lineCost - weeklyNet * weeks;
+  return { weeks, protos, tests, tooling, line: lineCost, weeklyNet, need, cash: s.company.cash, creditRoom: Math.max(0, credit(s).limit - s.company.loan) };
 }
 
 /** 'ok' when cash covers it, 'credit' when only with a loan, 'short' when not even then. */
