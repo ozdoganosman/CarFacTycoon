@@ -86,6 +86,7 @@ src/ui/     React arayüzü, grafikler, araç çizimi, fabrika animasyonu, kart 
            motor bloğu ve süspansiyon simülasyonları, gazete
 scripts/    denge botu ve uzun simülasyonlar
 tests/      birim ve uçtan uca simülasyon testleri
+promo/      Remotion ile dikey tanıtım videosu (YouTube Shorts), bkz. promo/README.md
 ```
 
 ```bash

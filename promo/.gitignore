@@ -1,0 +1,5 @@
+# Captured from the running game (npm run capture) and generated audio (npm run audio).
+public/shots/
+public/seq/
+public/audio/
+out/

@@ -3,7 +3,7 @@ import { CYLINDER_OPTIONS } from '../../../data/tech';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Readout, Slider } from './controls';
-import { TAU, alpha, clamp, fmt, fs, hatchRect, mix, mod, paperGrid, rad, roundRect, text, type Ctx } from './draw';
+import { TAU, alpha, clamp, fmt, font, fs, hatchRect, mix, mod, paperGrid, rad, roundRect, text, type Ctx } from './draw';
 import { paragraph } from './text';
 
 // The whole engine at work: every cylinder with its own piston, rod and crank
@@ -670,18 +670,25 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
 
   // ----- torque strip -----
   const headY = strip.y;
-  text(ctx, 'Krank milindeki anlık tork · iki tur (720°)', strip.x, headY, { size: f - 1, weight: 600, color: c.ink, baseline: 'top' });
+  const head = 'Krank milindeki anlık tork · iki tur (720°)';
   const peak = trace.max / trace.mean;
-  text(ctx, `Tepe: ortalamanın ${fmt(peak, 1)} katı${trace.min < 0 ? ' · arada krankı geri çeker' : ''}`, strip.x + strip.w, headY, {
+  const peakText = `Tepe: ortalamanın ${fmt(peak, 1)} katı${trace.min < 0 ? ' · arada krankı geri çeker' : ''}`;
+  const headW = text(ctx, head, strip.x, headY, { size: f - 1, weight: 600, color: c.ink, baseline: 'top' });
+  ctx.font = font(f - 2);
+  // On a narrow screen the peak note goes under the heading instead of over it.
+  const twoLines = headW + ctx.measureText(peakText).width + 12 > strip.w;
+  text(ctx, peakText, twoLines ? strip.x : strip.x + strip.w, twoLines ? headY + f * 1.2 : headY, {
     size: f - 2,
     color: trace.min < 0 ? c.bad : c.muted,
-    align: 'right',
+    align: twoLines ? 'left' : 'right',
     baseline: 'top',
+    maxWidth: strip.w,
   });
+  const headH = f * (twoLines ? 2.45 : 1.35);
   const px = strip.x;
-  const py = strip.y + f * 1.35;
+  const py = strip.y + headH;
   const pw = strip.w;
-  const ph = strip.h - f * 1.35;
+  const ph = strip.h - headH;
   const lo = Math.min(0, trace.min) * 1.08;
   const hi = Math.max(trace.max, ...trace.per.map((q) => Math.max(...q))) * 1.08;
   const Yt = (v: number) => py + ph - ((v - lo) / (hi - lo)) * ph;
