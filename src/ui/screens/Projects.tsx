@@ -3,6 +3,7 @@ import { newProjectBudget } from '../../core/budget';
 import { BudgetLine } from '../components/BudgetLine';
 import { MARKETS } from '../../data/markets';
 import * as A from '../../core/actions';
+import { FOCUS_PRESETS, presetFocus } from '../../core/development';
 import { availableSegments, gates } from '../../core/game';
 import { referencePrice, weeklySegmentDemand } from '../../core/market';
 import { yearFloat } from '../../core/time';
@@ -49,6 +50,9 @@ function NewProject({ onDone }: { onDone: () => void }) {
   const [platformId, setPlatformId] = useState('');
   const [engineId, setEngineId] = useState('');
   const [replaces, setReplaces] = useState('');
+  // A sensible starting point for the class; the player decides.
+  const PRESET_FOR: Record<SegmentId, string> = { city: 'people', family: 'family', sport: 'driver', luxury: 'luxury', pickup: 'work', suv: 'family' };
+  const [preset, setPreset] = useState(PRESET_FOR[segs.includes('family') ? 'family' : segs[0]]);
   const g = gates(s);
   const sameSeg = s.models.filter((m) => m.status === 'active' && m.segment === segment);
   // What such a project would cost before launch, worked out on a copy of the game.
@@ -57,6 +61,7 @@ function NewProject({ onDone }: { onDone: () => void }) {
   const pickSegment = (id: SegmentId) => {
     setSegment(id);
     setReplaces('');
+    setPreset(PRESET_FOR[id]);
   };
 
   return (
@@ -139,6 +144,19 @@ function NewProject({ onDone }: { onDone: () => void }) {
           </select>
         </label>
       )}
+      <div className="field">
+        <span>
+          Mühendislik odağı: mühendisler zamanlarını neye harcasın? <span className="muted small">(tasarımda ve geliştirmede kaydırıcılarla ince ayar yapılır)</span>
+        </span>
+        <div className="preset-chips" role="radiogroup" aria-label="Mühendislik odağı">
+          {FOCUS_PRESETS.map((x) => (
+            <button key={x.id} type="button" role="radio" aria-checked={preset === x.id} className={`chip ${preset === x.id ? 'is-on' : ''}`} title={x.desc} onClick={() => setPreset(x.id)}>
+              {x.name}
+            </button>
+          ))}
+        </div>
+        <span className="muted small">{FOCUS_PRESETS.find((x) => x.id === preset)?.desc}</span>
+      </div>
       {budget && (
         <>
           <p className="muted small">Şirketin son arabasına benzer bir tasarımla ve varsayılan test planıyla bu proje:</p>
@@ -153,7 +171,7 @@ function NewProject({ onDone }: { onDone: () => void }) {
           kind="primary"
           onClick={() => {
             const r = store.act((st) =>
-              A.startProject(st, { name, segment, targetPrice: Math.round(referencePrice(s.company.hq, segment, yf)), platformId: platformId || undefined, engineRefId: engineId || undefined, replacesModelId: replaces || undefined }),
+              A.startProject(st, { name, segment, targetPrice: Math.round(referencePrice(s.company.hq, segment, yf)), platformId: platformId || undefined, engineRefId: engineId || undefined, replacesModelId: replaces || undefined, focus: presetFocus(preset) }),
             );
             if (r && r.ok) {
               onDone();

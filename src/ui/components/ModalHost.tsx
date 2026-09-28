@@ -274,7 +274,7 @@ function CashFacts({ r, s }: { r: CashReport; s: GameState }) {
 }
 
 /** The company stands still: a design waiting on the desk, or no successor while the cars age. */
-function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idle' | 'polish'; projectId?: string }) {
+function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idle' | 'polish' | 'tested' | 'tooling' | 'launch'; projectId?: string }) {
   const close = () => store.act(A.dismissModal);
   const go = (to: Parameters<typeof store.go>[0]) => {
     store.keepPaused();
@@ -286,6 +286,38 @@ function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idl
   const age = newest ? Math.floor((s.week - newest.refreshWeek) / 52) : 0;
   const lastYear = s.years[s.years.length - 1];
   const best = s.years.reduce((a, y) => Math.max(a, y.unitsSold), 0);
+  if (reason === 'tested' || reason === 'tooling' || reason === 'launch') {
+    const p = s.projects.find((x) => x.id === projectId);
+    const weeks = p?.waitSince !== undefined ? s.week - p.waitSince : 0;
+    const what = {
+      tested: { title: 'Testler bitti, sıradaki adım bekliyor', body: 'testleri bitti ama üretim hazırlığına geçilmedi', next: 'Projede “Üretim hazırlığına geç”e bas, sonra hattı ve kalıpları seç.' },
+      tooling: { title: 'Kalıplar sipariş edilmedi', body: 'üretim hazırlığında bekliyor: hat seçilip kalıplar sipariş edilmedi', next: 'Projede hattı seç (boşta hat yoksa küçük bir atölye hattı kur) ve kalıpları sipariş et.' },
+      launch: { title: 'Araba hazır, lansman bekliyor', body: 'hazır ama satışa çıkmadı', next: 'Projede fiyatı ve pazarları seçip lansmanı yap.' },
+    }[reason];
+    return (
+      <Modal
+        title={what.title}
+        icon="⏳"
+        actions={
+          <>
+            {p && (
+              <Button kind="primary" onClick={() => go({ id: 'project', projectId: p.id })}>
+                Projeye git
+              </Button>
+            )}
+            <Button kind="ghost" onClick={close}>
+              Tamam
+            </Button>
+          </>
+        }
+      >
+        <p>
+          <b>{p?.name ?? 'Proje'}</b> {weeks} haftadır {what.body}. Bu sürede maaşlar ve kira ödeniyor ama araba satılmıyor.
+        </p>
+        <p>{what.next}</p>
+      </Modal>
+    );
+  }
   if (reason === 'polish') {
     const p = s.projects.find((x) => x.id === projectId);
     return (

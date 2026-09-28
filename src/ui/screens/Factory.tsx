@@ -19,7 +19,7 @@ import {
 } from '../../core/factory';
 import { yearFloat } from '../../core/time';
 import { DEALER_COMMISSION, MAX_SLOTS, costIndex, lineBuildWeeks, newLineCost, realWage, shopCost, slotCost } from '../../data/economy';
-import { materialUnitCost } from '../../core/game';
+import { credit, materialUnitCost } from '../../core/game';
 import { priceNow } from '../../core/market';
 import { STAGES, STATIONS, stationDef } from '../../data/stations';
 import type { CarModel, ComponentKey, GameState, ProductionLine, StageId } from '../../core/types';
@@ -92,6 +92,7 @@ function CapacityPlanner() {
   const active = s.models.filter((m) => m.status === 'active');
   const [pick, setPick] = useState<string>('');
   const [count, setCount] = useState(1);
+  const [sizePick, setSizePick] = useState<number | undefined>(undefined);
   const blackOption = blackPaintIsFaster(yf);
   const usesBlack = s.lines.some((l) => l.stations.paint.some((id) => stationDef(id).blackOnly));
   const [black, setBlack] = useState(usesBlack);
@@ -102,9 +103,15 @@ function CapacityPlanner() {
   const short = active.filter((x) => gapOf(x) >= 0.5).sort((a, b) => gapOf(b) - gapOf(a));
   const suggested = short[0] ?? [...active].sort((a, b) => demandOf(b) - demandOf(a))[0];
   const m = active.find((x) => x.id === pick) ?? suggested;
-  const perLine = (b: boolean) =>
-    lineReport(s, { ...emptyLine('plan', 'plan'), slots: MAX_SLOTS, stations: planBalancedLine(yf, b) }, m?.stats.complexity ?? 1).throughput;
-  const each = turnkeyLineCost(s.week, allowBlack) + (m ? A.retoolCost(s, m) : 0);
+  const SIZES = [2, 3, 4, 6, MAX_SLOTS];
+  const outputAt = (b: boolean, k: number) =>
+    lineReport(s, { ...emptyLine('plan', 'plan'), slots: Math.max(3, k), stations: planBalancedLine(yf, b, k) }, m?.stats.complexity ?? 1).throughput;
+  // Without a choice: the smallest hall that covers what buyers are missing.
+  const missing = m ? Math.max(0, demandOf(m) - modelCapacity(s, m)) : 0;
+  const fits = SIZES.find((k) => outputAt(allowBlack, k) >= missing) ?? MAX_SLOTS;
+  const size = sizePick ?? fits;
+  const perLine = (b: boolean) => outputAt(b, size);
+  const each = turnkeyLineCost(s.week, allowBlack, size) + (m ? A.retoolCost(s, m) : 0);
   const shopEach = workshopLineCost(s.week) + (m ? A.retoolCost(s, m) : 0);
   const shopCap = lineReport(s, { ...emptyLine('plan', 'plan'), stations: workshopPlan(yf) }, m?.stats.complexity ?? 1).throughput;
   const demand = m ? Object.values(m.lastDemand ?? {}).reduce((a, b) => a + b, 0) : 0;
@@ -115,7 +122,7 @@ function CapacityPlanner() {
   const upgradeCost = upgrades.reduce((a, u) => a + Math.max(0, u.q.cost), 0);
   const affordable = Math.max(0, Math.floor(s.company.cash / each));
   // What one more line earns if every car it builds is sold: years to pay for itself.
-  const planLine = { ...emptyLine('plan', 'plan'), slots: MAX_SLOTS, stations: planBalancedLine(yf, allowBlack) };
+  const planLine = { ...emptyLine('plan', 'plan'), slots: Math.max(3, size), stations: planBalancedLine(yf, allowBlack, size) };
   const margin = m ? priceNow(m, s.week) * (1 - DEALER_COMMISSION) - materialUnitCost(s, m) - lineUpkeep(s, planLine, 1) / Math.max(0.1, perLine(allowBlack)) : 0;
   const payback = margin > 0 ? each / (margin * perLine(allowBlack) * 52) : Infinity;
   const build = lineBuildWeeks(yf);
@@ -150,8 +157,8 @@ function CapacityPlanner() {
           {m && (
             <div className="planner-form">
               <p>
-                <b>Anahtar teslim hat:</b> tam boy, bugünün en iyi makineleriyle ve dengeli kurulur (hiçbir bölüm darboğazın besleyebileceğinden fazla makine
-                almaz). {m.name} için hat başına <b>+{perLine(allowBlack).toFixed(1)} araç/hf</b>, kalıp dahil <b>{money(each)}</b>. Binası ve makineleri{' '}
+                <b>Anahtar teslim hat:</b> bugünün en iyi makineleriyle ve dengeli kurulur (hiçbir bölüm darboğazın besleyebileceğinden fazla makine
+                almaz). {m.name} için {size} yerli hat başına <b>+{perLine(allowBlack).toFixed(1)} araç/hf</b>, kalıp dahil <b>{money(each)}</b>. Binası ve makineleri{' '}
                 <b>{build} haftada</b> kurulur.{' '}
                 {payback < Infinity ? (
                   <>
@@ -161,6 +168,14 @@ function CapacityPlanner() {
                   <span className="tone-bad">Bu fiyatla araç başına para kalmıyor: yeni hat kendini ödemez.</span>
                 )}
               </p>
+              <div className="preset-chips" role="radiogroup" aria-label="Hat boyu">
+                <span className="small muted">Hat boyu (bölüm başına yer):</span>
+                {SIZES.map((k) => (
+                  <button key={k} type="button" role="radio" aria-checked={size === k} className={`chip ${size === k ? 'is-on' : ''}`} onClick={() => setSizePick(k)} title={`${outputAt(allowBlack, k).toFixed(1)} araç/hf · ${money(turnkeyLineCost(s.week, allowBlack, k) + A.retoolCost(s, m))}`}>
+                    {k} yer · {outputAt(allowBlack, k).toFixed(0)}/hf{k === fits && sizePick === undefined ? ' (açığa göre)' : ''}
+                  </button>
+                ))}
+              </div>
               {blackOption && (
                 <Toggle
                   checked={black}
@@ -204,12 +219,31 @@ function CapacityPlanner() {
                       body: `${m.name} için ${count} anahtar teslim hat: ${money(each * count)} şimdi ödenir, hatlar ${build} hafta sonra üretime başlar (+${(perLine(allowBlack) * count).toFixed(0)} araç/hf). Talep şu an ~${demand.toFixed(0)}/hf, üretim ${cap.toFixed(1)}/hf.`,
                       confirm: `${count} hat kur`,
                     });
-                    if (okd) store.try((st) => A.buildTurnkeyLines(st, count, m.id, allowBlack), `${count} hat inşa ediliyor: ${m.name}`);
+                    if (okd) store.try((st) => A.buildTurnkeyLines(st, count, m.id, allowBlack, size), `${count} hat inşa ediliyor: ${m.name}`);
                   }}
                 >
                   {count} hat kur
                 </Button>
               </div>
+              {(() => {
+                // A line that pays for itself soon but the till is short: the bank can bridge it.
+                const short = each * count - s.company.cash;
+                const room = credit(s).limit - s.company.loan;
+                if (short <= 0 || payback > 2) return null;
+                return room >= short ? (
+                  <p className="note small planner-loan">
+                    Kasada {money(s.company.cash)} var, eksik {money(short)}. Hat ~{payback < 1 ? `${Math.max(1, Math.round(payback * 12))} ayda` : `${payback.toFixed(1)} yılda`} kendini
+                    ödüyorsa eksiği kredi ile kapatmak mantıklı olabilir (faiz yılda %{Math.round(credit(s).rate * 100)}).{' '}
+                    <Button small onClick={() => store.try((st) => A.takeLoan(st, Math.ceil(short / 1000) * 1000), 'Kredi alındı')}>
+                      {money(Math.ceil(short / 1000) * 1000)} kredi al
+                    </Button>
+                  </p>
+                ) : (
+                  <p className="note small planner-loan">
+                    Kasa ve banka kredisi ({money(Math.max(0, room))}) bu hattı kurmaya yetmiyor: daha küçük bir hat boyu seç ya da hatları tek tek büyüt.
+                  </p>
+                );
+              })()}
             </div>
           )}
         </>

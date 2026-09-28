@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as A from '../../core/actions';
-import { FOCUS_HINTS, FOCUS_KEYS, FOCUS_NAMES, devRate, evenFocus } from '../../core/development';
+import { FOCUS_HINTS, FOCUS_KEYS, FOCUS_NAMES, FOCUS_PRESETS, devRate, matchingPreset, presetFocus } from '../../core/development';
 import { costIndex, engineerSalary } from '../../data/economy';
 import { yearFloat } from '../../core/time';
 import { unknownTech } from '../../core/research';
@@ -183,18 +183,24 @@ export function FocusPanel({ project: p }: { project: Project }) {
             buna göre. Neye ağırlık vereceğin senin fikrin: bu araba kimin için?
           </p>
         </div>
-        <Button
-          small
-          kind="ghost"
-          onClick={() =>
-            store.act((st) => {
-              A.setFocus(st, p.id, evenFocus());
-              for (const k of locked) A.toggleFocusLock(st, p.id, k);
-            })
-          }
-        >
-          Eşit dağıt
-        </Button>
+      </div>
+      <div className="preset-chips" role="group" aria-label="Hazır odaklar">
+        {FOCUS_PRESETS.map((x) => (
+          <button
+            key={x.id}
+            type="button"
+            className={`chip ${matchingPreset(p.dev.focus) === x.id ? 'is-on' : ''}`}
+            title={x.desc}
+            onClick={() =>
+              store.act((st) => {
+                for (const k of locked) A.toggleFocusLock(st, p.id, k);
+                A.setFocus(st, p.id, presetFocus(x.id));
+              })
+            }
+          >
+            {x.name}
+          </button>
+        ))}
       </div>
       <div className="focus-bar" aria-hidden>
         {FOCUS_KEYS.map((k) => (

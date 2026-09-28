@@ -23,7 +23,7 @@ import {
 import { modelScores, priceNow, referencePrice } from './market';
 import { stateRng } from './rng';
 import { acquisitionTargets } from './acquisitions';
-import { beginResearch, ensureResearch, knownKnowhow, missingRequirements, pumpResearchQueue, researchCost, researchDef, researchSlots, restrictToKnown, unknownTech } from './research';
+import { beginResearch, ensureResearch, knownKnowhow, labSlots, missingRequirements, pumpResearchQueue, researchCost, researchDef, researcherHireCost, restrictToKnown, unknownTech } from './research';
 import { experienceFactor, newEstimate } from './estimate';
 import { TESTS, SUPPLIERS, expectedDefects, generateDefects } from './testing';
 import { yearFloat } from './time';
@@ -77,6 +77,25 @@ export function hireEngineers(s: GameState, n: number): ActionResult {
   return ok;
 }
 
+/** Research staff: they only learn new technology, and faster than design engineers. */
+export function hireResearchers(s: GameState, n: number): ActionResult {
+  const cost = n * researcherHireCost(yearFloat(s.week));
+  if (s.company.cash < cost) return fail('Yeterli para yok.');
+  spend(s, cost, 'other');
+  s.company.researchers = (s.company.researchers ?? 0) + n;
+  decide(s, 'researchers', `${n} Ar-Ge uzmanı işe alındı (toplam ${s.company.researchers})`);
+  return ok;
+}
+
+export function fireResearchers(s: GameState, n: number): ActionResult {
+  const have = s.company.researchers ?? 0;
+  if (have < n) return fail('Bu kadar Ar-Ge uzmanı yok.');
+  s.company.researchers = have - n;
+  s.company.reputation = clamp(s.company.reputation - 0.1 * n, 0, 100);
+  decide(s, 'researchers', `${n} Ar-Ge uzmanı çıkarıldı (toplam ${s.company.researchers})`);
+  return ok;
+}
+
 export function fireEngineers(s: GameState, n: number): ActionResult {
   if (s.company.engineers - n < 1) return fail('En az bir mühendis kalmalı.');
   s.company.engineers -= n;
@@ -95,6 +114,8 @@ export interface StartProjectOptions {
   platformId?: string;
   engineRefId?: string;
   replacesModelId?: string;
+  /** How the engineers split their time, chosen up front (a preset); even when missing. */
+  focus?: Record<FocusKey, number>;
 }
 
 /** One line describing a design, for the decision log. */
@@ -150,7 +171,7 @@ export function startProject(s: GameState, o: StartProjectOptions): { ok: true; 
     phase: 'design',
     createdWeek: s.week,
     engineers: Math.max(1, free),
-    dev: { required: 0, done: 0, focus: evenFocus(), points: { performance: 0, efficiency: 0, comfort: 0, handling: 0, safety: 0, practicality: 0, cost: 0, quality: 0 } },
+    dev: { required: 0, done: 0, focus: o.focus ? normalizeFocus(o.focus) : evenFocus(), points: { performance: 0, efficiency: 0, comfort: 0, handling: 0, safety: 0, practicality: 0, cost: 0, quality: 0 } },
     defects: [],
     defectPrior: 0,
     tests: { dyno: { planned: 4, done: 0 }, road: { planned: 8, done: 0 }, crash: { planned: 0, done: 0 }, durability: { planned: 8, done: 0 } },
@@ -775,18 +796,18 @@ export function sellStation(s: GameState, lineId: string, stage: StageId, index:
   return ok;
 }
 
-/** Build `count` new lines, fully equipped and balanced, and put `modelId` on them. */
-export function buildTurnkeyLines(s: GameState, count: number, modelId: string | undefined, allowBlack: boolean): ActionResult {
+/** Build `count` new lines, equipped and balanced (full size, or a smaller hall of `slots` places), and put `modelId` on them. */
+export function buildTurnkeyLines(s: GameState, count: number, modelId: string | undefined, allowBlack: boolean, slots = MAX_SLOTS): ActionResult {
   const m = modelId ? model(s, modelId) : undefined;
-  const each = turnkeyLineCost(s.week, allowBlack) + (m ? retoolCost(s, m) : 0);
+  const each = turnkeyLineCost(s.week, allowBlack, slots) + (m ? retoolCost(s, m) : 0);
   const total = each * count;
   if (count < 1) return fail('En az bir hat seç.');
   if (s.company.cash < total) return fail(`${count} hat için ${money(total)} gerekiyor.`);
-  const plan = planBalancedLine(yearFloat(s.week), allowBlack);
+  const plan = planBalancedLine(yearFloat(s.week), allowBlack, slots);
   for (let i = 0; i < count; i++) {
     spend(s, each, 'investment');
     const line = emptyLine(`L${s.nextId++}`, nextLineName(s));
-    line.slots = MAX_SLOTS;
+    line.slots = Math.max(line.slots, slots);
     for (const st of STAGES) line.stations[st.id] = [...plan[st.id]];
     line.buildUntilWeek = s.week + lineBuildWeeks(yearFloat(s.week));
     if (m) line.modelId = m.id;
@@ -1016,7 +1037,7 @@ export function startResearch(s: GameState, id: string): ActionResult {
   if (r.active.some((a) => a.id === id)) return fail(`${def.name} zaten araştırılıyor.`);
   const missing = missingRequirements(s, id);
   if (missing.length) return fail(`Önce şunlar bilinmeli: ${missing.map((m) => m.name).join(', ')}.`);
-  if (r.active.length >= researchSlots(s.company.engineers))
+  if (r.active.length >= labSlots(s))
     return fail('Mühendislerin aynı anda bu kadar konu araştırabiliyor. Daha çok mühendisle daha çok konu yürütülür.');
   const cost = researchCost(def, yf, s);
   if (s.company.cash < cost) return fail(`${def.name} araştırması için ${money(cost)} gerekiyor.`);

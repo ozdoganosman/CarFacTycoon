@@ -2916,9 +2916,8 @@ fieldset {
   min-width: 0;
 }
 .rrow-name b {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
 }
 .rrow-tags {
   display: flex;
@@ -3825,4 +3824,33 @@ fieldset {
   display: flex;
   gap: 6px;
   flex: none;
+}
+
+.lab-staff {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent2) 35%, var(--line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent2) 7%, var(--panel));
+}
+.lab-staff-text {
+  display: grid;
+  gap: 2px;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.lab-staff-btns {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+.preset-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
 }

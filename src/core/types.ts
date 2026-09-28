@@ -222,6 +222,9 @@ export interface Project {
   design: CarDesign;
   phase: ProjectPhase;
   createdWeek: number;
+  /** What the project has been waiting on the player for, and since when (for the standing-still warning). */
+  waitKind?: 'design' | 'tested' | 'tooling' | 'launch';
+  waitSince?: number;
   engineers: number;
   dev: {
     required: number;
@@ -363,6 +366,8 @@ export interface ProductionLine {
   retoolUntilWeek?: number;
   /** A new line is being built and equipped until this week. */
   buildUntilWeek?: number;
+  /** When automatic capacity last rebuilt it (at most once a year). */
+  rebuiltWeek?: number;
   /** When a line is working on military orders during the war. */
   military?: boolean;
   /** Sections that also work a night shift. */
@@ -421,7 +426,7 @@ export type ModalItem =
   | { kind: 'unlock'; title: string; body: string }
   | { kind: 'insolvency'; stage: 'first' | 'last' }
   /** The company stands still: a design left on the desk, or no new car coming while the range ages. Stops the clock. */
-  | { kind: 'stall'; reason: 'design' | 'idle' | 'polish'; projectId?: string }
+  | { kind: 'stall'; reason: 'design' | 'idle' | 'polish' | 'tested' | 'tooling' | 'launch'; projectId?: string }
   /** Research finished (and what started next from the queue): a corner note that does not stop the clock. */
   | { kind: 'research'; done: string[]; started: string[] }
   | { kind: 'gameOver' };
@@ -472,6 +477,8 @@ export interface Company {
   loan: number;
   reputation: number; // 0..100
   engineers: number;
+  /** Research staff: learn new technology faster (they do not develop cars). */
+  researchers?: number;
   skill: number; // engineering skill 0..100
   shops: Record<ComponentKey, boolean>;
   modelsLaunched: number;
@@ -516,7 +523,7 @@ export interface GameState {
   news?: NewsIssue[];
   /** Technologies the company has learned, and what its engineers are researching now (older saves lack it). */
   /** queue: subjects waiting for a free slot, in order; they start by themselves when there is room and money. */
-  research?: { known: string[]; active: { id: string; weeksLeft: number; weeks: number }[]; queue?: string[] };
+  research?: { known: string[]; active: { id: string; weeksLeft: number; weeks: number; /** Research speed when it started (staff hired later speed it up). */ speed?: number }[]; queue?: string[] };
   cardsSeen: string[];
   /** The racing team: budget level 0-3 and the fame its results earned. */
   racing?: { level: number; fame: number; wins?: number; winYears?: number[]; paused?: boolean; dry?: number; last?: { year: number; race: string; result: 'win' | 'podium' | 'none'; model: string } };

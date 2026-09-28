@@ -1,7 +1,7 @@
 import * as A from '../../core/actions';
 import { devWeeksLeft } from '../../core/budget';
 import { engineersBusy, idleEngineers } from '../../core/game';
-import { researchSlots, researchSpeed } from '../../core/research';
+import { labSlots, labSpeed } from '../../core/research';
 import { yearFloat } from '../../core/time';
 import { costIndex, engineerSalary } from '../../data/economy';
 import { money } from '../format';
@@ -39,7 +39,7 @@ export function TeamPanel({ compact }: { compact?: boolean }) {
           <b>{project.name}</b> geliştirmesi şimdiki ekiple ~<b>{now} hafta</b>; +5 mühendisle ~<b>{with5}</b>, +10 ile ~<b>{with10}</b> hafta.
         </p>
       ) : (
-        !compact && <p className="small muted">Geliştirmede proje yok. Mühendisler Ar-Ge’de çalışır: araştırma hızı ×{researchSpeed(n).toFixed(1)}, {researchSlots(n)} araştırma yeri.</p>
+        !compact && <p className="small muted">Geliştirmede proje yok. Mühendisler Ar-Ge’de çalışır: araştırma hızı ×{labSpeed(s).toFixed(1)}, {labSlots(s)} araştırma yeri (Ar-Ge ekranından ayrıca Ar-Ge uzmanı alınabilir).</p>
       )}
       <div className="team-actions">
         <Button kind="primary" disabled={s.company.cash < hireCost} onClick={() => hire(1)}>

@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import * as A from '../../core/actions';
 import {
+  labSlots,
+  labSpeed,
   missingRequirements,
   queueHold,
   researchCost,
@@ -9,6 +11,8 @@ import {
   researchSlots,
   researchSpeed,
   researchWeeks,
+  researcherHireCost,
+  researcherSalary,
   rivalAdoption,
   techState,
   type ResearchDef,
@@ -40,7 +44,7 @@ export function Research() {
   const yf = yearFloat(s.week);
   const r = s.research ?? { known: [], active: [], queue: [] };
   const queue = r.queue ?? [];
-  const slots = researchSlots(s.company.engineers);
+  const slots = labSlots(s);
   const adoption = useMemo(() => rivalAdoption(s), [s.week, s.rivalModels.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const defs = researchDefs();
   const [filter, setFilter] = useState<Filter>('open');
@@ -95,13 +99,13 @@ export function Research() {
             <>
               Araştırma yeri
               <Info>
-                <p>Her 15 mühendis bir konu daha yürütebilir.</p>
+                <p>Her 15 mühendis ya da 6 Ar-Ge uzmanı bir konu daha yürütebilir.</p>
               </Info>
             </>
           }
           value={`${r.active.length} / ${slots}`}
         />
-        <Stat label="Araştırma hızı" value={`×${researchSpeed(s.company.engineers).toFixed(1)}`} sub={`${s.company.engineers} mühendis`} />
+        <Stat label="Araştırma hızı" value={`×${labSpeed(s).toFixed(1)}`} sub={`${s.company.engineers} mühendis · ${s.company.researchers ?? 0} Ar-Ge uzmanı`} />
         <Stat
           label={
             <>
@@ -116,6 +120,8 @@ export function Research() {
         />
         <Stat label="Rakiplerde var, sende yok" value={count('rivals')} sub="teknoloji" tone={count('rivals') > 3 ? 'warn' : undefined} />
       </div>
+
+      <LabStaff />
 
       <div className="research-layout">
         <div className="research-main">
@@ -198,10 +204,10 @@ function ResearchRow({ d, expanded, onToggle, share }: { d: ResearchDef; expande
   const queue = r.queue ?? [];
   const st = techState(s, d.id, yf);
   const cost = researchCost(d, yf, s);
-  const weeks = researchWeeks(d, yf, s.company.engineers);
+  const weeks = researchWeeks(d, yf, s.company.engineers, s.company.researchers ?? 0);
   const missing = missingRequirements(s, d.id);
   const active = r.active.find((a) => a.id === d.id);
-  const free = researchSlots(s.company.engineers) - r.active.length;
+  const free = labSlots(s) - r.active.length;
   const qi = queue.indexOf(d.id);
   return (
     <div className={`rrow is-${st}`} role="listitem">
@@ -235,7 +241,7 @@ function ResearchRow({ d, expanded, onToggle, share }: { d: ResearchDef; expande
         {st === 'known' ? (
           <span className="tone-good">✓ biliniyor</span>
         ) : active ? (
-          <Progress value={active.weeks - active.weeksLeft} max={active.weeks} label={`${active.weeksLeft} hf`} />
+          <Progress value={active.weeks - active.weeksLeft} max={active.weeks} label={`${Math.ceil(active.weeksLeft)} hf`} />
         ) : st === 'future' ? (
           ''
         ) : (
@@ -282,6 +288,42 @@ function ResearchRow({ d, expanded, onToggle, share }: { d: ResearchDef; expande
   );
 }
 
+/** Research staff: hire them to learn faster and work on more subjects at once. */
+function LabStaff() {
+  const s = useGameState();
+  const yf = yearFloat(s.week);
+  const n = s.company.researchers ?? 0;
+  const e = s.company.engineers;
+  const hire = (k: number) => store.try((st) => A.hireResearchers(st, k), `${k} Ar-Ge uzmanı işe alındı`);
+  const next = n + 4;
+  return (
+    <div className="lab-staff">
+      <div className="lab-staff-text">
+        <b>Ar-Ge uzmanları: {n}</b>
+        <span className="muted small">
+          {' '}
+          · araştırma hızı ×{labSpeed(s).toFixed(1)}, aynı anda {labSlots(s)} konu · maaşları haftada {money(n * researcherSalary(yf))}
+        </span>
+        <span className="small">
+          +4 uzmanla hız ×{researchSpeed(e, next).toFixed(1)}, {researchSlots(e, next)} konu. Uzmanlar yalnızca araştırır (araba geliştirmez); işe alınca süren araştırmalar da hızlanır. Kişi başı işe alma{' '}
+          {money(researcherHireCost(yf))}, maaş haftada {money(researcherSalary(yf))}.
+        </span>
+      </div>
+      <div className="lab-staff-btns">
+        <Button kind="primary" small disabled={s.company.cash < researcherHireCost(yf)} onClick={() => hire(1)}>
+          +1 Ar-Ge uzmanı al
+        </Button>
+        <Button small disabled={s.company.cash < 4 * researcherHireCost(yf)} onClick={() => hire(4)}>
+          +4
+        </Button>
+        <Button small kind="ghost" disabled={n <= 0} onClick={() => store.try((st) => A.fireResearchers(st, 1), 'Bir Ar-Ge uzmanı ayrıldı')}>
+          −1
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 /** What the engineers are learning now and what comes next. */
 function ActiveAndQueue() {
   const s = useGameState();
@@ -297,7 +339,7 @@ function ActiveAndQueue() {
             <div key={a.id} className="research-active">
               <div className="test-head">
                 <b>{researchDef(a.id)?.name ?? a.id}</b>
-                <span className="muted small">{a.weeksLeft} hf</span>
+                <span className="muted small">{Math.ceil(a.weeksLeft)} hf</span>
               </div>
               <Progress value={a.weeks - a.weeksLeft} max={a.weeks} />
             </div>
@@ -348,7 +390,7 @@ function ActiveAndQueue() {
               })}
             </ol>
             <p className="muted small">
-              Yer açılınca sıradaki kendiliğinden başlar; bedeli o an ödenir ve kasada birkaç haftalık gider kadar yedek bırakılır. Önkoşulunu bekleyenin yerine arkasındaki başlar.
+              Yer açılınca sıradaki kendiliğinden başlar ve bedeli o an ödenir. Sıra, birkaç haftalık gideri ayırdıktan sonra kalan kasanın en fazla yarısını harcar (fabrikanın büyümesi için para kalsın); daha pahalı bir konuyu “Araştır” ile elle başlatabilirsin. Önkoşulunu bekleyenin yerine arkasındaki başlar.
             </p>
           </>
         ) : (

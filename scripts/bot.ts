@@ -226,12 +226,27 @@ function smartFactoryAndPrices(s: GameState) {
     // Build what sells, and work a stock pile down.
     const demand = demandAt(m.price);
     m.productionRate = soon > 0 ? Math.min(1, Math.max(0, (demand - (m.inventory - 2 * demand) / 4) / soon)) : 1;
-    // Would one more line pay for itself within a year at today's price?
-    const perLine = lineReport(s, { ...emptyLine('x', 'x'), slots: MAX_SLOTS, stations: planBalancedLine(yf, true) }, m.stats.complexity).throughput;
-    const each = turnkeyLineCost(s.week, true) + A.retoolCost(s, m);
-    const margin = m.price * (1 - DEALER_COMMISSION) - unit;
-    const extra = Math.min(perLine, demand - soon);
-    if (extra > 0 && extra * margin * 52 > each && s.company.cash - (s.company.taxOwed ?? 0) > each * 1.5) A.buildTurnkeyLines(s, 1, m.id, true);
+    // Would a line (of the right size) pay for itself within a year and a half, counting that more
+    // cars can be sold at a lower price? A small line otherwise keeps the price high and sales low.
+    if (s.week % 4 === 0) {
+      const profitWith = (capacity: number) => {
+        let best = -Infinity;
+        for (let f = 0.7; f <= 3.01; f += 0.1) {
+          const p = ref * f;
+          best = Math.max(best, Math.min(demandAt(p), capacity) * (p * (1 - DEALER_COMMISSION) - unit));
+        }
+        return best;
+      };
+      const now = profitWith(cap);
+      let pick: { k: number; ratio: number; cost: number } | null = null;
+      for (const k of [2, 3, 4, 6, MAX_SLOTS]) {
+        const add = lineReport(s, { ...emptyLine('x', 'x'), slots: Math.max(3, k), stations: planBalancedLine(yf, true, k) }, m.stats.complexity).throughput;
+        const cost = turnkeyLineCost(s.week, true, k) + A.retoolCost(s, m);
+        const gain = (profitWith(cap + add) - now) * 52;
+        if (gain * 1.5 > cost && s.company.cash - (s.company.taxOwed ?? 0) > cost * 1.5 && (!pick || gain / cost > pick.ratio)) pick = { k, ratio: gain / cost, cost };
+      }
+      if (pick) A.buildTurnkeyLines(s, 1, m.id, true, pick.k);
+    }
     if (demand > soon * 1.1) {
       for (const l of lines) {
         const q = modernizeQuote(l, s.week, true);

@@ -15,7 +15,7 @@ import { updateRivals, initRivals } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
 import { eraReference } from './scoring';
 import { allTech } from './techtree';
-import { knownKnowhow, noteResearch, pumpResearchQueue, researchDef, startingKnowledge } from './research';
+import { knownKnowhow, labSpeed, noteResearch, pumpResearchQueue, researchDef, researcherSalary, startingKnowledge } from './research';
 import { checkBoom, publish, techIssue } from './news';
 import { racingWeek } from './racing';
 import {
@@ -428,10 +428,25 @@ function closeYear(s: GameState, year: number) {
 function checkStall(s: GameState) {
   if (s.modals.some((m) => m.kind === 'stall')) return;
   const since = (k: string) => s.week - (s.flags[k] ?? -1e6);
-  const waiting = s.projects.find((p) => p.phase === 'design' && s.week - p.createdWeek >= 13);
-  if (waiting && since('stallDesign') >= 26) {
-    s.flags.stallDesign = s.week;
-    pushModal(s, { kind: 'stall', reason: 'design', projectId: waiting.id });
+  // A project waiting on the player: a design on the desk, tests done but no production prep, no
+  // dies ordered, or a finished car never launched. Easy to miss while time runs (one company sat
+  // three years with a tested car and no dies).
+  for (const p of s.projects) {
+    const w = waitingOn(p);
+    if (!w) {
+      delete p.waitKind;
+      delete p.waitSince;
+    } else if (p.waitKind !== w) {
+      p.waitKind = w;
+      p.waitSince = w === 'design' ? p.createdWeek : s.week;
+    }
+  }
+  const stuck = s.projects.find(
+    (p) => p.waitKind && s.week - (p.waitSince ?? s.week) >= (p.waitKind === 'design' ? 13 : 8) && since(`stall:${p.id}:${p.waitKind}`) >= 26,
+  );
+  if (stuck && stuck.waitKind) {
+    s.flags[`stall:${stuck.id}:${stuck.waitKind}`] = s.week;
+    pushModal(s, { kind: 'stall', reason: stuck.waitKind, projectId: stuck.id });
     return;
   }
   // A car developed far past its target gains nothing more: the engineers could be testing it.
@@ -451,6 +466,15 @@ function checkStall(s: GameState) {
     s.flags.stallIdle = s.week;
     pushModal(s, { kind: 'stall', reason: 'idle' });
   }
+}
+
+/** What a project is waiting for the player to do, if anything. */
+function waitingOn(p: Project): Project['waitKind'] {
+  if (p.phase === 'design') return 'design';
+  if (p.phase === 'testing' && TESTS.every((t) => p.tests[t.id].done >= p.tests[t.id].planned)) return 'tested';
+  if (p.phase === 'production' && p.productionReadyWeek === undefined) return 'tooling';
+  if (p.phase === 'ready') return 'launch';
+  return undefined;
 }
 
 /**
@@ -489,7 +513,9 @@ function payTaxInstalment(s: GameState) {
 
 function advanceResearch(s: GameState) {
   if (!s.research) return;
-  for (const a of s.research.active) a.weeksLeft -= 1;
+  // Research staff hired mid-way speed up the work already under way.
+  const speed = labSpeed(s);
+  for (const a of s.research.active) a.weeksLeft -= speed / (a.speed ?? speed);
   const done = s.research.active.filter((a) => a.weeksLeft <= 0);
   if (!done.length) {
     // A queue held up by an empty till starts once the money is there.
@@ -728,7 +754,7 @@ function field(s: GameState) {
 
 function fixedCosts(s: GameState) {
   const yf = yearFloat(s.week);
-  spend(s, s.company.engineers * engineerSalary(yf), 'salaries');
+  spend(s, s.company.engineers * engineerSalary(yf) + (s.company.researchers ?? 0) * researcherSalary(yf), 'salaries');
   s.company.idleSalary = (s.company.idleSalary ?? 0) + idleEngineers(s) * engineerSalary(yf);
   spend(s, overhead(yf, s.lines.length), 'other');
   for (const m of MARKET_IDS) {

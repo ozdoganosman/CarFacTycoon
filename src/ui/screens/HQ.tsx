@@ -53,7 +53,7 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
   const r = s.research;
   const hold = queueHold(s, yearFloat(s.week));
   if (r && r.active.length === 0 && hold?.reason === 'cash')
-    out.push({ text: `Ar-Ge sırası bekliyor: ${researchDef(hold.id)?.name} için kasa yetmiyor.`, go: () => store.go({ id: 'research' }) });
+    out.push({ text: `Ar-Ge sırası bekliyor: ${researchDef(hold.id)?.name}, serbest kasanın yarısından pahalı (sıra fabrikanın parasına dokunmaz). Elle başlatabilir ya da kasanın birikmesini bekleyebilirsin.`, go: () => store.go({ id: 'research' }) });
   else if (r && r.active.length === 0 && !r.queue?.length && s.models.length) {
     const yf = yearFloat(s.week);
     const adoption = rivalAdoption(s);

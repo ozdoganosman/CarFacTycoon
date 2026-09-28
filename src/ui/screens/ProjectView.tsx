@@ -18,6 +18,7 @@ import { pctWith } from '../../core/turkish';
 import { Badge, Button, Choice, NumberInput, Panel, Progress, Slider, Toggle } from '../components/ui';
 import { newEstimate } from '../../core/estimate';
 import { launchBudget } from '../../core/budget';
+import { researcherSalary } from '../../core/research';
 import { BudgetLine } from '../components/BudgetLine';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { Designer } from './Designer';
@@ -78,7 +79,9 @@ export function ProjectView({ projectId }: { projectId: string }) {
       {(p.phase === 'design' || p.phase === 'development') && (
         <>
           <DevBar project={p} />
-          <Designer project={p} readOnly={p.phase === 'development'} below={<FocusPanel project={p} />} />
+          {/* The brief first: what the engineers should work on, then the car itself. */}
+          <FocusPanel project={p} />
+          <Designer project={p} readOnly={p.phase === 'development'} />
         </>
       )}
       {p.phase === 'testing' && <Testing p={p} />}
@@ -136,6 +139,11 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
       bestProfit = pf;
     }
   }
+  // A small line pushes the best price up and sales down: what a line big enough would earn instead.
+  const refRound = Math.round(ref / 10) * 10;
+  const demandAtRef = demandAt(refRound);
+  const bigLineProfit = demandAtRef * (refRound * net - unit - labour);
+  const lineTooSmall = !noLine && demandAtRef > cap * 2 && bigLineProfit > bestProfit * 1.5;
   const base = [0.85, 1, 1.15, 1.3, 1.5].map((f) => Math.round((ref * f) / 10) * 10);
   const options = [...base, ...(base.some((x) => Math.abs(x - best) / best < 0.03) ? [] : [best])].sort((a, b) => a - b);
   const bestShown = options.reduce((a, b) => (Math.abs(b - best) < Math.abs(a - best) ? b : a));
@@ -158,6 +166,13 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
         {segWeekly > 0 && ` (sınıfın ~${pctWith(d / segWeekly, 'poss')})`} · hat {cap.toFixed(1)} araç/hafta. {verdict}
         {segWeekly > 0 && d / segWeekly > 0.4 && ' Sınıfın bu kadarını tek bir araba nadiren alır: bayiler, üretim ve rakiplerin yanıtı payı sınırlar; tahmini iyimser say.'}
       </p>
+      {lineTooSmall && (
+        <p className="note small">
+          <b>Hat küçük.</b> “En kârlı” fiyat bu hattın az üretmesinden yüksek çıkıyor. Sınıf fiyatında ({money(refRound)}) talep ~{demandAtRef.toFixed(0)} araç/hf: ona yetecek bir
+          hatla haftada ~{money(bigLineProfit)} brüt kâr kalır (bu hatla en iyisi {money(bestProfit)}). Fabrika’dan hat kur ya da büyüt; “talebi otomatik karşıla” da kasa
+          yettikçe büyütür.
+        </p>
+      )}
       <table className="table compact">
         <thead>
           <tr>
@@ -697,7 +712,7 @@ function Launch({ p }: { p: Project }) {
   const sold = Math.min(demand, cap);
   const labourWeek = line ? lineUpkeep(s, line, cap > 0 ? sold / cap : 0) : 0;
   const contribution = sold * (net - unit) - labourWeek;
-  const fixed = s.company.engineers * engineerSalary(yf) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, m) => a + dealerUpkeep(s, m), 0);
+  const fixed = s.company.engineers * engineerSalary(yf) + (s.company.researchers ?? 0) * researcherSalary(yf) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, m) => a + dealerUpkeep(s, m), 0);
   const weeklyNet = contribution - fixed;
   const others = s.models.some((m) => m.status === 'active' && m.id !== p.replacesModelId);
   // With other cars on sale their profit already carries the fixed costs.

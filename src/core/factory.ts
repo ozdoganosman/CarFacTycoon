@@ -120,15 +120,15 @@ export function blackPaintIsFaster(yf: number): boolean {
 }
 
 /**
- * A full-size line with today's best stations, balanced: no section gets more
- * stations than the slowest one can feed.
+ * A line with today's best stations, balanced: no section gets more stations than the slowest one
+ * can feed. Full size by default; a smaller hall (`slots`) for a smaller demand.
  */
-export function planBalancedLine(yf: number, allowBlack: boolean): Record<StageId, string[]> {
+export function planBalancedLine(yf: number, allowBlack: boolean, slots = MAX_SLOTS): Record<StageId, string[]> {
   const best = bestStations(yf, allowBlack);
-  const target = Math.min(...STAGES.map((st) => best[st.id].capacity * MAX_SLOTS));
+  const target = Math.min(...STAGES.map((st) => best[st.id].capacity * slots));
   const plan = {} as Record<StageId, string[]>;
   for (const st of STAGES) {
-    const n = Math.min(MAX_SLOTS, Math.ceil(target / best[st.id].capacity - 1e-9));
+    const n = Math.min(slots, Math.ceil(target / best[st.id].capacity - 1e-9));
     plan[st.id] = Array.from({ length: n }, () => best[st.id].id);
   }
   return plan;
@@ -156,12 +156,12 @@ export function workshopLineCost(week: number): number {
   return newLineCost(yearFloat(week)) + STAGES.reduce((a, st) => a + plan[st.id].reduce((b, id) => b + stationPrice(id, week), 0), 0);
 }
 
-/** Price of a new, fully equipped, balanced line (without tooling for a model). */
-export function turnkeyLineCost(week: number, allowBlack: boolean): number {
+/** Price of a new, fully equipped, balanced line of `slots` places per section (without tooling for a model). */
+export function turnkeyLineCost(week: number, allowBlack: boolean, slots = MAX_SLOTS): number {
   const yf = yearFloat(week);
-  const plan = planBalancedLine(yf, allowBlack);
+  const plan = planBalancedLine(yf, allowBlack, slots);
   const stations = STAGES.reduce((a, st) => a + plan[st.id].reduce((b, id) => b + stationPrice(id, week), 0), 0);
-  return newLineCost(yf) + expansionCost(yf, emptyLine('x', 'x').slots, MAX_SLOTS) + stations;
+  return newLineCost(yf) + expansionCost(yf, emptyLine('x', 'x').slots, Math.max(emptyLine('x', 'x').slots, slots)) + stations;
 }
 
 export interface ModernizeQuote {
@@ -177,9 +177,10 @@ export interface ModernizeQuote {
 }
 
 /** What it takes to rebuild a line to today's balanced plan, keeping the stations it can reuse. */
-export function modernizeQuote(line: ProductionLine, week: number, allowBlack: boolean): ModernizeQuote {
+export function modernizeQuote(line: ProductionLine, week: number, allowBlack: boolean, slots = MAX_SLOTS): ModernizeQuote {
   const yf = yearFloat(week);
-  const plan = planBalancedLine(yf, allowBlack);
+  const size = Math.max(line.slots, slots);
+  const plan = planBalancedLine(yf, allowBlack, size);
   let buy = 0;
   let resale = 0;
   for (const st of STAGES) {
@@ -191,7 +192,7 @@ export function modernizeQuote(line: ProductionLine, week: number, allowBlack: b
     }
     resale += keep.reduce((a, id) => a + stationResale(id, week), 0);
   }
-  const expand = expansionCost(yf, line.slots, MAX_SLOTS);
+  const expand = expansionCost(yf, line.slots, size);
   const raw = (stations: Record<StageId, string[]>) =>
     Math.min(...STAGES.map((st) => stations[st.id].reduce((a, id) => a + stationDef(id).capacity, 0) * shiftFactor(line, st.id)));
   return { plan, buy, resale, expand, cost: buy + expand - resale, before: raw(line.stations), after: raw(plan) };

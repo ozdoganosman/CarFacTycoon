@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as A from '../src/core/actions';
 import { aiDesign, referenceBonus, referenceDesigns } from '../src/core/ai';
 import { computeEngine, displacementCc, eraRpmCap, racHp } from '../src/core/engine';
-import { researchCost, researchDef, researchDefs, researchScale, unknownTech } from '../src/core/research';
+import { researchCost, researchDef, researchDefs, researchScale, researchSlots, unknownTech } from '../src/core/research';
 import { KNOWHOW } from '../src/data/knowhow';
 import { capexScale, corporateTaxRate, costIndex } from '../src/data/economy';
 import { lineOffline, lineReport, nextLineName, reservedLines, stationPrice, suggestedLine } from '../src/core/factory';
@@ -22,7 +22,7 @@ import type { CarDesign } from '../src/core/types';
 import { RIVALS } from '../src/data/rivals';
 import { SEGMENTS } from '../src/data/segments';
 import { inYear } from '../src/ui/format';
-import { FOCUS_KEYS, bonusFromPoints, teamOutput } from '../src/core/development';
+import { FOCUS_KEYS, bonusFromPoints, presetFocus, teamOutput } from '../src/core/development';
 import { experienceFactor } from '../src/core/estimate';
 import { autoCapacity } from '../src/core/autocap';
 import { stationDef } from '../src/data/stations';
@@ -839,3 +839,63 @@ describe('engineering focus on handling and practicality', () => {
     expect(packaging.practicality - plain.practicality).toBeGreaterThan(10);
   });
 });
+
+describe('research staff, focus presets and waiting projects', () => {
+  it('research staff learn faster, take more subjects and speed up work under way', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 51 });
+    s.modals = [];
+    s.week = 52 * 11;
+    s.company.cash = 5_000_000;
+    expect(A.startResearch(s, 'vt:ohv').ok).toBe(true);
+    const before = s.research!.active[0].weeksLeft;
+    expect(A.hireResearchers(s, 8).ok).toBe(true);
+    tick(s);
+    const left = s.research!.active.find((a) => a.id === 'vt:ohv')?.weeksLeft ?? 0;
+    expect(before - left).toBeGreaterThan(1.5);
+    expect(researchSlotsOf(s)).toBeGreaterThan(1);
+  });
+
+  it('a project can start with a focus preset', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 52 });
+    const r = A.startProject(s, { name: 'Hızlı', segment: 'sport', targetPrice: 0, focus: presetFocus('fast') });
+    const p = s.projects.find((x) => r.ok && x.id === r.id)!;
+    expect(p.dev.focus.performance).toBeGreaterThan(0.4);
+    expect(FOCUS_KEYS.reduce((a, k) => a + p.dev.focus[k], 0)).toBeCloseTo(1, 6);
+  });
+
+  it('a tested car whose dies were never ordered stops the clock', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 53 });
+    s.modals = [];
+    const r = A.startProject(s, { name: 'Unutulan', segment: 'family', targetPrice: 0 });
+    const p = s.projects.find((x) => r.ok && x.id === r.id)!;
+    p.phase = 'production';
+    for (let i = 0; i < 16; i++) {
+      tick(s);
+      s.modals = s.modals.filter((m) => m.kind === 'stall');
+    }
+    expect(s.modals.some((m) => m.kind === 'stall' && m.reason === 'tooling')).toBe(true);
+  });
+
+  it('automatic capacity can grow a small workshop line by rebuilding it', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 54 });
+    runBot(s, 52 * 3, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active')!;
+    s.lines = s.lines.filter((l) => l.modelId !== m.id);
+    const shop = { ...s.lines[0], id: 'Lshop', name: 'Atölye X', slots: 3, stations: { press: ['press_hand'], body: ['body_coach'], paint: ['paint_brush'], assembly: ['asm_static'] }, modelId: m.id } as (typeof s.lines)[number];
+    s.lines.push(shop);
+    s.week = 52 * 16;
+    s.company.cash = 5e6;
+    A.setModelAutoCapacity(s, m.id, true);
+    m.lastDemand = { usa: 40, europe: 0 };
+    m.demandTrend = 40;
+    m.price = m.price * 3;
+    const capOf = () => s.lines.filter((l) => l.modelId === m.id).reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
+    const before = capOf();
+    autoCapacity(s, () => 100);
+    expect(capOf()).toBeGreaterThan(before * 3);
+  });
+});
+
+function researchSlotsOf(s: ReturnType<typeof newGame>) {
+  return researchSlots(s.company.engineers, s.company.researchers ?? 0);
+}

@@ -1,6 +1,6 @@
 import { MAX_SLOTS, costIndex, lineBuildWeeks, newLineCost, slotCost } from '../data/economy';
 import { STAGES, STATIONS, stationDef } from '../data/stations';
-import { blackPaintIsFaster, emptyLine, expansionCost, lineOffline, lineReport, lineUpkeep, nextLineName, planBalancedLine, reservedLines, retoolCost, stationPrice, stationResale, turnkeyLineCost } from './factory';
+import { blackPaintIsFaster, emptyLine, expansionCost, lineOffline, modernizeQuote, lineReport, lineUpkeep, nextLineName, planBalancedLine, reservedLines, retoolCost, stationPrice, stationResale, turnkeyLineCost } from './factory';
 import { DEALER_COMMISSION } from '../data/economy';
 import { priceNow, weeklySegmentDemand } from './market';
 import { HIKE_TOLERANCE } from './actions';
@@ -125,8 +125,8 @@ function wayOut(
 export const AUTO_HOLD_TEXT: Record<NonNullable<CarModel['autoHold']>, string> = {
   war: 'savaş sürerken fabrika büyütülmüyor',
   margin: 'araç başına kâr %8’in altında: büyümek zararı büyütür, önce fiyatı ya da maliyeti düzelt',
-  cash: 'kasa yetmiyor (birkaç haftalık gider ve vergi taksiti yedekte tutuluyor)',
-  payback: 'sıradaki büyütme bu fiyatla arabanın kalan satış ömründe (yeni arabada iki yıl) kendini ödemiyor',
+  cash: 'kasa yetmiyor',
+  payback: 'sıradaki büyütme bu fiyatla iki yılda kendini ödemiyor',
   successor: 'yeni kuşağı yolda: eskiyen arabaya fabrika kurulmuyor',
   full: 'hatlar dolu ve talep açığı yeni bir hat için küçük',
 };
@@ -188,28 +188,54 @@ function stepUp(s: GameState, m: CarModel, l: ProductionLine, allowBlack: boolea
   return null;
 }
 
-function options(s: GameState, m: CarModel, lines: ProductionLine[], allowBlack: boolean): Option[] {
+function options(s: GameState, m: CarModel, lines: ProductionLine[], allowBlack: boolean, margin = 0): Option[] {
   const yf = yearFloat(s.week);
   const out: Option[] = [];
+  const SIZES = [2, 3, 4, 6, MAX_SLOTS];
   for (const l of lines) {
     const o = stepUp(s, m, l, allowBlack);
     if (o) out.push(o);
+    // Rebuild the whole line with today's balanced machines, in a hall as big as needed: an old
+    // workshop line grows far better that way than one station at a time. Not more than once a
+    // year, only for a real gain, and the two weeks without output count as a cost.
+    const now = lineReport(s, l, m.stats.complexity).throughput;
+    if (s.week - (l.rebuiltWeek ?? -1e6) < 52) continue;
+    for (const k of SIZES.filter((x) => x >= l.slots)) {
+      const q = modernizeQuote(l, s.week, allowBlack, k);
+      const after = lineReport(s, { ...l, slots: k, stations: q.plan }, m.stats.complexity).throughput;
+      if (after <= now * 1.25) continue;
+      out.push({
+        cost: Math.max(0, q.cost) + 2 * now * Math.max(0, margin),
+        gain: after - now,
+        counts: { 'hat yenileme': 1 },
+        apply: () => {
+          l.slots = k;
+          for (const st of STAGES) l.stations[st.id] = [...q.plan[st.id]];
+          l.retoolUntilWeek = Math.max(l.retoolUntilWeek ?? 0, s.week + 2);
+          l.rebuiltWeek = s.week;
+        },
+      });
+    }
   }
-  const plan = planBalancedLine(yf, allowBlack);
-  const perLine = lineReport(s, { ...emptyLine('x', 'x'), slots: MAX_SLOTS, stations: plan }, m.stats.complexity).throughput;
-  out.push({
-    cost: turnkeyLineCost(s.week, allowBlack) + retoolCost(s, m),
-    gain: perLine,
-    counts: { 'yeni hat': 1 },
-    apply: () => {
-      const line = emptyLine(`L${s.nextId++}`, nextLineName(s));
-      line.slots = MAX_SLOTS;
-      for (const st of STAGES) line.stations[st.id] = [...plan[st.id]];
-      line.modelId = m.id;
-      line.buildUntilWeek = s.week + lineBuildWeeks(yf);
-      s.lines.push(line);
-    },
-  });
+  // A new line, from a small hall to a full one: the size the missing demand needs.
+  for (const k of SIZES) {
+    const plan = planBalancedLine(yf, allowBlack, k);
+    const slots = Math.max(emptyLine('x', 'x').slots, k);
+    const perLine = lineReport(s, { ...emptyLine('x', 'x'), slots, stations: plan }, m.stats.complexity).throughput;
+    out.push({
+      cost: turnkeyLineCost(s.week, allowBlack, k) + retoolCost(s, m),
+      gain: perLine,
+      counts: { 'yeni hat': 1 },
+      apply: () => {
+        const line = emptyLine(`L${s.nextId++}`, nextLineName(s));
+        line.slots = slots;
+        for (const st of STAGES) line.stations[st.id] = [...plan[st.id]];
+        line.modelId = m.id;
+        line.buildUntilWeek = s.week + lineBuildWeeks(yf);
+        s.lines.push(line);
+      },
+    });
+  }
   return out.filter((o) => o.gain > 0.01);
 }
 
@@ -240,10 +266,9 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
     let margin = net - materialCost(m) - labourPerCar();
     let spent = 0;
     const done: Record<string, number> = {};
-    // A car sells for a few years: an older one must pay for new plant sooner, and one whose
+    // New plant must pay for itself in two years of today's (smoothed) demand; a car whose
     // successor is on the way gets none.
-    const age = (s.week - m.refreshWeek) / 52;
-    const horizon = Math.min(2, Math.max(0.5, 4 - age));
+    const horizon = 2;
     const successor = s.projects.some((p) => p.replacesModelId === m.id && p.kind !== 'facelift');
     // Why it is not growing, when buyers wait: shown on the model and factory screens.
     m.autoHold = undefined;
@@ -255,12 +280,17 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
       // Judge each option by the part of its capacity that buyers would actually use,
       // and leave a small shortfall rather than build a whole line for it.
       const useful = (o: Option) => Math.min(o.gain, gap);
-      const all = options(s, m, linesOf(s, m), allowBlack).filter((o) => !o.counts['yeni hat'] || gap >= 0.35 * o.gain);
+      const all = options(s, m, linesOf(s, m), allowBlack, margin).filter((o) => !o.counts['yeni hat'] || gap >= 0.35 * o.gain);
       const paying = all.filter((o) => o.cost <= useful(o) * margin * 52 * horizon);
       const opts = paying.filter((o) => o.cost <= budget);
       if (!opts.length) {
         m.autoHold = !all.length ? 'full' : !paying.length ? 'payback' : 'cash';
         if (m.autoHold === 'payback') m.autoHint = wayOut(s, m, all, useful, margin, horizon, allowBlack, cap, d, net - margin);
+        if (m.autoHold === 'cash') {
+          const best = paying.reduce((a, b) => (b.cost < a.cost ? b : a));
+          const years = best.cost / Math.max(1, useful(best) * margin * 52);
+          m.autoHint = `sıradaki büyütme ~${money(best.cost)} tutuyor ve ~${years < 1 ? `${Math.max(1, Math.round(years * 12))} ayda` : `${years.toFixed(1)} yılda`} kendini öder; kasada ayrılabilen ${money(Math.max(0, budget))} (birkaç haftalık gider ve vergi yedekte). Banka kredisi alırsan ya da kasa birikince otomatik kapasite büyütür`;
+        }
         break;
       }
       m.autoHold = undefined;
