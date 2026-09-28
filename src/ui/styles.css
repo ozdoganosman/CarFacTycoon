@@ -1174,6 +1174,139 @@ fieldset {
   gap: 10px;
   min-width: 0;
 }
+/* engine sound: the test stand */
+.engine-sound {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  padding: 10px 12px;
+  margin: 12px 0;
+}
+.engine-sound.is-running {
+  border-color: var(--accent);
+}
+.engine-sound-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.engine-sound-body {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 8px;
+}
+.engine-sound-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.engine-sound-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.engine-gas {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.engine-gas:active:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.engine-gas:active:not(:disabled) .muted {
+  color: inherit;
+  opacity: 0.8;
+}
+.engine-sound-range {
+  display: grid;
+  grid-template-columns: 5.5em minmax(0, 1fr) 3.2em;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+.engine-sound-range output {
+  font-family: var(--font-mono);
+  text-align: right;
+}
+.engine-sound-note {
+  margin: 0;
+}
+.tacho {
+  width: 150px;
+  flex: none;
+  text-align: center;
+}
+.tacho svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.tacho-face {
+  fill: var(--panel);
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+.tacho-red {
+  fill: none;
+  stroke: var(--bad);
+  stroke-width: 5;
+}
+.tacho-major {
+  stroke: var(--ink);
+  stroke-width: 1.6;
+}
+.tacho-minor {
+  stroke: var(--muted);
+  stroke-width: 0.8;
+}
+.tacho-num {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  fill: var(--ink);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.tacho-unit {
+  font-family: var(--font-mono);
+  font-size: 6px;
+  fill: var(--muted);
+  text-anchor: middle;
+}
+.tacho-needle {
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+.tacho-hub {
+  fill: var(--ink);
+}
+.tacho-readout {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+.tacho-readout.is-red {
+  color: var(--bad);
+  font-weight: 700;
+}
+@media (max-width: 520px) {
+  .engine-sound-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .tacho {
+    align-self: center;
+    width: 170px;
+  }
+}
 .engine-notes {
   border-top: 1px solid var(--line);
   padding-top: 8px;

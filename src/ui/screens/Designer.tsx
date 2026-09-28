@@ -30,6 +30,11 @@ import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { CarSVG } from '../viz/CarSVG';
 import { LineChart } from '../viz/LineChart';
 import { EngineBlock, FourStroke, SuspensionSim } from '../cards/animations';
+import { EngineSound } from '../components/EngineSound';
+import { engineSound } from '../audio/engineSound';
+import { soundSpec } from '../audio/engineVoice';
+
+const engineRpm = () => engineSound.rpm;
 
 type Tab = 'chassis' | 'body' | 'engine' | 'gearbox' | 'suspension' | 'safety' | 'equipment';
 const TABS: { id: Tab; label: string }[] = [
@@ -323,6 +328,9 @@ function EngineTab({
   const gate = useTechGate();
   const eu = yf >= 1910 && yf <= 1947;
   const diesel = isDiesel(e);
+  const [soundOn, setSoundOn] = useState(false);
+  const year = Math.floor(yf);
+  const sound = useMemo(() => soundSpec(e, es, year, d.features), [e, es, year, d.features]);
 
   return (
     <div className="engine-tab">
@@ -695,7 +703,8 @@ function EngineTab({
           <b>{money(es.cost)}</b>
         </div>
       </div>
-      <EngineBlock cylinders={e.cylinders} layout={e.layout} bore={e.bore} stroke={e.stroke} diesel={diesel} />
+      <EngineSound spec={sound} onRunning={setSoundOn} />
+      <EngineBlock cylinders={e.cylinders} layout={e.layout} bore={e.bore} stroke={e.stroke} diesel={diesel} rpmSource={soundOn ? engineRpm : undefined} />
       <div className="engine-viz">
         <div className="engine-anim">
           <FourStroke bore={e.bore} stroke={e.stroke} rpm={Math.round(es.peakPowerRpm)} controls={false} diesel={diesel} />

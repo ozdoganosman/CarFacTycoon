@@ -20,7 +20,12 @@ export interface EngineBlockProps {
   bore: number;
   stroke: number;
   diesel?: boolean;
+  /** When the engine is running on the test stand: its speed, which the drawing follows (slowed down). */
+  rpmSource?: () => number;
 }
+
+/** Real revs are far too fast to watch: the drawing turns this many times slower. */
+const WATCH_SLOWDOWN = 25;
 
 const ROD_RATIO = 1.75;
 const LAMBDA = 1 / (2 * ROD_RATIO); // crank radius / rod length: size of the second-order shake
@@ -763,7 +768,7 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
   ctx.fill();
 }
 
-export function EngineBlock({ cylinders, layout, bore, stroke, diesel = false }: EngineBlockProps) {
+export function EngineBlock({ cylinders, layout, bore, stroke, diesel = false, rpmSource }: EngineBlockProps) {
   const [speed, setSpeed] = useState(0.35);
   const theta = useRef(0);
   const cfg = useMemo(() => engineConfig(cylinders, layout), [cylinders, layout]);
@@ -776,7 +781,8 @@ export function EngineBlock({ cylinders, layout, bore, stroke, diesel = false }:
 
   const ref = useCanvasAnimation(
     (ctx, _t, w, h, c, dt) => {
-      theta.current = mod(theta.current + dt * speed * 360, 720);
+      const turns = rpmSource ? rpmSource() / 60 / WATCH_SLOWDOWN : speed;
+      theta.current = mod(theta.current + dt * turns * 360, 720);
       drawEngine(ctx, w, h, c, { th: theta.current, cfg, trace, g, diesel, title, balance });
     },
     [cfg, trace, g, title],
@@ -796,7 +802,13 @@ export function EngineBlock({ cylinders, layout, bore, stroke, diesel = false }:
           <Readout label="Denge" value={balance.label} />
         </>
       }
-      controls={<Slider label="Hız" value={speed} min={0.05} max={1.5} step={0.05} onChange={setSpeed} format={(v) => `${fmt(v, 2)} tur/sn`} />}
+      controls={
+        rpmSource ? (
+          <p className="muted small">Motor çalışıyor: çizim gerçek devri {WATCH_SLOWDOWN} kat yavaş izliyor.</p>
+        ) : (
+          <Slider label="Hız" value={speed} min={0.05} max={1.5} step={0.05} onChange={setSpeed} format={(v) => `${fmt(v, 2)} tur/sn`} />
+        )
+      }
     />
   );
 }
