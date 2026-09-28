@@ -34,7 +34,19 @@ import { EngineSound } from '../components/EngineSound';
 import { engineSound } from '../audio/engineSound';
 import { soundSpec } from '../audio/engineVoice';
 
-const engineRpm = () => engineSound.rpm;
+/** Torque (Nm) at `rpm` read off the engine's full-throttle curve. */
+function torqueAt(curve: { rpm: number; torque: number }[], rpm: number): number {
+  if (!curve.length) return 0;
+  if (rpm <= curve[0].rpm) return curve[0].torque;
+  for (let i = 1; i < curve.length; i++) {
+    if (rpm <= curve[i].rpm) {
+      const a = curve[i - 1];
+      const b = curve[i];
+      return a.torque + ((b.torque - a.torque) * (rpm - a.rpm)) / (b.rpm - a.rpm);
+    }
+  }
+  return curve[curve.length - 1].torque;
+}
 
 type Tab = 'chassis' | 'body' | 'engine' | 'gearbox' | 'suspension' | 'safety' | 'equipment';
 const TABS: { id: Tab; label: string }[] = [
@@ -704,7 +716,18 @@ function EngineTab({
         </div>
       </div>
       <EngineSound spec={sound} onRunning={setSoundOn} />
-      <EngineBlock cylinders={e.cylinders} layout={e.layout} bore={e.bore} stroke={e.stroke} diesel={diesel} rpmSource={soundOn ? engineRpm : undefined} />
+      <EngineBlock
+        cylinders={e.cylinders}
+        layout={e.layout}
+        bore={e.bore}
+        stroke={e.stroke}
+        diesel={diesel}
+        live={
+          soundOn
+            ? () => ({ rpm: engineSound.rpm, throttle: engineSound.throttle, redline: es.redline, fullTorqueNm: torqueAt(curve, engineSound.rpm) })
+            : undefined
+        }
+      />
       <div className="engine-viz">
         <div className="engine-anim">
           <FourStroke bore={e.bore} stroke={e.stroke} rpm={Math.round(es.peakPowerRpm)} controls={false} diesel={diesel} />

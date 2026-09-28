@@ -68,6 +68,7 @@ export function EngineSound({ spec, onRunning }: { spec: EngineSoundSpec; onRunn
   const holding = useRef(false);
   const needle = useRef<SVGGElement | null>(null);
   const readout = useRef<HTMLSpanElement | null>(null);
+  const status = useRef<HTMLParagraphElement | null>(null);
   const supported = typeof window !== 'undefined' && !!(window.AudioContext ?? (window as unknown as { webkitAudioContext?: unknown }).webkitAudioContext);
 
   useEffect(() => {
@@ -92,6 +93,23 @@ export function EngineSound({ spec, onRunning }: { spec: EngineSoundSpec; onRunn
       if (readout.current) {
         readout.current.textContent = engineSound.running ? `${fmt(Math.round(rpm / 10) * 10)} d/d` : 'motor duruyor';
         readout.current.classList.toggle('is-red', rpm >= spec.redline * 0.97);
+      }
+      if (status.current) {
+        const on = engineSound.running;
+        let msg = '';
+        let tone = '';
+        if (on && engineSound.float > 0.05) {
+          msg = 'Supaplar yüzüyor! Kırmızı çizginin üstünde yaylar supapları kapatamıyor: güç düşer, motor tekler ve takırdar. Uzun tutarsan supaplar pistona çarpar.';
+          tone = 'tone-bad';
+        } else if (on && engineSound.governed) {
+          msg = 'Regülatör yakıtı kısıyor: dizel bu devrin üstüne çıkmaz.';
+          tone = 'muted';
+        } else if (on && spec.knock > 0 && engineSound.throttle > 0.4 && rpm < spec.redline * 0.8) {
+          msg = 'Vuruntu: sıkıştırma dönemin benzinine fazla, yükte silindirler metalik tıkırdıyor.';
+          tone = 'tone-warn';
+        }
+        if (status.current.textContent !== msg) status.current.textContent = msg;
+        status.current.className = `small engine-sound-status ${tone}`;
       }
       if (engineSound.running) raf = requestAnimationFrame(draw);
     };
@@ -128,7 +146,9 @@ export function EngineSound({ spec, onRunning }: { spec: EngineSoundSpec; onRunn
     opt?.label ?? `${spec.cylinders} silindir`,
     `${fmt(spec.displacementCc / 1000, 1)} L`,
     spec.diesel ? 'dizel' : vt?.name.replace(/ \(.*\)/, ''),
+    `sıkıştırma ${fmt(spec.compression, 1)}:1`,
     spec.supercharged ? 'kompresörlü' : null,
+    spec.knock > 0 ? 'vuruntu yapıyor' : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -144,6 +164,14 @@ export function EngineSound({ spec, onRunning }: { spec: EngineSoundSpec; onRunn
           <p>
             Hacim büyüdükçe ses kalınlaşır, uzun strok daha tok vurur. Yan supaplı motor yumuşak tıkırdar, üstten kamlı motor dişlileriyle öter; dizel vuruntu yapar,
             kompresör devirle birlikte ıslık çalar. Erken yılların susturucusu zayıftır, rölantisi de düzensizdir.
+          </p>
+          <p>
+            Sıkıştırma yükseldikçe patlama sertleşir, ses keskinleşir. Sıkıştırma dönemin benzinine fazlaysa motor vuruntu yapar: yükte, silindirin çapına göre 5-10 kHz’de
+            çınlayan metalik bir tıkırtı.
+          </p>
+          <p>
+            Dönemin motorlarında devir kesici yoktur. Benzinli motor kırmızı çizgiyi geçince supap yayları yetişemez, supaplar yüzer: güç düşer, motor tekler, takırdar,
+            egzozdan patlar ve daha fazla devir alamaz. Dizelin pompasındaki regülatör ise yakıtı kısıp devri tutar.
           </p>
           <p>Motor çalışırken ayarları değiştir: ses anında değişir.</p>
         </Info>
@@ -197,6 +225,7 @@ export function EngineSound({ spec, onRunning }: { spec: EngineSoundSpec; onRunn
           <p className="muted small engine-sound-note">
             Rölanti {fmt(spec.idle)} d/d · kırmızı çizgi {fmt(spec.redline)} d/d
           </p>
+          <p ref={status} className="small engine-sound-status" aria-live="polite" />
         </div>
       </div>
     </section>

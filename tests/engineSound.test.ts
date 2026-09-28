@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firings, layerMix, layerRpms, makeLayer, soundSpec, voiceTone, type EngineSoundSpec } from '../src/ui/audio/engineVoice';
+import { firings, layerMix, layerRpms, makeLayer, soundSpec, stepRevs, voiceTone, type EngineSoundSpec } from '../src/ui/audio/engineVoice';
 import type { EngineDesign, EngineStats } from '../src/core/types';
 
 const SR = 22050;
@@ -11,6 +11,8 @@ function spec(over: Partial<EngineSoundSpec> = {}): EngineSoundSpec {
     bore: 90,
     stroke: 100,
     displacementCc: 2545,
+    compression: 6,
+    knock: 0,
     diesel: false,
     valvetrain: 'ohv',
     supercharged: false,
@@ -122,14 +124,90 @@ describe('engine sound', () => {
     expect(burble).toBeGreaterThan(5 * smooth);
   });
 
+  it('has no rev limiter: at full throttle a petrol engine climbs past the redline into valve float, and stays up there', () => {
+    const s = spec();
+    const tone = voiceTone(s);
+    let seed = 7;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    let rpm = s.idle;
+    let reached = false;
+    let lowest = Infinity;
+    let highest = 0;
+    let dips = 0;
+    let levels = 0;
+    let frames = 0;
+    let floatEnd = 0;
+    for (let i = 0; i < 60 * 8; i++) {
+      const r = stepRevs(s, tone, rpm, 1, 1 / 60, i / 60, rnd);
+      rpm = r.rpm;
+      if (rpm >= s.redline) reached = true;
+      if (reached) {
+        lowest = Math.min(lowest, rpm);
+        highest = Math.max(highest, rpm);
+        levels += r.level;
+        frames++;
+        if (r.level < 1) dips++;
+      }
+      floatEnd = r.float;
+    }
+    expect(reached).toBe(true);
+    // No bouncing back off a limiter: the revs hover at the top.
+    expect(lowest).toBeGreaterThan(s.redline * 0.97);
+    expect(highest).toBeLessThanOrEqual(s.redline * (1 + tone.floatMargin) * 1.011);
+    expect(floatEnd).toBeGreaterThan(0.5);
+    // Missing cylinders, but still loud on average.
+    expect(dips).toBeGreaterThan(0);
+    expect(levels / frames).toBeGreaterThan(0.75);
+    // Let go: back down towards idle.
+    for (let i = 0; i < 60 * 8; i++) rpm = stepRevs(s, tone, rpm, 0, 1 / 60, i / 60, rnd).rpm;
+    expect(rpm).toBeLessThan(s.idle * 1.2);
+  });
+
+  it('lets a diesel governor hold the speed without misfiring', () => {
+    const s = spec({ diesel: true, compression: 18, idle: 520, redline: 3200 });
+    const tone = voiceTone(s);
+    let rpm = s.idle;
+    let r = stepRevs(s, tone, rpm, 1, 1 / 60, 0);
+    let highest = 0;
+    for (let i = 0; i < 60 * 8; i++) {
+      r = stepRevs(s, tone, rpm, 1, 1 / 60, i / 60);
+      rpm = r.rpm;
+      highest = Math.max(highest, rpm);
+      expect(r.level).toBe(1);
+      expect(r.float).toBe(0);
+    }
+    expect(r.governed).toBe(true);
+    expect(highest).toBeLessThanOrEqual(s.redline * 1.02 + 1e-6);
+    // The governor has trimmed the fuel.
+    expect(r.load).toBeLessThan(1);
+  });
+
+  it('sounds harder with more compression, and only a knocking engine knocks', () => {
+    expect(voiceTone(spec({ compression: 8.5 })).crack).toBeGreaterThan(voiceTone(spec({ compression: 4.2 })).crack);
+    expect(voiceTone(spec({ compression: 8.5 })).combust).toBeGreaterThan(voiceTone(spec({ compression: 4.2 })).combust);
+    expect(makeLayer(spec(), voiceTone(spec()), 1500, SR).knock).toBeUndefined();
+    const k = spec({ knock: 0.6 });
+    const layer = makeLayer(k, voiceTone(k), 1500, SR);
+    expect(layer.knock).toBeDefined();
+    expect(layer.knock!.length).toBe(layer.left.length);
+    expect(Math.max(...layer.knock!.map(Math.abs))).toBeGreaterThan(0.5);
+    // The ping is the bore's own ring: about 6 kHz in a 90 mm bore, lower in a wider one.
+    expect(voiceTone(spec({ bore: 90 })).knockHz).toBeGreaterThan(5500);
+    expect(voiceTone(spec({ bore: 90 })).knockHz).toBeLessThan(6800);
+    expect(voiceTone(spec({ bore: 120 })).knockHz).toBeLessThan(voiceTone(spec({ bore: 90 })).knockHz);
+  });
+
   it('reads the design: idle, diesel, starter, and a deeper voice for a bigger engine', () => {
     const e: EngineDesign = { cylinders: 6, layout: 'inline', bore: 85, stroke: 110, compression: 5, valvetrain: 'sv', fuelSystem: 'carb', aspiration: 'na' };
-    const es = { redline: 3000, displacementCc: 3745 } as EngineStats;
+    const es = { redline: 3000, displacementCc: 3745, knockLimit: 5.4, knocking: false } as EngineStats;
     const s = soundSpec(e, es, 1925, []);
     expect(s.idle).toBeLessThanOrEqual(s.redline * 0.3);
     expect(s.electricStart).toBe(false);
     expect(soundSpec(e, es, 1925, ['electricStart']).electricStart).toBe(true);
     expect(soundSpec({ ...e, fuel: 'diesel' }, es, 1950, []).diesel).toBe(true);
+    expect(s.knock).toBe(0);
+    expect(soundSpec({ ...e, compression: 6.2 }, { ...es, knocking: true }, 1925, []).knock).toBeGreaterThan(0.5);
+    expect(soundSpec({ ...e, fuel: 'diesel', compression: 18 }, { ...es, knocking: true, diesel: true }, 1950, []).knock).toBe(0);
     expect(voiceTone(spec({ displacementCc: 6000 })).bodyHz).toBeLessThan(voiceTone(spec({ displacementCc: 1200 })).bodyHz);
     expect(voiceTone(spec({ diesel: true })).clatter).toBeGreaterThan(0);
   });

@@ -14,6 +14,10 @@ export interface EngineSoundSpec {
   bore: number;
   stroke: number;
   displacementCc: number;
+  /** Compression ratio: higher burns harder and sounds sharper. */
+  compression: number;
+  /** How hard it knocks (0 none .. 1 badly): compression above what the era's petrol stands. */
+  knock: number;
   diesel: boolean;
   valvetrain: ValvetrainId;
   supercharged: boolean;
@@ -39,6 +43,8 @@ export function soundSpec(e: EngineDesign, es: EngineStats, year: number, featur
     bore: e.bore,
     stroke: e.stroke,
     displacementCc: es.displacementCc,
+    compression: e.compression,
+    knock: diesel || !es.knocking ? 0 : clamp(0.25 + (e.compression - es.knockLimit) / 1.2, 0.25, 1),
     diesel,
     valvetrain: e.valvetrain,
     supercharged: e.aspiration === 'supercharger',
@@ -88,20 +94,28 @@ export interface VoiceTone {
   pulseDeg: number;
   /** How slowly the engine gathers and loses revs (flywheel, era). */
   inertia: number;
+  /** Petrol combustion thud through the block: harder with more compression. */
+  combust: number;
+  /** Ring of a knocking cylinder (Hz): the gas in the bore resonates, lower in a wide bore. */
+  knockHz: number;
+  /** How far past the redline the valves start to float (share of the redline). */
+  floatMargin: number;
 }
 
-const RASP: Record<ValvetrainId, [number, number, number]> = {
-  // [rasp Hz, rasp dB, tick]
-  sv: [1300, 1, 0.1],
-  ioe: [1500, 2, 0.11],
-  ohv: [1700, 3, 0.13],
-  ohc: [2200, 4, 0.07],
-  dohc: [2600, 5, 0.06],
+const RASP: Record<ValvetrainId, [number, number, number, number]> = {
+  // [rasp Hz, rasp dB, tick, valve float margin]
+  sv: [1300, 1, 0.1, 0.08],
+  ioe: [1500, 2, 0.11, 0.08],
+  ohv: [1700, 3, 0.13, 0.1],
+  ohc: [2200, 4, 0.07, 0.12],
+  dohc: [2600, 5, 0.06, 0.14],
 };
 
 export function voiceTone(s: EngineSoundSpec): VoiceTone {
   const cc = Math.max(200, s.displacementCc);
-  const [raspHz, raspDb, tick] = RASP[s.valvetrain] ?? RASP.ohv;
+  const [raspHz, raspDb, tick, floatMargin] = RASP[s.valvetrain] ?? RASP.ohv;
+  // 4:1 (1900) burns soft, 9:1 (late 1950s) hard.
+  const hard = clamp((s.compression - 4) / 6, 0, 1);
   const bodyHz = clamp(95 * Math.pow(2000 / cc, 0.3), 36, 150);
   const old = s.year < 1915;
   const muffle = s.year < 1912 ? 4500 : s.year < 1925 ? 3400 : s.year < 1940 ? 2700 : 2300;
@@ -113,7 +127,7 @@ export function voiceTone(s: EngineSoundSpec): VoiceTone {
     muffleHz: muffle * (s.diesel ? 1.4 : 1),
     tick,
     clatter: s.diesel ? 0.9 : 0,
-    crack: s.diesel ? 0.15 : 0.25 + (s.valvetrain === 'ohc' || s.valvetrain === 'dohc' ? 0.1 : 0),
+    crack: s.diesel ? 0.15 : (0.25 + (s.valvetrain === 'ohc' || s.valvetrain === 'dohc' ? 0.1 : 0)) * (0.7 + 0.6 * hard),
     noise: (old ? 0.35 : 0.22) + (s.supercharged ? 0.05 : 0),
     roughness: (old ? 7 : s.year < 1935 ? 4 : 2.5) * (s.cylinders <= 2 ? 1.3 : 1),
     pulseDeg: 100 * Math.sqrt(clamp(s.stroke / s.bore, 0.8, 1.6)),
@@ -122,6 +136,10 @@ export function voiceTone(s: EngineSoundSpec): VoiceTone {
       (s.year < 1920 ? 1.5 : s.year < 1940 ? 1.2 : 1) *
       (s.cylinders <= 2 ? 1.4 : 1) *
       (s.diesel ? 1.3 : 1),
+    combust: s.diesel ? 0 : 0.1 + 0.3 * hard,
+    // First two acoustic modes of the gas in a cylinder of this bore (speed of sound ~950 m/s when hot).
+    knockHz: (1.841 * 950) / (Math.PI * (Math.max(50, s.bore) / 1000)),
+    floatMargin,
   };
 }
 
@@ -150,6 +168,11 @@ export interface Layer {
   rpm: number;
   left: Float32Array;
   right: Float32Array;
+  /**
+   * Knock: a click in the cycles where a cylinder detonates (not every one). Played in step with
+   * the main loop through a resonator at the bore's ring, so the ping keeps its pitch as the revs change.
+   */
+  knock?: Float32Array;
 }
 
 /**
@@ -169,6 +192,9 @@ export function makeLayer(s: EngineSoundSpec, tone: VoiceTone, rpm: number, samp
   const spd = len / K / 720; // samples per crank degree
   const left = new Float32Array(len);
   const right = new Float32Array(len);
+  const knock = s.knock > 0 ? new Float32Array(len) : undefined;
+  const thudLen = Math.round(0.0015 * sampleRate);
+  const clickLen = Math.round(0.0002 * sampleRate);
   const at = (i: number) => ((Math.round(i) % len) + len) % len;
   const idleness = 1 - clamp((rpm - s.idle) / Math.max(1, s.redline - s.idle), 0, 1);
   const events = firings(s.cylinders, s.layout);
@@ -189,7 +215,20 @@ export function makeLayer(s: EngineSoundSpec, tone: VoiceTone, rpm: number, samp
       const gr = f.bank === 0 ? 0.85 : f.bank > 0 ? 1 : 0.5;
       const fire = (k * 720 + f.angle + jitter) * spd;
 
-      // Combustion: a diesel knocks hard; petrol only thuds through the block.
+      // Combustion: a diesel knocks hard; petrol thuds through the block, harder with more compression.
+      if (tone.combust > 0) {
+        for (let j = 0; j < thudLen; j++) {
+          const v = (rnd() * 2 - 1) * tone.combust * amp * Math.exp(-j / (0.0004 * sampleRate));
+          left[at(fire + j)] += v * gl;
+          right[at(fire + j)] += v * gr;
+        }
+      }
+      // Detonation: the end gas explodes some 10-25° after the top, and not in every cycle.
+      if (knock && rnd() < 0.55) {
+        const t0 = fire + (10 + rnd() * 15) * spd;
+        const a = 0.4 + 0.6 * rnd();
+        for (let j = 0; j < clickLen; j++) knock[at(t0 + j)] += (rnd() * 2 - 1) * a;
+      }
       if (tone.clatter > 0) {
         let prev = 0;
         const a = tone.clatter * amp * (0.5 + 0.5 * idleness);
@@ -247,7 +286,65 @@ export function makeLayer(s: EngineSoundSpec, tone: VoiceTone, rpm: number, samp
     left[i] *= g;
     right[i] *= g;
   }
-  return { rpm: (120 * K * sampleRate) / len, left, right };
+  if (knock) {
+    let kp = 1e-6;
+    for (let i = 0; i < len; i++) kp = Math.max(kp, Math.abs(knock[i]));
+    for (let i = 0; i < len; i++) knock[i] *= 0.9 / kp;
+  }
+  return { rpm: (120 * K * sampleRate) / len, left, right, knock };
+}
+
+export interface RevState {
+  rpm: number;
+  /** 0..1: how badly the valves float (petrol past the redline). */
+  float: number;
+  /** A diesel's governor is holding the speed. */
+  governed: boolean;
+  /** Level this frame: floating valves make cylinders miss. */
+  level: number;
+  /** Load the sound should carry: the throttle, or what the governor lets through. */
+  load: number;
+  /** An unburnt charge went off in the exhaust. */
+  backfire: boolean;
+}
+
+/**
+ * One step of the engine's revs on the test stand. No engine of the period had a rev limiter: a
+ * petrol engine runs on past its redline until the valve springs can no longer close the valves
+ * ("valve float"), where it loses power, misses and clatters, still screaming; a diesel's
+ * injection-pump governor cuts the fuel and holds the speed.
+ */
+export function stepRevs(s: EngineSoundSpec, tone: VoiceTone, rpm: number, throttle: number, dt: number, t: number, rnd: () => number = Math.random): RevState {
+  const top = s.diesel ? s.redline * 1.02 : s.redline * (1 + tone.floatMargin);
+  const target = s.idle + throttle * (top * (s.diesel ? 1 : 1.02) - s.idle);
+  let tau = (target > rpm ? 0.45 : 0.8) * tone.inertia;
+  // Past the redline the power falls away: the revs creep up instead of flying.
+  if (!s.diesel && rpm > s.redline && target > rpm) tau *= 3;
+  let next = rpm + (target - rpm) * (1 - Math.exp(-dt / tau));
+  // An old engine hunts a little at idle.
+  if (throttle < 0.05) next *= 1 + Math.sin(t / (s.year < 1925 ? 0.26 : 0.4)) * (s.year < 1925 ? 0.004 : 0.0015);
+
+  if (s.diesel) {
+    const governed = throttle > 0.3 && next > s.redline * 0.97;
+    // The governor trims the fuel as the set speed nears, and hunts a touch around it.
+    const fuel = clamp((top - next) / (s.redline * 0.06) + 0.25, 0.25, 1);
+    if (governed) next = Math.min(top, next * (1 + (rnd() - 0.5) * 0.004));
+    return { rpm: next, float: 0, governed, level: 1, load: throttle * fuel, backfire: false };
+  }
+
+  const float = clamp((next - s.redline) / (top - s.redline), 0, 1);
+  let level = 1;
+  let backfire = false;
+  if (float > 0.15) {
+    // Valves that do not seat: cylinders miss, the revs stagger, unburnt mixture pops in the exhaust.
+    if (rnd() < float * 0.35) {
+      level = 0.45 + 0.35 * rnd();
+      backfire = rnd() < 0.2 * float;
+    }
+    next *= 1 + (rnd() - 0.5) * 0.02 * float;
+    next = Math.min(next, top * 1.01);
+  }
+  return { rpm: next, float, governed: false, level, load: throttle, backfire };
 }
 
 /** Where `rpm` falls between the loops: the two to play and their equal-power gains. */

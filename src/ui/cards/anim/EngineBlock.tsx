@@ -20,8 +20,17 @@ export interface EngineBlockProps {
   bore: number;
   stroke: number;
   diesel?: boolean;
-  /** When the engine is running on the test stand: its speed, which the drawing follows (slowed down). */
-  rpmSource?: () => number;
+  /** When the engine is running on the test stand: its state, which the drawing and the torque trace follow. */
+  live?: () => EngineLive | null;
+}
+
+export interface EngineLive {
+  rpm: number;
+  /** 0..1 */
+  throttle: number;
+  redline: number;
+  /** Full-throttle torque at this speed (Nm), from the engine's curve. */
+  fullTorqueNm: number;
 }
 
 /** Real revs are far too fast to watch: the drawing turns this many times slower. */
@@ -121,16 +130,38 @@ export interface TorqueTrace {
   ripple: number;
 }
 
-export function torqueTrace(cfg: EngineConfig, diesel: boolean): TorqueTrace {
+/** Where the engine is running: how full the cylinders are, and how fast (share of the redline). */
+export interface OperatingPoint {
+  charge: number;
+  speed: number;
+}
+
+/** Charge for a throttle opening: even a closed throttle lets some mixture in to keep it turning. */
+export const chargeOf = (throttle: number) => 0.1 + 0.9 * clamp(throttle, 0, 1);
+
+/** Piston inertia at full revs, against the gas torque's units. */
+const INERTIA = 0.3;
+
+/**
+ * Torque the pistons' own inertia puts on the crank: it grows with the square of the revs and
+ * averages out over a turn, but at high speed it can swamp the firing pulses.
+ */
+function inertiaTorque(l: number, speed: number): number {
+  const a = rad(l);
+  return -INERTIA * speed * speed * ((LAMBDA / 4) * Math.sin(a) - 0.5 * Math.sin(2 * a) - ((3 * LAMBDA) / 4) * Math.sin(3 * a));
+}
+
+export function torqueTrace(cfg: EngineConfig, diesel: boolean, op: OperatingPoint = { charge: 1, speed: 0 }): TorqueTrace {
   const step = 3;
   const total: number[] = [];
   const per: number[][] = cfg.cyls.map(() => []);
   for (let x = 0; x <= 720; x += step) {
     let s = 0;
     cfg.cyls.forEach((c, i) => {
-      const v = cylTorque(cycleOf(x, c), diesel);
+      const l = cycleOf(x, c);
+      const v = op.charge * cylTorque(l, diesel);
       per[i].push(v);
-      s += v;
+      s += v + (op.speed > 0 ? inertiaTorque(l, op.speed) : 0);
     });
     total.push(s);
   }
@@ -268,6 +299,12 @@ interface DrawArgs {
   diesel: boolean;
   title: string;
   balance: Balance;
+  /** The running engine, when there is one: the trace is then for its throttle and revs. */
+  live: EngineLive | null;
+  /** Fixed scale for the live trace, so it visibly grows and shrinks. */
+  range: { lo: number; hi: number };
+  /** Mean of the full-throttle trace, to turn trace units into Nm. */
+  fullMean: number;
 }
 
 function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs) {
@@ -318,6 +355,14 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
   const hatch = alpha(c.muted, 0.4);
 
   const sh = shakeAt(cfg, th);
+  if (a.live) {
+    // Out-of-balance forces grow with the square of the revs.
+    const sp = clamp(a.live.rpm / a.live.redline, 0, 1.1);
+    const k = 0.3 + 1.4 * sp * sp;
+    sh.x *= k;
+    sh.y *= k;
+    sh.rot *= k;
+  }
   const midX = (cx(0) + cx(cfg.cells - 1)) / 2;
   ctx.save();
   ctx.translate(midX + sh.x, cy + sh.y);
@@ -675,9 +720,13 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
 
   // ----- torque strip -----
   const headY = strip.y;
-  const head = 'Krank milindeki anlık tork · iki tur (720°)';
-  const peak = trace.max / trace.mean;
-  const peakText = `Tepe: ortalamanın ${fmt(peak, 1)} katı${trace.min < 0 ? ' · arada krankı geri çeker' : ''}`;
+  const lv = a.live;
+  const toNm = lv && a.fullMean > 0 ? lv.fullTorqueNm / a.fullMean : 0;
+  const pullsBack = trace.min < 0 ? ' · arada krankı geri çeker' : '';
+  const head = lv ? `Anlık tork · ${fmt(Math.round(lv.rpm / 10) * 10)} d/d · gaz %${Math.round(lv.throttle * 100)}` : 'Krank milindeki anlık tork · iki tur (720°)';
+  const peakText = lv
+    ? `ortalama ${fmt(Math.max(0, trace.mean * toNm))} Nm · tepe ${fmt(trace.max * toNm)} Nm${pullsBack}`
+    : `Tepe: ortalamanın ${fmt(trace.max / trace.mean, 1)} katı${pullsBack}`;
   const headW = text(ctx, head, strip.x, headY, { size: f - 1, weight: 600, color: c.ink, baseline: 'top' });
   ctx.font = font(f - 2);
   // On a narrow screen the peak note goes under the heading instead of over it.
@@ -694,8 +743,8 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
   const py = strip.y + headH;
   const pw = strip.w;
   const ph = strip.h - headH;
-  const lo = Math.min(0, trace.min) * 1.08;
-  const hi = Math.max(trace.max, ...trace.per.map((q) => Math.max(...q))) * 1.08;
+  const lo = lv ? a.range.lo : Math.min(0, trace.min) * 1.08;
+  const hi = lv ? a.range.hi : Math.max(trace.max, ...trace.per.map((q) => Math.max(...q))) * 1.08;
   const Yt = (v: number) => py + ph - ((v - lo) / (hi - lo)) * ph;
   const Xt = (deg: number) => px + (deg / 720) * pw;
   ctx.fillStyle = alpha(c.line, 0.35);
@@ -752,7 +801,7 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
   ctx.lineTo(px + pw, Yt(trace.mean));
   ctx.stroke();
   ctx.setLineDash([]);
-  text(ctx, 'ortalama', px + pw - 2, Yt(trace.mean) - 2, { size: f - 3, color: c.accent, align: 'right', baseline: 'bottom' });
+  text(ctx, 'ortalama', px + pw - 2, Math.max(py + f, Yt(trace.mean) - 2), { size: f - 3, color: c.accent, align: 'right', baseline: 'bottom' });
   // cursor
   const ci = Math.round(mod(th, 720) / trace.step);
   const cxp = Xt(ci * trace.step);
@@ -768,11 +817,19 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
   ctx.fill();
 }
 
-export function EngineBlock({ cylinders, layout, bore, stroke, diesel = false, rpmSource }: EngineBlockProps) {
+export function EngineBlock({ cylinders, layout, bore, stroke, diesel = false, live }: EngineBlockProps) {
   const [speed, setSpeed] = useState(0.35);
   const theta = useRef(0);
   const cfg = useMemo(() => engineConfig(cylinders, layout), [cylinders, layout]);
   const trace = useMemo(() => torqueTrace(cfg, diesel), [cfg, diesel]);
+  // The live trace's scale covers idle to full throttle, standstill to the redline.
+  const range = useMemo(() => {
+    const ts = [0, 1].flatMap((th) => [0, 1.05].map((sp) => torqueTrace(cfg, diesel, { charge: chargeOf(th), speed: sp })));
+    return {
+      lo: Math.min(0, ...ts.map((t) => t.min)) * 1.08,
+      hi: Math.max(...ts.map((t) => Math.max(t.max, ...t.per.map((q) => Math.max(...q))))) * 1.08,
+    };
+  }, [cfg, diesel]);
   const balance = useMemo(() => balanceOf(cylinders, layout), [cylinders, layout]);
   const g = useMemo(() => geometry(stroke / bore, diesel), [stroke, bore, diesel]);
   const opt = CYLINDER_OPTIONS.find((o) => o.cylinders === cylinders && o.layout === layout);
@@ -781,9 +838,11 @@ export function EngineBlock({ cylinders, layout, bore, stroke, diesel = false, r
 
   const ref = useCanvasAnimation(
     (ctx, _t, w, h, c, dt) => {
-      const turns = rpmSource ? rpmSource() / 60 / WATCH_SLOWDOWN : speed;
+      const st = live?.() ?? null;
+      const turns = st ? st.rpm / 60 / WATCH_SLOWDOWN : speed;
       theta.current = mod(theta.current + dt * turns * 360, 720);
-      drawEngine(ctx, w, h, c, { th: theta.current, cfg, trace, g, diesel, title, balance });
+      const tr = st ? torqueTrace(cfg, diesel, { charge: chargeOf(st.throttle), speed: clamp(st.rpm / st.redline, 0, 1.05) }) : trace;
+      drawEngine(ctx, w, h, c, { th: theta.current, cfg, trace: tr, g, diesel, title, balance, live: st, range, fullMean: trace.mean });
     },
     [cfg, trace, g, title],
     { aspect: (w) => (w >= 560 ? 2.05 : w / 400), minHeight: 320, maxHeight: 440 },
@@ -803,8 +862,11 @@ export function EngineBlock({ cylinders, layout, bore, stroke, diesel = false, r
         </>
       }
       controls={
-        rpmSource ? (
-          <p className="muted small">Motor çalışıyor: çizim gerçek devri {WATCH_SLOWDOWN} kat yavaş izliyor.</p>
+        live ? (
+          <p className="muted small">
+            Motor çalışıyor: çizim gerçek devri {WATCH_SLOWDOWN} kat yavaş izliyor. Tork eğrisi gazla büyür; yüksek devirde pistonların ataleti dalgayı artırır,
+            blok da daha çok sarsılır.
+          </p>
         ) : (
           <Slider label="Hız" value={speed} min={0.05} max={1.5} step={0.05} onChange={setSpeed} format={(v) => `${fmt(v, 2)} tur/sn`} />
         )

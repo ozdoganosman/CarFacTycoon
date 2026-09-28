@@ -1,4 +1,4 @@
-import { layerMix, layerRpms, makeLayer, voiceTone, type EngineSoundSpec, type VoiceTone } from './engineVoice';
+import { layerMix, layerRpms, makeLayer, stepRevs, voiceTone, type EngineSoundSpec, type VoiceTone } from './engineVoice';
 
 // Plays an engine design through Web Audio. `EngineVoice` is the sound graph for
 // one design (it also renders offline, for checks); `engineSound` is the live
@@ -8,8 +8,10 @@ export interface VoiceState {
   rpm: number;
   /** 0..1 */
   throttle: number;
-  /** Overall level, 0..1 (the rev limiter cuts it). */
+  /** Overall level, 0..1 (misfiring cylinders dip it). */
   level: number;
+  /** 0..1: floating valves clatter and the exhaust opens up. */
+  float?: number;
 }
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -38,6 +40,11 @@ export class EngineVoice {
   private readonly rpms: number[];
   private readonly sources: AudioBufferSourceNode[] = [];
   private readonly gains: GainNode[] = [];
+  private readonly knockSources: AudioBufferSourceNode[] = [];
+  private readonly knockGains: GainNode[] = [];
+  private readonly knockBus?: GainNode;
+  private readonly clatter: GainNode;
+  private readonly ctx: BaseAudioContext;
   private readonly others: AudioScheduledSourceNode[] = [];
   private readonly muffler: BiquadFilterNode;
   private readonly out: GainNode;
@@ -46,12 +53,32 @@ export class EngineVoice {
   private readonly hiss: GainNode;
 
   constructor(ctx: BaseAudioContext, spec: EngineSoundSpec, dest: AudioNode, when = ctx.currentTime) {
+    this.ctx = ctx;
     this.spec = spec;
     this.tone = voiceTone(spec);
     const t = this.tone;
     this.rpms = layerRpms(spec);
 
     const mix = ctx.createGain();
+    // Knock rings at the bore's own frequencies whatever the revs: a resonator after the clicks.
+    let knockMix: GainNode | undefined;
+    if (spec.knock > 0) {
+      knockMix = ctx.createGain();
+      this.knockBus = ctx.createGain();
+      this.knockBus.gain.value = 0;
+      for (const [f, g] of [
+        [t.knockHz, 1],
+        [t.knockHz * 1.66, 0.6],
+      ]) {
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = f;
+        bp.Q.value = 25;
+        const lvl = ctx.createGain();
+        lvl.gain.value = g * 6;
+        knockMix.connect(bp).connect(lvl).connect(this.knockBus);
+      }
+    }
     this.rpms.forEach((rpm, i) => {
       const layer = makeLayer(spec, t, rpm, ctx.sampleRate, i + 1);
       const buf = ctx.createBuffer(2, layer.left.length, ctx.sampleRate);
@@ -64,10 +91,25 @@ export class EngineVoice {
       g.gain.value = 0;
       src.connect(g).connect(mix);
       // Start each loop at a different point so their cycles never line up.
-      src.start(when, (i * 0.137) % (buf.duration * 0.9));
+      const offset = (i * 0.137) % (buf.duration * 0.9);
+      src.start(when, offset);
       this.sources.push(src);
       this.gains.push(g);
       this.rpms[i] = layer.rpm;
+      if (layer.knock && knockMix) {
+        // Same length and start as the main loop: the pings stay on their firings.
+        const kb = ctx.createBuffer(1, layer.knock.length, ctx.sampleRate);
+        kb.copyToChannel(layer.knock as Float32Array<ArrayBuffer>, 0);
+        const ks = ctx.createBufferSource();
+        ks.buffer = kb;
+        ks.loop = true;
+        const kg = ctx.createGain();
+        kg.gain.value = 0;
+        ks.connect(kg).connect(knockMix);
+        ks.start(when, offset);
+        this.knockSources.push(ks);
+        this.knockGains.push(kg);
+      }
     });
 
     // Exhaust: resonances that stay put while the revs change, then the muffler.
@@ -99,6 +141,8 @@ export class EngineVoice {
     this.out.gain.value = 0;
     mix.connect(hp).connect(body).connect(pipe).connect(rasp).connect(this.muffler).connect(shaper).connect(this.out);
     this.out.connect(dest);
+    // Knock is heard through the block, not the exhaust.
+    this.knockBus?.connect(this.out);
 
     // Intake roar: air rushing in, louder with the throttle open.
     const noise = ctx.createBufferSource();
@@ -113,6 +157,14 @@ export class EngineVoice {
     noise.connect(bp).connect(this.hiss).connect(this.out);
     noise.start(when);
     this.others.push(noise);
+    // Floating valves: the valve gear chatters as the valves bounce off their seats.
+    const chatter = ctx.createBiquadFilter();
+    chatter.type = 'bandpass';
+    chatter.frequency.value = 4200;
+    chatter.Q.value = 1.2;
+    this.clatter = ctx.createGain();
+    this.clatter.gain.value = 0;
+    noise.connect(chatter).connect(this.clatter).connect(this.out);
 
     // A Roots blower whines in step with the crank.
     if (spec.supercharged) {
@@ -149,13 +201,19 @@ export class EngineVoice {
     const mix = layerMix(this.rpms, rpm);
     this.sources.forEach((src, i) => src.playbackRate.setTargetAtTime(rpm / this.rpms[i], t, tc));
     this.gains.forEach((g, i) => g.gain.setTargetAtTime(mix[i], t, tc));
+    this.knockSources.forEach((src, i) => src.playbackRate.setTargetAtTime(rpm / this.rpms[i], t, tc));
+    this.knockGains.forEach((g, i) => g.gain.setTargetAtTime(mix[i], t, tc));
     const up = clamp((rpm - s.idle) / Math.max(1, s.redline - s.idle), 0, 1.2);
     const load = clamp(st.throttle, 0, 1);
+    const float = clamp(st.float ?? 0, 0, 1);
     // Idle stays audible (a slow single-cylinder is mostly silence between its bangs).
     const level = st.level * (0.4 + 0.6 * load) * (0.6 + 0.4 * Math.min(1, up));
     this.out.gain.setTargetAtTime(level * 0.9, t, tc);
-    this.muffler.frequency.setTargetAtTime(this.tone.muffleHz * (0.5 + 0.5 * load) * (0.75 + 0.5 * Math.min(1, up)), t, tc);
-    this.hiss.gain.setTargetAtTime(0.05 * load * (0.3 + 0.7 * Math.min(1, up)), t, tc);
+    this.muffler.frequency.setTargetAtTime(this.tone.muffleHz * (0.5 + 0.5 * load) * (0.75 + 0.5 * Math.min(1, up)) * (1 + 0.6 * float), t, tc);
+    this.hiss.gain.setTargetAtTime(0.05 * load * (0.3 + 0.7 * Math.min(1, up)) + 0.04 * float, t, tc);
+    this.clatter.gain.setTargetAtTime(0.18 * float, t, tc);
+    // Knock comes with load, and fades as the revs rise (less time for the end gas to detonate).
+    this.knockBus?.gain.setTargetAtTime(s.knock * Math.pow(load, 1.5) * (1 - 0.6 * Math.min(1, up)), t, tc);
     if (this.whine) {
       this.whine.osc.frequency.setTargetAtTime((rpm / 60) * 8.4, t, tc);
       this.whine.gain.gain.setTargetAtTime(0.06 * Math.pow(Math.min(1, up), 1.5) * (0.3 + 0.7 * load), t, tc);
@@ -166,11 +224,29 @@ export class EngineVoice {
     }
   }
 
+  /** An unburnt charge lighting up in the exhaust pipe: a sharp bang. */
+  backfire(t: number) {
+    const ctx = this.ctx;
+    const n = Math.round(0.06 * ctx.sampleRate);
+    const b = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (0.012 * ctx.sampleRate)) + Math.sin((2 * Math.PI * this.tone.bodyHz * 1.5 * i) / ctx.sampleRate) * Math.exp(-i / (0.02 * ctx.sampleRate));
+    const src = ctx.createBufferSource();
+    src.buffer = b;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 2500;
+    const g = ctx.createGain();
+    g.gain.value = 0.35 + 0.25 * Math.random();
+    src.connect(lp).connect(g).connect(this.out);
+    src.start(t);
+  }
+
   /** Fades out and releases the graph. */
   dispose(t: number, fade = 0.2) {
     this.out.gain.cancelScheduledValues(t);
     this.out.gain.setTargetAtTime(0, t, fade / 4);
-    for (const s of [...this.sources, ...this.others]) {
+    for (const s of [...this.sources, ...this.knockSources, ...this.others]) {
       try {
         s.stop(t + fade + 0.1);
       } catch {
@@ -205,8 +281,10 @@ class EngineSound {
   private raf = 0;
   private last = 0;
   private crankT = 0;
-  private cutUntil = 0;
   private throttleTarget = 0;
+  /** Valve float (0..1) and governor state, for the panel. */
+  float = 0;
+  governed = false;
   private throttleNow = 0;
   private volume = savedVolume();
   private listeners = new Set<() => void>();
@@ -318,6 +396,8 @@ class EngineSound {
     this.voice = null;
     this.stopStarter(t);
     this.rpm = 0;
+    this.float = 0;
+    this.governed = false;
     this.throttleTarget = 0;
     this.throttleNow = 0;
     this.emit();
@@ -335,10 +415,8 @@ class EngineSound {
     const dt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
     const s = this.spec;
-    const inertia = this.voice.tone.inertia;
     this.throttleNow += (this.throttleTarget - this.throttleNow) * (1 - Math.exp(-dt / 0.06));
     const t = this.ctx.currentTime;
-    let level = 1;
 
     if (this.phase === 'cranking') {
       this.crankT += dt;
@@ -347,27 +425,20 @@ class EngineSound {
       // Each compression stroke slows the crank, then it swings through.
       const phase = ((this.crankT * crank) / 60) * Math.PI * Math.max(1, s.cylinders / 2);
       this.rpm = crank * (1 + 0.25 * Math.sin(phase));
-      level = 0.45;
       if (this.crankT >= duration) {
         this.phase = 'running';
         this.rpm = s.idle * 1.5; // it catches and flares
         this.stopStarter(t);
       }
+      this.voice.set(t + 0.005, { rpm: this.rpm, throttle: 0.3, level: 0.45 });
     } else {
-      const target = s.idle + this.throttleNow * (s.redline * 1.03 - s.idle);
-      const tau = (target > this.rpm ? 0.45 : 0.8) * inertia;
-      this.rpm += (target - this.rpm) * (1 - Math.exp(-dt / tau));
-      // An old engine hunts a little at idle.
-      if (this.throttleNow < 0.05) this.rpm *= 1 + Math.sin(now / (s.year < 1925 ? 260 : 400)) * (s.year < 1925 ? 0.004 : 0.0015);
-      // Rev limiter: the ignition cuts out and the revs drop back.
-      if (this.rpm >= s.redline && now > this.cutUntil) {
-        this.cutUntil = now + 70;
-        this.rpm *= 0.965;
-      }
-      if (now < this.cutUntil) level = 0.12;
+      const r = stepRevs(s, this.voice.tone, this.rpm, this.throttleNow, dt, now / 1000);
+      this.rpm = r.rpm;
+      this.float = r.float;
+      this.governed = r.governed;
+      if (r.backfire) this.voice.backfire(t + 0.005);
+      this.voice.set(t + 0.005, { rpm: this.rpm, throttle: r.load, level: r.level, float: r.float });
     }
-
-    this.voice.set(t + 0.005, { rpm: this.rpm, throttle: this.phase === 'cranking' ? 0.3 : this.throttleNow, level });
     this.raf = requestAnimationFrame(this.tick);
   };
 }
