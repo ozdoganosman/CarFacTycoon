@@ -23,6 +23,12 @@ Kısayollar: **boşluk** duraklat/devam, **1-2-3** hız. Karar isteyen olaylar z
 
 claude.ai içinde oyuncu izin verirse oyun kendi kaydını sayfanın veritabanındaki `playtests/g<seed>` belgesine kendiliğinden yazar (üç oyun ayında bir, en fazla dakikada bir; hata olunca hemen). Menüdeki **Claude’a gönder** düğmesi notlu ayrı bir kopya ekler. Kayıtta oyuncunun önemli kararlarının zaman çizelgesi (`decisions`) ve yakalanan hatalar (`errors`) da vardır. `node scripts/playtest.mjs <klasör> <id>` indirilen parçaları yeniden kayda çevirir.
 
+### Herkese açık link ve oyuncu verisi
+
+`.github/workflows/pages.yml` tek dosyalık sürümü GitHub Pages'e yayınlar (`https://<kullanıcı>.github.io/CarFacTycoon/`). Bir kez **Settings → Pages → Source: GitHub Actions** seçilir; o zamana kadar iş akışı yalnızca derler ve bir not bırakır. Aynı `dist-single/index.html` itch.io'ya da (zip içinde) yüklenebilir.
+
+Bu sürümde **Claude’a gönder** yerine **Geri bildirim** vardır: oyuncuya bir kez sorulur, "Paylaş" derse oyunu aynı aralıklarla geliştiricinin toplayıcısına gider (`<oyuncu>-g<seed>` kimliğiyle, her gönderim öncekinin üstüne yazılır); "Hayır" bu tarayıcıda hatırlanır. Ad, e-posta, IP ya da konum toplanmaz; tarayıcıya rastgele bir oyuncu numarası verilir. Toplayıcı, geliştiricinin Google Drive'ına yazan bir Google Apps Script'tir: kurulum `tools/playtest-collector/README.md`, adresi `VITE_PLAYTEST_URL` (derleme sırasında, Pages'te `PLAYTEST_URL` depo değişkeni) ya da `src/ui/collector.ts`. Adres yoksa sürüm hiçbir şey toplamaz.
+
 ## Ana döngü
 
 1. **Proje:** Segmenti seç. Yeni proje penceresi, tasarım, test ve üretim hazırlığı ekranları projenin lansmana kadar daha ne kadar para yakacağını (prototip, test, kalıp, bu sürede şirketin gideri ya da geliri) kasa ve kredi limitiyle karşılaştırır; kasa ve kredi birlikte yetmiyorsa geliştirmeyi başlatmadan önce sorar (şehir arabası, aile, spor, pikap, lüks, 1946’dan sonra arazi aracı).

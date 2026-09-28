@@ -1,0 +1,61 @@
+name: Pages
+
+# Publishes the one-file build to GitHub Pages: https://<owner>.github.io/<repo>/
+# Turn it on once in Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# Until then this workflow only builds and leaves a note.
+# The playtest collector's URL can come from the repository variable PLAYTEST_URL
+# (Settings → Secrets and variables → Actions → Variables); src/ui/collector.ts holds a default.
+
+on:
+  push:
+    branches: [main, 'claude/peaceful-cray-agq64v']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.pages.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vite build --mode single
+        env:
+          VITE_PLAYTEST_URL: ${{ vars.PLAYTEST_URL }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist-single
+      - id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${{ github.repository }}/pages" > /dev/null 2>&1; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::GitHub Pages is off. Turn it on in Settings → Pages → Source: GitHub Actions, then re-run this workflow."
+          fi
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

@@ -1,13 +1,15 @@
 import { serialize } from '../core/save';
 import { formatDate } from '../core/time';
 import type { GameState } from '../core/types';
+import { COLLECTOR_URL, playerId, postPlaytest } from './collector';
 
-// Sends the player's game to Claude through the page's shared database (the
-// claude.ai "db" capability). Claude reads the `playtests` collection to study
-// how the game is played and which errors happened. Once the player allows it,
-// the running game keeps its own document up to date; the menu button adds a
-// separate snapshot with a note. Outside claude.ai there is no database and the
-// caller falls back to copying the save code.
+// Sends the player's game where it can be studied: on claude.ai, through the
+// page's shared database (the "db" capability), where Claude reads the
+// `playtests` collection; in the public build, to the developer's collector (a
+// Google Apps Script that files it in Google Drive), but only after the player
+// says yes. Once allowed, the running game keeps its own copy up to date; the
+// menu button adds a separate snapshot with a note. With neither, the caller
+// falls back to copying the save code.
 
 interface DocRef {
   set(data: Record<string, unknown>): Promise<void>;
@@ -104,32 +106,60 @@ export function sendErrorText(e: unknown): string {
   if (code === 'quota_exceeded') return 'Gönderim kutusu doldu. Claude’a söyle, eskilerini temizlesin.';
   if (code === 'not_granted' || code === 'revoked' || code === 'invalid_argument') return 'Bu sayfada Claude’a gönderme izni yok.';
   if (code === 'resource_exhausted') return 'Çok sık gönderildi, biraz sonra yeniden denenecek.';
+  if (code === 'too_big') return 'Oyun kaydı gönderilemeyecek kadar büyük.';
   return 'Gönderilemedi, biraz sonra yeniden denenecek.';
 }
 
+/** Where playtests go: Claude (claude.ai page) or the developer's collector (public build). */
+export type SinkKind = 'claude' | 'developer';
+export interface Sink {
+  kind: SinkKind;
+  put(id: string, save: { encoding: string; data: string }, meta: Record<string, unknown>): Promise<void>;
+}
+
 /**
- * Save the whole game (gzip + base64, split into pieces under 256 KiB) plus a
- * short summary and the player's note under `playtests/<id>`. Pieces go first,
- * so a visible playtest is always complete; readers use the first `chunks`
- * pieces only.
+ * On claude.ai: the whole save (gzip + base64) split into pieces under 256 KiB, then the
+ * summary under `playtests/<id>`. Pieces go first, so a visible playtest is always complete;
+ * readers use the first `chunks` pieces only.
  */
-export async function sendToClaude(db: Db, s: GameState, note: string, id = `p${Date.now().toString(36)}`, auto = false): Promise<string> {
+function dbSink(db: Db): Sink {
+  return {
+    kind: 'claude',
+    async put(id, save, meta) {
+      const size = save.encoding === 'json' ? 90_000 : 150_000;
+      const pieces: string[] = [];
+      for (let i = 0; i < save.data.length; i += size) pieces.push(save.data.slice(i, i + size));
+      for (let i = 0; i < pieces.length; i++) await write(db.doc(`playtests/${id}/chunks/${i}`), { i, data: pieces[i] });
+      await write(db.doc(`playtests/${id}`), { ...meta, encoding: save.encoding, chunks: pieces.length });
+    },
+  };
+}
+
+/** In the public build: one request to the collector, which files it by id (a game's copy is replaced, not duplicated). */
+function collectorSink(url: string): Sink {
+  return {
+    kind: 'developer',
+    put: (id, save, meta) => postPlaytest(url, { id, ...meta, encoding: save.encoding, data: save.data }),
+  };
+}
+
+let sinkPromise: Promise<Sink | null> | null = null;
+
+/** Where this copy of the game can send playtests, if anywhere. */
+export function playtestSink(): Promise<Sink | null> {
+  sinkPromise ??= claudeDb().then((db) => (db ? dbSink(db) : COLLECTOR_URL ? collectorSink(COLLECTOR_URL) : null));
+  return sinkPromise;
+}
+
+/** Save the whole game plus a short summary and the player's note. */
+export async function sendPlaytest(sink: Sink, s: GameState, note: string, id = `p${Date.now().toString(36)}`, auto = false): Promise<string> {
   const json = serialize(s);
   const packed = await gzipBase64(json);
-  const text = packed ?? json;
-  const size = packed ? 150_000 : 90_000;
-  const pieces: string[] = [];
-  for (let i = 0; i < text.length; i += size) pieces.push(text.slice(i, i + size));
-  for (let i = 0; i < pieces.length; i++) await write(db.doc(`playtests/${id}/chunks/${i}`), { i, data: pieces[i] });
-  await write(db.doc(`playtests/${id}`), {
-    sentAt: new Date().toISOString(),
-    auto,
-    note: note.trim().slice(0, 4000),
-    encoding: packed ? 'gzip-base64' : 'json',
-    chunks: pieces.length,
-    saveVersion: s.version,
-    summary: summary(s),
-  });
+  await sink.put(
+    id,
+    { encoding: packed ? 'gzip-base64' : 'json', data: packed ?? json },
+    { sentAt: new Date().toISOString(), auto, note: note.trim().slice(0, 4000), saveVersion: s.version, summary: summary(s) },
+  );
   return id;
 }
 
@@ -160,18 +190,27 @@ function setStatus(next: SyncStatus) {
   for (const l of listeners) l();
 }
 
-export function sharingPreferred(): boolean {
+function sharingPref(): string | null {
   try {
-    return localStorage.getItem(PREF_KEY) !== 'off';
+    return localStorage.getItem(PREF_KEY);
   } catch {
-    return true;
+    return null;
   }
+}
+
+export function sharingPreferred(): boolean {
+  return sharingPref() !== 'off';
 }
 
 /** Find out whether this view can share, and whether the player still has to allow it. */
 export async function initSync() {
-  const db = await claudeDb();
-  if (!db) return setStatus({ mode: 'off' });
+  const sink = await playtestSink();
+  if (!sink) return setStatus({ mode: 'off' });
+  // The public build shares only after the player has said yes, in this browser.
+  if (sink.kind === 'developer') {
+    const pref = sharingPref();
+    return setStatus({ mode: pref === 'on' ? 'on' : pref === 'off' ? 'disabled' : 'ask' });
+  }
   if (!sharingPreferred()) return setStatus({ mode: 'disabled' });
   const perms = await permissions();
   const state = perms ? await perms.state('db').catch((): PermissionState => 'prompt') : 'prompt';
@@ -188,7 +227,8 @@ export async function allowSharing(s: GameState | null) {
   } catch {
     /* per-viewer preference only */
   }
-  const perms = await permissions();
+  const sink = await playtestSink();
+  const perms = sink?.kind === 'claude' ? await permissions() : null;
   if (perms) {
     const res = await perms.request(['db']).catch(() => ({}) as Record<string, PermissionState>);
     if (res.db === 'denied') return setStatus({ mode: 'denied' });
@@ -220,13 +260,14 @@ export function syncTick(s: GameState, reason: 'tick' | 'hidden' = 'tick') {
 }
 
 export async function syncNow(s: GameState) {
-  const db = await claudeDb();
-  if (!db || busy) return;
+  const sink = await playtestSink();
+  if (!sink || busy) return;
   busy = true;
   lastAt = Date.now();
   setStatus({ ...status, mode: 'sending' });
   try {
-    await sendToClaude(db, s, '', `g${s.seed}`, true);
+    // One copy per game; in the public build, per player too (two players can share a seed).
+    await sendPlaytest(sink, s, '', sink.kind === 'developer' ? `${playerId()}-g${s.seed}` : `g${s.seed}`, true);
     lastWeek = s.week;
     lastErrors = s.errors?.length ?? 0;
     setStatus({ mode: 'on', lastSent: Date.now() });

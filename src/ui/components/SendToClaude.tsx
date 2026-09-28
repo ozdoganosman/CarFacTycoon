@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { serialize } from '../../core/save';
-import { allowSharing, claudeDb, disableSharing, onSyncStatus, sendErrorText, sendToClaude, syncNow, syncStatus, type SyncStatus } from '../claudeLink';
+import { allowSharing, disableSharing, onSyncStatus, playtestSink, sendErrorText, sendPlaytest, syncNow, syncStatus, type SinkKind, type SyncStatus } from '../claudeLink';
 import { store, useGameState } from '../store';
 import { Button } from './ui';
 
@@ -14,7 +14,34 @@ function ago(t?: number): string {
   return m < 1 ? 'az önce' : `${m} dk önce`;
 }
 
-function statusText(st: SyncStatus): string {
+/** Which way this copy sends playtests (null: nowhere, or not known yet). */
+function useSinkKind(): SinkKind | null | undefined {
+  const [kind, setKind] = useState<SinkKind | null | undefined>(undefined);
+  useEffect(() => {
+    let live = true;
+    void playtestSink().then((sink) => live && setKind(sink?.kind ?? null));
+    return () => {
+      live = false;
+    };
+  }, []);
+  return kind;
+}
+
+function statusText(st: SyncStatus, kind: SinkKind | null | undefined): string {
+  if (kind === 'developer') {
+    switch (st.mode) {
+      case 'on':
+        return st.lastSent ? `Oyunun geliştiriciyle paylaşılıyor · son gönderim ${ago(st.lastSent)}` : 'Oyunun geliştiriciyle paylaşılıyor';
+      case 'sending':
+        return 'Gönderiliyor…';
+      case 'error':
+        return st.message ?? 'Gönderilemedi, yeniden denenecek.';
+      case 'ask':
+        return 'Otomatik paylaşım kapalı: izin verirsen oyunun arada bir geliştiriciye gider.';
+      default:
+        return 'Otomatik paylaşım kapalı.';
+    }
+  }
   switch (st.mode) {
     case 'on':
       return st.lastSent ? `Claude oyununu görüyor · son gönderim ${ago(st.lastSent)}` : 'Claude oyununu görüyor';
@@ -33,12 +60,34 @@ function statusText(st: SyncStatus): string {
   }
 }
 
-/** A slim bar asking once whether Claude may watch this game. */
+/** What is and is not collected, said before the player decides. */
+const PRIVACY =
+  'Adın, e-postan, IP adresin ya da konumun toplanmaz; bu tarayıcıya rastgele bir oyuncu numarası verilir. Şirkete verdiğin ad ve yazdığın notlar oyunla birlikte gider. İstediğin an menüdeki Geri bildirim’den kapatabilirsin.';
+
+/** A slim bar asking once whether the game may be shared (with Claude, or with the developer). */
 export function ShareBar() {
   const s = useGameState();
   const st = useSyncStatus();
+  const kind = useSinkKind();
   const [hidden, setHidden] = useState(false);
-  if (st.mode !== 'ask' || hidden) return null;
+  if (st.mode !== 'ask' || hidden || kind === undefined) return null;
+  if (kind === 'developer')
+    return (
+      <div className="claude-share" role="note">
+        <span>
+          <b>Oyununu geliştiriciyle paylaşır mısın?</b> Oyunu düzeltmek ve dengelemek için oyunun (tasarımların, kararların, satışların, karşılaştığın hatalar) arada bir
+          kendiliğinden gönderilir. <span className="muted">{PRIVACY}</span>
+        </span>
+        <span className="claude-share-btns">
+          <Button kind="ghost" onClick={disableSharing}>
+            Hayır, teşekkürler
+          </Button>
+          <Button kind="primary" onClick={() => void allowSharing(s)}>
+            Paylaş
+          </Button>
+        </span>
+      </div>
+    );
   return (
     <div className="claude-share" role="note">
       <span>
@@ -65,15 +114,9 @@ export function SendToClaude() {
   const [note, setNote] = useState('');
   const [phase, setPhase] = useState<Phase>('idle');
   const [error, setError] = useState('');
-  const [hasDb, setHasDb] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    let live = true;
-    void claudeDb().then((db) => live && setHasDb(!!db));
-    return () => {
-      live = false;
-    };
-  }, []);
+  const kind = useSinkKind();
+  const hasDb = kind === undefined ? null : kind !== null;
+  const dev = kind === 'developer';
 
   const close = () => {
     setOpen(false);
@@ -81,16 +124,19 @@ export function SendToClaude() {
   };
 
   const send = async () => {
-    const db = await claudeDb();
-    if (!db) return;
+    const sink = await playtestSink();
+    if (!sink) return;
     setPhase('sending');
     try {
-      await sendToClaude(db, s, note);
+      await sendPlaytest(sink, s, note);
       setPhase('sent');
       setNote('');
-      // The click granted the database: keep the game's own copy fresh from now on.
-      if (syncStatus().mode === 'ask' || syncStatus().mode === 'error') await allowSharing(null);
-      void syncNow(s);
+      // On claude.ai the click granted the database: keep the game's own copy fresh from now on.
+      // A public player's one-off note is not a yes to automatic sharing.
+      if (sink.kind === 'claude') {
+        if (syncStatus().mode === 'ask' || syncStatus().mode === 'error') await allowSharing(null);
+        void syncNow(s);
+      }
     } catch (e) {
       setError(sendErrorText(e));
       setPhase('error');
@@ -110,12 +156,12 @@ export function SendToClaude() {
 
   return (
     <>
-      <button type="button" className="nav-item nav-claude" onClick={() => setOpen(true)} title={statusText(st)}>
+      <button type="button" className="nav-item nav-claude" onClick={() => setOpen(true)} title={statusText(st, kind)}>
         <span className="nav-icon" aria-hidden>
           📨
         </span>
-        <span className="nav-label">Claude’a gönder</span>
-        {dot !== 'off' && <span className={`sync-dot sync-${dot}`} aria-label={statusText(st)} />}
+        <span className="nav-label">{dev ? 'Geri bildirim' : 'Claude’a gönder'}</span>
+        {dot !== 'off' && <span className={`sync-dot sync-${dot}`} aria-label={statusText(st, kind)} />}
       </button>
       {open && (
         <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && close()}>
@@ -124,21 +170,34 @@ export function SendToClaude() {
               <span className="modal-icon" aria-hidden>
                 📨
               </span>
-              Oyununu Claude’a gönder
+              {dev ? 'Oyununu geliştiriciye gönder' : 'Oyununu Claude’a gönder'}
             </h2>
             <div className="modal-body">
-              {hasDb !== false && <p className={`sync-line sync-line-${dot}`}>{statusText(st)}</p>}
+              {hasDb !== false && <p className={`sync-line sync-line-${dot}`}>{statusText(st, kind)}</p>}
               {phase === 'sent' ? (
-                <p>
-                  <b>Gönderildi.</b> Sohbette Claude’a “gönderdim” demen yeterli: oyununu açıp tasarımlarına, fiyatlarına, fabrikana, kararlarına ve hatalara bakacak.
-                </p>
+                dev ? (
+                  <p>
+                    <b>Gönderildi, teşekkürler!</b> Oyunun ve notun geliştiriciye ulaştı.
+                  </p>
+                ) : (
+                  <p>
+                    <b>Gönderildi.</b> Sohbette Claude’a “gönderdim” demen yeterli: oyununu açıp tasarımlarına, fiyatlarına, fabrikana, kararlarına ve hatalara bakacak.
+                  </p>
+                )
               ) : hasDb === false ? (
                 <p>Bu sürüm Claude’a doğrudan gönderemiyor. Kayıt kodunu kopyalayıp sohbete yapıştırabilirsin (uzun bir metin olacak).</p>
               ) : (
                 <>
-                  <p>Şu anki oyunun ve notun Claude’un okuyabileceği bir kutuya kaydedilir. Oyun kaldığı yerden sürer.</p>
+                  {dev ? (
+                    <p>
+                      Şu anki oyunun ve notun geliştiriciye gönderilir; oyunu düzeltmek ve dengelemek için okunur. Oyun kaldığı yerden sürer.{' '}
+                      <span className="muted small">{PRIVACY}</span>
+                    </p>
+                  ) : (
+                    <p>Şu anki oyunun ve notun Claude’un okuyabileceği bir kutuya kaydedilir. Oyun kaldığı yerden sürer.</p>
+                  )}
                   <label className="send-note">
-                    <span>Claude’a notun (isteğe bağlı)</span>
+                    <span>{dev ? 'Geliştiriciye notun (isteğe bağlı)' : 'Claude’a notun (isteğe bağlı)'}</span>
                     <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={4} placeholder="Neyi sıkıcı, zor ya da garip buldun? Nerede hata gördün?" />
                   </label>
                   {phase === 'error' && <p className="tone-bad">{error}</p>}
@@ -147,7 +206,7 @@ export function SendToClaude() {
                       Otomatik paylaşımı kapat
                     </button>
                   )}
-                  {st.mode === 'disabled' && (
+                  {(st.mode === 'disabled' || (dev && st.mode === 'ask')) && (
                     <button type="button" className="link-btn small" onClick={() => void allowSharing(s)}>
                       Otomatik paylaşımı aç
                     </button>
