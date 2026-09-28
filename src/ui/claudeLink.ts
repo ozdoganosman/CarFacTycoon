@@ -145,9 +145,15 @@ function collectorSink(url: string): Sink {
 
 let sinkPromise: Promise<Sink | null> | null = null;
 
-/** Where this copy of the game can send playtests, if anywhere. */
+/**
+ * Where this copy of the game can send playtests, if anywhere. A claude.ai page only ever uses
+ * its own database (a visitor who cannot write there copies the save code instead); the
+ * collector is for copies of the game hosted elsewhere.
+ */
 export function playtestSink(): Promise<Sink | null> {
-  sinkPromise ??= claudeDb().then((db) => (db ? dbSink(db) : COLLECTOR_URL ? collectorSink(COLLECTOR_URL) : null));
+  sinkPromise ??= runtime()
+    ? claudeDb().then((db) => (db ? dbSink(db) : null))
+    : Promise.resolve(COLLECTOR_URL ? collectorSink(COLLECTOR_URL) : null);
   return sinkPromise;
 }
 

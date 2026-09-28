@@ -3,7 +3,7 @@
 // developer's Google Drive (see tools/playtest-collector). Empty: the build collects nothing.
 //
 // Set at build time with VITE_PLAYTEST_URL, or here once the web app is deployed.
-const DEFAULT_URL = '';
+const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwOEdCVTJsjm33KmUD8FveA4A2hk8oUxjZzrrI8AevBKBBz6hSeueOVm6YMDx3PENVv/exec';
 
 export const COLLECTOR_URL: string = import.meta.env.VITE_PLAYTEST_URL?.trim() || DEFAULT_URL;
 

@@ -99,11 +99,18 @@ describe('playtest collector', () => {
     expect(posts).toHaveLength(0);
   });
 
-  it('stays silent in a build without a collector', async () => {
+  it('uses the built-in collector when the build names none, and never from inside claude.ai', async () => {
     vi.stubEnv('VITE_PLAYTEST_URL', '');
+    const { COLLECTOR_URL } = await import('../src/ui/collector');
+    expect(COLLECTOR_URL).toMatch(/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/);
     const link = await import('../src/ui/claudeLink');
-    await link.initSync();
-    expect(link.syncStatus().mode).toBe('off');
-    expect(await link.playtestSink()).toBeNull();
+    expect((await link.playtestSink())?.kind).toBe('developer');
+    // On a claude.ai page (runtime present) without a writable database: nothing goes out.
+    vi.resetModules();
+    vi.stubGlobal('window', { claude: { use: async () => null } });
+    const inClaude = await import('../src/ui/claudeLink');
+    expect(await inClaude.playtestSink()).toBeNull();
+    await inClaude.initSync();
+    expect(inClaude.syncStatus().mode).toBe('off');
   });
 });

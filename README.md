@@ -27,7 +27,7 @@ claude.ai içinde oyuncu izin verirse oyun kendi kaydını sayfanın veritabanı
 
 `.github/workflows/pages.yml` tek dosyalık sürümü GitHub Pages'e yayınlar (`https://<kullanıcı>.github.io/CarFacTycoon/`). Bir kez **Settings → Pages → Source: GitHub Actions** seçilir; o zamana kadar iş akışı yalnızca derler ve bir not bırakır. Aynı `dist-single/index.html` itch.io'ya da (zip içinde) yüklenebilir.
 
-Bu sürümde **Claude’a gönder** yerine **Geri bildirim** vardır: oyuncuya bir kez sorulur, "Paylaş" derse oyunu aynı aralıklarla geliştiricinin toplayıcısına gider (`<oyuncu>-g<seed>` kimliğiyle, her gönderim öncekinin üstüne yazılır); "Hayır" bu tarayıcıda hatırlanır. Ad, e-posta, IP ya da konum toplanmaz; tarayıcıya rastgele bir oyuncu numarası verilir. Toplayıcı, geliştiricinin Google Drive'ına yazan bir Google Apps Script'tir: kurulum `tools/playtest-collector/README.md`, adresi `VITE_PLAYTEST_URL` (derleme sırasında, Pages'te `PLAYTEST_URL` depo değişkeni) ya da `src/ui/collector.ts`. Adres yoksa sürüm hiçbir şey toplamaz.
+Bu sürümde **Claude’a gönder** yerine **Geri bildirim** vardır: oyuncuya bir kez sorulur, "Paylaş" derse oyunu aynı aralıklarla geliştiricinin toplayıcısına gider (`<oyuncu>-g<seed>` kimliğiyle, her gönderim öncekinin üstüne yazılır); "Hayır" bu tarayıcıda hatırlanır. Ad, e-posta, IP ya da konum toplanmaz; tarayıcıya rastgele bir oyuncu numarası verilir. Toplayıcı, geliştiricinin Google Drive'ına yazan bir Google Apps Script'tir: kurulum `tools/playtest-collector/README.md`, adresi `src/ui/collector.ts` içindedir (derleme sırasında `VITE_PLAYTEST_URL`, Pages'te `PLAYTEST_URL` depo değişkeni onu geçersiz kılar). claude.ai'deki kopya toplayıcıyı hiç kullanmaz, yalnızca sayfanın veritabanına yazar.
 
 ## Ana döngü
 
