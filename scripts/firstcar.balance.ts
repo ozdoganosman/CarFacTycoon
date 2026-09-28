@@ -66,8 +66,8 @@ function firstCar(seed: number, focus: Record<FocusKey, number>, price: number, 
 }
 
 test('a first car meets rivals that are ahead of it', () => {
-  const comfort = { performance: 0, efficiency: 0, comfort: 0.79, safety: 0.12, cost: 0.09, quality: 0 };
-  const even = { performance: 1 / 6, efficiency: 1 / 6, comfort: 1 / 6, safety: 1 / 6, cost: 1 / 6, quality: 1 / 6 };
+  const comfort = { performance: 0, efficiency: 0, comfort: 0.79, handling: 0, safety: 0.12, practicality: 0, cost: 0.09, quality: 0 };
+  const even = { performance: 1 / 8, efficiency: 1 / 8, comfort: 1 / 8, handling: 1 / 8, safety: 1 / 8, practicality: 1 / 8, cost: 1 / 8, quality: 1 / 8 };
   for (const seed of [1924320942, 7, 11]) {
     firstCar(seed, comfort, 900, [17, 30, 30]);
     firstCar(seed, even, 958, [8, 10, 10]);

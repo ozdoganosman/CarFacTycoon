@@ -1,13 +1,15 @@
 import { withTuning } from './testing';
 import type { DevBonus, FocusKey } from './types';
 
-export const FOCUS_KEYS: FocusKey[] = ['performance', 'efficiency', 'comfort', 'safety', 'cost', 'quality'];
+export const FOCUS_KEYS: FocusKey[] = ['performance', 'efficiency', 'comfort', 'handling', 'safety', 'practicality', 'cost', 'quality'];
 
 export const FOCUS_NAMES: Record<FocusKey, string> = {
   performance: 'Performans',
   efficiency: 'Verim',
   comfort: 'Konfor',
+  handling: 'Yol tutuş',
   safety: 'Güvenlik',
+  practicality: 'Pratiklik',
   cost: 'Maliyet',
   quality: 'Kalite',
 };
@@ -16,7 +18,9 @@ export const FOCUS_HINTS: Record<FocusKey, string> = {
   performance: 'Motor gücü ↑, ağırlık ↓',
   efficiency: 'Yakıt tüketimi ↓',
   comfort: 'Konfor ↑',
+  handling: 'Yol tutuş ↑ (şasi ve süspansiyon ayarı)',
   safety: 'Güvenlik ↑',
+  practicality: 'Pratiklik ↑ (iç düzen, bagaj, bakım kolaylığı)',
   cost: 'Birim maliyet ↓',
   quality: 'Güvenilirlik ↑, gizli kusur ↓',
 };
@@ -57,7 +61,9 @@ export function bonusFromPoints(
     massMult: 1 - 0.1 * b(r('performance')) * sf,
     fuelMult: 1 - 0.3 * b(r('efficiency')) * sf,
     comfort: 25 * b(r('comfort')) * sf,
+    handling: 22 * b(r('handling')) * sf,
     safety: 25 * b(r('safety')) * sf,
+    practicality: 22 * b(r('practicality')) * sf,
     costMult: 1 - 0.28 * b(r('cost')) * sf,
     reliability: 20 * b(r('quality')) * sf + 7 * (1 - Math.exp(-2.5 * polish)) * sf + (skill - 50) * 0.08,
     defectMult: 1 - 0.5 * b(r('quality')) * sf,
@@ -66,7 +72,7 @@ export function bonusFromPoints(
 
 export function evenFocus(): Record<FocusKey, number> {
   const e = 1 / FOCUS_KEYS.length;
-  return { performance: e, efficiency: e, comfort: e, safety: e, cost: e, quality: e };
+  return { performance: e, efficiency: e, comfort: e, handling: e, safety: e, practicality: e, cost: e, quality: e };
 }
 
 export function normalizeFocus(f: Record<FocusKey, number>): Record<FocusKey, number> {

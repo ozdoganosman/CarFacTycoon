@@ -20,7 +20,7 @@ export type AttrKey =
   | 'prestige'
   | 'practicality';
 
-export type FocusKey = 'performance' | 'efficiency' | 'comfort' | 'safety' | 'cost' | 'quality';
+export type FocusKey = 'performance' | 'efficiency' | 'comfort' | 'handling' | 'safety' | 'practicality' | 'cost' | 'quality';
 export type ComponentKey = 'engine' | 'gearbox' | 'electrics';
 export type SupplierChoice = 'inhouse' | 'cheap' | 'quality';
 export type TestId = 'dyno' | 'road' | 'crash' | 'durability';
@@ -108,8 +108,10 @@ export interface DevBonus {
   reliability: number;
   /** Quality work: fewer latent defects when development ends (older saves lack it). */
   defectMult?: number;
-  /** Chassis tuning from road tests. */
+  /** Chassis tuning: development focus and road tests. */
   handling?: number;
+  /** Packaging, luggage room, ease of servicing (development focus). */
+  practicality?: number;
 }
 
 export interface EngineStats {

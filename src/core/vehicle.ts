@@ -320,7 +320,8 @@ export function computeCarStats(design: CarDesign, year: number, bonus: DevBonus
     gb.practicality +
     (closed ? 5 : 0) +
     sum('practicality') +
-    kh.practicality;
+    kh.practicality +
+    (bonus.practicality ?? 0);
 
   // ---- Cost ----
   const gearboxCost = 25 + 12 * n + gb.cost;

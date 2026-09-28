@@ -202,7 +202,9 @@ export function aiDesign(segment: SegmentId, year: number, o: AiOptions, rng: Rn
     performance: w.accel + w.topSpeed + 0.05,
     efficiency: w.economy + 0.05,
     comfort: w.comfort + 0.05,
+    handling: w.handling + 0.05,
     safety: w.safety + 0.05,
+    practicality: w.practicality + 0.05,
     cost: o.style === 'mass' || o.style === 'utility' ? 0.3 : 0.1,
     quality: w.reliability + 0.05,
   };
@@ -270,5 +272,5 @@ export function referenceDesigns(year: number, segment: SegmentId): CarDesign[] 
 }
 
 export function referenceBonus(): DevBonus {
-  return aiBonus({ performance: 0.2, efficiency: 0.2, comfort: 0.25, safety: 0.15, cost: 0.2, quality: 0.15 }, 55);
+  return aiBonus({ performance: 0.2, efficiency: 0.2, comfort: 0.25, handling: 0.1, safety: 0.15, practicality: 0.1, cost: 0.2, quality: 0.15 }, 55);
 }

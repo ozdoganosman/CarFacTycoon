@@ -826,3 +826,16 @@ describe('report fb96772', () => {
 function yearFloatOf(week: number) {
   return 1900 + week / 52;
 }
+
+describe('engineering focus on handling and practicality', () => {
+  it('a team working on the chassis or the packaging makes a measurably better car there', () => {
+    const only = (k: FocusKey) => Object.fromEntries(FOCUS_KEYS.map((x) => [x, x === k ? 1 : 0])) as Record<FocusKey, number>;
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 41 });
+    const design = A.defaultDesign(s, 'family');
+    const plain = computeCarStats(design, 1925, bonusFromPoints(only('cost'), 1, 1, 50));
+    const chassis = computeCarStats(design, 1925, bonusFromPoints(only('handling'), 1, 1, 50));
+    const packaging = computeCarStats(design, 1925, bonusFromPoints(only('practicality'), 1, 1, 50));
+    expect(chassis.handling - plain.handling).toBeGreaterThan(10);
+    expect(packaging.practicality - plain.practicality).toBeGreaterThan(10);
+  });
+});

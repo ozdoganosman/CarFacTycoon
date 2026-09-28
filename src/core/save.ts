@@ -24,10 +24,12 @@ function migrate(s: GameState) {
   s.errors ??= [];
   s.news ??= [];
   s.decisions ??= [];
-  // The quality focus arrived later.
+  // The quality, handling and practicality focus areas arrived later.
   for (const p of s.projects) {
-    p.dev.points.quality ??= 0;
-    p.dev.focus.quality ??= 0;
+    for (const k of ['quality', 'handling', 'practicality'] as const) {
+      p.dev.points[k] ??= 0;
+      p.dev.focus[k] ??= 0;
+    }
   }
   // Research arrived later: older companies already know everything that exists.
   ensureResearch(s, yearFloat(s.week));

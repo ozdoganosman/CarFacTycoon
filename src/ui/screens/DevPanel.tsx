@@ -157,7 +157,7 @@ export function FocusPanel({ project: p }: { project: Project }) {
     const ids = new Set(fresh.map((b) => b.id));
     const t = setTimeout(() => setBubbles((b) => b.filter((x) => !ids.has(x.id))), 1400);
     return () => clearTimeout(t);
-  }, [p.dev.points.performance, p.dev.points.efficiency, p.dev.points.comfort, p.dev.points.safety, p.dev.points.cost, p.dev.points.quality]);
+  }, [p.dev.points.performance, p.dev.points.efficiency, p.dev.points.comfort, p.dev.points.handling, p.dev.points.safety, p.dev.points.practicality, p.dev.points.cost, p.dev.points.quality]);
 
   const locked = p.dev.locked ?? [];
   // Keep the total at 100%: the unlocked sliders make room, the locked ones stay put.
@@ -166,7 +166,9 @@ export function FocusPanel({ project: p }: { project: Project }) {
     performance: `Güç +%${((bonus.powerMult - 1) * 100).toFixed(1)}`,
     efficiency: `Tüketim −%${((1 - bonus.fuelMult) * 100).toFixed(1)}`,
     comfort: `Konfor +${bonus.comfort.toFixed(1)}`,
+    handling: `Yol tutuş +${(bonus.handling ?? 0).toFixed(1)}`,
     safety: `Güvenlik +${bonus.safety.toFixed(1)}`,
+    practicality: `Pratiklik +${(bonus.practicality ?? 0).toFixed(1)}`,
     cost: `Maliyet −%${((1 - bonus.costMult) * 100).toFixed(1)}`,
     quality: `Gizli kusur −%${((1 - (bonus.defectMult ?? 1)) * 100).toFixed(0)}`,
   };
