@@ -14,6 +14,7 @@
     "balance": "vitest run --config vitest.balance.config.ts"
   },
   "dependencies": {
+    "posthog-js": "^1.434.17",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

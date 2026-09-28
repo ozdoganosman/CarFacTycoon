@@ -62,7 +62,7 @@ function statusText(st: SyncStatus, kind: SinkKind | null | undefined): string {
 
 /** What is and is not collected, said before the player decides. */
 const PRIVACY =
-  'Adın, e-postan, IP adresin ya da konumun toplanmaz; bu tarayıcıya rastgele bir oyuncu numarası verilir. Şirkete verdiğin ad ve yazdığın notlar oyunla birlikte gider. İstediğin an menüdeki Geri bildirim’den kapatabilirsin.';
+  'Adın ya da e-postan sorulmaz; bu tarayıcıya rastgele bir oyuncu numarası verilir. Şirkete verdiğin ad ve yazdığın notlar oyunla birlikte gider. Veriler AB’deki sunucularda (Supabase, PostHog) durur, reklam için kullanılmaz, kimseyle paylaşılmaz. İstediğin an menüdeki Geri bildirim’den kapatabilirsin.';
 
 /** A slim bar asking once whether the game may be shared (with Claude, or with the developer). */
 export function ShareBar() {
@@ -76,7 +76,7 @@ export function ShareBar() {
       <div className="claude-share" role="note">
         <span>
           <b>Oyununu geliştiriciyle paylaşır mısın?</b> Oyunu düzeltmek ve dengelemek için oyunun (tasarımların, kararların, satışların, karşılaştığın hatalar) arada bir
-          kendiliğinden gönderilir. <span className="muted">{PRIVACY}</span>
+          kendiliğinden gönderilir; hangi ekranlarda ne yaptığın ve oyun ekranının kaydı da tutulur. <span className="muted">{PRIVACY}</span>
         </span>
         <span className="claude-share-btns">
           <Button kind="ghost" onClick={disableSharing}>

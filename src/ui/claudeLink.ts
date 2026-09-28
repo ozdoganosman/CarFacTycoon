@@ -1,6 +1,7 @@
 import { serialize } from '../core/save';
 import { formatDate } from '../core/time';
 import type { GameState } from '../core/types';
+import { startAnalytics, stopAnalytics } from './analytics';
 import { COLLECTOR_URL, playerId, postPlaytest } from './collector';
 
 // Sends the player's game where it can be studied: on claude.ai, through the
@@ -179,6 +180,11 @@ export interface SyncStatus {
 }
 
 const PREF_KEY = 'carfactycoon.share';
+/**
+ * The public build's yes. Versioned: a yes given to older wording (saves only, before play
+ * analytics) is asked again; a no is kept.
+ */
+const DEV_CONSENT = 'on:2';
 let status: SyncStatus = { mode: 'off' };
 const listeners = new Set<() => void>();
 let lastWeek = -1;
@@ -215,7 +221,8 @@ export async function initSync() {
   // The public build shares only after the player has said yes, in this browser.
   if (sink.kind === 'developer') {
     const pref = sharingPref();
-    return setStatus({ mode: pref === 'on' ? 'on' : pref === 'off' ? 'disabled' : 'ask' });
+    if (pref === DEV_CONSENT) void startAnalytics();
+    return setStatus({ mode: pref === DEV_CONSENT ? 'on' : pref === 'off' ? 'disabled' : 'ask' });
   }
   if (!sharingPreferred()) return setStatus({ mode: 'disabled' });
   const perms = await permissions();
@@ -228,17 +235,19 @@ export async function initSync() {
 
 /** The player's click: ask once, then share right away. */
 export async function allowSharing(s: GameState | null) {
+  const sink = await playtestSink();
   try {
-    localStorage.setItem(PREF_KEY, 'on');
+    localStorage.setItem(PREF_KEY, sink?.kind === 'developer' ? DEV_CONSENT : 'on');
   } catch {
     /* per-viewer preference only */
   }
-  const sink = await playtestSink();
   const perms = sink?.kind === 'claude' ? await permissions() : null;
   if (perms) {
     const res = await perms.request(['db']).catch(() => ({}) as Record<string, PermissionState>);
     if (res.db === 'denied') return setStatus({ mode: 'denied' });
   }
+  // The same yes covers how the game is played (PostHog), in the public build only.
+  if (sink?.kind === 'developer') void startAnalytics();
   setStatus({ mode: 'on' });
   if (s) await syncNow(s);
 }
@@ -249,6 +258,7 @@ export function disableSharing() {
   } catch {
     /* per-viewer preference only */
   }
+  stopAnalytics();
   setStatus({ mode: 'disabled' });
 }
 

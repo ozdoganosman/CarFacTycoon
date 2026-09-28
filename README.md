@@ -27,7 +27,12 @@ claude.ai içinde oyuncu izin verirse oyun kendi kaydını sayfanın veritabanı
 
 `.github/workflows/pages.yml` tek dosyalık sürümü GitHub Pages'e yayınlar (`https://<kullanıcı>.github.io/CarFacTycoon/`). Bir kez **Settings → Pages → Source: GitHub Actions** seçilir; o zamana kadar iş akışı yalnızca derler ve bir not bırakır. Aynı `dist-single/index.html` itch.io'ya da (zip içinde) yüklenebilir.
 
-Bu sürümde **Claude’a gönder** yerine **Geri bildirim** vardır: oyuncuya bir kez sorulur, "Paylaş" derse oyunu aynı aralıklarla geliştiricinin toplayıcısına gider (`<oyuncu>-g<seed>` kimliğiyle, her gönderim öncekinin üstüne yazılır); "Hayır" bu tarayıcıda hatırlanır. Ad, e-posta, IP ya da konum toplanmaz; tarayıcıya rastgele bir oyuncu numarası verilir. Toplayıcı, geliştiricinin Google Drive'ına yazan bir Google Apps Script'tir: kurulum `tools/playtest-collector/README.md`, adresi `src/ui/collector.ts` içindedir (derleme sırasında `VITE_PLAYTEST_URL`, Pages'te `PLAYTEST_URL` depo değişkeni onu geçersiz kılar). claude.ai'deki kopya toplayıcıyı hiç kullanmaz, yalnızca sayfanın veritabanına yazar.
+Bu sürümde **Claude’a gönder** yerine **Geri bildirim** vardır: oyuncuya bir kez sorulur, "Paylaş" derse iki şey başlar, "Hayır" ise bu tarayıcıda hatırlanır ve hiçbir şey gitmez (PostHog'un kütüphanesi bile yüklenmez). Ad ya da e-posta sorulmaz; tarayıcıya rastgele bir oyuncu numarası verilir ve ikisi de onu kullanır.
+
+- **Oyun kayıtları → Supabase** (AB, Frankfurt): oyunun tamamı aynı aralıklarla `playtests` tablosuna gider (`<oyuncu>-g<seed>` kimliğiyle, her gönderim öncekinin üstüne yazılır; notlu gönderimler ayrı satırdır). Sayfadaki anahtar yalnızca `submit_playtest` işlevini çağırabilir: tabloyu okuyamaz, başka oyuncunun kaydını değiştiremez. Şema `supabase/migrations/` içinde, proje adresi ve anahtarı `src/ui/collector.ts` içindedir (derlemede `VITE_SUPABASE_URL`/`VITE_SUPABASE_KEY`, Pages'te `SUPABASE_URL`/`SUPABASE_KEY` depo değişkenleri onları geçersiz kılar). Kayıtlar Supabase panelindeki Table Editor'dan görülür; `data` sütunu gzip + base64 kayıttır.
+- **Nasıl oynandığı → PostHog** (AB bulutu, `src/ui/analytics.ts`): ekran geçişleri sayfa görüntülemesi olarak, önemli kararlar (`decision`), yıl sonları (`year_end`: ciro, kâr, satış), hatalar (`game_error`), oyunun başlaması ve bitişi (`game_started`/`game_resumed`, `game_over` ve puan), tıklamalar ve oturum kayıtları (giriş alanları maskeli). PostHog projesinde **Settings → Project → IP data capture → Discard client IP data** açık tutulmalıdır.
+
+claude.ai'deki kopya bunların hiçbirini kullanmaz, yalnızca sayfanın veritabanına yazar.
 
 ## Ana döngü
 

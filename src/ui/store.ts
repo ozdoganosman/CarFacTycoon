@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { newGame, tick, type NewGameOptions } from '../core/game';
 import { loadLocal, saveLocal } from '../core/save';
 import { syncTick } from './claudeLink';
+import { observeGame, trackScreen } from './analytics';
 import { isBlockingModal, recordError } from '../core/util';
 import type { ModalItem } from '../core/types';
 
@@ -76,6 +77,9 @@ class GameStore {
   notify() {
     this.version++;
     for (const l of this.listeners) l();
+    // Only once the player has agreed to share (see analytics.ts); otherwise these return at once.
+    trackScreen(this.state ? this.screen.id : 'start');
+    observeGame(this.state);
   }
 
   start(opts: NewGameOptions) {

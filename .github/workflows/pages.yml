@@ -34,7 +34,9 @@ jobs:
       - run: npm ci
       - run: npx vite build --mode single
         env:
-          VITE_PLAYTEST_URL: ${{ vars.PLAYTEST_URL }}
+          # Optional repository variables; empty means the project built into src/ui/collector.ts.
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ vars.SUPABASE_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist-single

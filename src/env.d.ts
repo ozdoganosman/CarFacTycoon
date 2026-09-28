@@ -1,7 +1,9 @@
 // Build-time settings Vite fills in (import.meta.env.VITE_*).
 interface ImportMetaEnv {
-  /** The playtest collector for the public build (see src/ui/collector.ts). */
-  readonly VITE_PLAYTEST_URL?: string;
+  /** The Supabase project the public build sends playtests to (see src/ui/collector.ts). */
+  readonly VITE_SUPABASE_URL?: string;
+  /** Its publishable key. */
+  readonly VITE_SUPABASE_KEY?: string;
 }
 
 interface ImportMeta {
