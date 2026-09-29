@@ -35,6 +35,9 @@ export function fmtNumber(v: number, digits = 0): string {
   return nf(digits).format(digits ? v : Math.round(v));
 }
 
+/** A number with a fixed count of decimals: as the game always wrote it in Turkish ("89.0"), in the language's own form otherwise ("89,0"). */
+export const dec = (v: number, digits = 1): string => (lang() === 'tr' ? v.toFixed(digits) : fmtNumber(v, digits));
+
 /** Dollars, shortened: $2,600 · $41K · $1.25M · $3.10B. */
 export function fmtMoney(v: number): string {
   const sign = v < 0 ? '-' : '';

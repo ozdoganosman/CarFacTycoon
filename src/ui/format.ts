@@ -1,10 +1,10 @@
 import { money, num } from '../core/util';
 import { pctWith } from '../core/turkish';
 import { isTurkish, langDef, msg, t } from '../i18n';
-import { fmtNumber, fmtPercent } from '../i18n/format';
+import { dec, fmtPercent } from '../i18n/format';
 import type { FinanceWeek, GameState } from '../core/types';
 
-export { money, num };
+export { dec, money, num };
 
 export const pct = (v: number, digits = 1) => fmtPercent(v, digits);
 
@@ -29,8 +29,8 @@ export function recentProfit(s: GameState, weeks = 4): number {
 }
 
 export const kmh = (v: number) => t('{v} km/s', { v: Math.round(v) });
-export const secs = (v: number | null) => (v === null || v >= 99 ? '—' : t('{v} sn', { v: isTurkish() ? v.toFixed(1) : fmtNumber(v, 1) }));
-export const litres = (v: number) => t('{v} L/100km', { v: isTurkish() ? v.toFixed(1) : fmtNumber(v, 1) });
+export const secs = (v: number | null) => (v === null || v >= 99 ? '—' : t('{v} sn', { v: dec(v, 1) }));
+export const litres = (v: number) => t('{v} L/100km', { v: dec(v, 1) });
 
 /** Turkish locative for a year, with vowel harmony and consonant assimilation: 1905’te, 1910’da, 1921’de. */
 export function inYear(year: number): string {
