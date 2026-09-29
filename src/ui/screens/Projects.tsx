@@ -9,17 +9,20 @@ import { referencePrice, weeklySegmentDemand } from '../../core/market';
 import { yearFloat } from '../../core/time';
 import { SEGMENTS, segmentDef } from '../../data/segments';
 import type { GameState, Project, ProjectPhase, SegmentId } from '../../core/types';
+import { msg, t } from '../../i18n';
 import { store, useGameState } from '../store';
 import { money, num } from '../format';
 import { inYear } from '../format';
+import { tx } from '../i18n';
 import { Badge, Button, Choice, Empty, Panel, Progress } from '../components/ui';
 
+/** Marked with msg(): show with t(PHASE_LABEL[phase]). */
 export const PHASE_LABEL: Record<ProjectPhase, string> = {
-  design: 'Tasarım',
-  development: 'Geliştirme',
-  testing: 'Test',
-  production: 'Üretim hazırlığı',
-  ready: 'Lansmana hazır',
+  design: msg('Tasarım'),
+  development: msg('Geliştirme'),
+  testing: msg('Test'),
+  production: msg('Üretim hazırlığı'),
+  ready: msg('Lansmana hazır'),
 };
 
 export function projectProgress(s: GameState, p: Project): number {
@@ -53,6 +56,7 @@ function NewProject({ onDone }: { onDone: () => void }) {
   // A sensible starting point for the class; the player decides.
   const PRESET_FOR: Record<SegmentId, string> = { city: 'people', family: 'family', sport: 'driver', luxury: 'luxury', pickup: 'work', suv: 'family' };
   const [preset, setPreset] = useState(PRESET_FOR[segs.includes('family') ? 'family' : segs[0]]);
+  const presetDef = FOCUS_PRESETS.find((x) => x.id === preset);
   const g = gates(s);
   const sameSeg = s.models.filter((m) => m.status === 'active' && m.segment === segment);
   // What such a project would cost before launch, worked out on a copy of the game.
@@ -65,15 +69,15 @@ function NewProject({ onDone }: { onDone: () => void }) {
   };
 
   return (
-    <Panel title="Yeni proje">
+    <Panel title={t('Yeni proje')}>
       <div className="form-grid">
         <label className="field">
-          <span>Model adı</span>
+          <span>{t('Model adı')}</span>
           <input value={name} maxLength={24} onChange={(e) => setName(e.target.value)} />
         </label>
       </div>
       <div className="field">
-        <span>Segment</span>
+        <span>{t('Segment')}</span>
         <Choice
           value={segment}
           onChange={pickSegment}
@@ -85,19 +89,23 @@ function NewProject({ onDone }: { onDone: () => void }) {
               disabled: !open,
               label: (
                 <>
-                  {seg.icon} {seg.name}
+                  {seg.icon} {t(seg.name)}
                 </>
               ),
               sub: open ? (
                 <>
-                  {seg.desc}
+                  {t(seg.desc)}
                   <br />
                   <span className="muted">
-                    Segment ({MARKETS.find((x) => x.id === s.company.hq)!.name}): {num(demand)} araç/yıl · tipik fiyat {money(referencePrice(s.company.hq, seg.id, yf))}
+                    {t('Segment ({market}): {count} araç/yıl · tipik fiyat {price}', {
+                      market: t(MARKETS.find((x) => x.id === s.company.hq)!.name),
+                      count: num(demand),
+                      price: money(referencePrice(s.company.hq, seg.id, yf)),
+                    })}
                   </span>
                 </>
               ) : (
-                `${inYear(seg.year)} açılır`
+                t('{year} açılır', { year: inYear(seg.year) })
               ),
             };
           })}
@@ -106,20 +114,20 @@ function NewProject({ onDone }: { onDone: () => void }) {
       {g.platforms ? (
         <div className="form-grid">
           <label className="field">
-            <span>Platform (şasi + boyut + süspansiyon)</span>
+            <span>{t('Platform (şasi + boyut + süspansiyon)')}</span>
             <select value={platformId} onChange={(e) => setPlatformId(e.target.value)}>
-              <option value="">Yeni platform tasarla</option>
+              <option value="">{t('Yeni platform tasarla')}</option>
               {s.platforms.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} ({s.models.filter((m) => m.status === 'active' && m.platformId === p.id).length} aktif model)
+                  {t('{name} ({n} aktif model)', { name: p.name, n: s.models.filter((m) => m.status === 'active' && m.platformId === p.id).length })}
                 </option>
               ))}
             </select>
           </label>
           <label className="field">
-            <span>Motor</span>
+            <span>{t('Motor')}</span>
             <select value={engineId} onChange={(e) => setEngineId(e.target.value)}>
-              <option value="">Yeni motor tasarla</option>
+              <option value="">{t('Yeni motor tasarla')}</option>
               {s.engines.map((e) => (
                 <option key={e.id} value={e.id}>
                   {e.name}
@@ -129,16 +137,16 @@ function NewProject({ onDone }: { onDone: () => void }) {
           </label>
         </div>
       ) : (
-        <p className="muted small">Platform ve motor paylaşımı üçüncü modelinle açılacak.</p>
+        <p className="muted small">{t('Platform ve motor paylaşımı üçüncü modelinle açılacak.')}</p>
       )}
       {sameSeg.length > 0 && (
         <label className="field">
-          <span>Bu proje bir modelin yeni kuşağı mı?</span>
+          <span>{t('Bu proje bir modelin yeni kuşağı mı?')}</span>
           <select value={replaces} onChange={(e) => setReplaces(e.target.value)}>
-            <option value="">Hayır, yeni bir model</option>
+            <option value="">{t('Hayır, yeni bir model')}</option>
             {sameSeg.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.name} yerine geçsin (hatlarını devralır)
+                {t('{name} yerine geçsin (hatlarını devralır)', { name: m.name })}
               </option>
             ))}
           </select>
@@ -146,26 +154,27 @@ function NewProject({ onDone }: { onDone: () => void }) {
       )}
       <div className="field">
         <span>
-          Mühendislik odağı: mühendisler zamanlarını neye harcasın? <span className="muted small">(tasarımda ve geliştirmede kaydırıcılarla ince ayar yapılır)</span>
+          {t('Mühendislik odağı: mühendisler zamanlarını neye harcasın?')}{' '}
+          <span className="muted small">{t('(tasarımda ve geliştirmede kaydırıcılarla ince ayar yapılır)')}</span>
         </span>
-        <div className="preset-chips" role="radiogroup" aria-label="Mühendislik odağı">
+        <div className="preset-chips" role="radiogroup" aria-label={t('Mühendislik odağı')}>
           {FOCUS_PRESETS.map((x) => (
-            <button key={x.id} type="button" role="radio" aria-checked={preset === x.id} className={`chip ${preset === x.id ? 'is-on' : ''}`} title={x.desc} onClick={() => setPreset(x.id)}>
-              {x.name}
+            <button key={x.id} type="button" role="radio" aria-checked={preset === x.id} className={`chip ${preset === x.id ? 'is-on' : ''}`} title={t(x.desc)} onClick={() => setPreset(x.id)}>
+              {t(x.name)}
             </button>
           ))}
         </div>
-        <span className="muted small">{FOCUS_PRESETS.find((x) => x.id === preset)?.desc}</span>
+        <span className="muted small">{presetDef && t(presetDef.desc)}</span>
       </div>
       {budget && (
         <>
-          <p className="muted small">Şirketin son arabasına benzer bir tasarımla ve varsayılan test planıyla bu proje:</p>
+          <p className="muted small">{t('Şirketin son arabasına benzer bir tasarımla ve varsayılan test planıyla bu proje:')}</p>
           <BudgetLine b={budget} />
         </>
       )}
       <div className="row-end">
         <Button kind="ghost" onClick={onDone}>
-          Vazgeç
+          {t('Vazgeç')}
         </Button>
         <Button
           kind="primary"
@@ -179,7 +188,7 @@ function NewProject({ onDone }: { onDone: () => void }) {
             } else if (r) store.showToast(r.error, 'bad');
           }}
         >
-          Tasarıma başla
+          {t('Tasarıma başla')}
         </Button>
       </div>
     </Panel>
@@ -192,50 +201,47 @@ export function Projects() {
   return (
     <div className="screen">
       <div className="screen-head">
-        <h1>Projeler</h1>
+        <h1>{t('Projeler')}</h1>
         {!creating && (
           <Button kind="primary" onClick={() => setCreating(true)}>
-            + Yeni proje
+            + {t('Yeni proje')}
           </Button>
         )}
       </div>
       {creating && <NewProject onDone={() => setCreating(false)} />}
-      <Panel title="Devam eden projeler">
+      <Panel title={t('Devam eden projeler')}>
         {s.projects.length ? (
           <div className="card-list">
             {s.projects.map((p) => (
               <button key={p.id} type="button" className="card-item" onClick={() => store.go({ id: 'project', projectId: p.id })}>
                 <div className="mini-top">
                   <b>{p.name}</b>
-                  <Badge tone={p.phase === 'ready' ? 'good' : 'info'}>{PHASE_LABEL[p.phase]}</Badge>
+                  <Badge tone={p.phase === 'ready' ? 'good' : 'info'}>{t(PHASE_LABEL[p.phase])}</Badge>
                 </div>
                 <div className="muted small">
-                  {segmentDef(p.segment).icon} {segmentDef(p.segment).name}
-                  {p.kind === 'facelift' ? ' · makyaj' : p.replacesModelId ? ' · yeni kuşak' : ''}
+                  {segmentDef(p.segment).icon} {t(segmentDef(p.segment).name)}
+                  {p.kind === 'facelift' ? ` · ${t('makyaj')}` : p.replacesModelId ? ` · ${t('yeni kuşak')}` : ''}
                 </div>
                 <Progress value={projectProgress(s, p)} />
               </button>
             ))}
           </div>
         ) : (
-          <Empty>Devam eden proje yok.</Empty>
+          <Empty>{t('Devam eden proje yok.')}</Empty>
         )}
       </Panel>
-      <Panel title="Nasıl çalışır?">
+      <Panel title={t('Nasıl çalışır?')}>
         <ol className="steps">
           <li>
-            <b>Tasarım ve geliştirme:</b> Aracı kimin için yaptığına sen karar ver: modülleri seç, mühendislerini ata, odağı dağıt (performans, verim, konfor,
-            güvenlik, maliyet, kalite). Odak aracı gerçekten değiştirir.
+            {tx(
+              '<b>Tasarım ve geliştirme:</b> Aracı kimin için yaptığına sen karar ver: modülleri seç, mühendislerini ata, odağı dağıt (performans, verim, konfor, güvenlik, maliyet, kalite). Odak aracı gerçekten değiştirir.',
+            )}
           </li>
           <li>
-            <b>Test:</b> Dinamometre, yol, dayanıklılık ve (1934’ten sonra) çarpışma testleri kusurları bulur ve aracı ayarlar. Kısa kesersen kusurlar sahada patlar.
+            {tx('<b>Test:</b> Dinamometre, yol, dayanıklılık ve (1934’ten sonra) çarpışma testleri kusurları bulur ve aracı ayarlar. Kısa kesersen kusurlar sahada patlar.')}
           </li>
-          <li>
-            <b>Üretim:</b> Tedarikçileri ve hattı seç, kalıplar hazırlanır.
-          </li>
-          <li>
-            <b>Lansman:</b> Fiyatı ve pazarları belirle. Dergiler puan verir, alıcılar yorum yapar.
-          </li>
+          <li>{tx('<b>Üretim:</b> Tedarikçileri ve hattı seç, kalıplar hazırlanır.')}</li>
+          <li>{tx('<b>Lansman:</b> Fiyatı ve pazarları belirle. Dergiler puan verir, alıcılar yorum yapar.')}</li>
         </ol>
       </Panel>
     </div>

@@ -3,6 +3,9 @@ import { CYLINDER_OPTIONS, VALVETRAINS } from '../../data/tech';
 import { engineSound, savedVolume } from '../audio/engineSound';
 import type { EngineSoundSpec } from '../audio/engineVoice';
 import { fmt } from '../cards/anim/draw';
+import { t } from '../../i18n';
+import { pct } from '../format';
+import { tx } from '../i18n';
 import { Button, Info } from './ui';
 
 // The engine on the test stand: start it, blip the throttle, hear it rev.
@@ -32,9 +35,9 @@ function Tacho({ redline, needle, readout }: { redline: number; needle: React.Re
     const [x1, y1] = polar(48, a);
     marks.push(<line key={r} x1={x0} y1={y0} x2={x1} y2={y1} className={major ? 'tacho-major' : 'tacho-minor'} />);
     if (major) {
-      const [tx, ty] = polar(32, a);
+      const [lx, ly] = polar(32, a);
       marks.push(
-        <text key={`t${r}`} x={tx} y={ty} className="tacho-num">
+        <text key={`t${r}`} x={lx} y={ly} className="tacho-num">
           {r / 1000}
         </text>,
       );
@@ -42,12 +45,12 @@ function Tacho({ redline, needle, readout }: { redline: number; needle: React.Re
   }
   return (
     <div className="tacho">
-      <svg viewBox="0 0 120 118" role="img" aria-label={`Devir saati, kırmızı çizgi ${redline} devir`}>
+      <svg viewBox="0 0 120 118" role="img" aria-label={t('Devir saati, kırmızı çizgi {rpm} devir', { rpm: redline })}>
         <circle cx="60" cy="60" r="54" className="tacho-face" />
         <path d={arc(46, toAngle(redline, max), toAngle(max, max))} className="tacho-red" />
         {marks}
         <text x="60" y="88" className="tacho-unit">
-          d/d ×1000
+          {t('d/d ×1000')}
         </text>
         <g ref={needle} style={{ transformOrigin: '60px 60px', transform: `rotate(${-SWEEP / 2}deg)` }}>
           <line x1="60" y1="66" x2="60" y2="16" className="tacho-needle" />
@@ -91,7 +94,7 @@ export function EngineSound({ spec, onRunning }: { spec: EngineSoundSpec; onRunn
       const rpm = engineSound.running ? engineSound.rpm : 0;
       if (needle.current) needle.current.style.transform = `rotate(${toAngle(rpm, max)}deg)`;
       if (readout.current) {
-        readout.current.textContent = engineSound.running ? `${fmt(Math.round(rpm / 10) * 10)} d/d` : 'motor duruyor';
+        readout.current.textContent = engineSound.running ? t('{v} d/d', { v: fmt(Math.round(rpm / 10) * 10) }) : t('motor duruyor');
         readout.current.classList.toggle('is-red', rpm >= spec.redline * 0.97);
       }
       if (status.current) {
@@ -99,13 +102,13 @@ export function EngineSound({ spec, onRunning }: { spec: EngineSoundSpec; onRunn
         let msg = '';
         let tone = '';
         if (on && engineSound.float > 0.05) {
-          msg = 'Supaplar yüzüyor! Kırmızı çizginin üstünde yaylar supapları kapatamıyor: güç düşer, motor tekler ve takırdar. Uzun tutarsan supaplar pistona çarpar.';
+          msg = t('Supaplar yüzüyor! Kırmızı çizginin üstünde yaylar supapları kapatamıyor: güç düşer, motor tekler ve takırdar. Uzun tutarsan supaplar pistona çarpar.');
           tone = 'tone-bad';
         } else if (on && engineSound.governed) {
-          msg = 'Regülatör yakıtı kısıyor: dizel bu devrin üstüne çıkmaz.';
+          msg = t('Regülatör yakıtı kısıyor: dizel bu devrin üstüne çıkmaz.');
           tone = 'muted';
         } else if (on && spec.knock > 0 && engineSound.throttle > 0.4 && rpm < spec.redline * 0.8) {
-          msg = 'Vuruntu: sıkıştırma dönemin benzinine fazla, yükte silindirler metalik tıkırdıyor.';
+          msg = t('Vuruntu: sıkıştırma dönemin benzinine fazla, yükte silindirler metalik tıkırdıyor.');
           tone = 'tone-warn';
         }
         if (status.current.textContent !== msg) status.current.textContent = msg;
@@ -143,37 +146,40 @@ export function EngineSound({ spec, onRunning }: { spec: EngineSoundSpec; onRunn
   const opt = CYLINDER_OPTIONS.find((o) => o.cylinders === spec.cylinders && o.layout === spec.layout);
   const vt = VALVETRAINS.find((v) => v.id === spec.valvetrain);
   const what = [
-    opt?.label ?? `${spec.cylinders} silindir`,
-    `${fmt(spec.displacementCc / 1000, 1)} L`,
-    spec.diesel ? 'dizel' : vt?.name.replace(/ \(.*\)/, ''),
-    `sıkıştırma ${fmt(spec.compression, 1)}:1`,
-    spec.supercharged ? 'kompresörlü' : null,
-    spec.knock > 0 ? 'vuruntu yapıyor' : null,
+    opt ? t(opt.label) : t('{n} silindir', { n: spec.cylinders }),
+    t('{v} L', { v: fmt(spec.displacementCc / 1000, 1) }),
+    spec.diesel ? t('dizel') : vt && t(vt.name).replace(/ \(.*\)/, ''),
+    t('sıkıştırma {v}:1', { v: fmt(spec.compression, 1) }),
+    spec.supercharged ? t('kompresörlü') : null,
+    spec.knock > 0 ? t('vuruntu yapıyor') : null,
   ]
     .filter(Boolean)
     .join(' · ');
 
   if (!supported) return null;
   return (
-    <section className={`engine-sound ${running ? 'is-running' : ''}`} aria-label="Motor sesi">
+    <section className={`engine-sound ${running ? 'is-running' : ''}`} aria-label={t('Motor sesi')}>
       <div className="engine-sound-head">
-        <b>Motor sesi</b>
+        <b>{t('Motor sesi')}</b>
         <span className="muted small">{what}</span>
         <Info>
-          <p>Ses, tasarladığın motordan hesaplanır: her silindir motorun gerçek ateşleme sırasıyla patlar, V motorlarda iki sıranın egzozu ayrı duyulur.</p>
+          <p>{t('Ses, tasarladığın motordan hesaplanır: her silindir motorun gerçek ateşleme sırasıyla patlar, V motorlarda iki sıranın egzozu ayrı duyulur.')}</p>
           <p>
-            Hacim büyüdükçe ses kalınlaşır, uzun strok daha tok vurur. Yan supaplı motor yumuşak tıkırdar, üstten kamlı motor dişlileriyle öter; dizel vuruntu yapar,
-            kompresör devirle birlikte ıslık çalar. Erken yılların susturucusu zayıftır, rölantisi de düzensizdir.
+            {t(
+              'Hacim büyüdükçe ses kalınlaşır, uzun strok daha tok vurur. Yan supaplı motor yumuşak tıkırdar, üstten kamlı motor dişlileriyle öter; dizel vuruntu yapar, kompresör devirle birlikte ıslık çalar. Erken yılların susturucusu zayıftır, rölantisi de düzensizdir.',
+            )}
           </p>
           <p>
-            Sıkıştırma yükseldikçe patlama sertleşir, ses keskinleşir. Sıkıştırma dönemin benzinine fazlaysa motor vuruntu yapar: yükte, silindirin çapına göre 5-10 kHz’de
-            çınlayan metalik bir tıkırtı.
+            {t(
+              'Sıkıştırma yükseldikçe patlama sertleşir, ses keskinleşir. Sıkıştırma dönemin benzinine fazlaysa motor vuruntu yapar: yükte, silindirin çapına göre 5-10 kHz’de çınlayan metalik bir tıkırtı.',
+            )}
           </p>
           <p>
-            Dönemin motorlarında devir kesici yoktur. Benzinli motor kırmızı çizgiyi geçince supap yayları yetişemez, supaplar yüzer: güç düşer, motor tekler, takırdar,
-            egzozdan patlar ve daha fazla devir alamaz. Dizelin pompasındaki regülatör ise yakıtı kısıp devri tutar.
+            {t(
+              'Dönemin motorlarında devir kesici yoktur. Benzinli motor kırmızı çizgiyi geçince supap yayları yetişemez, supaplar yüzer: güç düşer, motor tekler, takırdar, egzozdan patlar ve daha fazla devir alamaz. Dizelin pompasındaki regülatör ise yakıtı kısıp devri tutar.',
+            )}
           </p>
-          <p>Motor çalışırken ayarları değiştir: ses anında değişir.</p>
+          <p>{t('Motor çalışırken ayarları değiştir: ses anında değişir.')}</p>
         </Info>
       </div>
       <div className="engine-sound-body">
@@ -181,7 +187,7 @@ export function EngineSound({ spec, onRunning }: { spec: EngineSoundSpec; onRunn
         <div className="engine-sound-controls">
           <div className="engine-sound-buttons">
             <Button kind={running ? 'default' : 'primary'} onClick={() => (running ? engineSound.stop() : void engineSound.start())}>
-              {running ? '■ Durdur' : spec.electricStart ? '▶ Marşa bas' : '▶ Kolla çalıştır'}
+              {running ? t('■ Durdur') : spec.electricStart ? t('▶ Marşa bas') : t('▶ Kolla çalıştır')}
             </Button>
             <button
               type="button"
@@ -198,16 +204,22 @@ export function EngineSound({ spec, onRunning }: { spec: EngineSoundSpec; onRunn
               onKeyUp={onKeyUp}
               onContextMenu={(e) => e.preventDefault()}
             >
-              Gaza bas <span className="muted small">(basılı tut)</span>
+              {tx('Gaza bas <hint>(basılı tut)</hint>', {}, {
+                hint: (c, k) => (
+                  <span key={k} className="muted small">
+                    {c}
+                  </span>
+                ),
+              })}
             </button>
           </div>
           <label className="engine-sound-range">
-            <span>Sabit gaz</span>
+            <span>{t('Sabit gaz')}</span>
             <input type="range" min={0} max={1} step={0.01} value={steady} disabled={!running} onChange={(e) => setSteady(Number(e.target.value))} />
-            <output>%{Math.round(steady * 100)}</output>
+            <output>{pct(steady, 0)}</output>
           </label>
           <label className="engine-sound-range">
-            <span>Ses</span>
+            <span>{t('Ses')}</span>
             <input
               type="range"
               min={0.05}
@@ -220,10 +232,10 @@ export function EngineSound({ spec, onRunning }: { spec: EngineSoundSpec; onRunn
                 engineSound.setVolume(v);
               }}
             />
-            <output>%{Math.round(volume * 100)}</output>
+            <output>{pct(volume, 0)}</output>
           </label>
           <p className="muted small engine-sound-note">
-            Rölanti {fmt(spec.idle)} d/d · kırmızı çizgi {fmt(spec.redline)} d/d
+            {t('Rölanti {idle} d/d · kırmızı çizgi {redline} d/d', { idle: fmt(spec.idle), redline: fmt(spec.redline) })}
           </p>
           <p ref={status} className="small engine-sound-status" aria-live="polite" />
         </div>

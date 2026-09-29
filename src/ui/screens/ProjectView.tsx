@@ -11,10 +11,13 @@ import * as N from '../../core/network';
 import { ATTRS, ATTR_NAMES, segmentDef } from '../../data/segments';
 import { STAGES } from '../../data/stations';
 import { TOOLING, toolingDef } from '../../data/tooling';
-import type { ComponentKey, GameState, MarketId, Project, ProjectPhase, TestId, ToolingTier } from '../../core/types';
+import type { ComponentKey, GameState, MarketId, Project, ProjectPhase, StageId, TestId, ToolingTier } from '../../core/types';
+import { isTurkish, msg, t } from '../../i18n';
+import { fmtNumber } from '../../i18n/format';
 import { store, useGameState } from '../store';
-import { money, num, pctOf, recentProfit } from '../format';
+import { money, num, pct as percent, pctOf, recentProfit } from '../format';
 import { inYear } from '../format';
+import { tx } from '../i18n';
 import { pctWith } from '../../core/turkish';
 import { Badge, Button, Choice, NumberInput, Panel, Progress, Slider, Toggle } from '../components/ui';
 import { newEstimate } from '../../core/estimate';
@@ -26,11 +29,14 @@ import { Designer } from './Designer';
 import { DevBar, FocusPanel } from './DevPanel';
 
 const STEPS: { label: string; phases: ProjectPhase[] }[] = [
-  { label: 'Tasarım ve geliştirme', phases: ['design', 'development'] },
-  { label: 'Test', phases: ['testing'] },
-  { label: 'Üretim hazırlığı', phases: ['production'] },
-  { label: 'Lansman', phases: ['ready'] },
+  { label: msg('Tasarım ve geliştirme'), phases: ['design', 'development'] },
+  { label: msg('Test'), phases: ['testing'] },
+  { label: msg('Üretim hazırlığı'), phases: ['production'] },
+  { label: msg('Lansman'), phases: ['ready'] },
 ];
+
+/** A decimal as the game always showed it in Turkish ("2.5"), in the player's own form elsewhere. */
+const fixed = (v: number, digits: number) => (isTurkish() ? v.toFixed(digits) : fmtNumber(v, digits));
 
 export function ProjectView({ projectId }: { projectId: string }) {
   const s = useGameState();
@@ -41,38 +47,43 @@ export function ProjectView({ projectId }: { projectId: string }) {
       <div className="screen-head">
         <div>
           <button type="button" className="link small" onClick={() => store.go({ id: 'projects' })}>
-            ← Projeler
+            ← {t('Projeler')}
           </button>
           <h1>
             {p.phase === 'design' ? (
-              <input className="title-input" value={p.name} maxLength={24} aria-label="Model adı" onChange={(e) => store.act((st) => A.renameProject(st, p.id, e.target.value))} />
+              <input className="title-input" value={p.name} maxLength={24} aria-label={t('Model adı')} onChange={(e) => store.act((st) => A.renameProject(st, p.id, e.target.value))} />
             ) : (
               p.name
             )}
           </h1>
           <p className="muted">
-            {segmentDef(p.segment).icon} {segmentDef(p.segment).name}
-            {p.kind === 'facelift' ? ' · makyaj projesi' : p.replacesModelId ? ' · yeni kuşak' : ''}
+            {segmentDef(p.segment).icon} {t(segmentDef(p.segment).name)}
+            {p.kind === 'facelift' ? ` · ${t('makyaj projesi')}` : p.replacesModelId ? ` · ${t('yeni kuşak')}` : ''}
           </p>
         </div>
         <Button
           kind="danger"
           small
           onClick={async () => {
-            const ok = await store.ask({ title: `${p.name} iptal edilsin mi?`, body: 'Bu projeye harcanan para geri gelmez.', confirm: 'Projeyi iptal et', danger: true });
+            const ok = await store.ask({
+              title: t('{name} iptal edilsin mi?', { name: p.name }),
+              body: t('Bu projeye harcanan para geri gelmez.'),
+              confirm: t('Projeyi iptal et'),
+              danger: true,
+            });
             if (ok) {
               store.act((st) => A.cancelProject(st, p.id));
               store.go({ id: 'projects' });
             }
           }}
         >
-          Projeyi iptal et
+          {t('Projeyi iptal et')}
         </Button>
       </div>
       <ol className="stepper">
         {STEPS.map((st, i) => (
           <li key={st.label} className={i < idx ? 'is-done' : i === idx ? 'is-on' : ''}>
-            {st.label}
+            {t(st.label)}
           </li>
         ))}
       </ol>
@@ -123,12 +134,12 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
   const hi = d * spread;
   // Judged on the middle estimate: the range is wide enough to cover almost any line.
   const verdict = noLine
-    ? 'Hattın kapasitesi henüz belli değil: kâr, talebin tamamı üretilir diye hesaplandı.'
+    ? t('Hattın kapasitesi henüz belli değil: kâr, talebin tamamı üretilir diye hesaplandı.')
     : d > cap * 1.2
-      ? `Orta tahmin hattın ${(d / Math.max(0.1, cap)).toFixed(1)} katı: fiyatı biraz yükseltebilir ya da kapasite ekleyebilirsin.`
+      ? t('Orta tahmin hattın {x} katı: fiyatı biraz yükseltebilir ya da kapasite ekleyebilirsin.', { x: fixed(d / Math.max(0.1, cap), 1) })
       : d < cap * 0.8
-        ? `Hat orta tahminin ${(cap / Math.max(0.1, d)).toFixed(1)} katını üretebilir: fiyatı düşürmeyi ya da daha küçük bir hattı düşün.`
-        : 'Orta tahmine göre talep ve kapasite dengeli.';
+        ? t('Hat orta tahminin {x} katını üretebilir: fiyatı düşürmeyi ya da daha küçük bir hattı düşün.', { x: fixed(cap / Math.max(0.1, d), 1) })
+        : t('Orta tahmine göre talep ve kapasite dengeli.');
   const weeklyProfit = (pr: number) => (noLine ? demandAt(pr) : Math.min(demandAt(pr), cap)) * (pr * net - unit - labour);
   // The price that earns most per week with this line (demand beyond the line's output is not sold).
   let best = ref;
@@ -152,35 +163,48 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
   const steep = steepPriceRatio(p.segment, s.company.hq, yf);
   const pct = (pr: number) => {
     const v = Math.round((pr / ref - 1) * 100);
-    return v < 0 ? `−%${-v}` : `+%${v}`;
+    return v < 0 ? `−${percent(-v / 100, 0)}` : `+${percent(v / 100, 0)}`;
   };
   return (
     <div className="price-guide">
-      <h4>Fiyat rehberi</h4>
+      <h4>{t('Fiyat rehberi')}</h4>
       {rivalPrices.length > 0 && (
         <p className="small">
-          Rakiplerin alıcı fiyatları: en ucuz {money(rivalPrices[0])} · ortanca {money(rivalPrices[Math.floor(rivalPrices.length / 2)])} · en pahalı{' '}
-          {money(rivalPrices[rivalPrices.length - 1])}.
+          {t('Rakiplerin alıcı fiyatları: en ucuz {low} · ortanca {mid} · en pahalı {high}.', {
+            low: money(rivalPrices[0]),
+            mid: money(rivalPrices[Math.floor(rivalPrices.length / 2)]),
+            high: money(rivalPrices[rivalPrices.length - 1]),
+          })}
         </p>
       )}
       <p className="small">
-        Bu fiyatta tahmini talep: <b>{lo.toFixed(1)}–{hi.toFixed(1)} araç/hafta</b>
-        {segWeekly > 0 && ` (sınıfın ~${pctWith(d / segWeekly, 'poss')})`} · hat {cap.toFixed(1)} araç/hafta. {verdict}
-        {segWeekly > 0 && d / segWeekly > 0.4 && ' Sınıfın bu kadarını tek bir araba nadiren alır: bayiler, üretim ve rakiplerin yanıtı payı sınırlar; tahmini iyimser say.'}
+        {segWeekly > 0
+          ? tx('Bu fiyatta tahmini talep: <b>{lo}–{hi} araç/hafta</b> (sınıfın ~{share}) · hat {cap} araç/hafta.', {
+              lo: fixed(lo, 1),
+              hi: fixed(hi, 1),
+              share: pctWith(d / segWeekly, 'poss'),
+              cap: fixed(cap, 1),
+            })
+          : tx('Bu fiyatta tahmini talep: <b>{lo}–{hi} araç/hafta</b> · hat {cap} araç/hafta.', { lo: fixed(lo, 1), hi: fixed(hi, 1), cap: fixed(cap, 1) })}{' '}
+        {verdict}
+        {segWeekly > 0 &&
+          d / segWeekly > 0.4 &&
+          ` ${t('Sınıfın bu kadarını tek bir araba nadiren alır: bayiler, üretim ve rakiplerin yanıtı payı sınırlar; tahmini iyimser say.')}`}
       </p>
       {lineTooSmall && (
         <p className="note small">
-          <b>Hat küçük.</b> “En kârlı” fiyat bu hattın az üretmesinden yüksek çıkıyor. Sınıf fiyatında ({money(refRound)}) talep ~{demandAtRef.toFixed(0)} araç/hf: ona yetecek bir
-          hatla haftada ~{money(bigLineProfit)} brüt kâr kalır (bu hatla en iyisi {money(bestProfit)}). Fabrika’dan hat kur ya da büyüt; “talebi otomatik karşıla” da kasa
-          yettikçe büyütür.
+          {tx(
+            '<b>Hat küçük.</b> “En kârlı” fiyat bu hattın az üretmesinden yüksek çıkıyor. Sınıf fiyatında ({price}) talep ~{demand} araç/hf: ona yetecek bir hatla haftada ~{profit} brüt kâr kalır (bu hatla en iyisi {best}). Fabrika’dan hat kur ya da büyüt; “talebi otomatik karşıla” da kasa yettikçe büyütür.',
+            { price: money(refRound), demand: fixed(demandAtRef, 0), profit: money(bigLineProfit), best: money(bestProfit) },
+          )}
         </p>
       )}
       <table className="table compact">
         <thead>
           <tr>
-            <th>Fiyat</th>
-            <th className="al-r">Talep (orta)</th>
-            <th className="al-r">Haftalık brüt kâr</th>
+            <th>{t('Fiyat')}</th>
+            <th className="al-r">{t('Talep (orta)')}</th>
+            <th className="al-r">{t('Haftalık brüt kâr')}</th>
           </tr>
         </thead>
         <tbody>
@@ -194,12 +218,12 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
                     {money(pr)}
                   </button>{' '}
                   <span className="muted small">
-                    {pr === Math.round(ref / 10) * 10 ? 'sınıf fiyatı' : pct(pr)}
-                    {pr === bestShown && bestProfit > 0 && <b className="tone-good"> · {noLine ? 'en kârlı' : 'bu hatla en kârlı'}</b>}
-                    {pr > ref * steep && ' · dergiler “iddialı” der'}
+                    {pr === Math.round(ref / 10) * 10 ? t('sınıf fiyatı') : pct(pr)}
+                    {pr === bestShown && bestProfit > 0 && <b className="tone-good"> · {noLine ? t('en kârlı') : t('bu hatla en kârlı')}</b>}
+                    {pr > ref * steep && ` · ${t('dergiler “iddialı” der')}`}
                   </span>
                 </td>
-                <td className="al-r">{dm.toFixed(1)}</td>
+                <td className="al-r">{fixed(dm, 1)}</td>
                 <td className={`al-r ${profit < 0 ? 'tone-bad' : ''}`}>{money(profit)}</td>
               </tr>
             );
@@ -207,8 +231,10 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
         </tbody>
       </table>
       <p className="muted small">
-        Dergiler fiyatı sınıfa göre tartar: sınıf fiyatının üstüne çıktıkça puan azar azar düşer, bu sınıfta %{Math.round((steep - 1) * 100)} üstünde “iddialı” derler. Ucuz başlayıp
-        sonra zam yapmak işe yaramaz: lansmandan sonraki üç yılda %{Math.round(A.HIKE_TOLERANCE * 100)}’den büyük bir zam dergilerin yeniden yazmasına ve itibar kaybına yol açar.
+        {t(
+          'Dergiler fiyatı sınıfa göre tartar: sınıf fiyatının üstüne çıktıkça puan azar azar düşer, bu sınıfta {steep} üstünde “iddialı” derler. Ucuz başlayıp sonra zam yapmak işe yaramaz: lansmandan sonraki üç yılda {hike}’den büyük bir zam dergilerin yeniden yazmasına ve itibar kaybına yol açar.',
+          { steep: percent(steep - 1, 0), hike: percent(A.HIKE_TOLERANCE, 0) },
+        )}
       </p>
     </div>
   );
@@ -220,11 +246,9 @@ function NextStep({ p }: { p: Project }) {
   if (!testsDone) return null;
   return (
     <div className="next-step" role="status">
-      <span>
-        <b>Test programı bitti.</b> Sırada tedarikçiler ve üretim hattı var.
-      </span>
+      <span>{tx('<b>Test programı bitti.</b> Sırada tedarikçiler ve üretim hattı var.')}</span>
       <Button kind="primary" onClick={() => store.try((st) => A.finishTesting(st, p.id))}>
-        Üretim hazırlığına geç
+        {t('Üretim hazırlığına geç')}
       </Button>
     </div>
   );
@@ -253,26 +277,28 @@ function Testing({ p }: { p: Project }) {
   const weeklyCost = TESTS.filter((t) => p.tests[t.id].done < p.tests[t.id].planned).reduce((a, t) => a + weekCost(t), 0);
   return (
     <div className="grid-2 wide-left">
-      <Panel title="Test programı">
+      <Panel title={t('Test programı')}>
         <BudgetLine b={launchBudget(s, p)} />
-        <p className="muted small">Testler her hafta paralel ilerler ve bulunan kusurlar hemen giderilir. Test haftalarını azaltırsan araç daha erken çıkar ama gizli kusurlar sahada patlar.</p>
-        {TESTS.map((t) => {
-          const plan = p.tests[t.id];
-          const locked = t.year > yf;
+        <p className="muted small">
+          {t('Testler her hafta paralel ilerler ve bulunan kusurlar hemen giderilir. Test haftalarını azaltırsan araç daha erken çıkar ama gizli kusurlar sahada patlar.')}
+        </p>
+        {TESTS.map((test) => {
+          const plan = p.tests[test.id];
+          const locked = test.year > yf;
           return (
-            <div key={t.id} className={`test-row ${locked ? 'is-locked' : ''}`}>
+            <div key={test.id} className={`test-row ${locked ? 'is-locked' : ''}`}>
               <div className="test-head">
-                <b>{t.name}</b>
-                <span className="muted small">{locked ? `${inYear(t.year)} gelir` : `${money(weekCost(t))}/hafta`}</span>
+                <b>{t(test.name)}</b>
+                <span className="muted small">{locked ? t('{year} gelir', { year: inYear(test.year) }) : t('{cost}/hafta', { cost: money(weekCost(test)) })}</span>
               </div>
-              <p className="muted small">{t.desc}</p>
+              <p className="muted small">{t(test.desc)}</p>
               <Slider
-                label="Planlanan süre"
+                label={t('Planlanan süre')}
                 value={plan.planned}
                 min={0}
                 max={30}
-                onChange={(v) => store.try((st) => A.setTestPlan(st, p.id, t.id, v))}
-                format={(v) => `${v} hafta`}
+                onChange={(v) => store.try((st) => A.setTestPlan(st, p.id, test.id, v))}
+                format={(v) => t('{n} hafta', { n: v })}
                 disabled={locked}
               />
               <Progress value={plan.done} max={Math.max(1, plan.planned)} tone={plan.done >= plan.planned ? 'good' : 'accent'} label={`${plan.done}/${plan.planned}`} />
@@ -281,63 +307,71 @@ function Testing({ p }: { p: Project }) {
         })}
         <div className="row-end">
           <Button kind={running ? 'danger' : 'primary'} onClick={() => store.try((st) => A.finishTesting(st, p.id))}>
-            {running ? 'Testleri erken bitir (riskli)' : 'Üretim hazırlığına geç'}
+            {running ? t('Testleri erken bitir (riskli)') : t('Üretim hazırlığına geç')}
           </Button>
         </div>
       </Panel>
       <aside>
-        <Panel title="Kusur raporu">
+        <Panel title={t('Kusur raporu')}>
           <div className="risk">
-            <span>Geliştirmeden çıkan gizli kusur (tahmin)</span>
-            <b>
-              {startRange[0]}–{startRange[1]} kusur
-            </b>
+            <span>{t('Geliştirmeden çıkan gizli kusur (tahmin)')}</span>
+            <b>{t('{lo}–{n} kusur', { lo: startRange[0], n: startRange[1] })}</b>
           </div>
           <div className="risk">
-            <span>Bu test planı bitince kalması beklenen</span>
+            <span>{t('Bu test planı bitince kalması beklenen')}</span>
             <b className={`tone-${risk.tone}`}>
-              ~{Math.round(exp)} · {risk.label} risk
+              ~{Math.round(exp)} · {t('{level} risk', { level: t(risk.label) })}
             </b>
           </div>
           <p className="muted small">
-            Kaç kusur olduğunu kimse kesin bilmez. {s.company.modelsLaunched < 2 ? 'Ekibin ilk arabalarında çok hata yapar; ' : ''}Kalan her kusur sahada
-            arıza, garanti masrafı ve geri çağırma demektir. Bazı kusurlar ancak binlerce müşterinin elinde, yıllarca kullanımda ortaya çıkar: en uzun test programı
-            bile hepsini yakalayamaz.
+            {t('Kaç kusur olduğunu kimse kesin bilmez.')}{' '}
+            {s.company.modelsLaunched < 2
+              ? t('Ekibin ilk arabalarında çok hata yapar; Kalan her kusur sahada arıza, garanti masrafı ve geri çağırma demektir.')
+              : t('Kalan her kusur sahada arıza, garanti masrafı ve geri çağırma demektir.')}{' '}
+            {t('Bazı kusurlar ancak binlerce müşterinin elinde, yıllarca kullanımda ortaya çıkar: en uzun test programı bile hepsini yakalayamaz.')}
           </p>
           <p>
-            Bulunan ve giderilen: <b>{found.length}</b>
-            {running && <span className="muted small"> · test maliyeti ~{money(weeklyCost)}/hafta</span>}
+            {tx('Bulunan ve giderilen: <b>{n}</b>', { n: found.length })}
+            {running && <span className="muted small"> · {t('test maliyeti ~{cost}/hafta', { cost: money(weeklyCost) })}</span>}
           </p>
           {found.length > 0 && (
             <ul className="defects">
               {found.map((d) => (
                 <li key={d.id}>
-                  <Badge tone={d.severity === 'critical' ? 'bad' : d.severity === 'major' ? 'warn' : 'muted'}>{SEVERITY_NAMES[d.severity]}</Badge> {AREA_NAMES[d.area]}:{' '}
-                  {defectText(d)} <span className="muted small">— giderildi</span>
+                  <Badge tone={d.severity === 'critical' ? 'bad' : d.severity === 'major' ? 'warn' : 'muted'}>{t(SEVERITY_NAMES[d.severity])}</Badge> {t(AREA_NAMES[d.area])}:{' '}
+                  {t(defectText(d))} <span className="muted small">— {t('giderildi')}</span>
                 </li>
               ))}
             </ul>
           )}
-          <h4>Planın bedeli</h4>
+          <h4>{t('Planın bedeli')}</h4>
           <p className="small">
-            {weeksLeft > 0 ? (
-              <>
-                <b>{weeksLeft} hafta</b> daha: test gideri ~{money(testCostLeft)}, mühendis maaşları ~{money(weeksLeft * fixedWeekly)}. Araç
-                o kadar geç satışa çıkar.
-              </>
-            ) : (
-              'Plan tamamlandı.'
-            )}
+            {weeksLeft > 0
+              ? tx('<b>{n} hafta</b> daha: test gideri ~{tests}, mühendis maaşları ~{salaries}. Araç o kadar geç satışa çıkar.', {
+                  n: weeksLeft,
+                  tests: money(testCostLeft),
+                  salaries: money(weeksLeft * fixedWeekly),
+                })
+              : t('Plan tamamlandı.')}
           </p>
           {weeksLeft - shorterWeeks > 0 && (
             <p className="small muted">
-              Her testi 5 hafta kısaltsan: ~{extraDefects.toFixed(1)} kusur daha sahaya çıkar, ama araç {weeksLeft - shorterWeeks} hafta erken satışa çıkar ve ~{money(shorterSaves)} tasarruf
-              edersin.
+              {t('Her testi 5 hafta kısaltsan: ~{defects} kusur daha sahaya çıkar, ama araç {n} hafta erken satışa çıkar ve ~{saves} tasarruf edersin.', {
+                defects: fixed(extraDefects, 1),
+                n: weeksLeft - shorterWeeks,
+                saves: money(shorterSaves),
+              })}
             </p>
           )}
-          <h4>Testlerin araca katkısı</h4>
+          <h4>{t('Testlerin araca katkısı')}</h4>
           <p className="small">
-            {tuningText(testTuning(p.tests)) || <span className="muted">Testler başlayınca ayarlar iyileşir: dinamometre gücü ve tüketimi, yol testi konfor ve yol tutuşu, çarpışma testi güvenliği, dayanıklılık güvenilirliği.</span>}
+            {tuningText(testTuning(p.tests)) || (
+              <span className="muted">
+                {t(
+                  'Testler başlayınca ayarlar iyileşir: dinamometre gücü ve tüketimi, yol testi konfor ve yol tutuşu, çarpışma testi güvenliği, dayanıklılık güvenilirliği.',
+                )}
+              </span>
+            )}
           </p>
         </Panel>
         <Panel tight>
@@ -349,7 +383,7 @@ function Testing({ p }: { p: Project }) {
             bonus={p.bonus}
             estimate={p.estimate ?? newEstimate(() => 0.5)}
             compact
-            note="Dinamometre hızı ve tüketimi, yol testi konfor ve yol tutuşu, çarpışma testi güvenliği, dayanıklılık güvenilirliği ölçer."
+            note={t('Dinamometre hızı ve tüketimi, yol testi konfor ve yol tutuşu, çarpışma testi güvenliği, dayanıklılık güvenilirliği ölçer.')}
           />
         </Panel>
       </aside>
@@ -357,18 +391,24 @@ function Testing({ p }: { p: Project }) {
   );
 }
 
-function tuningText(t: Tuning): string {
+function tuningText(tu: Tuning): string {
   const parts: string[] = [];
-  if (t.power > 0.001) parts.push(`güç +%${(t.power * 100).toFixed(1)}`);
-  if (t.fuel > 0.001) parts.push(`tüketim −%${(t.fuel * 100).toFixed(1)}`);
-  if (t.comfort > 0.05) parts.push(`konfor +${t.comfort.toFixed(1)}`);
-  if (t.handling > 0.05) parts.push(`yol tutuş +${t.handling.toFixed(1)}`);
-  if (t.safety > 0.05) parts.push(`güvenlik +${t.safety.toFixed(1)}`);
-  if (t.reliability > 0.05) parts.push(`güvenilirlik +${t.reliability.toFixed(1)}`);
-  return parts.length ? `Şimdiye kadar: ${parts.join(', ')}.` : '';
+  if (tu.power > 0.001) parts.push(t('güç +{pct}', { pct: percent(tu.power, 1) }));
+  if (tu.fuel > 0.001) parts.push(t('tüketim −{pct}', { pct: percent(tu.fuel, 1) }));
+  if (tu.comfort > 0.05) parts.push(t('konfor +{v}', { v: fixed(tu.comfort, 1) }));
+  if (tu.handling > 0.05) parts.push(t('yol tutuş +{v}', { v: fixed(tu.handling, 1) }));
+  if (tu.safety > 0.05) parts.push(t('güvenlik +{v}', { v: fixed(tu.safety, 1) }));
+  if (tu.reliability > 0.05) parts.push(t('güvenilirlik +{v}', { v: fixed(tu.reliability, 1) }));
+  return parts.length ? t('Şimdiye kadar: {list}.', { list: parts.join(', ') }) : '';
 }
 
-const COMPONENT_NAMES: Record<ComponentKey, string> = { engine: 'Motor', gearbox: 'Şanzıman', electrics: 'Elektrik ve donanım' };
+const COMPONENT_NAMES: Record<ComponentKey, string> = { engine: msg('Motor'), gearbox: msg('Şanzıman'), electrics: msg('Elektrik ve donanım') };
+
+/** A line stage's name ('' when unknown). */
+function stageName(id: StageId): string {
+  const stage = STAGES.find((x) => x.id === id);
+  return stage ? t(stage.name) : '';
+}
 
 function Production({ p }: { p: Project }) {
   const s = useGameState();
@@ -381,12 +421,16 @@ function Production({ p }: { p: Project }) {
   if (started) {
     const left = Math.max(0, (p.productionReadyWeek ?? 0) - s.week);
     return (
-      <Panel title="Üretim hazırlığı">
+      <Panel title={t('Üretim hazırlığı')}>
         <p>
-          {toolingDef(p.tooling).name} ve ilk parçalar hazırlanıyor ({s.lines.find((l) => l.id === p.lineId)?.name}). Kalan: <b>{left} hafta</b>.
+          {tx('{tooling} ve ilk parçalar hazırlanıyor ({line}). Kalan: <b>{n} hafta</b>.', {
+            tooling: t(toolingDef(p.tooling).name),
+            line: s.lines.find((l) => l.id === p.lineId)?.name,
+            n: left,
+          })}
         </p>
         <Progress value={1 - left / 12} />
-        <p className="muted small">Bu sürede hat mevcut modeli üretmeye devam eder. Lansmanda yeni model hattı devralır.</p>
+        <p className="muted small">{t('Bu sürede hat mevcut modeli üretmeye devam eder. Lansmanda yeni model hattı devralır.')}</p>
       </Panel>
     );
   }
@@ -400,14 +444,14 @@ function Production({ p }: { p: Project }) {
   const workshop = workshopLineCost(s.week);
   const reserved = reservedLines(s, p.id);
   // Build a line and pick it for this car at once.
-  const buildAndPick = async (build: (st: GameState) => { ok: boolean; error?: string }, msg: string, what: string, cost: number, weeks: number) => {
+  const buildAndPick = async (build: (st: GameState) => { ok: boolean; error?: string }, success: string, what: string, cost: number, weeks: number) => {
     const yes = await store.ask({
-      title: `${what} kurulsun mu?`,
-      body: `${money(cost)} şimdi ödenir; hat ${weeks} haftada kurulur ve bu arabaya seçilir. Kalıplar da bu sürede hazırlanabilir.`,
-      confirm: 'Kur',
+      title: t('{what} kurulsun mu?', { what }),
+      body: t('{cost} şimdi ödenir; hat {n} haftada kurulur ve bu arabaya seçilir. Kalıplar da bu sürede hazırlanabilir.', { cost: money(cost), n: weeks }),
+      confirm: t('Kur'),
     });
     if (!yes) return;
-    if (store.try(build, msg)) {
+    if (store.try(build, success)) {
       const lines = store.state?.lines ?? [];
       setLineId(lines[lines.length - 1]?.id);
     }
@@ -418,61 +462,53 @@ function Production({ p }: { p: Project }) {
       <div className="howto prod-howto">
         <div>
           <p>
-            <b>Üretim hazırlığı: araba çizimden fabrikaya geçiyor.</b> Üç karar var; hepsi birim maliyeti, işçilik kalitesini ve lansman tarihini etkiler.
+            {tx('<b>Üretim hazırlığı: araba çizimden fabrikaya geçiyor.</b> Üç karar var; hepsi birim maliyeti, işçilik kalitesini ve lansman tarihini etkiler.')}
           </p>
           <ol>
-            <li>
-              <b>Parçalar:</b> motoru, şanzımanı ve elektriği kim yapacak? Tedarikçi fiyatı, kaliteyi ve teslim süresini belirler.
-            </li>
-            <li>
-              <b>Hat:</b> arabayı hangi hat üretecek? Hattın en yavaş bölümü (darboğaz) haftada kaç araba çıkacağını belirler.
-            </li>
-            <li>
-              <b>Kalıplar:</b> gövde panellerini basan kalıplar ve montaj fikstürleri. Parasını şimdi ödersin; kalitesi arabanın işçiliğini ve firesini belirler.
-            </li>
+            <li>{tx('<b>Parçalar:</b> motoru, şanzımanı ve elektriği kim yapacak? Tedarikçi fiyatı, kaliteyi ve teslim süresini belirler.')}</li>
+            <li>{tx('<b>Hat:</b> arabayı hangi hat üretecek? Hattın en yavaş bölümü (darboğaz) haftada kaç araba çıkacağını belirler.')}</li>
+            <li>{tx('<b>Kalıplar:</b> gövde panellerini basan kalıplar ve montaj fikstürleri. Parasını şimdi ödersin; kalitesi arabanın işçiliğini ve firesini belirler.')}</li>
           </ol>
         </div>
       </div>
       <div className="grid-2">
-        <Panel title="1 · Parçalar: yap ya da al">
+        <Panel title={t('1 · Parçalar: yap ya da al')}>
           {!g.suppliers ? (
             <p className="muted">
-              İlk modelinde parçaları güvenilir tedarikçilerden alıyorsun: pahalı ama sağlam. Kimden alacağına (ya da kendin üretmeye) ikinci modelinde sen karar
-              vereceksin.
+              {t(
+                'İlk modelinde parçaları güvenilir tedarikçilerden alıyorsun: pahalı ama sağlam. Kimden alacağına (ya da kendin üretmeye) ikinci modelinde sen karar vereceksin.',
+              )}
             </p>
           ) : (
             (Object.keys(COMPONENT_NAMES) as ComponentKey[]).map((k) => (
               <div key={k} className="supplier-row">
                 <div className="test-head">
-                  <b>{COMPONENT_NAMES[k]}</b>
-                  <span className="muted small">parça bedeli {money(st.componentCost[k] * costIndex(yf))}</span>
+                  <b>{t(COMPONENT_NAMES[k])}</b>
+                  <span className="muted small">{t('parça bedeli {cost}', { cost: money(st.componentCost[k] * costIndex(yf)) })}</span>
                 </div>
                 <Choice
                   value={p.suppliers[k]}
                   onChange={(v) => store.try((st2) => A.setSupplier(st2, p.id, k, v))}
                   options={SUPPLIERS.map((x) => ({
                     value: x.id,
-                    label: x.name,
+                    label: t(x.name),
                     disabled: x.id === 'inhouse' && !s.company.shops[k],
-                    sub: `${x.costMult < 1 ? '−' : '+'}%${Math.round(Math.abs(1 - x.costMult) * 100)} · ${x.leadWeeks ? `${x.leadWeeks} hf teslim` : 'hemen'} · ${x.desc}`,
+                    sub: `${x.costMult < 1 ? '−' : '+'}${percent(Math.abs(1 - x.costMult), 0)} · ${x.leadWeeks ? t('{n} hf teslim', { n: x.leadWeeks }) : t('hemen')} · ${t(x.desc)}`,
                   }))}
                 />
                 {!s.company.shops[k] && (
-                  <Button small kind="ghost" onClick={() => store.try((st2) => A.buildShop(st2, k), 'Atölye kuruldu')}>
-                    {COMPONENT_NAMES[k]} atölyesi kur ({money(shopCost(yf))})
+                  <Button small kind="ghost" onClick={() => store.try((st2) => A.buildShop(st2, k), t('Atölye kuruldu'))}>
+                    {t('{part} atölyesi kur ({cost})', { part: t(COMPONENT_NAMES[k]), cost: money(shopCost(yf)) })}
                   </Button>
                 )}
               </div>
             ))
           )}
-          <p>
-            Birim malzeme maliyeti: <b>{money(unitNow)}</b>
-          </p>
+          <p>{tx('Birim malzeme maliyeti: <b>{cost}</b>', { cost: money(unitNow) })}</p>
         </Panel>
-        <Panel title="2 · Hangi hat üretecek?">
+        <Panel title={t('2 · Hangi hat üretecek?')}>
           <p className="muted small">
-            Bir hat aynı anda tek model üretir. Başka bir modelin hattını seçersen o model lansmanda hattını kaybeder. Kapasite, bu arabanın üretim zorluğuna göre
-            hesaplandı.
+            {t('Bir hat aynı anda tek model üretir. Başka bir modelin hattını seçersen o model lansmanda hattını kaybeder. Kapasite, bu arabanın üretim zorluğuna göre hesaplandı.')}
           </p>
           {(() => {
             const option = (l: (typeof s.lines)[number]) => {
@@ -485,19 +521,19 @@ function Production({ p }: { p: Project }) {
                 <label key={l.id} className={`line-option ${lineId === l.id ? 'is-on' : ''} ${claimedBy ? 'is-off' : ''}`}>
                   <input type="radio" name="line" checked={lineId === l.id} disabled={!!claimedBy} onChange={() => setLineId(l.id)} />
                   <span>
-                    <b>{l.name}</b> · {r.throughput.toFixed(1)} araç/hafta
+                    <b>{l.name}</b> · {t('{v} araç/hafta', { v: fixed(r.throughput, 1) })}
                     <br />
                     <span className="muted small">
                       {claimedBy
-                        ? `${claimedBy.name} projesine ayrıldı`
+                        ? t('{name} projesine ayrıldı', { name: claimedBy.name })
                         : occupant
                           ? replaced
-                            ? `Şu an: ${occupant.name} (yerine geçecek)`
-                            : `Şu an: ${occupant.name}; lansmanda bu hattı kaybeder`
+                            ? t('Şu an: {name} (yerine geçecek)', { name: occupant.name })
+                            : t('Şu an: {name}; lansmanda bu hattı kaybeder', { name: occupant.name })
                           : building
-                            ? `İnşaatta: ${l.buildUntilWeek! - s.week} hafta`
-                            : 'Boş'}{' '}
-                      · darboğaz: {STAGES.find((x) => x.id === r.bottleneck)?.name}
+                            ? t('İnşaatta: {n} hafta', { n: l.buildUntilWeek! - s.week })
+                            : t('Boş')}{' '}
+                      · {t('darboğaz: {stage}', { stage: stageName(r.bottleneck) })}
                     </span>
                   </span>
                 </label>
@@ -513,44 +549,66 @@ function Production({ p }: { p: Project }) {
                 <div className="line-pick">{main.map(option)}</div>
                 {taken.length > 0 && (
                   <details className="line-taken">
-                    <summary className="small">Satıştaki başka arabaların hatları ({taken.length}): seçersen o araba lansmanda hattını kaybeder</summary>
+                    <summary className="small">{t('Satıştaki başka arabaların hatları ({n}): seçersen o araba lansmanda hattını kaybeder', { n: taken.length })}</summary>
                     <div className="line-pick">{taken.map(option)}</div>
                   </details>
                 )}
               </>
             );
           })()}
-          {!suggestedLine(s, p) && <p className="note small">Boşta hat yok: bütün hatlarda satıştaki bir araba ya da başka bir proje var. Bu araba için yeni bir hat kur.</p>}
+          {!suggestedLine(s, p) && (
+            <p className="note small">{t('Boşta hat yok: bütün hatlarda satıştaki bir araba ya da başka bir proje var. Bu araba için yeni bir hat kur.')}</p>
+          )}
           <div className="line-build">
-            <Button small kind="ghost" disabled={s.company.cash < workshop} onClick={() => buildAndPick((st2) => A.buildWorkshopLine(st2, undefined), 'Atölye hattı kuruluyor', 'Küçük atölye hattı', workshop, Math.max(3, Math.round(lineBuildWeeks(yf) / 2)))}>
-              + Küçük atölye hattı ({money(workshop)})
+            <Button
+              small
+              kind="ghost"
+              disabled={s.company.cash < workshop}
+              onClick={() =>
+                buildAndPick(
+                  (st2) => A.buildWorkshopLine(st2, undefined),
+                  t('Atölye hattı kuruluyor'),
+                  t('Küçük atölye hattı'),
+                  workshop,
+                  Math.max(3, Math.round(lineBuildWeeks(yf) / 2)),
+                )
+              }
+            >
+              {t('+ Küçük atölye hattı ({cost})', { cost: money(workshop) })}
             </Button>
-            <Button small kind="ghost" disabled={s.company.cash < turnkey} onClick={() => buildAndPick((st2) => A.buildTurnkeyLines(st2, 1, undefined, false), 'Yeni hat kuruluyor', 'Dengeli yeni hat', turnkey, lineBuildWeeks(yf))}>
-              + Dengeli yeni hat ({money(turnkey)}, {lineBuildWeeks(yf)} hf)
+            <Button
+              small
+              kind="ghost"
+              disabled={s.company.cash < turnkey}
+              onClick={() => buildAndPick((st2) => A.buildTurnkeyLines(st2, 1, undefined, false), t('Yeni hat kuruluyor'), t('Dengeli yeni hat'), turnkey, lineBuildWeeks(yf))}
+            >
+              {t('+ Dengeli yeni hat ({cost}, {n} hf)', { cost: money(turnkey), n: lineBuildWeeks(yf) })}
             </Button>
           </div>
-          <p className="muted small">Kapasiteyi sonra Fabrika ekranından büyütebilir ya da “talebi otomatik karşıla” ile fabrikaya bırakabilirsin.</p>
+          <p className="muted small">{t('Kapasiteyi sonra Fabrika ekranından büyütebilir ya da “talebi otomatik karşıla” ile fabrikaya bırakabilirsin.')}</p>
         </Panel>
       </div>
-      <Panel title="3 · Kalıplar">
+      <Panel title={t('3 · Kalıplar')}>
         <Choice
           value={tier}
           onChange={setTier}
           options={TOOLING.map((x) => {
             const q = quoteFor(x.id);
             const eff = Object.entries(x.scores)
-              .map(([k, v]) => `${ATTR_NAMES[k as keyof typeof ATTR_NAMES].toLowerCase()} ${v > 0 ? '+' : '−'}${Math.abs(v)}`)
+              .map(([k, v]) => `${t(ATTR_NAMES[k as keyof typeof ATTR_NAMES]).toLowerCase()} ${v > 0 ? '+' : '−'}${Math.abs(v)}`)
               .join(', ');
             return {
               value: x.id,
-              label: x.name,
+              label: t(x.name),
               sub: (
                 <>
-                  {q ? `${money(q.cost)} · ${Math.max(q.weeks, q.leadWeeks)} hafta · ` : ''}
-                  {x.materialMult !== 1 ? `birim maliyet ${x.materialMult > 1 ? '+' : '−'}%${Math.round(Math.abs(x.materialMult - 1) * 100)}` : 'olağan fire'}
+                  {q ? `${money(q.cost)} · ${t('{n} hafta', { n: Math.max(q.weeks, q.leadWeeks) })} · ` : ''}
+                  {x.materialMult !== 1
+                    ? t('birim maliyet {change}', { change: `${x.materialMult > 1 ? '+' : '−'}${percent(Math.abs(x.materialMult - 1), 0)}` })
+                    : t('olağan fire')}
                   {eff ? ` · ${eff}` : ''}
                   <br />
-                  {x.desc}
+                  {t(x.desc)}
                 </>
               ),
             };
@@ -559,36 +617,42 @@ function Production({ p }: { p: Project }) {
         {quote && (
           <div className="quote">
             <div>
-              <span>Kalıp maliyeti</span>
+              <span>{t('Kalıp maliyeti')}</span>
               <b>{money(quote.cost)}</b>
             </div>
             <div>
-              <span>Üretime hazır</span>
-              <b>{readyWeeks} hafta sonra</b>
+              <span>{t('Üretime hazır')}</span>
+              <b>{t('{n} hafta sonra', { n: readyWeeks })}</b>
             </div>
             <div>
-              <span>Birim malzeme</span>
+              <span>{t('Birim malzeme')}</span>
               <b>{money(unitNow)}</b>
             </div>
             <div>
-              <span>Hat kapasitesi</span>
-              <b>{report ? `${report.throughput.toFixed(1)} araç/hf` : '—'}</b>
+              <span>{t('Hat kapasitesi')}</span>
+              <b>{report ? t('{v} araç/hf', { v: fixed(report.throughput, 1) }) : '—'}</b>
             </div>
-            {quote.sharedPlatform && <Badge tone="good">Aynı platform: kalıplar büyük ölçüde ortak</Badge>}
+            {quote.sharedPlatform && <Badge tone="good">{t('Aynı platform: kalıplar büyük ölçüde ortak')}</Badge>}
           </div>
         )}
-        {quote && quote.leadWeeks > quote.weeks && <p className="muted small">Hazırlık süresini parça tedarikçisinin teslimi belirliyor ({quote.leadWeeks} hafta).</p>}
+        {quote && quote.leadWeeks > quote.weeks && (
+          <p className="muted small">{t('Hazırlık süresini parça tedarikçisinin teslimi belirliyor ({n} hafta).', { n: quote.leadWeeks })}</p>
+        )}
         <Toggle
           checked={p.autoCapacity ?? true}
           onChange={(v) => store.act((st2) => A.setProjectAutoCapacity(st2, p.id, v))}
-          label="Satışa çıkınca talebi otomatik karşıla"
-          sub="Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır. Sonradan Model ve Fabrika ekranlarından değiştirebilirsin."
+          label={t('Satışa çıkınca talebi otomatik karşıla')}
+          sub={t(
+            'Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır. Sonradan Model ve Fabrika ekranlarından değiştirebilirsin.',
+          )}
         />
-        {!lineId && <p className="note">Kalıpları sipariş etmek için önce arabanın üretileceği hattı seç.</p>}
+        {!lineId && <p className="note">{t('Kalıpları sipariş etmek için önce arabanın üretileceği hattı seç.')}</p>}
         {lineId && quote && s.company.cash < quote.cost && <ToolingShort p={p} lineId={lineId} tier={tier} setTier={setTier} cost={quote.cost} />}
         <div className="row-end">
           <Button kind="primary" disabled={!lineId || (quote ? s.company.cash < quote.cost : true)} onClick={() => lineId && store.try((st2) => A.startTooling(st2, p.id, lineId, tier))}>
-            {toolingDef(tier).name}: sipariş et{quote ? ` (${money(quote.cost)})` : ''}
+            {quote
+              ? t('{tooling}: sipariş et ({cost})', { tooling: t(toolingDef(tier).name), cost: money(quote.cost) })
+              : t('{tooling}: sipariş et', { tooling: t(toolingDef(tier).name) })}
           </Button>
         </div>
       </Panel>
@@ -601,17 +665,22 @@ function ToolingShort({ p, lineId, tier, setTier, cost }: { p: Project; lineId: 
   const s = useGameState();
   const shortfall = cost - s.company.cash;
   const room = Math.max(0, credit(s).limit - s.company.loan);
-  const cheaper = TOOLING.map((t) => ({ t, q: A.toolingQuote(s, p, lineId, t.id) })).filter((x) => x.t.id !== tier && x.q.cost <= s.company.cash);
+  const cheaper = TOOLING.map((def) => ({ def, q: A.toolingQuote(s, p, lineId, def.id) })).filter((x) => x.def.id !== tier && x.q.cost <= s.company.cash);
   const borrow = Math.ceil((shortfall * 1.05) / 100) * 100;
   return (
     <div className="note tooling-short">
       <p>
-        <b>Neden sipariş edilemiyor?</b> {toolingDef(tier).name} {money(cost)} tutuyor, kasada {money(s.company.cash)} var: {money(shortfall)} eksik.
+        {tx('<b>Neden sipariş edilemiyor?</b> {tooling} {cost} tutuyor, kasada {cash} var: {short} eksik.', {
+          tooling: t(toolingDef(tier).name),
+          cost: money(cost),
+          cash: money(s.company.cash),
+          short: money(shortfall),
+        })}
       </p>
       <div className="row">
-        {cheaper.map(({ t, q }) => (
-          <Button key={t.id} small onClick={() => setTier(t.id)}>
-            {t.name} seç ({money(q.cost)}, kasaya yetiyor)
+        {cheaper.map(({ def, q }) => (
+          <Button key={def.id} small onClick={() => setTier(def.id)}>
+            {t('{tooling} seç ({cost}, kasaya yetiyor)', { tooling: t(def.name), cost: money(q.cost) })}
           </Button>
         ))}
         {room >= borrow && (
@@ -622,10 +691,10 @@ function ToolingShort({ p, lineId, tier, setTier, cost }: { p: Project; lineId: 
               store.try((st2) => {
                 const r = A.takeLoan(st2, borrow);
                 return r.ok ? A.startTooling(st2, p.id, lineId, tier) : r;
-              }, `${money(borrow)} kredi alındı, kalıplar sipariş edildi`)
+              }, t('{amount} kredi alındı, kalıplar sipariş edildi', { amount: money(borrow) }))
             }
           >
-            Eksiği krediyle karşıla ({money(borrow)} kredi)
+            {t('Eksiği krediyle karşıla ({amount} kredi)', { amount: money(borrow) })}
           </Button>
         )}
         {s.company.reputation >= 5 && (
@@ -633,18 +702,23 @@ function ToolingShort({ p, lineId, tier, setTier, cost }: { p: Project; lineId: 
             small
             onClick={() =>
               store.ask({
-                title: 'Kalıpçıya vadeli sipariş',
-                body: `Kalıpçı parayı sonra, satışlardan almayı kabul ediyor ama %${Math.round(A.VENDOR_CREDIT * 100)} fazlasını istiyor: ${money(cost * (1 + A.VENDOR_CREDIT))} şirketin borcuna eklenir ve faiz işler. Bankanın kredi limiti bu borcu da sayar.`,
-                confirm: 'Vadeli sipariş et',
-              }).then((yes) => yes && store.try((st2) => A.startTooling(st2, p.id, lineId, tier, { vendorCredit: true }), 'Kalıplar vadeli sipariş edildi'))
+                title: t('Kalıpçıya vadeli sipariş'),
+                body: t(
+                  'Kalıpçı parayı sonra, satışlardan almayı kabul ediyor ama {pct} fazlasını istiyor: {amount} şirketin borcuna eklenir ve faiz işler. Bankanın kredi limiti bu borcu da sayar.',
+                  { pct: percent(A.VENDOR_CREDIT, 0), amount: money(cost * (1 + A.VENDOR_CREDIT)) },
+                ),
+                confirm: t('Vadeli sipariş et'),
+              }).then((yes) => yes && store.try((st2) => A.startTooling(st2, p.id, lineId, tier, { vendorCredit: true }), t('Kalıplar vadeli sipariş edildi')))
             }
           >
-            Kalıpçıya vadeli sipariş et (+%{Math.round(A.VENDOR_CREDIT * 100)}, borca eklenir)
+            {t('Kalıpçıya vadeli sipariş et (+{pct}, borca eklenir)', { pct: percent(A.VENDOR_CREDIT, 0) })}
           </Button>
         )}
       </div>
       {!cheaper.length && room < borrow && (
-        <p className="small muted">Kasa ve banka kredisi yetmiyor. Vadeli sipariş son çıkış yolu; ya da satıştaki arabalardan para gelmesini bekle, gereksiz mühendisleri çıkar.</p>
+        <p className="small muted">
+          {t('Kasa ve banka kredisi yetmiyor. Vadeli sipariş son çıkış yolu; ya da satıştaki arabalardan para gelmesini bekle, gereksiz mühendisleri çıkar.')}
+        </p>
       )}
     </div>
   );
@@ -663,18 +737,22 @@ function NoLine({ p }: { p: Project }) {
     if (!store.try(build)) return;
     const lines = store.state?.lines ?? [];
     const id = lines[lines.length - 1]?.id;
-    if (id) store.try((st) => A.setProjectLine(st, p.id, id), 'Yeni hat bu arabaya ayrıldı');
+    if (id) store.try((st) => A.setProjectLine(st, p.id, id), t('Yeni hat bu arabaya ayrıldı'));
   };
   return (
-    <Panel title="Bu arabanın hattı yok">
-      <p>Kalıplar hazır ama yapıldıkları hat artık yok (satıldı ya da başka bir arabaya verildi). Lansmandan önce arabanın üretileceği hattı seç ya da yeni bir hat kur.</p>
+    <Panel title={t('Bu arabanın hattı yok')}>
+      <p>
+        {t('Kalıplar hazır ama yapıldıkları hat artık yok (satıldı ya da başka bir arabaya verildi). Lansmandan önce arabanın üretileceği hattı seç ya da yeni bir hat kur.')}
+      </p>
       {free.length > 0 && (
         <div className="line-pick">
           {free.map((l) => (
-            <button key={l.id} type="button" className="line-option" onClick={() => store.try((st) => A.setProjectLine(st, p.id, l.id), `${l.name} seçildi`)}>
+            <button key={l.id} type="button" className="line-option" onClick={() => store.try((st) => A.setProjectLine(st, p.id, l.id), t('{name} seçildi', { name: l.name }))}>
               <span>
                 <b>{l.name}</b>{' '}
-                <span className="muted small">{live(l.modelId) ? `şu an ${s.models.find((m) => m.id === l.modelId)?.name}; lansmanda hattını kaybeder` : 'boş'}</span>
+                <span className="muted small">
+                  {live(l.modelId) ? t('şu an {name}; lansmanda hattını kaybeder', { name: String(s.models.find((m) => m.id === l.modelId)?.name) }) : t('boş')}
+                </span>
               </span>
             </button>
           ))}
@@ -682,10 +760,10 @@ function NoLine({ p }: { p: Project }) {
       )}
       <div className="line-build">
         <Button small disabled={s.company.cash < workshop} onClick={() => buildAndAssign((st) => A.buildWorkshopLine(st, undefined))}>
-          + Küçük atölye hattı ({money(workshop)})
+          {t('+ Küçük atölye hattı ({cost})', { cost: money(workshop) })}
         </Button>
         <Button small disabled={s.company.cash < turnkey} onClick={() => buildAndAssign((st) => A.buildTurnkeyLines(st, 1, undefined, false))}>
-          + Dengeli yeni hat ({money(turnkey)}, {lineBuildWeeks(yf)} hf)
+          {t('+ Dengeli yeni hat ({cost}, {n} hf)', { cost: money(turnkey), n: lineBuildWeeks(yf) })}
         </Button>
       </div>
     </Panel>
@@ -714,8 +792,8 @@ function Launch({ p }: { p: Project }) {
   const sold = Math.min(demand, cap);
   const labourWeek = line ? lineUpkeep(s, line, cap > 0 ? sold / cap : 0) : 0;
   const contribution = sold * (net - unit) - labourWeek;
-  const fixed = s.company.engineers * engineerSalary(yf) + (s.company.researchers ?? 0) * researcherSalary(yf) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, m) => a + dealerUpkeep(s, m), 0);
-  const weeklyNet = contribution - fixed;
+  const fixedCost = s.company.engineers * engineerSalary(yf) + (s.company.researchers ?? 0) * researcherSalary(yf) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, m) => a + dealerUpkeep(s, m), 0);
+  const weeklyNet = contribution - fixedCost;
   const others = s.models.some((m) => m.status === 'active' && m.id !== p.replacesModelId);
   // With other cars on sale their profit already carries the fixed costs.
   const now = recentProfit(s, 8);
@@ -723,86 +801,97 @@ function Launch({ p }: { p: Project }) {
   const showShare = s.company.cash > 0 ? showCost / s.company.cash : 1;
   return (
     <div className="grid-2">
-      <Panel title="Fiyat ve pazarlar">
-        <NumberInput label="Fabrika çıkış fiyatı" prefix="$" value={price} min={1} step={10} onChange={setPrice} />
+      <Panel title={t('Fiyat ve pazarlar')}>
+        <NumberInput label={t('Fabrika çıkış fiyatı')} prefix="$" value={price} min={1} step={10} onChange={setPrice} />
         <p className="muted small">
-          Sınıfın tipik fiyatı: {money(referencePrice(s.company.hq, p.segment, yf))}. Fiyat enflasyona göre otomatik güncellenir; istersen Modeller ekranından değiştirirsin.
+          {t('Sınıfın tipik fiyatı: {price}. Fiyat enflasyona göre otomatik güncellenir; istersen Modeller ekranından değiştirirsin.', {
+            price: money(referencePrice(s.company.hq, p.segment, yf)),
+          })}
         </p>
         <p className="muted small">
-          Satış yapılan {N.openStates(s).length} eyalette sunulur · segment {num(weeklySegmentDemand('usa', p.segment, yf) * 52)} araç/yıl (bütün ülke) · araç başına ortalama nakliye{' '}
-          {money(N.avgFreightPerCar(s, yf))}.
+          {t('Satış yapılan {n} eyalette sunulur · segment {count} araç/yıl (bütün ülke) · araç başına ortalama nakliye {freight}.', {
+            n: N.openStates(s).length,
+            count: num(weeklySegmentDemand('usa', p.segment, yf) * 52),
+            freight: money(N.avgFreightPerCar(s, yf)),
+          })}
         </p>
         <Toggle
           checked={autoShow}
           onChange={setAutoShow}
-          label="Otomobil fuarında tanıt"
-          sub={
-            <>
-              {money(showCost)} ·{' '}
-              <span className={showShare > 0.25 ? 'tone-bad' : ''}>kasanın {pctOf(showShare)}</span> · bilinirlik ve lansman heyecanı artar
-            </>
-          }
+          label={t('Otomobil fuarında tanıt')}
+          sub={tx(
+            '{cost} · <share>kasanın {pct}</share> · bilinirlik ve lansman heyecanı artar',
+            { cost: money(showCost), pct: pctOf(showShare) },
+            {
+              share: (c, k) => (
+                <span key={k} className={showShare > 0.25 ? 'tone-bad' : ''}>
+                  {c}
+                </span>
+              ),
+            },
+          )}
         />
       </Panel>
-      <Panel title="Lansman özeti">
+      <Panel title={t('Lansman özeti')}>
         <div className="quote">
           <div>
-            <span>Seçili pazarlarda segment ({markets.map((mk) => MARKETS.find((x) => x.id === mk)!.name).join(' + ')})</span>
+            <span>{t('Seçili pazarlarda segment ({markets})', { markets: markets.map((mk) => t(MARKETS.find((x) => x.id === mk)!.name)).join(' + ') })}</span>
             <b>
-              {num(segmentWeekly * 52)} araç/yıl <span className="muted small">(haftada {segmentWeekly.toFixed(0)})</span>
+              {t('{count} araç/yıl', { count: num(segmentWeekly * 52) })} <span className="muted small">{t('(haftada {v})', { v: fixed(segmentWeekly, 0) })}</span>
             </b>
           </div>
           <div>
-            <span>Hat kapasitesi</span>
-            <b>{cap.toFixed(1)} araç/hafta</b>
+            <span>{t('Hat kapasitesi')}</span>
+            <b>{t('{v} araç/hafta', { v: fixed(cap, 1) })}</b>
           </div>
           <div>
-            <span>Malzeme / araç</span>
+            <span>{t('Malzeme / araç')}</span>
             <b>{money(unit)}</b>
           </div>
           <div>
-            <span>İşçilik / araç (tam kapasite)</span>
+            <span>{t('İşçilik / araç (tam kapasite)')}</span>
             <b>{money(labour)}</b>
           </div>
           <div>
-            <span>Araç başı brüt kâr (tam kapasite)</span>
+            <span>{t('Araç başı brüt kâr (tam kapasite)')}</span>
             <b className={margin < 0 ? 'tone-bad' : 'tone-good'}>{money(margin)}</b>
           </div>
           <div>
-            <span>Beklenen satış (orta tahmin)</span>
-            <b>{sold.toFixed(1)} araç/hafta</b>
+            <span>{t('Beklenen satış (orta tahmin)')}</span>
+            <b>{t('{v} araç/hafta', { v: fixed(sold, 1) })}</b>
           </div>
           <div>
-            <span>Aracın haftalık katkısı</span>
+            <span>{t('Aracın haftalık katkısı')}</span>
             <b className={contribution < 0 ? 'tone-bad' : ''}>{money(contribution)}</b>
           </div>
           <div>
-            <span>Sabit giderler (maaş, genel gider, bayi)</span>
-            <b>{money(-fixed)}</b>
+            <span>{t('Sabit giderler (maaş, genel gider, bayi)')}</span>
+            <b>{money(-fixedCost)}</b>
           </div>
           {others ? (
             <div>
-              <span>Şirketin haftalık kârı: şimdi → bu araçla</span>
+              <span>{t('Şirketin haftalık kârı: şimdi → bu araçla')}</span>
               <b className={now + contribution < 0 ? 'tone-bad' : 'tone-good'}>
                 {money(now)} → {money(now + contribution)}
               </b>
             </div>
           ) : (
             <div>
-              <span>Haftalık net</span>
+              <span>{t('Haftalık net')}</span>
               <b className={weeklyNet < 0 ? 'tone-bad' : 'tone-good'}>{money(weeklyNet)}</b>
             </div>
           )}
         </div>
         {weeklyNet < 0 && !others && (
           <p className="small tone-bad">
-            Bu fiyatta ve beklenen talepte şirket haftada {money(-weeklyNet)} kaybeder. Hat işçiliği az üretimde de ödenir; fiyatı, hattı ya da mühendis sayısını gözden
-            geçir.
+            {t('Bu fiyatta ve beklenen talepte şirket haftada {loss} kaybeder. Hat işçiliği az üretimde de ödenir; fiyatı, hattı ya da mühendis sayısını gözden geçir.', {
+              loss: money(-weeklyNet),
+            })}
           </p>
         )}
         <PriceGuide p={p} price={price} setPrice={setPrice} markets={markets} cap={cap} unit={unit} labour={labour} />
         <p className="muted small">
-          Alıcıların aracını nasıl karşılayacağını lansmanda göreceksin: dergi puanları, rakiplerle karşılaştırma ve dört hafta sonra ilk ay raporu.
+          {t('Alıcıların aracını nasıl karşılayacağını lansmanda göreceksin: dergi puanları, rakiplerle karşılaştırma ve dört hafta sonra ilk ay raporu.')}
         </p>
         <div className="row-end">
           <Button
@@ -814,10 +903,10 @@ function Launch({ p }: { p: Project }) {
               else if (r) store.showToast(r.error, 'bad');
             }}
           >
-            🎉 Lansmanı yap
+            🎉 {t('Lansmanı yap')}
           </Button>
         </div>
-        <p className="muted small">Hat: {line?.name ?? '—'}</p>
+        <p className="muted small">{t('Hat: {name}', { name: line?.name ?? '—' })}</p>
       </Panel>
     </div>
   );

@@ -6,12 +6,17 @@ import { ATTRS, ATTR_NAMES, importanceLabel, segmentDef } from '../../data/segme
 import { computeCarStats } from '../../core/vehicle';
 import { estimateRange, factRange, isRough, rawRange } from '../../core/estimate';
 import type { AttrKey, CarDesign, CarStats, DevBonus, Estimate, GameState, Scores, SegmentId } from '../../core/types';
+import { isTurkish, t } from '../../i18n';
+import { fmtNumber } from '../../i18n/format';
 import { kmh, litres, money, secs } from '../format';
+import { tx } from '../i18n';
 import { CostBreakdown } from './CostBreakdown';
 import { Info, RangeBar, ScoreBar } from './ui';
 
-/** "lo–hi unit" for an engineers' range. */
-const span = ([lo, hi]: [number, number], f: (v: number) => string, unit = '') => `${f(lo)}–${f(hi)}${unit}`;
+/** "lo–hi" for an engineers' range. */
+const span = ([lo, hi]: [number, number], f: (v: number) => string) => `${f(lo)}–${f(hi)}`;
+/** A decimal as the game always showed it in Turkish ("1.25"), in the player's own form elsewhere. */
+const fixed = (v: number, digits: number) => (isTurkish() ? v.toFixed(digits) : fmtNumber(v, digits));
 
 export function useCarStats(design: CarDesign, yf: number, bonus?: DevBonus): CarStats {
   const key = JSON.stringify(design) + Math.floor(yf) + JSON.stringify(bonus ?? null);
@@ -21,19 +26,19 @@ export function useCarStats(design: CarDesign, yf: number, bonus?: DevBonus): Ca
 
 /** The engineers' quote for a measured quantity: a range while they are unsure. */
 function estimatedRaw(k: AttrKey, st: CarStats, yf: number, seg: SegmentId, est: Estimate): string {
-  const range = (v: number, digits: number, unit: string) => {
+  const range = (v: number, digits: number) => {
     const [lo, hi] = rawRange(est, k, v);
-    return `${lo.toFixed(digits)}–${hi.toFixed(digits)} ${unit}`;
+    return `${fixed(lo, digits)}–${fixed(hi, digits)}`;
   };
   switch (k) {
     case 'accel': {
       const m = accelMetric(st, eraReference(yf, seg));
-      return m.value === null || m.value >= 99 ? `${m.label}: —` : `${m.label}: ${range(m.value, 0, 'sn')}`;
+      return m.value === null || m.value >= 99 ? `${t(m.label)}: —` : `${t(m.label)}: ${t('{v} sn', { v: range(m.value, 0) })}`;
     }
     case 'topSpeed':
-      return range(st.topSpeed, 0, 'km/s');
+      return t('{v} km/s', { v: range(st.topSpeed, 0) });
     case 'economy':
-      return range(st.fuel, 1, 'L/100km');
+      return t('{v} L/100km', { v: range(st.fuel, 1) });
     default:
       return '';
   }
@@ -43,7 +48,7 @@ function rawValue(k: AttrKey, st: CarStats, yf: number, seg: SegmentId): string 
   switch (k) {
     case 'accel': {
       const m = accelMetric(st, eraReference(yf, seg));
-      return `${m.label}: ${secs(m.value)}`;
+      return `${t(m.label)}: ${secs(m.value)}`;
     }
     case 'topSpeed':
       return kmh(st.topSpeed);
@@ -56,11 +61,11 @@ function rawValue(k: AttrKey, st: CarStats, yf: number, seg: SegmentId): string 
 
 export function Importance({ s, segment, attr }: { s: GameState; segment: SegmentId; attr: AttrKey }) {
   const k = s.knowledge[segment][attr] ?? 0;
-  if (k === 0) return <span className="imp imp-unknown" title="Bu alıcıların buna ne kadar önem verdiğini henüz bilmiyorsun">?</span>;
+  if (k === 0) return <span className="imp imp-unknown" title={t('Bu alıcıların buna ne kadar önem verdiğini henüz bilmiyorsun')}>?</span>;
   const { label, level } = importanceLabel(segmentDef(segment).weights[attr]);
-  if (k === 1) return <span className="imp imp-hint" title={`İpucu: ${label.toLowerCase()} olabilir (daha fazla geri bildirim gerek)`}>{'●'.repeat(Math.max(1, level))}?</span>;
+  if (k === 1) return <span className="imp imp-hint" title={t('İpucu: {level} olabilir (daha fazla geri bildirim gerek)', { level: t(label).toLowerCase() })}>{'●'.repeat(Math.max(1, level))}?</span>;
   return (
-    <span className="imp" title={`Önem: ${label}`}>
+    <span className="imp" title={t('Önem: {level}', { level: t(label) })}>
       {'●'.repeat(level)}
       <span className="imp-off">{'●'.repeat(4 - level)}</span>
     </span>
@@ -99,21 +104,23 @@ export function StatsPanel(props: {
       <div className="sp-head">
         {est ? (
           <div>
-            <b className="sp-estimate-title">Mühendis tahmini</b>
+            <b className="sp-estimate-title">{t('Mühendis tahmini')}</b>
             <div className="muted small">
-              Alıcıların {segmentDef(segment).name.toLowerCase()} için ne diyeceği lansmanda belli olur. Aralıklar sınıf ortalamasına (çizgi) göre; testler aralıkları daraltır.
+              {t('Alıcıların {segment} için ne diyeceği lansmanda belli olur. Aralıklar sınıf ortalamasına (çizgi) göre; testler aralıkları daraltır.', {
+                segment: t(segmentDef(segment).name).toLowerCase(),
+              })}
             </div>
             {(est.experience ?? 1) > 1.5 && (
-              <div className="small tone-warn">Ekibin ilk arabalarından biri: tahminler kaba ve yanılabilir. Her yeni model ekibini keskinleştirir.</div>
+              <div className="small tone-warn">{t('Ekibin ilk arabalarından biri: tahminler kaba ve yanılabilir. Her yeni model ekibini keskinleştirir.')}</div>
             )}
             {props.note && <div className="muted small">{props.note}</div>}
             <ClassGaps est={est} scores={scores} />
           </div>
         ) : (
           <div>
-            <span className="muted small">Çekicilik ({segmentDef(segment).name})</span>
+            <span className="muted small">{t('Çekicilik ({segment})', { segment: t(segmentDef(segment).name) })}</span>
             <b className={`sp-appeal ${ap >= 55 ? 'tone-good' : ap < 45 ? 'tone-bad' : ''}`}>{ap.toFixed(0)}</b>
-            <span className="muted small"> / sınıf ort. 50</span>
+            <span className="muted small"> / {t('sınıf ort. 50')}</span>
             {props.note && <div className="muted small">{props.note}</div>}
           </div>
         )}
@@ -124,11 +131,11 @@ export function StatsPanel(props: {
           return (
             <div key={k} className="sp-row">
               <div className="sp-label">
-                <span>{ATTR_NAMES[k]}</span>
+                <span>{t(ATTR_NAMES[k])}</span>
                 {!est && <Importance s={s} segment={segment} attr={k} />}
               </div>
               <div className="sp-raw">
-                {!est ? rawValue(k, st, yf, segment) : measurable(k) ? (isRough(est, k) ? estimatedRaw(k, st, yf, segment, est) : rawValue(k, st, yf, segment)) : isRough(est, k) ? 'kaba tahmin' : 'ölçüldü'}
+                {!est ? rawValue(k, st, yf, segment) : measurable(k) ? (isRough(est, k) ? estimatedRaw(k, st, yf, segment, est) : rawValue(k, st, yf, segment)) : isRough(est, k) ? t('kaba tahmin') : t('ölçüldü')}
               </div>
               {r ? <RangeBar lo={r.lo} hi={r.hi} rough={isRough(est!, k)} /> : <ScoreBar value={scores[k]} />}
             </div>
@@ -139,36 +146,40 @@ export function StatsPanel(props: {
         <div className="sp-facts">
           {est && (
             <p className="sp-facts-note muted small">
-              Kâğıt üstündeki hesap
+              {t('Kâğıt üstündeki hesap')}
               <Info>
-                <p>Mühendislerin çizimden çıkardığı rakamlar. Tecrübesiz ya da küçük bir ekip geniş ve yanılabilir aralık verir; her yeni model, beceri ve kalabalık bir ekip aralığı daraltır.</p>
-                <p>Dinamometre gücü, yol testi ağırlığı netleştirir. Kesin birim maliyeti üretim hazırlığında tedarikçiler söyler.</p>
+                <p>
+                  {t(
+                    'Mühendislerin çizimden çıkardığı rakamlar. Tecrübesiz ya da küçük bir ekip geniş ve yanılabilir aralık verir; her yeni model, beceri ve kalabalık bir ekip aralığı daraltır.',
+                  )}
+                </p>
+                <p>{t('Dinamometre gücü, yol testi ağırlığı netleştirir. Kesin birim maliyeti üretim hazırlığında tedarikçiler söyler.')}</p>
               </Info>
             </p>
           )}
           <div>
-            <span>Güç</span>
-            <b>{est ? span(factRange(est, 'power', st.engine.powerHp), (v) => v.toFixed(0), ' bg') : `${st.engine.powerHp.toFixed(0)} bg`}</b>
+            <span>{t('Güç')}</span>
+            <b>{t('{v} bg', { v: est ? span(factRange(est, 'power', st.engine.powerHp), (v) => fixed(v, 0)) : fixed(st.engine.powerHp, 0) })}</b>
           </div>
           <div>
-            <span>Ağırlık</span>
-            <b>{est ? span(factRange(est, 'mass', st.massKg), (v) => String(Math.round(v / 5) * 5), ' kg') : `${Math.round(st.massKg)} kg`}</b>
+            <span>{t('Ağırlık')}</span>
+            <b>{t('{v} kg', { v: est ? span(factRange(est, 'mass', st.massKg), (v) => String(Math.round(v / 5) * 5)) : Math.round(st.massKg) })}</b>
           </div>
           <div>
-            <span>Malzeme maliyeti</span>
+            <span>{t('Malzeme maliyeti')}</span>
             <b>{est ? span(factRange(est, 'cost', unit), money) : money(unit)}</b>
           </div>
-          <div title="Malzeme + tahmini işçilik">
-            <span>Tahmini toplam maliyet</span>
+          <div title={t('Malzeme + tahmini işçilik')}>
+            <span>{t('Tahmini toplam maliyet')}</span>
             <b>{est ? span(factRange(est, 'cost', approxCost), money) : money(approxCost)}</b>
           </div>
-          <div title="Bu fiyattan satarsan bayi payından sonra araç başına kalan">
-            <span>Sınıfın tipik fiyatı</span>
+          <div title={t('Bu fiyattan satarsan bayi payından sonra araç başına kalan')}>
+            <span>{t('Sınıfın tipik fiyatı')}</span>
             <b className={approxCost > target * 0.9 ? 'tone-bad' : ''}>{money(ref)}</b>
           </div>
-          <div title="1 = sıradan araç. Yüksekse hat daha yavaş çalışır.">
-            <span>Üretim zorluğu</span>
-            <b>{est ? span(factRange(est, 'complexity', st.complexity), (v) => v.toFixed(2)) : st.complexity.toFixed(2)}</b>
+          <div title={t('1 = sıradan araç. Yüksekse hat daha yavaş çalışır.')}>
+            <span>{t('Üretim zorluğu')}</span>
+            <b>{est ? span(factRange(est, 'complexity', st.complexity), (v) => fixed(v, 2)) : fixed(st.complexity, 2)}</b>
           </div>
         </div>
       )}
@@ -195,12 +206,12 @@ function ClassGaps({ est, scores }: { est: Estimate; scores: Record<AttrKey, num
     <div className="class-gaps small">
       {behind.length > 0 && (
         <div className="tone-warn">
-          Mühendislere göre sınıf ortalamasının gerisinde kalabilir: <b>{behind.map((k) => ATTR_NAMES[k].toLowerCase()).join(', ')}</b>.
+          {tx('Mühendislere göre sınıf ortalamasının gerisinde kalabilir: <b>{attrs}</b>.', { attrs: behind.map((k) => t(ATTR_NAMES[k]).toLowerCase()).join(', ') })}
         </div>
       )}
       {ahead.length > 0 && (
         <div className="tone-good">
-          Mühendislere göre sınıf ortalamasının önünde: <b>{ahead.map((k) => ATTR_NAMES[k].toLowerCase()).join(', ')}</b>.
+          {tx('Mühendislere göre sınıf ortalamasının önünde: <b>{attrs}</b>.', { attrs: ahead.map((k) => t(ATTR_NAMES[k]).toLowerCase()).join(', ') })}
         </div>
       )}
     </div>

@@ -5,11 +5,17 @@ import { costIndex, engineerSalary } from '../../data/economy';
 import { yearFloat } from '../../core/time';
 import { unknownTech } from '../../core/research';
 import { budgetVerdict, launchBudget } from '../../core/budget';
-import { money } from '../format';
+import { isTurkish, t } from '../../i18n';
+import { fmtNumber } from '../../i18n/format';
+import { money, pct } from '../format';
+import { tx } from '../i18n';
 import { BudgetLine } from '../components/BudgetLine';
 import type { FocusKey, Project } from '../../core/types';
 import { store, useGameState } from '../store';
 import { Button, Progress, Slider } from '../components/ui';
+
+/** A decimal as the game always showed it in Turkish ("1.5"), in the player's own form elsewhere. */
+const fixed = (v: number, digits: number) => (isTurkish() ? v.toFixed(digits) : fmtNumber(v, digits));
 
 interface Bubble {
   id: number;
@@ -34,57 +40,68 @@ export function DevBar({ project: p }: { project: Project }) {
     .map((n) => ({ n, weeks: Math.ceil(remaining / Math.max(0.1, devRate((s.company.engineers + n) / (others + 1), s.company.skill))) }))
     .find((o) => o.weeks <= weeksNow * 0.75);
   const done = developing && p.dev.done >= p.dev.required;
-  const pct = required > 0 ? Math.round((p.dev.done / required) * 100) : 0;
+  const progress = pct(required > 0 ? p.dev.done / required : 0, 0);
   const bonus = A.projectedBonus(s, p);
   const polish = bonus.reliability - (s.company.skill - 50) * 0.08;
   const paused = store.speed === 0;
   const missing = developing ? [] : unknownTech(s, p.design);
-  const team = others ? `${s.company.engineers} mühendis ${others + 1} projeye bölünüyor (bu projede ~${eng.toFixed(1)})` : `${s.company.engineers} mühendisin hepsi bu projede`;
+  const team = others
+    ? t('{n} mühendis {projects} projeye bölünüyor (bu projede ~{share})', { n: s.company.engineers, projects: others + 1, share: fixed(eng, 1) })
+    : t('{n} mühendisin hepsi bu projede', { n: s.company.engineers });
 
   return (
     <div className={`dev-bar ${done ? 'is-done' : ''}`}>
       <div className="dev-bar-text">
         {!developing ? (
           <>
-            <b>Geliştirme:</b> tahmini <b>~{Math.ceil(remaining / Math.max(0.1, rate))} hafta</b> · {team}
+            {tx('<b>Geliştirme:</b> tahmini <b>~{n} hafta</b> · {team}', { n: Math.ceil(remaining / Math.max(0.1, rate)), team })}
             {missing.length ? (
-              <span className="small tone-bad">Tasarımda henüz araştırılmamış teknoloji var: {missing.join(', ')}. Ar-Ge’de araştır ya da tasarımdan çıkar.</span>
+              <span className="small tone-bad">
+                {t('Tasarımda henüz araştırılmamış teknoloji var: {tech}. Ar-Ge’de araştır ya da tasarımdan çıkar.', { tech: missing.map((x) => t(x)).join(', ') })}
+              </span>
             ) : (
-              <span className="muted small">Aracı tasarla, mühendislik odağını seç, sonra başlat. Başlayınca tasarım kilitlenir; odak her zaman değişebilir.</span>
+              <span className="muted small">{t('Aracı tasarla, mühendislik odağını seç, sonra başlat. Başlayınca tasarım kilitlenir; odak her zaman değişebilir.')}</span>
             )}
           </>
         ) : done ? (
           <>
-            <b>Geliştirme bitti.</b> Zaman akarsa araç cilalanmaya devam eder (güvenilirlik şu an +{Math.max(0, polish).toFixed(1)}, en fazla %160’a kadar).
+            {tx('<b>Geliştirme bitti.</b> Zaman akarsa araç cilalanmaya devam eder (güvenilirlik şu an +{v}, en fazla %160’a kadar).', {
+              v: fixed(Math.max(0, polish), 1),
+            })}
           </>
         ) : (
           <>
-            <b>Geliştirme %{pct}</b> · kalan ~{Math.ceil(remaining / Math.max(0.1, rate))} hafta · {team}
-            <span className="muted small">Her hafta odak alanlarına puan birikir.</span>
+            {tx('<b>Geliştirme {pct}</b> · kalan ~{n} hafta · {team}', { pct: progress, n: Math.ceil(remaining / Math.max(0.1, rate)), team })}
+            <span className="muted small">{t('Her hafta odak alanlarına puan birikir.')}</span>
           </>
         )}
       </div>
       {!done && (
         <div className="dev-bar-hire small">
           <span>
-            <b>Ekip: {s.company.engineers} mühendis.</b>{' '}
+            <b>{t('Ekip: {n} mühendis.', { n: s.company.engineers })}</b>{' '}
             {faster && weeksNow >= 8 ? (
               <>
-                +{faster.n} mühendisle ~{faster.weeks} hafta ({weeksNow} yerine); maaşları yılda ~{money(faster.n * engineerSalary(yf) * 52)}.
+                {t('+{n} mühendisle ~{weeks} hafta ({now} yerine); maaşları yılda ~{salaries}.', {
+                  n: faster.n,
+                  weeks: faster.weeks,
+                  now: weeksNow,
+                  salaries: money(faster.n * engineerSalary(yf) * 52),
+                })}
               </>
             ) : (
-              <>Daha çok mühendis geliştirmeyi hızlandırır; bir arabada bir düzineden fazlası orantılı hızlandırmaz.</>
+              <>{t('Daha çok mühendis geliştirmeyi hızlandırır; bir arabada bir düzineden fazlası orantılı hızlandırmaz.')}</>
             )}
           </span>
           <span className="dev-bar-hire-btns">
-            <Button small disabled={s.company.cash < 40 * costIndex(yf)} onClick={() => store.try((st) => A.hireEngineers(st, 1), '1 mühendis işe alındı')}>
-              +1 mühendis al
+            <Button small disabled={s.company.cash < 40 * costIndex(yf)} onClick={() => store.try((st) => A.hireEngineers(st, 1), t('{n} mühendis işe alındı', { n: 1 }))}>
+              {t('+1 mühendis al')}
             </Button>
             <Button
               small
               kind={faster && weeksNow >= 8 ? 'primary' : undefined}
               disabled={s.company.cash < (faster?.n ?? 5) * 40 * costIndex(yf)}
-              onClick={() => store.try((st) => A.hireEngineers(st, faster?.n ?? 5), `${faster?.n ?? 5} mühendis işe alındı`)}
+              onClick={() => store.try((st) => A.hireEngineers(st, faster?.n ?? 5), t('{n} mühendis işe alındı', { n: faster?.n ?? 5 }))}
             >
               +{faster?.n ?? 5}
             </Button>
@@ -94,7 +111,7 @@ export function DevBar({ project: p }: { project: Project }) {
       {!done && <BudgetLine b={launchBudget(s, p)} />}
       {developing && (
         <div className="dev-bar-progress">
-          <Progress value={Math.min(p.dev.done, required * 1.6)} max={done ? required * 1.6 : required} tone={done ? 'good' : 'accent'} label={`%${pct}`} />
+          <Progress value={Math.min(p.dev.done, required * 1.6)} max={done ? required * 1.6 : required} tone={done ? 'good' : 'accent'} label={progress} />
         </div>
       )}
       <div className="dev-bar-actions">
@@ -107,25 +124,28 @@ export function DevBar({ project: p }: { project: Project }) {
               const b = launchBudget(s, p);
               if (budgetVerdict(b) === 'short') {
                 const go = await store.ask({
-                  title: 'Bu proje kasayı aşıyor',
-                  body: `Lansmana kadar ~${money(Math.max(0, b.need))} gerekiyor; kasa ${money(b.cash)} ve banka kredisi ${money(b.creditRoom)} birlikte yetmiyor. Kalıp parası bittiğinde araba satışa çıkamaz. Daha küçük ya da ucuz bir tasarım, kısa bir test planı ya da önce satıştaki arabalardan para kazanmak daha güvenli.`,
-                  confirm: 'Yine de başlat',
+                  title: t('Bu proje kasayı aşıyor'),
+                  body: t(
+                    'Lansmana kadar ~{need} gerekiyor; kasa {cash} ve banka kredisi {credit} birlikte yetmiyor. Kalıp parası bittiğinde araba satışa çıkamaz. Daha küçük ya da ucuz bir tasarım, kısa bir test planı ya da önce satıştaki arabalardan para kazanmak daha güvenli.',
+                    { need: money(Math.max(0, b.need)), cash: money(b.cash), credit: money(b.creditRoom) },
+                  ),
+                  confirm: t('Yine de başlat'),
                   danger: true,
                 });
                 if (!go) return;
               }
-              store.try((st) => A.beginDevelopment(st, p.id), 'Geliştirme başladı');
+              store.try((st) => A.beginDevelopment(st, p.id), t('Geliştirme başladı'));
             }}
           >
-            Geliştirmeyi başlat
+            {t('Geliştirmeyi başlat')}
           </Button>
         ) : done ? (
           <Button kind="primary" onClick={() => store.try((st) => A.finishDevelopment(st, p.id))}>
-            Prototipleri yap, teste geç
+            {t('Prototipleri yap, teste geç')}
           </Button>
         ) : paused ? (
           <Button kind="primary" onClick={() => store.setSpeed(store.lastSpeed)}>
-            ▶ Zamanı başlat
+            {t('▶ Zamanı başlat')}
           </Button>
         ) : null}
       </div>
@@ -155,42 +175,43 @@ export function FocusPanel({ project: p }: { project: Project }) {
     if (!fresh.length) return;
     setBubbles((b) => [...b.slice(-20), ...fresh]);
     const ids = new Set(fresh.map((b) => b.id));
-    const t = setTimeout(() => setBubbles((b) => b.filter((x) => !ids.has(x.id))), 1400);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setBubbles((b) => b.filter((x) => !ids.has(x.id))), 1400);
+    return () => clearTimeout(timer);
   }, [p.dev.points.performance, p.dev.points.efficiency, p.dev.points.comfort, p.dev.points.handling, p.dev.points.safety, p.dev.points.practicality, p.dev.points.cost, p.dev.points.quality]);
 
   const locked = p.dev.locked ?? [];
   // Keep the total at 100%: the unlocked sliders make room, the locked ones stay put.
   const setFocus = (k: FocusKey, v: number) => store.act((st) => A.setFocus(st, p.id, A.refocus(p.dev.focus, locked, k, v)));
   const effect: Record<FocusKey, string> = {
-    performance: `Güç +%${((bonus.powerMult - 1) * 100).toFixed(1)}`,
-    efficiency: `Tüketim −%${((1 - bonus.fuelMult) * 100).toFixed(1)}`,
-    comfort: `Konfor +${bonus.comfort.toFixed(1)}`,
-    handling: `Yol tutuş +${(bonus.handling ?? 0).toFixed(1)}`,
-    safety: `Güvenlik +${bonus.safety.toFixed(1)}`,
-    practicality: `Pratiklik +${(bonus.practicality ?? 0).toFixed(1)}`,
-    cost: `Maliyet −%${((1 - bonus.costMult) * 100).toFixed(1)}`,
-    quality: `Gizli kusur −%${((1 - (bonus.defectMult ?? 1)) * 100).toFixed(0)}`,
+    performance: t('Güç +{pct}', { pct: pct(bonus.powerMult - 1, 1) }),
+    efficiency: t('Tüketim −{pct}', { pct: pct(1 - bonus.fuelMult, 1) }),
+    comfort: t('Konfor +{v}', { v: fixed(bonus.comfort, 1) }),
+    handling: t('Yol tutuş +{v}', { v: fixed(bonus.handling ?? 0, 1) }),
+    safety: t('Güvenlik +{v}', { v: fixed(bonus.safety, 1) }),
+    practicality: t('Pratiklik +{v}', { v: fixed(bonus.practicality ?? 0, 1) }),
+    cost: t('Maliyet −{pct}', { pct: pct(1 - bonus.costMult, 1) }),
+    quality: t('Gizli kusur −{pct}', { pct: pct(1 - (bonus.defectMult ?? 1), 0) }),
   };
 
   return (
-    <section className="focus-panel" aria-label="Mühendislik odağı">
+    <section className="focus-panel" aria-label={t('Mühendislik odağı')}>
       <div className="focus-head">
         <div>
-          <h3>Mühendislik odağı</h3>
+          <h3>{t('Mühendislik odağı')}</h3>
           <p className="muted small">
-            Mühendislerin zamanını alanlara böl (toplam %100). Her kartın altındaki değer, geliştirme bu dağılımla biterse aracın kazanacağı iyileştirme; sağdaki tahmin de
-            buna göre. Neye ağırlık vereceğin senin fikrin: bu araba kimin için?
+            {t(
+              'Mühendislerin zamanını alanlara böl (toplam %100). Her kartın altındaki değer, geliştirme bu dağılımla biterse aracın kazanacağı iyileştirme; sağdaki tahmin de buna göre. Neye ağırlık vereceğin senin fikrin: bu araba kimin için?',
+            )}
           </p>
         </div>
       </div>
-      <div className="preset-chips" role="group" aria-label="Hazır odaklar">
+      <div className="preset-chips" role="group" aria-label={t('Hazır odaklar')}>
         {FOCUS_PRESETS.map((x) => (
           <button
             key={x.id}
             type="button"
             className={`chip ${matchingPreset(p.dev.focus) === x.id ? 'is-on' : ''}`}
-            title={x.desc}
+            title={t(x.desc)}
             onClick={() =>
               store.act((st) => {
                 for (const k of locked) A.toggleFocusLock(st, p.id, k);
@@ -198,13 +219,13 @@ export function FocusPanel({ project: p }: { project: Project }) {
               })
             }
           >
-            {x.name}
+            {t(x.name)}
           </button>
         ))}
       </div>
       <div className="focus-bar" aria-hidden>
         {FOCUS_KEYS.map((k) => (
-          <span key={k} className={`focus-seg fc-${k}`} style={{ width: `${p.dev.focus[k] * 100}%` }} title={`${FOCUS_NAMES[k]} %${Math.round(p.dev.focus[k] * 100)}`} />
+          <span key={k} className={`focus-seg fc-${k}`} style={{ width: `${p.dev.focus[k] * 100}%` }} title={`${t(FOCUS_NAMES[k])} ${pct(p.dev.focus[k], 0)}`} />
         ))}
       </div>
       <div className="focus-grid">
@@ -213,12 +234,12 @@ export function FocusPanel({ project: p }: { project: Project }) {
             <Slider
               label={
                 <>
-                  <span className="focus-dot" aria-hidden /> {FOCUS_NAMES[k]}
+                  <span className="focus-dot" aria-hidden /> {t(FOCUS_NAMES[k])}
                   <button
                     type="button"
                     className="focus-lock"
                     aria-pressed={locked.includes(k)}
-                    title={locked.includes(k) ? 'Kilidi aç' : 'Bu yüzdeyi kilitle: diğer kaydırıcılar onu değiştirmez'}
+                    title={locked.includes(k) ? t('Kilidi aç') : t('Bu yüzdeyi kilitle: diğer kaydırıcılar onu değiştirmez')}
                     onClick={() => store.act((st) => A.toggleFocusLock(st, p.id, k))}
                   >
                     {locked.includes(k) ? '🔒' : '🔓'}
@@ -230,7 +251,7 @@ export function FocusPanel({ project: p }: { project: Project }) {
               min={0}
               max={100}
               onChange={(v) => setFocus(k, v / 100)}
-              format={(v) => `%${v}`}
+              format={(v) => pct(v / 100, 0)}
             />
             <div className="focus-foot">
               <span className="focus-effect">
@@ -245,7 +266,7 @@ export function FocusPanel({ project: p }: { project: Project }) {
                     ))}
                 </span>
               </span>
-              <span className="muted small">{FOCUS_HINTS[k]}</span>
+              <span className="muted small">{t(FOCUS_HINTS[k])}</span>
             </div>
           </div>
         ))}

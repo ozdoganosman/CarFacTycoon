@@ -22,9 +22,12 @@ import {
   maxGears,
 } from '../../data/tech';
 import type { CarDesign, EngineDesign, FeatureId, Project } from '../../core/types';
+import { isTurkish, msg, t } from '../../i18n';
+import { fmtNumber } from '../../i18n/format';
 import { store, useGameState } from '../store';
 import { kmh, litres, money, secs } from '../format';
 import { inYear } from '../format';
+import { tx } from '../i18n';
 import { Button, Choice, Info, Slider, Toggle } from '../components/ui';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { CarSVG } from '../viz/CarSVG';
@@ -48,15 +51,20 @@ function torqueAt(curve: { rpm: number; torque: number }[], rpm: number): number
   return curve[curve.length - 1].torque;
 }
 
+/** A decimal as the game always showed it in Turkish ("2.35"), in the player's own form elsewhere. */
+const fixed = (v: number, digits: number) => (isTurkish() ? v.toFixed(digits) : fmtNumber(v, digits));
+/** Millimetres in half steps as the game always showed them in Turkish ("82.5"), in the player's own form elsewhere. */
+const mm = (v: number) => (isTurkish() ? String(v) : fmtNumber(v, Number.isInteger(v) ? 0 : 1));
+
 type Tab = 'chassis' | 'body' | 'engine' | 'gearbox' | 'suspension' | 'safety' | 'equipment';
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'chassis', label: 'Şasi' },
-  { id: 'body', label: 'Gövde' },
-  { id: 'engine', label: 'Motor' },
-  { id: 'gearbox', label: 'Şanzıman' },
-  { id: 'suspension', label: 'Süspansiyon' },
-  { id: 'safety', label: 'Güvenlik' },
-  { id: 'equipment', label: 'İç mekân' },
+  { id: 'chassis', label: msg('Şasi') },
+  { id: 'body', label: msg('Gövde') },
+  { id: 'engine', label: msg('Motor') },
+  { id: 'gearbox', label: msg('Şanzıman') },
+  { id: 'suspension', label: msg('Süspansiyon') },
+  { id: 'safety', label: msg('Güvenlik') },
+  { id: 'equipment', label: msg('İç mekân') },
 ];
 
 interface Gate {
@@ -72,10 +80,10 @@ function useTechGate(): (id: string, year: number) => Gate {
   const s = useGameState();
   const yf = yearFloat(s.week);
   return (id, year) => {
-    if (year > yf) return { disabled: true, short: String(year), long: `${inYear(year)} gelir` };
+    if (year > yf) return { disabled: true, short: String(year), long: t('{year} gelir', { year: inYear(year) }) };
     const st = techState(s, id, yf);
-    if (st === 'available') return { disabled: true, short: 'Ar-Ge', long: 'Önce Ar-Ge’de araştır' };
-    if (st === 'researching') return { disabled: true, short: 'Ar-Ge’de', long: 'Ar-Ge’de araştırılıyor' };
+    if (st === 'available') return { disabled: true, short: t('Ar-Ge'), long: t('Önce Ar-Ge’de araştır') };
+    if (st === 'researching') return { disabled: true, short: t('Ar-Ge’de'), long: t('Ar-Ge’de araştırılıyor') };
     return { disabled: false };
   };
 }
@@ -86,14 +94,14 @@ function KnowhowStrip({ ids }: { ids: string[] }) {
   return (
     <div className="knowhow-strip">
       <span className="muted small">
-        Şirketin bilgi birikimi
+        {t('Şirketin bilgi birikimi')}
         <Info>
-          <p>Ar-Ge’de araştırılan mühendislik yenilikleri (manyeto ateşleme, amortisör, balon lastik…) bütün yeni tasarımlara kendiliğinden girer.</p>
+          <p>{t('Ar-Ge’de araştırılan mühendislik yenilikleri (manyeto ateşleme, amortisör, balon lastik…) bütün yeni tasarımlara kendiliğinden girer.')}</p>
           {list.length > 0 && (
             <ul>
               {list.map((k) => (
                 <li key={k.id}>
-                  <b>{k.name}:</b> {effectsText(k.effects)}
+                  <b>{t(k.name)}:</b> {effectsText(k.effects)}
                 </li>
               ))}
             </ul>
@@ -104,11 +112,11 @@ function KnowhowStrip({ ids }: { ids: string[] }) {
       {list.length ? (
         list.map((k) => (
           <span key={k.id} className="kh-chip" title={effectsText(k.effects)}>
-            {k.name}
+            {t(k.name)}
           </span>
         ))
       ) : (
-        <span className="muted small">henüz yok</span>
+        <span className="muted small">{t('henüz yok')}</span>
       )}
     </div>
   );
@@ -121,9 +129,9 @@ function ResearchHint({ ids }: { ids: string[] }) {
   if (!ids.some((id) => ['available', 'researching'].includes(techState(s, id, yf)))) return null;
   return (
     <p className="muted small research-hint">
-      “Ar-Ge” yazan seçenekler önce araştırılmalı.{' '}
+      {t('“Ar-Ge” yazan seçenekler önce araştırılmalı.')}{' '}
       <button type="button" className="link-btn" onClick={() => store.go({ id: 'research' })}>
-        Ar-Ge’ye git
+        {t('Ar-Ge’ye git')}
       </button>
     </p>
   );
@@ -156,25 +164,25 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
             <CarSVG body={d.body} size={d.size} year={yf} cylinders={d.engine.cylinders} styling={d.styling} />
           </div>
           <div className="tabs" role="tablist">
-            {TABS.map((t) => (
-              <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={`tab ${tab === t.id ? 'is-on' : ''}`} onClick={() => setTab(t.id)}>
-                {t.label}
+            {TABS.map((x) => (
+              <button key={x.id} type="button" role="tab" aria-selected={tab === x.id} className={`tab ${tab === x.id ? 'is-on' : ''}`} onClick={() => setTab(x.id)}>
+                {t(x.label)}
               </button>
             ))}
           </div>
           <KnowhowStrip ids={d.knowhow ?? []} />
-          {readOnly && <p className="note design-locked">Geliştirme başladı: tasarım kilitli. Değişiklik için makyaj ya da yeni kuşak projesi gerekir.</p>}
+          {readOnly && <p className="note design-locked">{t('Geliştirme başladı: tasarım kilitli. Değişiklik için makyaj ya da yeni kuşak projesi gerekir.')}</p>}
           <fieldset className="tab-body" disabled={readOnly}>
             {tab === 'chassis' && (
               <>
                 {platformLocked && (
                   <p className="note">
-                    {facelift ? 'Makyajda şasi değişmez.' : 'Mevcut bir platformu kullanıyorsun: şasi, boyut ve süspansiyon sabit. Geliştirme ve kalıp maliyeti düşük.'}
+                    {facelift ? t('Makyajda şasi değişmez.') : t('Mevcut bir platformu kullanıyorsun: şasi, boyut ve süspansiyon sabit. Geliştirme ve kalıp maliyeti düşük.')}
                     {!facelift && !readOnly && (
                       <>
                         {' '}
                         <Button small kind="ghost" onClick={() => store.try((st) => A.setProjectPlatform(st, project.id, undefined))}>
-                          Yeni platform tasarla
+                          {t('Yeni platform tasarla')}
                         </Button>
                       </>
                     )}
@@ -182,9 +190,9 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
                 )}
                 {!platformLocked && !readOnly && oldPlatform && (
                   <p className="note">
-                    Yeni bir platform: şasi, boyut ve süspansiyon serbest, ama geliştirme ve kalıplar daha pahalı.{' '}
+                    {t('Yeni bir platform: şasi, boyut ve süspansiyon serbest, ama geliştirme ve kalıplar daha pahalı.')}{' '}
                     <Button small kind="ghost" onClick={() => store.try((st) => A.setProjectPlatform(st, project.id, oldPlatform.id))}>
-                      {oldPlatform.name} ile devam et
+                      {t('{name} ile devam et', { name: oldPlatform.name })}
                     </Button>
                   </p>
                 )}
@@ -193,22 +201,22 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
                   onChange={(v) => set({ chassis: v })}
                   options={CHASSIS.map((c) => {
                     const g = gate(`chassis:${c.id}`, c.year);
-                    return { value: c.id, label: c.name, disabled: platformLocked || g.disabled, sub: g.long ?? c.desc };
+                    return { value: c.id, label: t(c.name), disabled: platformLocked || g.disabled, sub: g.long ?? t(c.desc) };
                   })}
                 />
                 <ResearchHint ids={CHASSIS.map((c) => `chassis:${c.id}`)} />
                 <Slider
-                  label="Boyut"
+                  label={t('Boyut')}
                   value={d.size}
                   min={0}
                   max={1}
                   step={0.05}
                   onChange={(v) => set({ size: v })}
-                  left="Küçük"
-                  right="Büyük"
+                  left={t('Küçük')}
+                  right={t('Büyük')}
                   format={(v) => `${Math.round(v * 100)}`}
                   disabled={platformLocked}
-                  hint="Büyük araç: konfor, pratiklik ve prestij ↑; ağırlık, maliyet ve üretim zorluğu ↑."
+                  hint={t('Büyük araç: konfor, pratiklik ve prestij ↑; ağırlık, maliyet ve üretim zorluğu ↑.')}
                 />
               </>
             )}
@@ -219,22 +227,22 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
                   onChange={(v) => set({ body: v })}
                   options={BODIES.map((b) => ({
                     value: b.id,
-                    label: b.name,
+                    label: t(b.name),
                     disabled: b.year > yf || (facelift && b.id !== d.body),
-                    sub: b.year > yf ? `${inYear(b.year)} gelir` : b.desc,
+                    sub: b.year > yf ? t('{year} gelir', { year: inYear(b.year) }) : t(b.desc),
                   }))}
                 />
                 <Slider
-                  label="Tasarım ve karoser işçiliği"
+                  label={t('Tasarım ve karoser işçiliği')}
                   value={d.styling}
                   min={0}
                   max={1}
                   step={0.05}
                   onChange={(v) => set({ styling: v })}
-                  left="Sade"
-                  right="Gösterişli"
+                  left={t('Sade')}
+                  right={t('Gösterişli')}
                   format={(v) => `${Math.round(v * 100)}`}
-                  hint="Prestiji ve biraz da aerodinamiği artırır; maliyet ve üretim zorluğu artar."
+                  hint={t('Prestiji ve biraz da aerodinamiği artırır; maliyet ve üretim zorluğu artar.')}
                 />
               </>
             )}
@@ -246,16 +254,16 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
               <>
                 <FeatureList d={d} group="equipment" onChange={(features) => set({ features })} />
                 <Slider
-                  label="İç mekân kalitesi"
+                  label={t('İç mekân kalitesi')}
                   value={d.interior}
                   min={0}
                   max={1}
                   step={0.05}
                   onChange={(v) => set({ interior: v })}
-                  left="Tahta sıra"
-                  right="Deri ve ceviz"
+                  left={t('Tahta sıra')}
+                  right={t('Deri ve ceviz')}
                   format={(v) => `${Math.round(v * 100)}`}
-                  hint="Konfor ve prestij ↑, maliyet ↑ (hızla artar)."
+                  hint={t('Konfor ve prestij ↑, maliyet ↑ (hızla artar).')}
                 />
               </>
             )}
@@ -271,7 +279,7 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
           yf={yf}
           bonus={A.projectedBonus(s, project)}
           estimate={project.estimate ?? neutral}
-          note="Geliştirme mevcut odak dağılımıyla biterse."
+          note={t('Geliştirme mevcut odak dağılımıyla biterse.')}
         />
       </aside>
     </div>
@@ -300,10 +308,10 @@ function FeatureList({ d, group, onChange }: { d: CarDesign; group: 'safety' | '
             onChange={(v) => toggle(f.id, v)}
             label={
               <>
-                {f.name} <span className="muted small">{money(f.cost)}’dan</span>
+                {t(f.name)} <span className="muted small">{t('{cost}’dan', { cost: money(f.cost) })}</span>
               </>
             }
-            sub={g.long ?? (missing.length ? `Önce: ${missing.map((m) => FEATURES.find((x) => x.id === m)!.name).join(', ')}` : f.desc)}
+            sub={g.long ?? (missing.length ? t('Önce: {list}', { list: missing.map((m) => t(FEATURES.find((x) => x.id === m)!.name)).join(', ') }) : t(f.desc))}
           />
         );
       })}
@@ -349,10 +357,10 @@ function EngineTab({
     <div className="engine-tab">
       {locked && (
         <p className="note">
-          {project.kind === 'facelift' ? 'Makyajda motor değişmez.' : 'Kütüphanedeki bir motoru kullanıyorsun: geliştirme işi %25 azalır ve motor daha az kusurlu çıkar.'}{' '}
+          {project.kind === 'facelift' ? t('Makyajda motor değişmez.') : t('Kütüphanedeki bir motoru kullanıyorsun: geliştirme işi %25 azalır ve motor daha az kusurlu çıkar.')}{' '}
           {project.kind !== 'facelift' && (
             <Button small kind="ghost" onClick={() => store.act((st2) => (st2.projects.find((p) => p.id === project.id)!.engineRefId = undefined))}>
-              Yeni motor tasarla
+              {t('Yeni motor tasarla')}
             </Button>
           )}
         </p>
@@ -361,14 +369,13 @@ function EngineTab({
         {yf >= DIESEL_YEAR && (
           <div className="field">
             <span>
-              Yakıt
+              {t('Yakıt')}
               <Info>
+                <p>{tx('<b>Benzin:</b> hafif, sessiz ve yüksek devirli.')}</p>
                 <p>
-                  <b>Benzin:</b> hafif, sessiz ve yüksek devirli.
-                </p>
-                <p>
-                  <b>Dizel:</b> yakıtı sıkıştırmanın ısısı tutuşturur. Çok az yakar ve uzun ömürlüdür; ama ağır, gürültülü, düşük devirli ve pahalıdır, alıcılar prestijli
-                  bulmaz.
+                  {tx(
+                    '<b>Dizel:</b> yakıtı sıkıştırmanın ısısı tutuşturur. Çok az yakar ve uzun ömürlüdür; ama ağır, gürültülü, düşük devirli ve pahalıdır, alıcılar prestijli bulmaz.',
+                  )}
                 </p>
               </Info>
             </span>
@@ -383,8 +390,8 @@ function EngineTab({
                 )
               }
               options={[
-                { value: 'petrol', label: 'Benzin' },
-                { value: 'diesel', label: 'Dizel', disabled: gate('fuel:diesel', DIESEL_YEAR).disabled && !diesel, sub: diesel ? undefined : gate('fuel:diesel', DIESEL_YEAR).short },
+                { value: 'petrol', label: t('Benzin') },
+                { value: 'diesel', label: t('Dizel'), disabled: gate('fuel:diesel', DIESEL_YEAR).disabled && !diesel, sub: diesel ? undefined : gate('fuel:diesel', DIESEL_YEAR).short },
               ]}
             />
           </div>
@@ -393,12 +400,12 @@ function EngineTab({
           <>
             <div className="field">
               <span>
-                Hazır motorlar
+                {t('Hazır motorlar')}
                 <Info>
                   <ul>
                     {presets.map((p) => (
                       <li key={p.id}>
-                        <b>{p.name}:</b> {p.desc}
+                        <b>{t(p.name)}:</b> {t(p.desc)}
                       </li>
                     ))}
                   </ul>
@@ -417,17 +424,21 @@ function EngineTab({
                 }}
                 options={presets.map((p) => ({
                   value: p.id,
-                  label: `${p.name} · ${(displacementCc(p.design) / 1000).toFixed(1)} L ${p.design.layout === 'v' ? 'V' : ''}${p.design.cylinders}`,
+                  label: `${t(p.name)} · ${t('{v} L', { v: fixed(displacementCc(p.design) / 1000, 1) })} ${p.design.layout === 'v' ? 'V' : ''}${p.design.cylinders}`,
                 }))}
               />
             </div>
             <Slider
               label={
                 <>
-                  Karakter (strok / çap)
+                  {t('Karakter (strok / çap)')}
                   <Info>
-                    <p className="up">↑ Uzun strok: düşük devirde güçlü çeker, az yakar{eu ? ', Avrupa’da vergisi düşük (vergi yalnızca çapa bakar)' : ''}.</p>
-                    <p className="down">↓ Kısa strok: yüksek devre çıkar ve daha çok güç verir, ama düşük devirde zayıftır.</p>
+                    <p className="up">
+                      {eu
+                        ? t('↑ Uzun strok: düşük devirde güçlü çeker, az yakar, Avrupa’da vergisi düşük (vergi yalnızca çapa bakar).')
+                        : t('↑ Uzun strok: düşük devirde güçlü çeker, az yakar.')}
+                    </p>
+                    <p className="down">{t('↓ Kısa strok: yüksek devre çıkar ve daha çok güç verir, ama düşük devirde zayıftır.')}</p>
                   </Info>
                 </>
               }
@@ -436,26 +447,26 @@ function EngineTab({
               max={1.6}
               step={0.05}
               onChange={(v) => onChange(withStrokeRatio(e, v, yf))}
-              left="Kısa strok"
-              right="Uzun strok"
-              format={(v) => v.toFixed(2)}
+              left={t('Kısa strok')}
+              right={t('Uzun strok')}
+              format={(v) => fixed(v, 2)}
             />
-            <p className="muted small">Her ayarı ayrı ayrı yapmak için Ayarlar’dan “Mühendis modu”nu aç.</p>
+            <p className="muted small">{t('Her ayarı ayrı ayrı yapmak için Ayarlar’dan “Mühendis modu”nu aç.')}</p>
           </>
         ) : (
           <>
             <div className="field">
               <span>
-                Silindir düzeni
+                {t('Silindir düzeni')}
                 <Info>
-                  <p>Aynı hacmi kaç silindire böleceğin. Değiştirince hacim korunur.</p>
-                  <p className="up">↑ Daha çok silindir: motor yumuşar ve sessizleşir, küçülen pistonlar daha yüksek devre çıkar, prestij artar.</p>
-                  <p className="down">↓ Ama motor pahalanır, ağırlaşır, arızalanacak parça çoğalır.</p>
+                  <p>{t('Aynı hacmi kaç silindire böleceğin. Değiştirince hacim korunur.')}</p>
+                  <p className="up">{t('↑ Daha çok silindir: motor yumuşar ve sessizleşir, küçülen pistonlar daha yüksek devre çıkar, prestij artar.')}</p>
+                  <p className="down">{t('↓ Ama motor pahalanır, ağırlaşır, arızalanacak parça çoğalır.')}</p>
                   <ul>
                     {CYLINDER_OPTIONS.map((c) => (
                       <li key={`${c.cylinders}${c.layout}`}>
-                        <b>{c.label}</b>
-                        {c.year > yf ? ` (${c.year})` : ''}: {c.desc}
+                        <b>{t(c.label)}</b>
+                        {c.year > yf ? ` (${c.year})` : ''}: {t(c.desc)}
                       </li>
                     ))}
                   </ul>
@@ -475,9 +486,9 @@ function EngineTab({
                   const g = gate(`cyl:${c.cylinders}${c.layout}`, c.year);
                   return {
                     value: `${c.cylinders}${c.layout}`,
-                    label: c.label.replace(' silindir sıra', ' sıra').replace('Tek silindir', 'Tek'),
+                    label: t(c.label).replace(' silindir sıra', ' sıra').replace('Tek silindir', 'Tek'),
                     disabled: g.disabled,
-                    title: g.long ?? c.desc,
+                    title: g.long ?? t(c.desc),
                     sub: g.short,
                   };
                 })}
@@ -487,14 +498,16 @@ function EngineTab({
               <Slider
                 label={
                   <>
-                    Silindir çapı
+                    {t('Silindir çapı')}
                     <Info>
-                      <p>Silindirin genişliği.</p>
+                      <p>{t('Silindirin genişliği.')}</p>
                       <p className="up">
-                        ↑ Artırınca: hacim ve güç artar{e.valvetrain === 'sv' ? '' : ', büyük supaplar nefesi iyileştirir'}. Ama alev yolu uzar, vuruntu sınırı düşer; motor
-                        ağırlaşır{eu ? '; Avrupa’da vergi çapın karesiyle artar' : ''}.
+                        {e.valvetrain === 'sv' ? t('↑ Artırınca: hacim ve güç artar.') : t('↑ Artırınca: hacim ve güç artar, büyük supaplar nefesi iyileştirir.')}{' '}
+                        {eu ? t('Ama alev yolu uzar, vuruntu sınırı düşer; motor ağırlaşır; Avrupa’da vergi çapın karesiyle artar.') : t('Ama alev yolu uzar, vuruntu sınırı düşer; motor ağırlaşır.')}
                       </p>
-                      <p className="down">↓ Azaltınca: vuruntuya dayanıklı ve hafif{eu ? ', vergisi düşük' : ''}. Ama hacim ve güç düşer.</p>
+                      <p className="down">
+                        {eu ? t('↓ Azaltınca: vuruntuya dayanıklı ve hafif, vergisi düşük.') : t('↓ Azaltınca: vuruntuya dayanıklı ve hafif.')} {t('Ama hacim ve güç düşer.')}
+                      </p>
                     </Info>
                   </>
                 }
@@ -503,22 +516,26 @@ function EngineTab({
                 max={160}
                 step={0.5}
                 onChange={(v) => onChange({ ...e, bore: v })}
-                format={(v) => `${v} mm`}
+                format={(v) => t('{v} mm', { v: mm(v) })}
               />
               <Slider
                 label={
                   <>
-                    Strok
+                    {t('Strok')}
                     <Info>
-                      <p>Pistonun bir turda aldığı yol.</p>
+                      <p>{t('Pistonun bir turda aldığı yol.')}</p>
                       <p className="up">
-                        ↑ Artırınca: hacim ve tork artar, tork düşük devre iner{eu ? ', vergi değişmez' : ''}. Ama piston çok hızlanır: devir sınırı düşer (şu an{' '}
-                        {Math.round(es.redline)} d/d).
+                        {eu
+                          ? t('↑ Artırınca: hacim ve tork artar, tork düşük devre iner, vergi değişmez.')
+                          : t('↑ Artırınca: hacim ve tork artar, tork düşük devre iner.')}{' '}
+                        {t('Ama piston çok hızlanır: devir sınırı düşer (şu an {rpm} d/d).', { rpm: Math.round(es.redline) })}
                       </p>
-                      <p className="down">↓ Azaltınca: motor yüksek devre çıkar, güç tepesi geç gelir. Ama düşük devirde zayıflar, hacim düşer.</p>
+                      <p className="down">{t('↓ Azaltınca: motor yüksek devre çıkar, güç tepesi geç gelir. Ama düşük devirde zayıflar, hacim düşer.')}</p>
                       <p>
-                        Dönemin supap yayları ve yatakları da devri sınırlar: bu yıl bu supap düzeniyle en fazla {Math.round(eraRpmCap(e.valvetrain, yf))} d/d. Bu sınıra
-                        dayanan bir motorda stroku kısaltmak gücü artırmaz.
+                        {t(
+                          'Dönemin supap yayları ve yatakları da devri sınırlar: bu yıl bu supap düzeniyle en fazla {rpm} d/d. Bu sınıra dayanan bir motorda stroku kısaltmak gücü artırmaz.',
+                          { rpm: Math.round(eraRpmCap(e.valvetrain, yf)) },
+                        )}
                       </p>
                     </Info>
                   </>
@@ -528,26 +545,26 @@ function EngineTab({
                 max={180}
                 step={0.5}
                 onChange={(v) => onChange({ ...e, stroke: v })}
-                format={(v) => `${v} mm`}
+                format={(v) => t('{v} mm', { v: mm(v) })}
               />
             </div>
             <Slider
               label={
                 <>
-                  Sıkıştırma oranı
+                  {t('Sıkıştırma oranı')}
                   <Info>
                     {diesel ? (
                       <>
-                        <p>Dizelde yakıtı sıkıştırmanın ısısı tutuşturur: vuruntu sınırı yok.</p>
-                        <p className="up">↑ Artırınca: verim ve güç artar.</p>
-                        <p className="down">↓ Azaltınca: güç ve verim düşer.</p>
+                        <p>{t('Dizelde yakıtı sıkıştırmanın ısısı tutuşturur: vuruntu sınırı yok.')}</p>
+                        <p className="up">{t('↑ Artırınca: verim ve güç artar.')}</p>
+                        <p className="down">{t('↓ Azaltınca: güç ve verim düşer.')}</p>
                       </>
                     ) : (
                       <>
-                        <p>Piston karışımı ne kadar sıkıştırıyor.</p>
-                        <p className="up">↑ Artırınca: yakıt daha iyi değerlendirilir, verim ve güç artar.</p>
+                        <p>{t('Piston karışımı ne kadar sıkıştırıyor.')}</p>
+                        <p className="up">{t('↑ Artırınca: yakıt daha iyi değerlendirilir, verim ve güç artar.')}</p>
                         <p className="down">
-                          ↓ Sınırı aşarsa karışım erken patlar (vuruntu): güç ve motor ömrü çöker. Sınır çap büyüdükçe düşer, dönemin benzini iyileştikçe yükselir.
+                          {t('↓ Sınırı aşarsa karışım erken patlar (vuruntu): güç ve motor ömrü çöker. Sınır çap büyüdükçe düşer, dönemin benzini iyileştikçe yükselir.')}
                         </p>
                       </>
                     )}
@@ -559,27 +576,28 @@ function EngineTab({
               max={diesel ? DIESEL_COMPRESSION[1] : Math.round(maxCompression(yf) * 10) / 10}
               step={0.1}
               onChange={(v) => onChange({ ...e, compression: v })}
-              format={(v) => `${v.toFixed(1)} : 1`}
+              format={(v) => `${fixed(v, 1)} : 1`}
               hint={
                 diesel ? undefined : (
                   <>
-                    Vuruntu sınırı <b>{kl.toFixed(1)}</b>. {e.compression > kl ? <span className="tone-bad">Motor vuruntu yapıyor!</span> : 'Güvenli.'}
+                    {tx('Vuruntu sınırı <b>{limit}</b>.', { limit: fixed(kl, 1) })}{' '}
+                    {e.compression > kl ? <span className="tone-bad">{t('Motor vuruntu yapıyor!')}</span> : t('Güvenli.')}
                   </>
                 )
               }
             />
             <div className="field">
               <span>
-                Supap düzeni
+                {t('Supap düzeni')}
                 <Info>
-                  <p>Supaplar yukarı çıktıkça motor daha rahat nefes alır.</p>
-                  <p className="up">↑ Gelişmiş düzen: daha yüksek devir, daha çok güç, biraz daha verim.</p>
-                  <p className="down">↓ Ama pahalı ve hassas; yeni teknoloji ilk yıllarında arıza çıkarır.</p>
+                  <p>{t('Supaplar yukarı çıktıkça motor daha rahat nefes alır.')}</p>
+                  <p className="up">{t('↑ Gelişmiş düzen: daha yüksek devir, daha çok güç, biraz daha verim.')}</p>
+                  <p className="down">{t('↓ Ama pahalı ve hassas; yeni teknoloji ilk yıllarında arıza çıkarır.')}</p>
                   <ul>
                     {VALVETRAINS.map((v) => (
                       <li key={v.id}>
-                        <b>{v.name}</b>
-                        {v.year > yf ? ` (${v.year})` : ''}: {v.desc}
+                        <b>{t(v.name)}</b>
+                        {v.year > yf ? ` (${v.year})` : ''}: {t(v.desc)}
                       </li>
                     ))}
                   </ul>
@@ -591,26 +609,26 @@ function EngineTab({
                 onChange={(v) => onChange({ ...e, valvetrain: v })}
                 options={VALVETRAINS.map((v) => {
                   const g = gate(`vt:${v.id}`, v.year);
-                  return { value: v.id, label: v.name, disabled: g.disabled, title: g.long ?? v.desc, sub: g.short };
+                  return { value: v.id, label: t(v.name), disabled: g.disabled, title: g.long ?? t(v.desc), sub: g.short };
                 })}
               />
             </div>
             <div className="grid-2 tight">
               {diesel ? (
                 <div className="field">
-                  <span>Yakıt sistemi</span>
-                  <p className="muted small">Dizelin kendi yüksek basınçlı enjeksiyon pompası var.</p>
+                  <span>{t('Yakıt sistemi')}</span>
+                  <p className="muted small">{t('Dizelin kendi yüksek basınçlı enjeksiyon pompası var.')}</p>
                 </div>
               ) : (
                 <div className="field">
                   <span>
-                    Yakıt sistemi
+                    {t('Yakıt sistemi')}
                     <Info>
                       <ul>
                         {FUEL_SYSTEMS.map((f) => (
                           <li key={f.id}>
-                            <b>{f.name}</b>
-                            {f.year > yf ? ` (${f.year})` : ''}: {f.desc}
+                            <b>{t(f.name)}</b>
+                            {f.year > yf ? ` (${f.year})` : ''}: {t(f.desc)}
                           </li>
                         ))}
                       </ul>
@@ -622,20 +640,20 @@ function EngineTab({
                     onChange={(v) => onChange({ ...e, fuelSystem: v })}
                     options={FUEL_SYSTEMS.map((f) => {
                       const g = gate(`fuel:${f.id}`, f.year);
-                      return { value: f.id, label: f.name, disabled: g.disabled, title: g.long ?? f.desc, sub: g.short };
+                      return { value: f.id, label: t(f.name), disabled: g.disabled, title: g.long ?? t(f.desc), sub: g.short };
                     })}
                   />
                 </div>
               )}
               <div className="field">
                 <span>
-                  Aşırı besleme
+                  {t('Aşırı besleme')}
                   <Info>
                     <ul>
                       {ASPIRATIONS.map((a) => (
                         <li key={a.id}>
-                          <b>{a.name}</b>
-                          {a.year > yf ? ` (${a.year})` : ''}: {a.desc}
+                          <b>{t(a.name)}</b>
+                          {a.year > yf ? ` (${a.year})` : ''}: {t(a.desc)}
                         </li>
                       ))}
                     </ul>
@@ -647,7 +665,7 @@ function EngineTab({
                   onChange={(v) => onChange({ ...e, aspiration: v })}
                   options={ASPIRATIONS.map((a) => {
                     const g = gate(`asp:${a.id}`, a.year);
-                    return { value: a.id, label: a.name, disabled: g.disabled, title: g.long ?? a.desc, sub: g.short };
+                    return { value: a.id, label: t(a.name), disabled: g.disabled, title: g.long ?? t(a.desc), sub: g.short };
                   })}
                 />
               </div>
@@ -664,55 +682,49 @@ function EngineTab({
           'fuel:diesel',
         ]}
       />
-      <p className="muted small readouts-note">Çizim üzerindeki hesap; gerçek motor geliştirme ve işçilikle bundan sapar:</p>
+      <p className="muted small readouts-note">{t('Çizim üzerindeki hesap; gerçek motor geliştirme ve işçilikle bundan sapar:')}</p>
       <div className="readouts">
         <div>
-          <span>Hacim</span>
-          <b>{(es.displacementCc / 1000).toFixed(2)} L</b>
+          <span>{t('Hacim')}</span>
+          <b>{t('{v} L', { v: fixed(es.displacementCc / 1000, 2) })}</b>
         </div>
         <div>
-          <span>Güç</span>
-          <b>
-            {es.powerHp.toFixed(0)} bg @ {Math.round(es.peakPowerRpm)}
-          </b>
+          <span>{t('Güç')}</span>
+          <b>{t('{hp} bg @ {rpm}', { hp: fixed(es.powerHp, 0), rpm: Math.round(es.peakPowerRpm) })}</b>
         </div>
         <div>
-          <span>Tork</span>
-          <b>
-            {es.torqueNm.toFixed(0)} Nm @ {Math.round(es.peakTorqueRpm)}
-          </b>
+          <span>{t('Tork')}</span>
+          <b>{t('{nm} Nm @ {rpm}', { nm: fixed(es.torqueNm, 0), rpm: Math.round(es.peakTorqueRpm) })}</b>
         </div>
         <div>
           <span>
-            Devir sınırı
+            {t('Devir sınırı')}
             <Info>
-              <p>Motorun güvenle dönebildiği en yüksek devir. Piston hızı sınırı belirler: uzun strok ve basit supaplar devri düşürür.</p>
+              <p>{t('Motorun güvenle dönebildiği en yüksek devir. Piston hızı sınırı belirler: uzun strok ve basit supaplar devri düşürür.')}</p>
             </Info>
           </span>
-          <b>{Math.round(es.redline)} d/d</b>
+          <b>{t('{v} d/d', { v: Math.round(es.redline) })}</b>
         </div>
         <div>
-          <span>Çap × strok</span>
-          <b>
-            {e.bore} × {e.stroke} mm
-          </b>
+          <span>{t('Çap × strok')}</span>
+          <b>{t('{bore} × {stroke} mm', { bore: mm(e.bore), stroke: mm(e.stroke) })}</b>
         </div>
         <div>
           <span>
-            Vergi beygiri
+            {t('Vergi beygiri')}
             <Info>
-              <p>İngiliz usulü vergi beygiri: çap² × silindir sayısı / 2,5 (inç). Stroka hiç bakmaz.</p>
-              <p>1910-1947 arası Avrupa’da araç vergisi buna göre alınır: düşük vergi beygiri alıcının cebinde kalan paradır.</p>
+              <p>{t('İngiliz usulü vergi beygiri: çap² × silindir sayısı / 2,5 (inç). Stroka hiç bakmaz.')}</p>
+              <p>{t('1910-1947 arası Avrupa’da araç vergisi buna göre alınır: düşük vergi beygiri alıcının cebinde kalan paradır.')}</p>
             </Info>
           </span>
-          <b>{es.taxHp.toFixed(1)}</b>
+          <b>{fixed(es.taxHp, 1)}</b>
         </div>
         <div>
-          <span>Motor ağırlığı</span>
-          <b>{Math.round(es.massKg)} kg</b>
+          <span>{t('Motor ağırlığı')}</span>
+          <b>{t('{v} kg', { v: Math.round(es.massKg) })}</b>
         </div>
         <div>
-          <span>Motor maliyeti</span>
+          <span>{t('Motor maliyeti')}</span>
           <b>{money(es.cost)}</b>
         </div>
       </div>
@@ -736,22 +748,22 @@ function EngineTab({
         <div className="engine-right">
           <div className="engine-charts">
             <LineChart
-              title="Güç (bg)"
-              series={[{ id: 'hp', name: 'Güç', color: 'var(--series-2)', points: curve.map((p) => ({ x: p.rpm, y: p.hp })), area: true }]}
+              title={t('Güç (bg)')}
+              series={[{ id: 'hp', name: t('Güç'), color: 'var(--series-2)', points: curve.map((p) => ({ x: p.rpm, y: p.hp })), area: true }]}
               height={130}
               xFormat={(v) => `${Math.round(v)}`}
               yFormat={(v) => v.toFixed(0)}
-              xLabel="Devir (d/d)"
-              ariaLabel="Motor güç eğrisi"
+              xLabel={t('Devir (d/d)')}
+              ariaLabel={t('Motor güç eğrisi')}
             />
             <LineChart
-              title="Tork (Nm)"
-              series={[{ id: 'tq', name: 'Tork', color: 'var(--series-1)', points: curve.map((p) => ({ x: p.rpm, y: p.torque })), area: true }]}
+              title={t('Tork (Nm)')}
+              series={[{ id: 'tq', name: t('Tork'), color: 'var(--series-1)', points: curve.map((p) => ({ x: p.rpm, y: p.torque })), area: true }]}
               height={130}
               xFormat={(v) => `${Math.round(v)}`}
               yFormat={(v) => v.toFixed(0)}
-              xLabel="Devir (d/d)"
-              ariaLabel="Motor tork eğrisi"
+              xLabel={t('Devir (d/d)')}
+              ariaLabel={t('Motor tork eğrisi')}
             />
           </div>
           <EngineVerdict e={e} yf={yf} segment={project.segment} />
@@ -764,7 +776,7 @@ function EngineTab({
 /** The engine's strong and weak points next to the class's typical engine. */
 function EngineVerdict({ e, yf, segment }: { e: EngineDesign; yf: number; segment: Project['segment'] }) {
   const n = useMemo(() => engineNotes(e, yf, segment), [e, yf, segment]);
-  return <ProsCons intro={`Sınıfın tipik motoruna göre (${n.typical}):`} pros={n.pros} cons={n.cons} />;
+  return <ProsCons intro={t('Sınıfın tipik motoruna göre ({engine}):', { engine: n.typical })} pros={n.pros} cons={n.cons} />;
 }
 
 function ProsCons({ intro, pros, cons }: { intro: string; pros: string[]; cons: string[] }) {
@@ -773,12 +785,12 @@ function ProsCons({ intro, pros, cons }: { intro: string; pros: string[]; cons: 
       <p className="muted small">{intro}</p>
       <div className="pc-grid">
         <div>
-          <h5 className="tone-good">Artıları</h5>
-          <ul className="pc pc-pro">{pros.length ? pros.map((x) => <li key={x}>{x}</li>) : <li className="muted">Belirgin bir artısı yok.</li>}</ul>
+          <h5 className="tone-good">{t('Artıları')}</h5>
+          <ul className="pc pc-pro">{pros.length ? pros.map((x) => <li key={x}>{x}</li>) : <li className="muted">{t('Belirgin bir artısı yok.')}</li>}</ul>
         </div>
         <div>
-          <h5 className="tone-bad">Eksileri</h5>
-          <ul className="pc pc-con">{cons.length ? cons.map((x) => <li key={x}>{x}</li>) : <li className="muted">Belirgin bir eksisi yok.</li>}</ul>
+          <h5 className="tone-bad">{t('Eksileri')}</h5>
+          <ul className="pc pc-con">{cons.length ? cons.map((x) => <li key={x}>{x}</li>) : <li className="muted">{t('Belirgin bir eksisi yok.')}</li>}</ul>
         </div>
       </div>
     </div>
@@ -820,19 +832,19 @@ function GearboxTab({
     <>
       <div className="field">
         <span>
-          Şanzıman tipi
+          {t('Şanzıman tipi')}
           <Info>
-            <p>Vites değiştirmenin ne kadar kolay olduğunu belirler.</p>
+            <p>{t('Vites değiştirmenin ne kadar kolay olduğunu belirler.')}</p>
             <ul>
               {GEARBOX_TYPES.map((x) => (
                 <li key={x.id}>
-                  <b>{x.name}</b>
-                  {x.year > yf ? ` (${x.year})` : ''}: {x.desc}
+                  <b>{t(x.name)}</b>
+                  {x.year > yf ? ` (${x.year})` : ''}: {t(x.desc)}
                 </li>
               ))}
             </ul>
-            <p className="up">↑ Kolay şanzıman: konfor ve pratiklik artar, vites değişimi hızlanır.</p>
-            <p className="down">↓ Ama pahalı ve ağırdır; otomatik biraz güç yutar. Yeni teknoloji ilk yıllarında arıza çıkarır.</p>
+            <p className="up">{t('↑ Kolay şanzıman: konfor ve pratiklik artar, vites değişimi hızlanır.')}</p>
+            <p className="down">{t('↓ Ama pahalı ve ağırdır; otomatik biraz güç yutar. Yeni teknoloji ilk yıllarında arıza çıkarır.')}</p>
           </Info>
         </span>
         <Choice
@@ -841,7 +853,7 @@ function GearboxTab({
           onChange={(v) => onChange({ gearbox: { ...g, type: v, gears: v === 'automatic' ? 4 : Math.min(g.gears, knownMaxGears(s, eraMax)) } })}
           options={GEARBOX_TYPES.map((x) => {
             const gg = gate(`gb:${x.id}`, x.year);
-            return { value: x.id, label: x.name, disabled: gg.disabled, title: gg.long ?? x.desc, sub: gg.short };
+            return { value: x.id, label: t(x.name), disabled: gg.disabled, title: gg.long ?? t(x.desc), sub: gg.short };
           })}
         />
         <ResearchHint ids={[...GEARBOX_TYPES.map((x) => `gb:${x.id}`), 'gears:4', 'gears:5']} />
@@ -849,11 +861,11 @@ function GearboxTab({
       <div className="grid-2 tight">
         <div className="field">
           <span>
-            İleri vites sayısı
+            {t('İleri vites sayısı')}
             <Info>
-              <p className="up">↑ Daha çok vites: vitesler birbirine yaklaşır, motor güçlü olduğu devirde kalır. Hızlanma iyileşir; uzun son vites az yakar.</p>
-              <p className="down">↓ Daha az vites: ucuz ve hafif; ama vitesler arası boşluk büyük, motor her geçişte güçsüz devre düşer.</p>
-              <p>Dönemin teknolojisi en fazla {maxGears(yf)} vitese izin veriyor.</p>
+              <p className="up">{t('↑ Daha çok vites: vitesler birbirine yaklaşır, motor güçlü olduğu devirde kalır. Hızlanma iyileşir; uzun son vites az yakar.')}</p>
+              <p className="down">{t('↓ Daha az vites: ucuz ve hafif; ama vitesler arası boşluk büyük, motor her geçişte güçsüz devre düşer.')}</p>
+              <p>{t('Dönemin teknolojisi en fazla {n} vitese izin veriyor.', { n: maxGears(yf) })}</p>
             </Info>
           </span>
           <Choice
@@ -864,18 +876,20 @@ function GearboxTab({
               value: n,
               label: `${n}`,
               disabled: n > maxG || (g.type === 'automatic' && n !== 4),
-              sub: g.type !== 'automatic' && n > maxG && n <= eraMax ? 'Ar-Ge' : undefined,
+              sub: g.type !== 'automatic' && n > maxG && n <= eraMax ? t('Ar-Ge') : undefined,
             }))}
           />
         </div>
         <Slider
           label={
             <>
-              Oranlar
+              {t('Oranlar')}
               <Info>
-                <p className="up">↑ Uzun oranlar: motor yolda düşük devirde döner; az yakar ve sessizdir, son hız artabilir. Ama kalkış ve hızlanma yavaşlar, güçsüz motor son viteste zorlanır.</p>
-                <p className="down">↓ Kısa oranlar: çevik kalkış ve güçlü çekiş. Ama motor hep yüksek devirde döner: çok yakar, son hız devir sınırına takılabilir.</p>
-                <p>Aşağıdaki grafikte eğrilerin yol direncini kestiği yer son hızdır.</p>
+                <p className="up">
+                  {t('↑ Uzun oranlar: motor yolda düşük devirde döner; az yakar ve sessizdir, son hız artabilir. Ama kalkış ve hızlanma yavaşlar, güçsüz motor son viteste zorlanır.')}
+                </p>
+                <p className="down">{t('↓ Kısa oranlar: çevik kalkış ve güçlü çekiş. Ama motor hep yüksek devirde döner: çok yakar, son hız devir sınırına takılabilir.')}</p>
+                <p>{t('Aşağıdaki grafikte eğrilerin yol direncini kestiği yer son hızdır.')}</p>
               </Info>
             </>
           }
@@ -884,56 +898,56 @@ function GearboxTab({
           max={1}
           step={0.05}
           onChange={(v) => onChange({ gearbox: { ...g, spread: v } })}
-          left="Kısa: çevik"
-          right="Uzun: az yakar"
-          format={(v) => (v < 0.3 ? 'Kısa' : v > 0.6 ? 'Uzun' : 'Dengeli')}
+          left={t('Kısa: çevik')}
+          right={t('Uzun: az yakar')}
+          format={(v) => (v < 0.3 ? t('Kısa') : v > 0.6 ? t('Uzun') : t('Dengeli'))}
         />
       </div>
-      <p className="muted small readouts-note">Çizim üzerindeki hesap:</p>
+      <p className="muted small readouts-note">{t('Çizim üzerindeki hesap:')}</p>
       <div className="readouts">
         <div>
-          <span>Son hız</span>
+          <span>{t('Son hız')}</span>
           <b>{kmh(st.topSpeed)}</b>
         </div>
         <div>
-          <span>0-50 km/s</span>
+          <span>{t('0-50 km/s')}</span>
           <b>{secs(st.accel50)}</b>
         </div>
         <div>
-          <span>0-100 km/s</span>
+          <span>{t('0-100 km/s')}</span>
           <b>{secs(st.accel100)}</b>
         </div>
         <div>
-          <span>Tüketim</span>
+          <span>{t('Tüketim')}</span>
           <b>{litres(st.fuel)}</b>
         </div>
         <div>
-          <span>Vites başına hız</span>
+          <span>{t('Vites başına hız')}</span>
           <b>{speeds.map((v) => Math.round(v)).join(' / ')}</b>
         </div>
       </div>
       <LineChart
-        title="Tekerlekteki çekiş kuvveti: her vites bir eğri, kesikli çizgi yol direnci"
+        title={t('Tekerlekteki çekiş kuvveti: her vites bir eğri, kesikli çizgi yol direnci')}
         series={[
           ...curves.map((c, i) => ({
             id: `g${c.gear}`,
-            name: `${c.gear}. vites`,
+            name: t('{n}. vites', { n: c.gear }),
             color: GEAR_COLORS[i],
             points: c.points.map((p) => ({ x: p.kmh, y: p.force })),
           })),
-          { id: 'load', name: 'Yol direnci', color: 'var(--muted)', dashed: true, points: load },
+          { id: 'load', name: t('Yol direnci'), color: 'var(--muted)', dashed: true, points: load },
         ]}
         height={220}
         xMin={0}
         xMax={maxKmh}
         xFormat={(v) => `${Math.round(v)}`}
         yFormat={(v) => `${Math.round(v)}`}
-        xLabel="Hız (km/s)"
-        yLabel="Kuvvet (N)"
-        ariaLabel="Viteslere göre çekiş kuvveti grafiği"
+        xLabel={t('Hız (km/s)')}
+        yLabel={t('Kuvvet (N)')}
+        ariaLabel={t('Viteslere göre çekiş kuvveti grafiği')}
       />
-      <p className="muted small">Eğrilerin yol direncini kestiği yer son hızdır. Vites sayısı arttıkça eğriler birbirine yaklaşır ve motor güçlü olduğu devirde kalır.</p>
-      <ProsCons intro="Aynı arabaya sınıfın tipik şanzımanı takılsaydı:" pros={notes.pros} cons={notes.cons} />
+      <p className="muted small">{t('Eğrilerin yol direncini kestiği yer son hızdır. Vites sayısı arttıkça eğriler birbirine yaklaşır ve motor güçlü olduğu devirde kalır.')}</p>
+      <ProsCons intro={t('Aynı arabaya sınıfın tipik şanzımanı takılsaydı:')} pros={notes.pros} cons={notes.cons} />
     </>
   );
 }
@@ -960,19 +974,19 @@ function SuspensionTab({
     <>
       <div className="field">
         <span>
-          Süspansiyon tipi
+          {t('Süspansiyon tipi')}
           <Info>
-            <p>Tekerleklerin yoldaki darbeleri gövdeye nasıl ilettiğini belirler.</p>
+            <p>{t('Tekerleklerin yoldaki darbeleri gövdeye nasıl ilettiğini belirler.')}</p>
             <ul>
               {SUSPENSIONS.map((x) => (
                 <li key={x.id}>
-                  <b>{x.name}</b>
-                  {x.year > yf ? ` (${x.year})` : ''}: {x.desc}
+                  <b>{t(x.name)}</b>
+                  {x.year > yf ? ` (${x.year})` : ''}: {t(x.desc)}
                 </li>
               ))}
             </ul>
-            <p className="up">↑ Gelişmiş sistem: hem konfor hem yol tutuş artar.</p>
-            <p className="down">↓ Ama pahalı ve ağır; yeni teknoloji ilk yıllarında arıza çıkarır.</p>
+            <p className="up">{t('↑ Gelişmiş sistem: hem konfor hem yol tutuş artar.')}</p>
+            <p className="down">{t('↓ Ama pahalı ve ağır; yeni teknoloji ilk yıllarında arıza çıkarır.')}</p>
           </Info>
         </span>
         <Choice
@@ -981,7 +995,7 @@ function SuspensionTab({
           onChange={(v) => onChange({ suspension: v })}
           options={SUSPENSIONS.map((x) => {
             const g = gate(`susp:${x.id}`, x.year);
-            return { value: x.id, label: x.name, disabled: locked || g.disabled, title: g.long ?? x.desc, sub: g.short };
+            return { value: x.id, label: t(x.name), disabled: locked || g.disabled, title: g.long ?? t(x.desc), sub: g.short };
           })}
         />
         <ResearchHint ids={SUSPENSIONS.map((x) => `susp:${x.id}`)} />
@@ -989,11 +1003,11 @@ function SuspensionTab({
       <Slider
         label={
           <>
-            Ayar
+            {t('Ayar')}
             <Info>
-              <p className="up">↑ Sert (yol tutuş): araç virajda yatmaz, direksiyon isabetli; ama bozuk yolda yolcular sarsılır.</p>
-              <p className="down">↓ Yumuşak (konfor): darbeleri yutar; ama virajda yatar, hızlıyken yüzer gibi gider.</p>
-              <p>Dengeyi kimin için yaptığına göre seç.</p>
+              <p className="up">{t('↑ Sert (yol tutuş): araç virajda yatmaz, direksiyon isabetli; ama bozuk yolda yolcular sarsılır.')}</p>
+              <p className="down">{t('↓ Yumuşak (konfor): darbeleri yutar; ama virajda yatar, hızlıyken yüzer gibi gider.')}</p>
+              <p>{t('Dengeyi kimin için yaptığına göre seç.')}</p>
             </Info>
           </>
         }
@@ -1002,12 +1016,12 @@ function SuspensionTab({
         max={1}
         step={0.05}
         onChange={(v) => onChange({ suspBalance: v })}
-        left="Konfor"
-        right="Yol tutuş"
-        format={(v) => (Math.abs(v - typBal) <= 0.07 ? 'Sınıfın olağan ayarı' : v < typBal ? 'Olağandan yumuşak' : 'Olağandan sert')}
+        left={t('Konfor')}
+        right={t('Yol tutuş')}
+        format={(v) => (Math.abs(v - typBal) <= 0.07 ? t('Sınıfın olağan ayarı') : v < typBal ? t('Olağandan yumuşak') : t('Olağandan sert'))}
       />
       <SuspensionSim suspension={d.suspension} balance={d.suspBalance} knowhow={d.knowhow} year={yf} body={d.body} />
-      <ProsCons intro="Aynı arabaya sınıfın tipik süspansiyonu takılsaydı:" pros={notes.pros} cons={notes.cons} />
+      <ProsCons intro={t('Aynı arabaya sınıfın tipik süspansiyonu takılsaydı:')} pros={notes.pros} cons={notes.cons} />
     </>
   );
 }
