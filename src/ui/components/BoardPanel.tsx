@@ -115,7 +115,7 @@ export function SharesPanel({ s }: { s: GameState }) {
   const free = freeFloat(s);
   const backAll = buybackCost(s, free);
   return (
-    <Panel title={t('Borsa ve yönetim kurulu')}>
+    <Panel title={t('Borsa ve yönetim kurulu')} className="board-panel">
       <div className="stats-row">
         <Stat label={t('Dışarıdaki pay')} value={pct(sh.float, 0)} sub={t('senin payın {share}', { share: pct(1 - sh.float, 0) })} />
         <Stat label={t('Piyasa değeri')} value={money(cap)} sub={t('borsa {mood}', { mood: moodName(mood) })} />

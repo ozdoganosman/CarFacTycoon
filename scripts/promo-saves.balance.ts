@@ -1,8 +1,9 @@
 // Saves for the store screenshots and the promo video, played by the smart bot on today's rules.
 // Run with PROMO_SAVES=1 npx vitest run --config vitest.balance.config.ts scripts/promo-saves.balance.ts
-// (skipped otherwise). Writes promo/capture/saves/play-*.json.gz.
+// (skipped otherwise). Writes promo/capture/saves/play-*.json.gz; with PROMO_LANG=en (de, es, hi, ar) the game
+// is played in that language (its news, letters and names) and the saves are play-*-en.json.gz.
 import { test } from 'vitest';
-import { writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { gzipSync } from 'zlib';
 import { newGame } from '../src/core/game';
 import { makeRng } from '../src/core/rng';
@@ -11,12 +12,69 @@ import { deserialize, serialize } from '../src/core/save';
 import { boardOutlook, buyBack, goPublic } from '../src/core/shares';
 import { weekFor, weekOfYear } from '../src/core/time';
 import type { GameState, SegmentId } from '../src/core/types';
+import { setLanguage, type Catalog, type Lang } from '../src/i18n';
 import { runBot } from './bot';
 
 const OUT = 'promo/capture/saves';
 
+const LANG = (process.env.PROMO_LANG ?? 'tr') as Lang;
+const SUFFIX = LANG === 'tr' ? '' : `-${LANG}`;
+
+/** The player's company in each language. */
+const COMPANY: Record<string, string> = {
+  tr: 'Anadolu Motor',
+  en: 'Liberty Motor Co.',
+  de: 'Falke Motorenwerke',
+  es: 'Motores Cóndor',
+  hi: 'गरुड़ मोटर्स',
+  ar: 'النجم للسيارات',
+};
+
 /** Names a person would give their cars, in the order they come. */
-const NAMES: Record<SegmentId, string[]> = {
+const NAMES_BY_LANG: Record<string, Record<SegmentId, string[]>> = {
+  en: {
+    city: ['Pioneer Kid', 'Sparrow', 'Swallow', 'Wren', 'Dove', 'Lark', 'Robin', 'Finch'],
+    family: ['Grey Wolf', 'Eagle', 'Falcon', 'Hawk', 'Kestrel', 'Condor', 'Osprey', 'Harrier'],
+    pickup: ['Mule', 'Buffalo', 'Ox', 'Grizzly'],
+    luxury: ['Sultan', 'Regent', 'Monarch'],
+    sport: ['Star', 'Lightning', 'Cyclone'],
+    suv: ['Sierra', 'Rockies'],
+  },
+  de: {
+    city: ['Pionier', 'Spatz', 'Schwalbe', 'Zaunkönig', 'Taube', 'Lerche', 'Rotkehlchen', 'Fink'],
+    family: ['Wolf', 'Adler', 'Falke', 'Habicht', 'Sperber', 'Kondor', 'Fischadler', 'Milan'],
+    pickup: ['Maultier', 'Büffel', 'Ochse', 'Grizzly'],
+    luxury: ['Kaiser', 'Regent', 'Monarch'],
+    sport: ['Stern', 'Blitz', 'Wirbelsturm'],
+    suv: ['Alpen', 'Rocky'],
+  },
+  es: {
+    city: ['Pionero', 'Gorrión', 'Golondrina', 'Jilguero', 'Paloma', 'Alondra', 'Petirrojo', 'Pinzón'],
+    family: ['Lobo', 'Águila', 'Halcón', 'Azor', 'Cernícalo', 'Cóndor', 'Quebrantahuesos', 'Milano'],
+    pickup: ['Mula', 'Búfalo', 'Buey', 'Oso'],
+    luxury: ['Sultán', 'Regente', 'Monarca'],
+    sport: ['Estrella', 'Relámpago', 'Ciclón'],
+    suv: ['Sierra', 'Andes'],
+  },
+  hi: {
+    city: ['पायनियर', 'गौरैया', 'अबाबील', 'मैना', 'कबूतर', 'बुलबुल', 'कोयल', 'तोता'],
+    family: ['भेड़िया', 'गरुड़', 'बाज़', 'शिकरा', 'चील', 'कोंडोर', 'ओस्प्रे', 'हैरियर'],
+    pickup: ['खच्चर', 'भैंसा', 'बैल', 'भालू'],
+    luxury: ['सुल्तान', 'महाराजा', 'सम्राट'],
+    sport: ['तारा', 'बिजली', 'तूफ़ान'],
+    suv: ['हिमालय', 'अरावली'],
+  },
+  ar: {
+    city: ['الرائد', 'العصفور', 'السنونو', 'الحسون', 'اليمامة', 'القبرة', 'أبو الحناء', 'الشرشور'],
+    family: ['الذئب', 'العقاب', 'الصقر', 'الباشق', 'العوسق', 'الكندور', 'العقاب النساري', 'الحدأة'],
+    pickup: ['البغل', 'الجاموس', 'الثور', 'الدب'],
+    luxury: ['السلطان', 'الأمير', 'الملك'],
+    sport: ['النجم', 'البرق', 'الإعصار'],
+    suv: ['الجبل', 'الصحراء'],
+  },
+};
+
+const NAMES_TR: Record<SegmentId, string[]> = {
   city: ['Öncü Kid', 'Serçe', 'Martı', 'Kırlangıç', 'Güvercin', 'Tarla Kuşu', 'Bülbül', 'Saka'],
   family: ['Bozkurt', 'Kartal', 'Doğan', 'Şahin', 'Atmaca', 'Toygar', 'Alkor', 'Tulpar'],
   pickup: ['Katır', 'Manda', 'Öküz', 'Bozayı'],
@@ -24,6 +82,7 @@ const NAMES: Record<SegmentId, string[]> = {
   sport: ['Yıldız', 'Şimşek', 'Kasırga'],
   suv: ['Toros', 'Kaçkar'],
 };
+const NAMES = NAMES_BY_LANG[LANG] ?? NAMES_TR;
 const BOT_NAME = /^(city|family|pickup|luxury|sport|suv)-\d{4}$/;
 
 /** Give the bot's projects (and so their cars, news and letters) proper names as soon as they start. */
@@ -37,12 +96,14 @@ function rename(s: GameState, used: Record<string, number>) {
   }
 }
 
-const write = (name: string, s: GameState) => writeFileSync(`${OUT}/${name}.json.gz`, gzipSync(serialize(s)));
+const write = (name: string, s: GameState) => writeFileSync(`${OUT}/${name}${SUFFIX}.json.gz`, gzipSync(serialize(s)));
 
 test.skipIf(!process.env.PROMO_SAVES)(
   'promo saves',
   () => {
-    const s = newGame({ companyName: 'Anadolu Motor', seed: Number(process.env.PROMO_SEED ?? 5) });
+    // The game in the chosen language: its catalog, as the app would load it.
+    if (LANG !== 'tr') setLanguage(LANG, JSON.parse(readFileSync(`src/i18n/locales/${LANG}.json`, 'utf8')) as Catalog);
+    const s = newGame({ companyName: COMPANY[LANG] ?? COMPANY.tr, seed: Number(process.env.PROMO_SEED ?? 5) });
     const o = { segments: ['city', 'family'] as SegmentId[], smart: true };
     const used: Record<string, number> = {};
     /** Play on to that year (and month: mid-year saves show the year's counters filled). */

@@ -1,18 +1,29 @@
 // Google Play feature graphic (1024 x 500): the game's own period map and a car from the 1928 save,
-// laid out in the game page itself so its fonts and colours apply.
+// laid out in the game page itself so its fonts and colours apply, with the tagline in one language:
+// fastlane/metadata/android/<locale>/images/featureGraphic.png.
 //
 // Needs the app build served locally (see store.mjs) and public/shots/map-1928.png from `node capture/shots.mjs map`.
-// Usage: node promo/capture/feature.mjs   (GAME_URL, CHROME_PATH to override)
+// Usage: GAME_LANG=en node promo/capture/feature.mjs   (GAME_URL, CHROME_PATH to override)
 import { createRequire } from 'module';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { gunzipSync } from 'zlib';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const require = createRequire(import.meta.url);
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = join(HERE, '../../docs/play/feature-graphic.png');
-const URL = process.env.GAME_URL ?? 'http://localhost:5191/index.html';
+const LANG = process.env.GAME_LANG ?? 'tr';
+const LOCALES = { tr: 'tr-TR', en: 'en-US', de: 'de-DE', es: 'es-419', hi: 'hi-IN', ar: 'ar' };
+const OUT = join(HERE, `../../fastlane/metadata/android/${LOCALES[LANG]}/images/featureGraphic.png`);
+const URL = `${process.env.GAME_URL ?? 'http://localhost:5191/index.html'}?lang=${LANG}`;
+const TAGLINE = {
+  tr: '1900 Amerika’sında küçük bir atölyeden<br>ülkenin otomobil devine',
+  en: 'From a small workshop in 1900 America<br>to the nation’s great car maker',
+  de: 'Von der kleinen Werkstatt im Amerika von 1900<br>zum großen Autohersteller des Landes',
+  es: 'De un pequeño taller en la América de 1900<br>al gran fabricante de autos del país',
+  hi: '1900 के अमेरिका की एक छोटी वर्कशॉप से<br>देश की सबसे बड़ी कार कंपनी तक',
+  ar: 'من ورشة صغيرة في أمريكا عام 1900<br>إلى أكبر صانع سيارات في البلاد',
+}[LANG];
 
 function loadPlaywright() {
   for (const p of ['playwright', '/opt/node22/lib/node_modules/playwright']) {
@@ -26,7 +37,8 @@ function loadPlaywright() {
 }
 const { chromium } = loadPlaywright();
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--no-sandbox'] });
-const save = JSON.parse(gunzipSync(readFileSync(join(HERE, 'saves', 'play-1928.json.gz'))).toString('utf8'));
+const own = join(HERE, 'saves', `play-1928-${LANG}.json.gz`);
+const save = JSON.parse(gunzipSync(readFileSync(LANG !== 'tr' && existsSync(own) ? own : join(HERE, 'saves', 'play-1928.json.gz'))).toString('utf8'));
 save.modals = [];
 const map = 'data:image/png;base64,' + readFileSync(join(HERE, '../public/shots/map-1928.png')).toString('base64');
 // The family car that sells best.
@@ -40,21 +52,21 @@ await page.evaluate((json) => {
   localStorage.setItem('carfactycoon.share', 'off');
 }, JSON.stringify(save));
 await page.reload();
-await page.getByRole('button', { name: 'Kaldığın yerden devam et' }).click();
-await page.locator('.nav-item', { hasText: 'Modeller' }).first().click();
+await page.locator('.start-actions .btn-default').first().click();
+await page.locator('[data-nav="models"]').first().click();
 await page.locator('button.link', { hasText: car.name }).first().click();
 await page.waitForTimeout(500);
-const svg = await page.locator('svg[aria-label$="gövdeli araç çizimi"]').first().evaluate((el) => el.outerHTML);
+const svg = await page.locator('.model-car svg, svg[role=img]').first().evaluate((el) => el.outerHTML);
 
 await page.evaluate(
-  ({ map, svg }) => {
+  ({ map, svg, tagline, rtl }) => {
     document.body.innerHTML = `
 <div id="fg">
   <img class="map" src="${map}" alt="">
   <div class="fade"></div>
   <div class="text">
     <h1>CarFacTycoon</h1>
-    <p>1900 Amerika’sında küçük bir atölyeden<br>ülkenin otomobil devine</p>
+    <p>${tagline}</p>
     <div class="years">1900 – 1960</div>
   </div>
   <div class="car">${svg}</div>
@@ -76,9 +88,18 @@ await page.evaluate(
         color: #f3ead8; background: #b0452c; padding: 7px 16px 6px; border-radius: 4px; }
       .car { position: absolute; right: 40px; bottom: 26px; width: 370px; filter: drop-shadow(0 14px 18px rgba(0,0,0,.55)); }
       .car svg { width: 100%; height: auto; display: block; }`;
+    // Right-to-left: the picture mirrored, the words on the right.
+    if (rtl)
+      css.textContent += `
+      #fg { direction: rtl; }
+      .map { left: -86px; transform: rotate(3deg); }
+      .fade { background: linear-gradient(270deg, #1f1c18 0%, #1f1c18 50%, rgba(31,28,24,.8) 58%, rgba(31,28,24,0) 74%),
+                          linear-gradient(0deg, rgba(31,28,24,.9) 0%, rgba(31,28,24,0) 30%); }
+      .text { left: auto; right: 56px; text-align: right; }
+      .car { right: auto; left: 40px; transform: scaleX(-1); }`;
     document.head.appendChild(css);
   },
-  { map, svg },
+  { map, svg, tagline: TAGLINE, rtl: LANG === 'ar' },
 );
 await page.waitForTimeout(500);
 await page.screenshot({ path: OUT, clip: { x: 0, y: 0, width: 1024, height: 500 } });

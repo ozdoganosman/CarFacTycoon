@@ -165,7 +165,7 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
           </div>
           <div className="tabs" role="tablist">
             {TABS.map((x) => (
-              <button key={x.id} type="button" role="tab" aria-selected={tab === x.id} className={`tab ${tab === x.id ? 'is-on' : ''}`} onClick={() => setTab(x.id)}>
+              <button key={x.id} type="button" role="tab" data-tab={x.id} aria-selected={tab === x.id} className={`tab ${tab === x.id ? 'is-on' : ''}`} onClick={() => setTab(x.id)}>
                 {t(x.label)}
               </button>
             ))}

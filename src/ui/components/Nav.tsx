@@ -29,6 +29,7 @@ export function Nav() {
           key={it.id}
           type="button"
           className={`nav-item ${active(it.id) ? 'is-on' : ''}`}
+          data-nav={it.id}
           onClick={() => store.go({ id: it.id } as Screen)}
           aria-current={active(it.id) ? 'page' : undefined}
         >

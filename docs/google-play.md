@@ -81,13 +81,22 @@ Plays offline, no account needed. Contains ads, which a one-time purchase remove
 
 (İngilizce metin mağazada ayrı dil olarak eklenebilir; oyunun kendisi şimdilik yalnızca Türkçe, İngilizce metnin son cümlesi bunu söylüyor.)
 
-**Grafikler** (`docs/play/`):
-- Uygulama simgesi 512×512: `icon-512.png`
-- Öne çıkan görsel 1024×500: `feature-graphic.png` (`promo/capture/feature.mjs`)
-- Telefon ekran görüntüleri 1080×1920: `screenshots/01-harita.jpg` … `08-gazete.jpg` (en az 2, en çok 8; `promo/capture/store.mjs`)
-- Tanıtım videosu (YouTube bağlantısı, herkese açık ya da liste dışı): `promo/` içindeki Remotion projesi, `promo/README.md`
+**Mağaza sayfası dosyaları** (`fastlane/metadata/android/<dil>/`, Play'in ve fastlane'in beklediği düzen):
+- `title.txt`, `short_description.txt`, `full_description.txt`: tr-TR, en-US, de-DE, es-419, hi-IN, ar.
+- `images/icon.png` (512×512), `images/featureGraphic.png` (1024×500, `promo/capture/feature.mjs`),
+  `images/phoneScreenshots/01-harita.jpg … 08-gazete.jpg` (1080×1920, `promo/capture/store.mjs`).
+- Tanıtım videosu (YouTube bağlantısı, herkese açık ya da liste dışı): `promo/` içindeki Remotion projesi, `promo/README.md`.
 
-Görseller oyunun o anki haliyle yeniden üretilebilir: kayıtlar `PROMO_SAVES=1 npx vitest run --config vitest.balance.config.ts scripts/promo-saves.balance.ts`, sonra uygulama derlemesi (`npx vite build --mode app`, `dist-app` klasörünü 5191 portunda sun) ve betikler.
+Play Console'da her dil **Mağaza varlığı → Ana mağaza girişi → Çevirileri yönet → Kendi çevirilerini ekle** ile eklenir;
+metinler ve görseller o dilin klasöründen yapıştırılır/yüklenir. Paket yüklemeden önce yapılabilir.
+
+Görseller oyunun o anki haliyle, her dilde yeniden üretilebilir:
+
+```sh
+PROMO_SAVES=1 PROMO_LANG=en npx vitest run --config vitest.balance.config.ts scripts/promo-saves.balance.ts   # kayıtlar (tr için PROMO_LANG'sız)
+npx vite build --mode app && python3 -m http.server 5191 --directory dist-app &                            # uygulama derlemesi
+GAME_LANG=en node promo/capture/store.mjs && GAME_LANG=en node promo/capture/feature.mjs                   # ekran görüntüleri, öne çıkan görsel
+```
 
 ## 5. Uygulama içeriği (Policy → App content)
 

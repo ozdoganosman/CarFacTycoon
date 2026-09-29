@@ -60,7 +60,7 @@ export function Company() {
         <RivalMovesPanel s={s} />
       </div>
       <div className="grid-2">
-        <Panel title={t('Yarış takımı')}>
+        <Panel title={t('Yarış takımı')} className="racing-panel">
           {!racingOpen ? (
             <Empty>{t('Otomobil yarışları {year}’dan itibaren bir markanın vitrini olur.', { year: RACING_YEAR })}</Empty>
           ) : (
