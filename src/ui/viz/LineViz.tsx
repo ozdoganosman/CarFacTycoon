@@ -160,11 +160,11 @@ export function LineViz(props: {
         });
         // label
         ctx.fillStyle = isB ? colors.bad : colors.ink;
-        ctx.font = '600 12px Inter, system-ui, sans-serif';
+        ctx.font = "600 12px Inter, 'Noto Sans Devanagari', 'Noto Sans Arabic', system-ui, sans-serif";
         ctx.textAlign = 'center';
         ctx.fillText(st.name.split(' ')[0], x, top + 13);
         ctx.fillStyle = colors.muted;
-        ctx.font = '11px ui-monospace, Menlo, monospace';
+        ctx.font = "11px ui-monospace, Menlo, 'Noto Sans Devanagari', 'Noto Sans Arabic', monospace";
         ctx.fillText(`${perStage[st.id].toFixed(1)}/hf`, x, conveyorY - 12);
         // work light
         if (busy[i]) {
@@ -193,7 +193,7 @@ export function LineViz(props: {
       }
       if (!running) {
         ctx.fillStyle = colors.muted;
-        ctx.font = '12px Inter, system-ui, sans-serif';
+        ctx.font = "12px Inter, 'Noto Sans Devanagari', 'Noto Sans Arabic', system-ui, sans-serif";
         ctx.textAlign = 'left';
         ctx.fillText(dataRef.current.label ?? 'Hat boşta', 10, h - 8);
       }

@@ -1,6 +1,7 @@
 /* Small canvas helpers shared by the explainer animations. Everything takes theme colors as
    arguments so drawings follow light / dark mode. */
 import type { ThemeColors } from '../../theme';
+import { fmtNumber } from '../../../i18n/format';
 
 export type Ctx = CanvasRenderingContext2D;
 
@@ -29,7 +30,7 @@ export function hash01(i: number): number {
 
 /** Turkish number formatting (decimal comma). */
 export function fmt(n: number, digits = 0): string {
-  return n.toLocaleString('tr-TR', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  return fmtNumber(n, digits);
 }
 
 /* ---------- colour ---------- */
@@ -89,9 +90,12 @@ let fontCache: { ui: string; mono: string } | null = null;
 function families() {
   if (!fontCache) {
     const cs = typeof document !== 'undefined' ? getComputedStyle(document.documentElement) : null;
+    // Canvas fonts cannot hold var(): put the Hindi and Arabic fallbacks in by hand.
+    const scripts = cs?.getPropertyValue('--font-scripts').trim() || "'Noto Sans Devanagari', 'Noto Sans Arabic'";
+    const resolve = (v: string | undefined) => v?.trim().replace(/var\(--font-scripts\)/g, scripts);
     fontCache = {
-      ui: cs?.getPropertyValue('--font-ui').trim() || 'system-ui, sans-serif',
-      mono: cs?.getPropertyValue('--font-mono').trim() || 'ui-monospace, monospace',
+      ui: resolve(cs?.getPropertyValue('--font-ui')) || 'system-ui, sans-serif',
+      mono: resolve(cs?.getPropertyValue('--font-mono')) || 'ui-monospace, monospace',
     };
   }
   return fontCache;

@@ -1,5 +1,10 @@
-/* The app build carries its fonts (Latin + Turkish letters only), so it works offline
-   and never flashes a fallback font. The web builds load the same families from Google Fonts. */
+/* The app build carries its fonts (Latin with Turkish and German letters, Devanagari for Hindi,
+   Arabic), so it works offline and never flashes a fallback font. The web builds load the same
+   families from Google Fonts. */
+@import '@fontsource/noto-sans-devanagari/devanagari-400.css';
+@import '@fontsource/noto-sans-devanagari/devanagari-700.css';
+@import '@fontsource/noto-sans-arabic/arabic-400.css';
+@import '@fontsource/noto-sans-arabic/arabic-700.css';
 @import '@fontsource/bitter/latin-500.css';
 @import '@fontsource/bitter/latin-ext-500.css';
 @import '@fontsource/bitter/latin-700.css';

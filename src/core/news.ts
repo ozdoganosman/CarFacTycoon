@@ -9,6 +9,7 @@ import { yearFloat, yearOf } from './time';
 import type { AttrKey, CarModel, GameState, MarketId, NewsIssue, NewsStoryData } from './types';
 import { money, pushModal } from './util';
 import { pctWith } from './turkish';
+import { fmtNumber } from '../i18n/format';
 
 // Front pages: the day new technology appears in the world, and the day one of
 // the player's cars takes off. Issues are kept for the archive and shown as a
@@ -25,7 +26,7 @@ export function publish(s: GameState, issue: NewsIssue) {
   pushModal(s, { kind: 'news', newsId: issue.id });
 }
 
-const fmt = (n: number) => Math.round(n).toLocaleString('tr-TR');
+const fmt = (n: number) => fmtNumber(n);
 
 function worldFor(year: number): NewsStoryData | undefined {
   const w = WORLD_NEWS.find((x) => x.year === year);

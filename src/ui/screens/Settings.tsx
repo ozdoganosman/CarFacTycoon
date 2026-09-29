@@ -4,6 +4,7 @@ import { deserialize, serialize } from '../../core/save';
 import { store, useGameState } from '../store';
 import { Button, Choice, Panel, Toggle } from '../components/ui';
 import { AdSettings } from '../components/Sponsor';
+import { LanguagePicker } from '../components/LanguagePicker';
 import { ads } from '../ads';
 
 type Theme = 'system' | 'light' | 'dark';
@@ -57,6 +58,9 @@ export function Settings() {
       <div className="screen-head">
         <h1>Ayarlar</h1>
       </div>
+      <Panel title="Dil · Language">
+        <LanguagePicker />
+      </Panel>
       <Panel title="Oynanış">
         <Toggle
           checked={s.settings.engineerMode}

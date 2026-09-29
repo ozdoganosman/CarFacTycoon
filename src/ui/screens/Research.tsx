@@ -22,6 +22,7 @@ import { store, useGameState } from '../store';
 import { money, pctOf } from '../format';
 import { inYear } from '../format';
 import { Button, Info, Panel, Progress, Stat } from '../components/ui';
+import { locale } from '../../i18n';
 
 const CATEGORIES: ResearchDef['category'][] = ['Motor', 'Şanzıman', 'Şasi ve süspansiyon', 'Donanım', 'Güvenlik'];
 const ICON: Record<ResearchDef['category'], string> = { Motor: '⚙️', Şanzıman: '🔩', 'Şasi ve süspansiyon': '🛞', Donanım: '💡', Güvenlik: '🛡️' };
@@ -63,8 +64,8 @@ export function Research() {
     future: (d) => techState(s, d.id, yf) === 'future' && d.year <= yf + 10,
   };
   const inCat = (d: ResearchDef) => cat === 'all' || d.category === cat;
-  const needle = q.trim().toLocaleLowerCase('tr-TR');
-  const inSearch = (d: ResearchDef) => !needle || `${d.name} ${d.desc} ${d.effects ?? ''}`.toLocaleLowerCase('tr-TR').includes(needle);
+  const needle = q.trim().toLocaleLowerCase(locale());
+  const inSearch = (d: ResearchDef) => !needle || `${d.name} ${d.desc} ${d.effects ?? ''}`.toLocaleLowerCase(locale()).includes(needle);
   const count = (f: Filter) => defs.filter((d) => matches[f](d) && inCat(d)).length;
   const list = defs
     .filter((d) => matches[filter](d) && inCat(d) && inSearch(d))

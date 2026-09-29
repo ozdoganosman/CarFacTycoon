@@ -1,0 +1,14 @@
+{
+ "7q510z": {
+  "tr": "{v} km/s",
+  "at": "src/ui/format.ts:29"
+ },
+ "1swqrrc": {
+  "tr": "{v} sn",
+  "at": "src/ui/format.ts:30"
+ },
+ "mwksn3": {
+  "tr": "{v} L/100km",
+  "at": "src/ui/format.ts:31"
+ }
+}

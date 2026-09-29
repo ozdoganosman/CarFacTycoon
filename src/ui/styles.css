@@ -19,9 +19,11 @@
   --fire: #e8762d;
   --shadow: 0 1px 2px rgba(40, 30, 10, 0.08), 0 4px 14px rgba(40, 30, 10, 0.06);
   --radius: 10px;
-  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Bitter', Georgia, 'Times New Roman', serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Hindi and Arabic letters fall through to the Noto families (the game's Latin fonts have none). */
+  --font-scripts: 'Noto Sans Devanagari', 'Noto Sans Arabic';
+  --font-ui: 'Inter', var(--font-scripts), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Bitter', var(--font-scripts), Georgia, 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono', var(--font-scripts), ui-monospace, SFMono-Regular, Menlo, monospace;
   --topbar-bg: #26241f;
   --topbar-ink: #efe8da;
   color-scheme: light;
@@ -231,7 +233,7 @@ fieldset {
   padding: 0;
   color: var(--accent2);
   cursor: pointer;
-  text-align: left;
+  text-align: start;
 }
 .link:hover {
   text-decoration: underline;
@@ -314,7 +316,7 @@ fieldset {
 .topbar-kpis {
   display: flex;
   gap: 16px;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 .kpi {
   display: flex;
@@ -369,7 +371,7 @@ fieldset {
   flex-direction: column;
   gap: 2px;
   padding: 12px 8px;
-  border-right: 1px solid var(--line);
+  border-inline-end: 1px solid var(--line);
   background: var(--panel-2);
   overflow-y: auto;
 }
@@ -382,7 +384,7 @@ fieldset {
   border-radius: 8px;
   background: transparent;
   cursor: pointer;
-  text-align: left;
+  text-align: start;
   position: relative;
 }
 .nav-item:hover {
@@ -398,7 +400,7 @@ fieldset {
   text-align: center;
 }
 .nav-badge {
-  margin-left: auto;
+  margin-inline-start: auto;
   background: var(--accent);
   color: var(--accent-ink);
   border-radius: 10px;
@@ -678,7 +680,7 @@ fieldset {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  text-align: left;
+  text-align: start;
   border: 1px solid var(--line);
   background: var(--panel);
   border-radius: 8px;
@@ -754,7 +756,7 @@ fieldset {
   height: 16px;
   border-radius: 50%;
   top: 3px;
-  left: 3px;
+  inset-inline-start: 3px;
   background: var(--panel);
   transition: left 0.15s;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -763,7 +765,7 @@ fieldset {
   background: var(--accent);
 }
 .toggle input:checked + .toggle-box::after {
-  left: 19px;
+  inset-inline-start: 19px;
 }
 .toggle input:focus-visible + .toggle-box {
   outline: 2px solid var(--accent2);
@@ -870,7 +872,7 @@ fieldset {
   font-size: 0.9rem;
 }
 .table th {
-  text-align: left;
+  text-align: start;
   font-size: 0.76rem;
   color: var(--muted);
   font-weight: 600;
@@ -957,7 +959,7 @@ fieldset {
   background: var(--panel);
   border-radius: 8px;
   padding: 10px 12px;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 .mini-item:hover,
@@ -1002,7 +1004,7 @@ fieldset {
 }
 .steps {
   margin: 0;
-  padding-left: 20px;
+  padding-inline-start: 20px;
 }
 .steps li {
   margin-bottom: 6px;
@@ -1234,7 +1236,7 @@ fieldset {
 }
 .engine-sound-range output {
   font-family: var(--font-mono);
-  text-align: right;
+  text-align: end;
 }
 .engine-sound-note {
   margin: 0;
@@ -1340,11 +1342,11 @@ fieldset {
 }
 .pc li {
   position: relative;
-  padding-left: 16px;
+  padding-inline-start: 16px;
 }
 .pc li::before {
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   font-weight: 700;
 }
 .pc-pro li::before {
@@ -1407,7 +1409,7 @@ fieldset {
   font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--muted);
-  text-align: right;
+  text-align: end;
 }
 .sp-row .scorebar {
   grid-area: bar;
@@ -1646,7 +1648,7 @@ fieldset {
   font: inherit;
   font-family: var(--font-display);
   font-weight: 700;
-  text-align: left;
+  text-align: start;
 }
 .line-title .muted {
   font-family: var(--font-ui);
@@ -1810,7 +1812,7 @@ fieldset {
   gap: 6px;
 }
 .chart-tip-row b {
-  margin-left: auto;
+  margin-inline-start: auto;
   font-family: var(--font-mono);
 }
 
@@ -1828,7 +1830,7 @@ fieldset {
   background: var(--panel);
   border-radius: 10px;
   padding: 12px;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   min-height: 84px;
 }
@@ -1855,7 +1857,7 @@ fieldset {
 }
 .card-gameplay {
   background: color-mix(in srgb, var(--accent2) 8%, var(--panel));
-  border-left: 3px solid var(--accent2);
+  border-inline-start: 3px solid var(--accent2);
   padding: 8px 12px;
   border-radius: 0 8px 8px 0;
 }
@@ -1907,7 +1909,7 @@ fieldset {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  text-align: left;
+  text-align: start;
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 10px 12px;
@@ -1925,7 +1927,7 @@ fieldset {
 }
 .rank {
   margin: 0;
-  padding-left: 22px;
+  padding-inline-start: 22px;
 }
 .rank li {
   padding: 2px 0;
@@ -2041,7 +2043,7 @@ fieldset {
   .nav {
     order: 2;
     flex-direction: row;
-    border-right: 0;
+    border-inline-end: 0;
     border-top: 1px solid var(--line);
     padding: 4px;
     overflow-x: auto;
@@ -2057,7 +2059,7 @@ fieldset {
   .nav-badge {
     position: absolute;
     top: 2px;
-    right: 6px;
+    inset-inline-end: 6px;
   }
   .main {
     padding: 12px 16px;
@@ -2067,7 +2069,7 @@ fieldset {
     padding: 8px 16px;
   }
   .topbar-kpis {
-    margin-left: 0;
+    margin-inline-start: 0;
     order: 3;
     width: 100%;
     justify-content: space-between;
@@ -2076,7 +2078,7 @@ fieldset {
     display: none;
   }
   .speed {
-    margin-left: auto;
+    margin-inline-start: auto;
   }
   .engine-charts,
   .pc-grid {
@@ -2298,7 +2300,7 @@ fieldset {
   height: 9px;
   border-radius: 50%;
   background: var(--fc);
-  margin-right: 2px;
+  margin-inline-end: 2px;
 }
 .focus-foot {
   display: flex;
@@ -2321,7 +2323,7 @@ fieldset {
 /* ---------- Development bubbles ---------- */
 .bubbles {
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   bottom: 100%;
   width: 0;
   height: 0;
@@ -2329,7 +2331,7 @@ fieldset {
 }
 .bubble {
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   bottom: 0;
   font-family: var(--font-mono);
   font-weight: 700;
@@ -2411,11 +2413,11 @@ fieldset {
   box-shadow: inset 0 -30px 40px rgba(0, 0, 0, 0.45);
 }
 .curtain-l {
-  left: 0;
+  inset-inline-start: 0;
   animation: curtain-l 1.1s ease-in-out 0.2s forwards;
 }
 .curtain-r {
-  right: 0;
+  inset-inline-end: 0;
   animation: curtain-r 1.1s ease-in-out 0.2s forwards;
 }
 @keyframes curtain-l {
@@ -2511,7 +2513,7 @@ fieldset {
   display: inline-block;
   width: 70px;
   vertical-align: middle;
-  margin-right: 6px;
+  margin-inline-end: 6px;
 }
 .rival-verdict {
   display: grid;
@@ -2521,7 +2523,7 @@ fieldset {
 .rival-verdict ul,
 .advice {
   margin: 0;
-  padding-left: 18px;
+  padding-inline-start: 18px;
 }
 .advice li {
   margin-bottom: 4px;
@@ -2551,13 +2553,13 @@ fieldset {
 /* ---------- Year card (non-blocking year report) ---------- */
 .year-card {
   position: fixed;
-  right: 20px;
+  inset-inline-end: 20px;
   bottom: 20px;
   z-index: 45;
   width: min(300px, calc(100vw - 32px));
   background: var(--panel);
   border: 1px solid var(--line);
-  border-left: 4px solid var(--accent);
+  border-inline-start: 4px solid var(--accent);
   border-radius: 12px;
   box-shadow: var(--shadow);
   padding: 12px 14px;
@@ -2609,7 +2611,7 @@ fieldset {
 }
 @media (max-width: 760px) {
   .year-card {
-    right: 16px;
+    inset-inline-end: 16px;
     bottom: 16px;
   }
 }
@@ -2624,7 +2626,7 @@ fieldset {
 .planner-model button {
   display: grid;
   gap: 2px;
-  text-align: left;
+  text-align: start;
   padding: 8px 12px;
   border-radius: 10px;
   border: 1px solid var(--line);
@@ -2727,7 +2729,7 @@ fieldset {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  margin-left: auto;
+  margin-inline-start: auto;
   flex: none;
 }
 .sync-on {
@@ -2771,7 +2773,7 @@ fieldset {
   .sync-dot {
     position: absolute;
     top: 4px;
-    right: 10px;
+    inset-inline-end: 10px;
   }
 }
 .link-btn {
@@ -2816,7 +2818,7 @@ fieldset {
 .info {
   display: inline-flex;
   vertical-align: middle;
-  margin-left: 4px;
+  margin-inline-start: 4px;
 }
 .info-btn {
   width: 17px;
@@ -2825,7 +2827,7 @@ fieldset {
   border: 1px solid var(--line);
   background: var(--panel-2);
   color: var(--muted);
-  font: italic 700 0.7rem/1 Georgia, 'Times New Roman', serif;
+  font: italic 700 0.7rem/1 Georgia, 'Times New Roman', var(--font-scripts), serif;
   padding: 0;
   cursor: help;
   display: inline-flex;
@@ -2858,7 +2860,7 @@ fieldset {
 }
 .info-tip ul {
   margin: 4px 0 0;
-  padding-left: 16px;
+  padding-inline-start: 16px;
 }
 .info-tip li {
   margin: 2px 0;
@@ -2876,7 +2878,7 @@ fieldset {
 /* ---------- Production prep ---------- */
 .prod-howto ol {
   margin: 6px 0 0;
-  padding-left: 20px;
+  padding-inline-start: 20px;
 }
 .prod-howto li {
   margin: 2px 0;
@@ -3041,7 +3043,7 @@ fieldset {
   background: none;
   color: inherit;
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 .rrow-icon {
@@ -3106,7 +3108,7 @@ fieldset {
 }
 .rrow-cost {
   grid-area: cost;
-  text-align: right;
+  text-align: end;
   white-space: nowrap;
 }
 .rrow-act {
@@ -3133,11 +3135,11 @@ fieldset {
   }
   .rrow-act {
     justify-content: flex-start;
-    padding-left: 40px;
+    padding-inline-start: 40px;
     min-width: 0;
   }
   .rrow-share {
-    padding-left: 40px;
+    padding-inline-start: 40px;
   }
 }
 .research-active + .research-active {
@@ -3161,7 +3163,7 @@ fieldset {
 /* ---------- Newspapers ---------- */
 .news-card {
   position: fixed;
-  right: 20px;
+  inset-inline-end: 20px;
   bottom: 20px;
   z-index: 46;
   width: min(320px, calc(100vw - 32px));
@@ -3210,7 +3212,7 @@ fieldset {
   font-size: 1.15rem;
 }
 .news-card-headline {
-  font-family: 'Old Standard TT', Georgia, serif;
+  font-family: 'Old Standard TT', Georgia, var(--font-scripts), serif;
   font-size: 1.05rem;
   line-height: 1.25;
 }
@@ -3219,18 +3221,18 @@ fieldset {
 }
 .mast-early,
 .paper-early .paper-name {
-  font-family: 'UnifrakturMaguntia', 'Old English Text MT', serif;
+  font-family: 'UnifrakturMaguntia', 'Old English Text MT', var(--font-scripts), serif;
   font-weight: 400;
 }
 .mast-mid,
 .paper-mid .paper-name {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Playfair Display', Georgia, var(--font-scripts), serif;
   font-weight: 900;
   letter-spacing: 0.01em;
 }
 .mast-late,
 .paper-late .paper-name {
-  font-family: 'Oswald', 'Arial Narrow', sans-serif;
+  font-family: 'Oswald', 'Arial Narrow', var(--font-scripts), sans-serif;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -3251,7 +3253,7 @@ fieldset {
 .paper-close {
   position: absolute;
   top: -14px;
-  right: -8px;
+  inset-inline-end: -8px;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -3271,7 +3273,7 @@ fieldset {
     radial-gradient(ellipse at 80% 90%, rgba(120, 90, 40, 0.12), transparent 60%),
     var(--paper);
   color: var(--newsink);
-  font-family: 'Old Standard TT', Georgia, 'Times New Roman', serif;
+  font-family: 'Old Standard TT', Georgia, 'Times New Roman', var(--font-scripts), serif;
   padding: 22px 26px 26px;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
   line-height: 1.45;
@@ -3323,8 +3325,8 @@ fieldset {
   gap: 0 22px;
 }
 .paper-lead {
-  border-right: 1px solid var(--rule);
-  padding-right: 22px;
+  border-inline-end: 1px solid var(--rule);
+  padding-inline-end: 22px;
 }
 .paper-headline {
   margin: 0 0 6px;
@@ -3334,18 +3336,18 @@ fieldset {
   color: var(--newsink);
 }
 .paper-early .paper-headline {
-  font-family: 'Old Standard TT', Georgia, serif;
+  font-family: 'Old Standard TT', Georgia, var(--font-scripts), serif;
   font-weight: 700;
   font-size: clamp(1.6rem, 4.2vw, 2.5rem);
   letter-spacing: 0.01em;
 }
 .paper-mid .paper-headline {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Playfair Display', Georgia, var(--font-scripts), serif;
   font-weight: 900;
   font-size: clamp(1.8rem, 4.6vw, 2.9rem);
 }
 .paper-late .paper-headline {
-  font-family: 'Oswald', 'Arial Narrow', sans-serif;
+  font-family: 'Oswald', 'Arial Narrow', var(--font-scripts), sans-serif;
   font-weight: 700;
   font-size: clamp(2rem, 5.4vw, 3.4rem);
   letter-spacing: 0.01em;
@@ -3406,7 +3408,7 @@ fieldset {
   font-size: 0.92rem;
 }
 .dropcap::first-letter {
-  float: left;
+  float: inline-start;
   font-size: 3.1em;
   line-height: 0.85;
   padding: 4px 6px 0 0;
@@ -3423,10 +3425,10 @@ fieldset {
   flex-direction: column;
   align-items: center;
   padding: 4px;
-  border-left: 1px solid var(--rule);
+  border-inline-start: 1px solid var(--rule);
 }
 .paper-stats > div:first-child {
-  border-left: 0;
+  border-inline-start: 0;
 }
 .paper-stats span {
   font-size: 0.66rem;
@@ -3455,12 +3457,12 @@ fieldset {
 }
 .paper-late .paper-story h3,
 .paper-late .paper-box h3 {
-  font-family: 'Oswald', 'Arial Narrow', sans-serif;
+  font-family: 'Oswald', 'Arial Narrow', var(--font-scripts), sans-serif;
   letter-spacing: 0.02em;
 }
 .paper-mid .paper-story h3,
 .paper-mid .paper-box h3 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Playfair Display', Georgia, var(--font-scripts), serif;
 }
 .paper-subdeck {
   font-style: italic;
@@ -3508,7 +3510,7 @@ fieldset {
 .paper-ad-flag {
   position: absolute;
   top: 10px;
-  left: -8px;
+  inset-inline-start: -8px;
   transform: rotate(-12deg);
   background: var(--newsink);
   color: var(--paper);
@@ -3522,17 +3524,17 @@ fieldset {
   letter-spacing: 0.2em;
 }
 .paper-ad-model {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Playfair Display', Georgia, var(--font-scripts), serif;
   font-weight: 900;
   font-size: 2rem;
   line-height: 1;
 }
 .paper-late .paper-ad-model {
-  font-family: 'Oswald', 'Arial Narrow', sans-serif;
+  font-family: 'Oswald', 'Arial Narrow', var(--font-scripts), sans-serif;
   text-transform: uppercase;
 }
 .paper-early .paper-ad-model {
-  font-family: 'UnifrakturMaguntia', serif;
+  font-family: 'UnifrakturMaguntia', var(--font-scripts), serif;
   font-weight: 400;
 }
 .paper-ad-car {
@@ -3591,7 +3593,7 @@ fieldset {
   gap: 4px;
 }
 .archive .link-btn {
-  text-align: left;
+  text-align: start;
   text-decoration: none;
 }
 .archive .link-btn:hover {
@@ -3606,8 +3608,8 @@ fieldset {
     grid-template-columns: minmax(0, 1fr);
   }
   .paper-lead {
-    border-right: 0;
-    padding-right: 0;
+    border-inline-end: 0;
+    padding-inline-end: 0;
     border-bottom: 1px solid var(--rule);
     padding-bottom: 10px;
     margin-bottom: 10px;
@@ -3637,17 +3639,17 @@ fieldset {
   padding: 10px 12px;
   border-radius: 8px;
   background: var(--panel-2);
-  border-left: 4px solid var(--line);
-  font-family: 'Old Standard TT', Georgia, serif;
+  border-inline-start: 4px solid var(--line);
+  font-family: 'Old Standard TT', Georgia, var(--font-scripts), serif;
 }
 .letter-good {
-  border-left-color: var(--good);
+  border-inline-start-color: var(--good);
 }
 .letter-bad {
-  border-left-color: var(--bad);
+  border-inline-start-color: var(--bad);
 }
 .letter-mixed {
-  border-left-color: var(--warn);
+  border-inline-start-color: var(--warn);
 }
 .letter p {
   margin: 4px 0;
@@ -3668,7 +3670,7 @@ fieldset {
 /* ---------- insolvency and post-mortem ---------- */
 .cash-facts {
   margin: 8px 0;
-  padding-left: 18px;
+  padding-inline-start: 18px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -3682,7 +3684,7 @@ fieldset {
 /* ---------- corner notes: year report, newspaper, research ---------- */
 .corner-stack {
   position: fixed;
-  right: 20px;
+  inset-inline-end: 20px;
   bottom: 20px;
   z-index: 46;
   display: flex;
@@ -3703,7 +3705,7 @@ fieldset {
   width: min(320px, calc(100vw - 32px));
   background: var(--panel);
   border: 1px solid var(--line);
-  border-left: 4px solid var(--accent2);
+  border-inline-start: 4px solid var(--accent2);
   border-radius: 12px;
   box-shadow: var(--shadow);
   padding: 12px 14px;
@@ -3713,13 +3715,13 @@ fieldset {
 }
 .research-card-list {
   margin: 0;
-  padding-left: 18px;
+  padding-inline-start: 18px;
   display: grid;
   gap: 2px;
 }
 @media (max-width: 760px) {
   .corner-stack {
-    right: 16px;
+    inset-inline-end: 16px;
     bottom: 16px;
   }
 }
@@ -3730,7 +3732,7 @@ fieldset {
 }
 .rqueue {
   margin: 0 0 8px;
-  padding-left: 22px;
+  padding-inline-start: 22px;
   display: grid;
   gap: 4px;
 }
@@ -3749,7 +3751,7 @@ fieldset {
   background: none;
   border: 0;
   padding: 0 2px;
-  margin-left: 4px;
+  margin-inline-start: 4px;
   cursor: pointer;
   font-size: 0.85em;
   opacity: 0.55;
@@ -3777,19 +3779,19 @@ fieldset {
   align-items: baseline;
   padding: 6px 10px;
   border-radius: 8px;
-  border-left: 3px solid var(--line);
+  border-inline-start: 3px solid var(--line);
   background: color-mix(in srgb, var(--line) 25%, transparent);
   margin: 6px 0;
 }
 .budget-line.tone-good-soft {
-  border-left-color: var(--good);
+  border-inline-start-color: var(--good);
 }
 .budget-line.tone-warn-soft {
-  border-left-color: var(--warn);
+  border-inline-start-color: var(--warn);
   background: color-mix(in srgb, var(--warn) 10%, transparent);
 }
 .budget-line.tone-bad-soft {
-  border-left-color: var(--bad);
+  border-inline-start-color: var(--bad);
   background: color-mix(in srgb, var(--bad) 10%, transparent);
 }
 .tooling-short .row {
@@ -3814,7 +3816,7 @@ fieldset {
   padding: 4px 6px;
   display: grid;
   background: color-mix(in srgb, var(--line) 30%, transparent);
-  border-right: 1px solid var(--line);
+  border-inline-end: 1px solid var(--line);
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
@@ -3831,7 +3833,7 @@ fieldset {
   top: 0;
   bottom: 0;
   width: 3px;
-  margin-left: -1px;
+  margin-inline-start: -1px;
   background: var(--ink);
 }
 
@@ -3892,7 +3894,7 @@ fieldset {
 .cost-bd-num {
   font-family: var(--font-mono);
   font-size: 0.82rem;
-  text-align: right;
+  text-align: end;
   white-space: nowrap;
 }
 .cost-bd-mults {
@@ -4006,7 +4008,7 @@ fieldset {
   border-radius: 6px;
   background: #f1e8d2;
   box-shadow: 0 2px 10px rgba(60, 40, 15, 0.25);
-  font-family: 'Old Standard TT', Georgia, 'Times New Roman', serif;
+  font-family: 'Old Standard TT', Georgia, 'Times New Roman', var(--font-scripts), serif;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -4063,7 +4065,7 @@ fieldset {
   text-anchor: middle;
 }
 .usmap-company {
-  font-family: 'UnifrakturMaguntia', 'Old Standard TT', serif;
+  font-family: 'UnifrakturMaguntia', 'Old Standard TT', var(--font-scripts), serif;
   font-size: 19px;
   text-anchor: middle;
 }
@@ -4077,7 +4079,7 @@ fieldset {
   text-anchor: middle;
 }
 .usmap-count {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, var(--font-scripts), sans-serif;
   font-size: 6.5px;
   font-weight: 700;
   fill: #fbf5e6 !important;
@@ -4151,7 +4153,7 @@ fieldset {
 }
 .state-card .kv b {
   font-family: var(--font-mono);
-  text-align: right;
+  text-align: end;
 }
 .state-card .actions {
   display: flex;
@@ -4243,7 +4245,7 @@ fieldset {
   background: #f3ead6;
   color: #2a2620;
   border: 1.5px solid #2a2620;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: Georgia, 'Times New Roman', var(--font-scripts), serif;
   padding: 6px 12px;
   display: grid;
   align-content: start;
@@ -4266,4 +4268,30 @@ fieldset {
   background: #333;
   color: #fff;
   font: 600 1.2rem/1.3 var(--font-ui);
+}
+
+/* ---------- Language ---------- */
+.lang-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.lang-picker select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-height: 36px;
+}
+.lang-picker.is-compact select {
+  padding: 4px 8px;
+  min-height: 30px;
+  font-size: 0.9rem;
+}
+.start-lang {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
 }

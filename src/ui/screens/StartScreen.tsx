@@ -5,6 +5,7 @@ import { DIFFICULTIES, type DifficultyId } from '../../data/difficulty';
 import { store } from '../store';
 import { Button, Choice } from '../components/ui';
 import { CarSVG } from '../viz/CarSVG';
+import { LanguagePicker } from '../components/LanguagePicker';
 
 export function StartScreen() {
   const [name, setName] = useState('Öncü Motor');
@@ -25,6 +26,9 @@ export function StartScreen() {
   return (
     <div className="start">
       <div className="start-card">
+        <div className="start-lang">
+          <LanguagePicker compact />
+        </div>
         <div className="start-hero">
           <CarSVG body="phaeton" size={0.3} year={1905} cylinders={4} styling={0.5} className="start-car" />
           <h1>CarFacTycoon</h1>

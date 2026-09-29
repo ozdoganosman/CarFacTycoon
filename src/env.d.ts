@@ -13,6 +13,8 @@ interface ImportMetaEnv {
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
+  /** Vite: modules matching a pattern, each loaded on demand. */
+  glob<T>(pattern: string): Record<string, () => Promise<T>>;
 }
 
 /** App-only styles and fonts in the Android build; empty elsewhere (see vite.config.ts). */

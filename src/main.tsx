@@ -10,6 +10,7 @@ import { deserialize, serialize } from './core/save';
 import { recordError } from './core/util';
 import { ErrorBoundary } from './ui/components/ErrorBoundary';
 import { initSync } from './ui/claudeLink';
+import { chosenLang, loadLanguage } from './i18n/load';
 import { ads, fakeBackend, useFakeAds } from './ui/ads';
 
 try {
@@ -51,8 +52,10 @@ function start(data: unknown) {
   );
 }
 
-if (hot?.ready) hot.ready(start);
-else start(hot?.data ?? {});
+// The language first (its catalog is a chunk of its own), then the game.
+const ready = loadLanguage(chosenLang());
+if (hot?.ready) hot.ready((data) => void ready.then(() => start(data)));
+else void ready.then(() => start(hot?.data ?? {}));
 void initSync();
 // Inside the Android app: back button, background pause, splash (src/native).
 if (Capacitor.isNativePlatform()) void import('./native/native').then((m) => m.initNative());

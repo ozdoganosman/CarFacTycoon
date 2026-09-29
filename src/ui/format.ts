@@ -1,16 +1,20 @@
 import { money, num } from '../core/util';
 import { pctWith } from '../core/turkish';
+import { isTurkish, langDef, t } from '../i18n';
+import { fmtNumber, fmtPercent } from '../i18n/format';
 import type { FinanceWeek, GameState } from '../core/types';
 
 export { money, num };
 
-export const pct = (v: number, digits = 1) => `%${(v * 100).toFixed(digits)}`;
+export const pct = (v: number, digits = 1) => fmtPercent(v, digits);
 
 /** A share with the possessive suffix, read as Turkish: pctOf(0.06) → "%6’sı", pctOf(0.025, 1) → "%2,5’i". */
 export const pctOf = (v: number, digits = 0) => pctWith(v, 'poss', digits);
 
 export function signedMoney(v: number) {
-  return `${v >= 0 ? '+' : ''}${money(v)}`;
+  const s = `${v >= 0 ? '+' : ''}${money(v)}`;
+  // Keep the sign with the amount in right-to-left text.
+  return langDef().rtl ? `\u2066${s.replace(/[\u2066\u2069]/g, '')}\u2069` : s;
 }
 
 /** Profit over the last n recorded weeks. */
@@ -24,13 +28,14 @@ export function recentProfit(s: GameState, weeks = 4): number {
   return total / f.length;
 }
 
-export const kmh = (v: number) => `${Math.round(v)} km/s`;
-export const secs = (v: number | null) => (v === null || v >= 99 ? '—' : `${v.toFixed(1)} sn`);
-export const litres = (v: number) => `${v.toFixed(1)} L/100km`;
+export const kmh = (v: number) => t('{v} km/s', { v: Math.round(v) });
+export const secs = (v: number | null) => (v === null || v >= 99 ? '—' : t('{v} sn', { v: isTurkish() ? v.toFixed(1) : fmtNumber(v, 1) }));
+export const litres = (v: number) => t('{v} L/100km', { v: isTurkish() ? v.toFixed(1) : fmtNumber(v, 1) });
 
 /** Turkish locative for a year, with vowel harmony and consonant assimilation: 1905’te, 1910’da, 1921’de. */
 export function inYear(year: number): string {
   const n = Math.round(year);
+  if (!isTurkish()) return String(n);
   const last = n % 10;
   const tens = n % 100;
   let word: 'de' | 'da' | 'te' | 'ta';

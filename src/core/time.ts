@@ -1,4 +1,6 @@
 // The game clock runs in weeks since 1 January 1900 (52 weeks per year).
+import { isTurkish } from '../i18n';
+import { fmtMonthYear, fmtShortMonth } from '../i18n/format';
 
 export const START_YEAR = 1900;
 export const WEEKS_PER_YEAR = 52;
@@ -13,6 +15,7 @@ export const monthOf = (week: number) => Math.min(11, Math.floor((weekOfYear(wee
 export const weekFor = (year: number, month = 0) => (year - START_YEAR) * WEEKS_PER_YEAR + Math.round((month / 12) * WEEKS_PER_YEAR);
 
 export function formatDate(week: number): string {
+  if (!isTurkish()) return fmtMonthYear(monthOf(week), yearOf(week));
   return `${MONTHS[monthOf(week)]} ${yearOf(week)}`;
 }
 
@@ -23,5 +26,6 @@ export function isMonthStart(week: number): boolean {
 
 /** Short label for chart axes, e.g. "Mar '08". */
 export function formatShort(week: number): string {
+  if (!isTurkish()) return fmtShortMonth(monthOf(week), yearOf(week));
   return `${MONTHS[monthOf(week)].slice(0, 3)} '${String(yearOf(week)).slice(2)}`;
 }

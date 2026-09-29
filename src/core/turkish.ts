@@ -1,5 +1,9 @@
+import { isTurkish } from '../i18n';
+import { fmtNumber, fmtPercent } from '../i18n/format';
+
 // Turkish suffixes after numbers follow how the number is read aloud: "%6’sı"
-// (altı), "%10’u" (on), "%25’i" (beş), "%40’ı" (kırk).
+// (altı), "%10’u" (on), "%25’i" (beş), "%40’ı" (kırk). In the other languages the helpers give the
+// plain number or percentage (the translated sentence carries the grammar).
 
 const UNITS = ['', 'bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz', 'dokuz'];
 const TENS = ['', 'on', 'yirmi', 'otuz', 'kırk', 'elli', 'altmış', 'yetmiş', 'seksen', 'doksan'];
@@ -53,11 +57,13 @@ export function suffixFor(word: string, kind: SuffixKind): string {
 
 /** A number with its suffix: num(6, 'poss') → "6’sı", num(2.5, 'poss', 1) → "2,5’i". */
 export function withSuffix(n: number, kind: SuffixKind, digits = 0): string {
+  if (!isTurkish()) return fmtNumber(n, digits);
   const shown = n.toLocaleString('tr-TR', { minimumFractionDigits: digits, maximumFractionDigits: digits });
   return `${shown}’${suffixFor(lastWord(n, digits), kind)}`;
 }
 
 /** A share as a percentage with a suffix: pct(0.06, 'poss') → "%6’sı". */
 export function pctWith(share: number, kind: SuffixKind, digits = 0): string {
+  if (!isTurkish()) return fmtPercent(share, digits);
   return `%${withSuffix(share * 100, kind, digits)}`;
 }

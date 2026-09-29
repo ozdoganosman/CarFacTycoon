@@ -1,4 +1,5 @@
 import type { FinanceWeek, GameState, LogCategory, LogEntry, ModalItem } from './types';
+import { fmtMoney, fmtNumber } from '../i18n/format';
 
 export function log(state: GameState, text: string, tone: LogEntry['tone'] = 'info', cat?: LogCategory) {
   state.log.push(cat && cat !== 'company' ? { week: state.week, text, tone, cat } : { week: state.week, text, tone });
@@ -72,17 +73,14 @@ export function earn(state: GameState, amount: number) {
 
 export const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
+/** Dollars, shortened in the player's language ("$1.25 mn" in Turkish). */
 export function money(v: number): string {
-  const sign = v < 0 ? '-' : '';
-  const a = Math.abs(v);
-  if (a >= 1e9) return `${sign}$${(a / 1e9).toFixed(2)} mr`;
-  if (a >= 1e6) return `${sign}$${(a / 1e6).toFixed(2)} mn`;
-  if (a >= 1e4) return `${sign}$${Math.round(a / 1000)} bin`;
-  return `${sign}$${Math.round(a).toLocaleString('tr-TR')}`;
+  return fmtMoney(v);
 }
 
+/** A whole number with the language's digit grouping. */
 export function num(v: number): string {
-  return Math.round(v).toLocaleString('tr-TR');
+  return fmtNumber(v);
 }
 
 /**
