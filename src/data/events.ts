@@ -451,6 +451,7 @@ export const DYNAMIC_EVENTS: GameEventDef[] = [
     body: (s) =>
       `Yönetim kurulunun sana güveni ${Math.round(s.shares?.confidence ?? 0)}/100’e düştü. Hissedarlar büyüme ve temettü bekliyor; toplantıda sesler yükseldi.\n\n` +
       `${targetsText(s)}\n\n` +
+      'Kurul artık yarış bütçesini, rakip satın almayı ve yeni hat kurmayı veto ediyor; güven 40’ın üstüne çıkınca kalkar. ' +
       'Temettü oranını Şirket ekranından ayarlayabilirsin. Güven 25’in altına inerse son uyarı gelir, sonra görevden alınırsın.',
   },
   {

@@ -7,7 +7,8 @@ import { makeRng } from '../src/core/rng';
 import { lastMove, mergeRivals, rivalMovesMonth, startPriceWar, techLeap } from '../src/core/rivalMoves';
 import { rivalDef, updateRivals } from '../src/core/rivals';
 import { deserialize, serialize } from '../src/core/save';
-import { boardYear, buyBack, canGoPublic, goPublic, marketCap } from '../src/core/shares';
+import { boardVeto, boardYear, buyBack, canGoPublic, goPublic, marketCap, nextTarget } from '../src/core/shares';
+import { setRacingLevel } from '../src/core/racing';
 import { weekFor } from '../src/core/time';
 import type { GameState, YearSummary } from '../src/core/types';
 import { eventDef } from '../src/data/events';
@@ -186,5 +187,94 @@ describe('the stock exchange and the board', () => {
     expect(copy.shares?.float).toBe(0.2);
     expect(buyBack(s, 1).ok).toBe(true);
     expect(s.shares).toBeUndefined();
+  });
+
+  /** Run the board through `years` years of steady business: revenue on target, profit up 10% a year. */
+  function run(s: GameState, years: number, payout: number) {
+    const sh = s.shares!;
+    sh.payout = payout;
+    let year = sh.target.year;
+    let profit = 80000;
+    for (let i = 0; i < years; i++, year++) {
+      const prev = s.years[s.years.length - 1].revenue;
+      profit *= 1.1;
+      s.years.push(summary(year, prev * (1 + sh.target.growth + 0.02), profit));
+      s.week = weekFor(year + 1);
+      if (boardYear(s, year)) return i + 1;
+    }
+    return 0;
+  }
+
+  it('a founder who never touches the dividend is voted out within a few years; one who pays is not', () => {
+    const passive = game(1912);
+    listed(passive);
+    expect(passive.shares!.payout).toBe(0.2);
+    const out = run(passive, 20, passive.shares!.payout);
+    expect(out).toBeGreaterThan(2);
+    expect(out).toBeLessThanOrEqual(8);
+    const careful = game(1912);
+    listed(careful);
+    expect(run(careful, 20, 0.6)).toBe(0);
+    expect(careful.shares!.confidence).toBeGreaterThan(55);
+  });
+
+  it('has a short memory: full confidence does not survive two bad years', () => {
+    const s = game(1912);
+    const sh = listed(s);
+    sh.confidence = 100;
+    sh.payout = 0;
+    s.years.push(summary(1912, 5e5, 1e4));
+    s.week = weekFor(1913);
+    boardYear(s, 1912);
+    expect(sh.confidence).toBeLessThan(60);
+    s.years.push(summary(1913, 3e5, 1e4));
+    s.week = weekFor(1914);
+    boardYear(s, 1913);
+    expect(sh.confidence).toBeLessThan(40);
+  });
+
+  it('expects half the profit and a rising dividend; a great year and a rival on the board raise the bar', () => {
+    // Calm years, far from the caps: 1926 and 1927.
+    const s = game(1926);
+    const sh = listed(s, 0.3);
+    const base = nextTarget(s, 1926);
+    expect(base.dividend).toBeCloseTo(0.3 * 0.5 * 80000, 0);
+    // A year that paid 60% of its profit and grew far beyond the target.
+    sh.history.push({ year: 1926, growth: base.growth + 0.3, targetGrowth: base.growth, dividend: 0.3 * 0.6 * 1e5, targetDividend: 0, profit: 1e5, met: true, confidence: 70, full: 0.6 * 1e5 });
+    s.years.push(summary(1926, 2e6, 1e5));
+    const next = nextTarget(s, 1927);
+    expect(next.dividend).toBeCloseTo(0.3 * 0.63 * 1e5, 0);
+    const calm = { ...sh.history[0], growth: base.growth };
+    sh.history[0] = calm;
+    const plain = nextTarget(s, 1927);
+    sh.history[0] = { ...calm, growth: base.growth + 0.3 };
+    expect(next.growth).toBeGreaterThan(plain.growth + 0.04);
+    sh.seat = 'monarch';
+    const strict = nextTarget(s, 1927);
+    expect(strict.growth).toBeGreaterThan(next.growth + 0.03);
+    expect(strict.dividend).toBeCloseTo(next.dividend * 1.15, 0);
+  });
+
+  it('a board that lost faith vetoes racing, buying rivals and new lines', () => {
+    const s = game(1920);
+    const sh = listed(s);
+    s.company.cash = 1e9;
+    expect(boardVeto(s)).toBeUndefined();
+    sh.confidence = 30;
+    expect(boardVeto(s)).toBeTruthy();
+    expect(A.buyLine(s).ok).toBe(false);
+    expect(setRacingLevel(s, 2).ok).toBe(false);
+    // Cutting back is always allowed.
+    expect(setRacingLevel(s, 0).ok).toBe(true);
+    // A bad board meeting disbands the racing team.
+    sh.confidence = 45;
+    s.racing = { level: 2, fame: 1 };
+    sh.payout = 0;
+    s.years.push(summary(1920, 1, 1e4));
+    s.week = weekFor(1921);
+    sh.target = { year: 1920, growth: 0.1, dividend: 1e6 };
+    boardYear(s, 1920);
+    expect(sh.confidence).toBeLessThan(40);
+    expect(s.racing.level).toBe(0);
   });
 });

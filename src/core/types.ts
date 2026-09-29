@@ -493,6 +493,8 @@ export interface BoardYear {
   profit: number;
   met: boolean;
   confidence: number;
+  /** The dividend as if every share were outside (to compare years when the float changed). */
+  full?: number;
 }
 
 /** The company on the stock exchange: outside shareholders, the board's targets and its patience. */

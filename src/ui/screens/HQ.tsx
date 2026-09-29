@@ -6,7 +6,7 @@ import { engineerSalary } from '../../data/economy';
 import { racingOutlook, racingPaused } from '../../core/racing';
 import { lineReport } from '../../core/factory';
 import { formatDate, formatShort, weekOfYear, yearFloat, yearOf } from '../../core/time';
-import { boardOutlook } from '../../core/shares';
+import { boardOutlook, boardVeto } from '../../core/shares';
 import { queueHold, researchDef, researchDefs, rivalAdoption, techState } from '../../core/research';
 import { segmentDef } from '../../data/segments';
 import type { CarModel, GameState, LogCategory } from '../../core/types';
@@ -79,6 +79,8 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
         go: () => store.go({ id: 'company' }),
       });
   }
+  const veto = boardVeto(s);
+  if (veto) out.push({ text: veto, go: () => store.go({ id: 'company' }) });
   // Research standing idle while rivals already build with technology the company has not learned.
   const r = s.research;
   const hold = queueHold(s, yearFloat(s.week));

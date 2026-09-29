@@ -75,7 +75,7 @@ export function Company() {
               )}
               <Choice
                 value={r.level}
-                onChange={(v) => store.act((st) => setRacingLevel(st, v))}
+                onChange={(v) => store.try((st) => setRacingLevel(st, v))}
                 options={RACING_LEVELS.map((l, i) => {
                   const o = racingOutlook(s, i);
                   return {

@@ -25,6 +25,7 @@ import {
 import { modelScores, priceNow, referencePrice } from './market';
 import { stateRng } from './rng';
 import { acquisitionTargets } from './acquisitions';
+import { boardVeto } from './shares';
 import { beginResearch, ensureResearch, knownKnowhow, labSlots, missingRequirements, pumpResearchQueue, researchCost, researchDef, researcherHireCost, restrictToKnown, unknownTech } from './research';
 import { experienceFactor, newEstimate } from './estimate';
 import { TESTS, SUPPLIERS, expectedDefects, generateDefects } from './testing';
@@ -752,6 +753,8 @@ export function setProjectLine(s: GameState, pid: string, lineId: string): Actio
 // ---------------- Factory ----------------
 
 export function buyLine(s: GameState): ActionResult {
+  const veto = boardVeto(s);
+  if (veto) return fail(veto);
   const cost = newLineCost(yearFloat(s.week));
   if (s.company.cash < cost) return fail(`Yeni hat için ${money(cost)} gerekiyor.`);
   spend(s, cost, 'investment');
@@ -803,6 +806,8 @@ export function buildTurnkeyLines(s: GameState, count: number, modelId: string |
   const each = turnkeyLineCost(s.week, allowBlack, slots) + (m ? retoolCost(s, m) : 0);
   const total = each * count;
   if (count < 1) return fail('En az bir hat seç.');
+  const veto = boardVeto(s);
+  if (veto) return fail(veto);
   if (s.company.cash < total) return fail(`${count} hat için ${money(total)} gerekiyor.`);
   const plan = planBalancedLine(yearFloat(s.week), allowBlack, slots);
   for (let i = 0; i < count; i++) {
@@ -823,6 +828,8 @@ export function buildTurnkeyLines(s: GameState, count: number, modelId: string |
 export function acquireRival(s: GameState, id: string): ActionResult {
   const t = acquisitionTargets(s).find((x) => x.id === id);
   if (!t) return fail('Bu şirket satılık değil.');
+  const veto = boardVeto(s);
+  if (veto) return fail(veto);
   if (s.company.cash < t.price) return fail(`${t.name} için ${money(t.price)} gerekiyor.`);
   spend(s, t.price, 'investment');
   (s.acquired ??= []).push(id);

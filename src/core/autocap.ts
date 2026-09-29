@@ -3,6 +3,7 @@ import { STAGES, STATIONS, stationDef } from '../data/stations';
 import { blackPaintIsFaster, emptyLine, expansionCost, lineOffline, modernizeQuote, lineReport, lineUpkeep, nextLineName, planBalancedLine, reservedLines, retoolCost, stationPrice, stationResale, turnkeyLineCost } from './factory';
 import { DEALER_COMMISSION } from '../data/economy';
 import { priceNow, weeklySegmentDemand } from './market';
+import { boardVeto } from './shares';
 import { HIKE_TOLERANCE } from './actions';
 import { yearFloat } from './time';
 import type { CarModel, GameState, ProductionLine, StageId } from './types';
@@ -217,8 +218,8 @@ function options(s: GameState, m: CarModel, lines: ProductionLine[], allowBlack:
       });
     }
   }
-  // A new line, from a small hall to a full one: the size the missing demand needs.
-  for (const k of SIZES) {
+  // A new line, from a small hall to a full one: the size the missing demand needs (not while the board vetoes new lines).
+  for (const k of boardVeto(s) ? [] : SIZES) {
     const plan = planBalancedLine(yf, allowBlack, k);
     const slots = Math.max(emptyLine('x', 'x').slots, k);
     const perLine = lineReport(s, { ...emptyLine('x', 'x'), slots, stations: plan }, m.stats.complexity).throughput;

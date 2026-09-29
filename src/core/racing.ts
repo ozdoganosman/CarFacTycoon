@@ -3,6 +3,7 @@ import { MARKETS } from '../data/markets';
 import { modelScores } from './market';
 import { publish } from './news';
 import { rand } from './rng';
+import { boardVeto } from './shares';
 import { weekOfYear, yearFloat, yearOf } from './time';
 import type { CarModel, GameState, MarketId } from './types';
 import { clamp, log, money, spend } from './util';
@@ -161,8 +162,13 @@ function publishWin(s: GameState, m: CarModel, race: string) {
   });
 }
 
-export function setRacingLevel(s: GameState, level: number) {
+export function setRacingLevel(s: GameState, level: number): { ok: boolean; error?: string } {
   s.racing ??= { level: 0, fame: 0 };
-  s.racing.level = clamp(Math.round(level), 0, 3);
+  const next = clamp(Math.round(level), 0, 3);
+  // A board that has lost faith pays for no racing.
+  const veto = next > s.racing.level ? boardVeto(s) : undefined;
+  if (veto) return { ok: false, error: veto };
+  s.racing.level = next;
   log(s, s.racing.level ? `Yarış bütçesi: ${RACING_LEVELS[s.racing.level].name} (yılda ~${money(racingBudget(s, s.racing.level))}).` : 'Yarış takımı dağıtıldı.', 'info');
+  return { ok: true };
 }

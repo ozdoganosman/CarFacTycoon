@@ -238,7 +238,7 @@ export function acceptBid(s: GameState) {
     float: b.stake,
     since: s.week,
     confidence: 60,
-    payout: 0.4,
+    payout: 0.2,
     target: { year: year + 1, growth: 0, dividend: 0 },
     history: [],
     dividends: 0,

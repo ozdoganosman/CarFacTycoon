@@ -24,7 +24,17 @@ const BUYBACK_PREMIUM = 1.1;
 export const GREENMAIL_PREMIUM = 1.35;
 /** Below this the board gives its last warning. */
 export const ULTIMATUM_AT = 25;
-export const WARNING_AT = 45;
+/** Below this the board warns, and vetoes racing, buying rivals and new lines. */
+export const WARNING_AT = 40;
+export const VETO_AT = WARNING_AT;
+/** The dividend the board expects: half the profit, rising a little every year (at most three quarters). */
+const DIVIDEND_SHARE = 0.5;
+const DIVIDEND_RISE = 1.05;
+const DIVIDEND_CAP = 0.75;
+/** A rival on the board: stricter targets and less patience. */
+const SEAT_GROWTH = 0.04;
+const SEAT_DIVIDEND = 1.15;
+const SEAT_ANGER = 1.3;
 
 /**
  * The stock market's mood: the long boom of the twenties, the crash of 1929 and the slow
@@ -109,8 +119,9 @@ export function goPublic(s: GameState, pct: number): ShareResult {
   s.shares = {
     float: share,
     since: s.week,
-    confidence: 65,
-    payout: 0.4,
+    confidence: 60,
+    // Low at first: raising it is the player's call (money out of the till).
+    payout: 0.2,
     target: { year: first, growth: 0, dividend: 0 },
     history: [],
     dividends: 0,
@@ -168,20 +179,33 @@ export function marketGrowth(year: number): number {
 }
 
 /**
- * The board's targets for a year: revenue must beat the market (less so for a maker that
- * already sells a big share), and the outside shareholders want their dividend.
+ * The board's targets for a year. Revenue must beat the market (less so for a maker that already
+ * sells a big share), and more after a very good year: success raises expectations. The outside
+ * shareholders want half the profit, and a dividend a little bigger than last year's. A rival on
+ * the board asks for more of both.
  */
 export function nextTarget(s: GameState, year: number): ShareState['target'] {
   const sh = s.shares!;
   const last = s.years.find((y) => y.year === year - 1) ?? s.years[s.years.length - 1];
   const share = last?.shareByMarket.usa ?? 0;
-  const strict = sh.seat ? 1 : 0;
-  // Wild years (the post-war boom, the crash) are judged against a calmer market.
-  const growth = clamp(marketGrowth(year) + 0.03 * Math.max(0, 1 - 2 * share) + 0.02 * strict, -0.2, 0.15);
-  // At least last year's dividend at a 40% payout: profit must not fall.
+  const seat = sh.seat ? 1 : 0;
+  const judged = sh.history.find((b) => b.year === year - 1);
+  const raised = judged ? clamp((judged.growth - judged.targetGrowth - 0.05) * 0.3, 0, 0.06) : 0;
+  // The post-war boom is judged against a calmer market; in the crash the board follows the market
+  // down, and while the lines build for the army (1942-45) it expects no growth at all.
+  const war = year >= 1942 && year <= 1945;
+  const growth = war ? -0.5 : clamp(marketGrowth(year) + 0.03 * Math.max(0, 1 - 2 * share) + raised + SEAT_GROWTH * seat, -0.4, 0.2);
   const profit = Math.max(0, last?.profit ?? 0);
-  const dividend = sh.float * Math.min(0.045 * Math.max(0, companyValue(s)), 0.4 * profit) * (strict ? 1.15 : 1);
+  const rising = Math.min((judged?.full ?? 0) * DIVIDEND_RISE, DIVIDEND_CAP * profit);
+  const dividend = sh.float * Math.max(DIVIDEND_SHARE * profit, rising) * (seat ? SEAT_DIVIDEND : 1);
   return { year, growth, dividend };
+}
+
+/** What the board forbids while it has lost faith (undefined when it forbids nothing). */
+export function boardVeto(s: GameState): string | undefined {
+  const sh = s.shares;
+  if (!sh || sh.confidence >= VETO_AT) return undefined;
+  return `Yönetim kurulu veto etti (güven ${Math.round(sh.confidence)}/100): yarış, rakip satın alma ve yeni hat yok. Güven ${VETO_AT}’ın üstüne çıkınca kalkar.`;
 }
 
 /** The dividend a year's profit pays the outside shareholders at the chosen payout. */
@@ -244,14 +268,17 @@ export function boardYear(s: GameState, year: number): boolean {
   const growth = prev > 0 ? y.revenue / prev - 1 : sh.target.growth;
   const grew = growth >= sh.target.growth - 0.01;
   const paid = dividend >= sh.target.dividend * 0.98;
-  // Two bad years bring a warning, three the last one: nobody is voted out for one poor year.
-  let delta = 0;
-  if (grew && paid) delta += 8 + Math.min(6, Math.max(0, growth - sh.target.growth) * 30);
-  if (!grew) delta -= 6 + Math.min(8, (sh.target.growth - growth) * 40);
-  if (!paid) delta -= 6;
-  if (y.profit < 0) delta -= 4;
-  if (sh.seat && delta < 0) delta *= 1.15;
   const before = sh.confidence;
+  // A short memory: the credit of good years fades by half every year ("what have you done lately?"),
+  // so a good run forgives one or two bad years, not a decade.
+  if (sh.confidence > 50) sh.confidence = 50 + (sh.confidence - 50) * 0.5;
+  // One bad year after a good run costs about 15 points (a warning needs two), the worst about 24.
+  let delta = grew ? 5 + Math.min(4, Math.max(0, growth - sh.target.growth) * 20) : -(5 + Math.min(7, (sh.target.growth - growth) * 30));
+  // Shareholders who got far less than they were promised are angrier than those a little short.
+  const short = sh.target.dividend > 0 ? clamp(1 - dividend / sh.target.dividend, 0, 1) : 0;
+  delta += paid ? 5 : -(4 + Math.min(8, short * 12));
+  if (y.profit < 0) delta -= 4;
+  if (sh.seat && delta < 0) delta *= SEAT_ANGER;
   sh.confidence = clamp(sh.confidence + delta, 0, 100);
   const met = grew && paid;
   const entry: BoardYear = {
@@ -263,6 +290,7 @@ export function boardYear(s: GameState, year: number): boolean {
     profit: y.profit,
     met,
     confidence: sh.confidence,
+    full: sh.float > 0 ? dividend / sh.float : 0,
   };
   sh.history.push(entry);
   if (sh.history.length > 60) sh.history.shift();
@@ -272,16 +300,22 @@ export function boardYear(s: GameState, year: number): boolean {
     `Yönetim kurulu, ${year}: ciro ${pctTxt(growth)} (hedef ${pctTxt(sh.target.growth)}), temettü ${money(dividend)} (hedef ${money(sh.target.dividend)}). ${met ? 'Hedefler tuttu.' : 'Hedefler tutmadı.'} Güven ${Math.round(before)} → ${Math.round(sh.confidence)}.`,
     met ? 'good' : 'warn',
   );
-  // Voted out: the last warning was not heeded, or no faith is left at all.
-  if (sh.confidence <= 0 || (sh.ultimatum && !met)) return true;
+  // Voted out only after the last warning went unheeded: nobody is thrown out without one.
+  if (sh.ultimatum && !met) return true;
   if (sh.ultimatum && met) {
     delete sh.ultimatum;
     log(s, 'Yönetim kurulu hedeflerin tutmasından memnun: son uyarı geri çekildi.', 'good');
   } else if (sh.confidence < ULTIMATUM_AT) {
     sh.ultimatum = true;
+    sh.confidence = Math.max(sh.confidence, 5);
     pushModal(s, { kind: 'event', eventId: 'board-ultimatum' });
   } else if (sh.confidence < WARNING_AT && before >= WARNING_AT) {
     pushModal(s, { kind: 'event', eventId: 'board-warning' });
+  }
+  // Pressure before the end: no money for racing while the board has lost faith.
+  if (sh.confidence < VETO_AT && s.racing?.level) {
+    s.racing.level = 0;
+    log(s, 'Yönetim kurulu yarış bütçesini kesti: takım dağıtıldı.', 'warn');
   }
   sh.target = nextTarget(s, year + 1);
   return false;

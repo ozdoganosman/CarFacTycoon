@@ -8,6 +8,7 @@ import {
   ULTIMATUM_AT,
   WARNING_AT,
   boardOutlook,
+  boardVeto,
   buyBack,
   buybackCost,
   canGoPublic,
@@ -45,8 +46,12 @@ export function SharesPanel({ s }: { s: GameState }) {
             <Info>
               <p>Şirketin bir kısmını borsada satarak sermaye toplarsın; kontrol hep sende kalır (en fazla %{Math.round(MAX_FLOAT * 100)} satılabilir).</p>
               <p>
-                Karşılığında her yıl yönetim kuruluna hesap verirsin: ciro büyümesi ve temettü hedefleri gelir. Tutturamazsan güven düşer; son uyarıdan sonra da tutmazsa
-                görevden alınırsın ve oyun biter.
+                Karşılığında her yıl yönetim kuruluna hesap verirsin. Ciro pazardan hızlı büyümeli (çok iyi bir yıldan sonra beklenti yükselir); hissedarlar kârın yarısını
+                ve her yıl biraz daha fazla temettü ister. Temettü oranı %20 başlar: yükseltmek senin işin ve kasadan gerçek para çıkarır.
+              </p>
+              <p>
+                Kurulun hafızası kısadır: iyi yılların kredisi her yıl yarıya iner. Güven {WARNING_AT}’ın altına inerse kurul yarışı, rakip satın almayı ve yeni hat
+                kurmayı veto eder; {ULTIMATUM_AT}’in altında son uyarı gelir, sonra da tutmazsa görevden alınırsın ve oyun biter.
               </p>
               <p>Oyun sonu puanında şirket değerinin yalnızca senin payın sayılır. Borsanın havası fiyatı belirler: 1928’de satmak, 1932’de geri almak ucuzdur.</p>
             </Info>
@@ -88,6 +93,7 @@ export function SharesPanel({ s }: { s: GameState }) {
     );
   }
   const out = boardOutlook(s)!;
+  const veto = boardVeto(s);
   const tone = sh.confidence < ULTIMATUM_AT ? 'bad' : sh.confidence < WARNING_AT ? 'warn' : 'good';
   const cap = marketCap(s);
   const step = 0.05;
@@ -118,7 +124,11 @@ export function SharesPanel({ s }: { s: GameState }) {
       ) : (
         <p className="small muted">Yönetim kurulu seni ilk kez {sh.target.year} sonunda değerlendirecek.</p>
       )}
-      <p className="small">Temettü oranı (kârın dış hissedarlara düşen payından ne kadarı dağıtılır):</p>
+      {veto && <p className="note tone-bad">{veto}</p>}
+      <p className="small">
+        Temettü oranı (kârın dış hissedarlara düşen payından ne kadarı dağıtılır). Kurul kârın yarısını ve geçen yıldan biraz fazlasını bekliyor
+        {sh.seat ? '; rakip yönetimde olduğu için daha da fazlasını' : ''}:
+      </p>
       <Choice
         compact
         value={sh.payout}
