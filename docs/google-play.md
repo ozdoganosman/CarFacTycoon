@@ -59,7 +59,7 @@ Play Console → **Uygulama oluştur**: ad `CarFacTycoon`, varsayılan dil Türk
 • Borsaya açıl: sermaye gelir, ama yönetim kurulu her yıl büyüme ve temettü ister. Hedefleri tutturamazsan görevden alınırsın.
 • Dönemin gerçek teknolojilerini araştır, savaş yıllarını ve 1929 buhranını atlat. Gazeteler her yeniliği manşetten duyurur; "neden böyle çalışıyor?" kartlarıyla gerçek otomobil mühendisliğini öğren.
 
-İnternetsiz oynanır, hesap gerekmez, reklam yok.
+İnternetsiz oynanır, hesap gerekmez. Reklam içerir; tek seferlik bir satın almayla kaldırılabilir. İstersen kısa bir reklam izleyip sponsordan şirketine para alabilirsin.
 ```
 
 **Uzun açıklama (EN):**
@@ -76,7 +76,7 @@ America, 1900. A small workshop, a handful of engineers and a little money. Your
 • Go public: the capital comes in, but the board wants growth and dividends every year. Miss the targets and you are voted out.
 • Research the real technologies of the era and live through the war years and the 1929 crash. Period newspapers announce every breakthrough; "why does it work like this?" cards teach real automotive engineering as you play.
 
-Plays offline, no account needed, no ads. The game is in Turkish.
+Plays offline, no account needed. Contains ads, which a one-time purchase removes; watch a short ad when you like and a sponsor pays your company. The game is in Turkish.
 ```
 
 (İngilizce metin mağazada ayrı dil olarak eklenebilir; oyunun kendisi şimdilik yalnızca Türkçe, İngilizce metnin son cümlesi bunu söylüyor.)
@@ -92,18 +92,19 @@ Görseller oyunun o anki haliyle yeniden üretilebilir: kayıtlar `PROMO_SAVES=1
 ## 5. Uygulama içeriği (Policy → App content)
 
 - **Gizlilik politikası:** `https://ozdoganosman.github.io/CarFacTycoon/privacy.html` (kaynak `public/privacy.html`; yayından önce iletişim e-postası eklenmeli).
-- **Reklamlar:** Hayır, reklam yok. (AdMob eklenince "Evet" olacak ve gizlilik politikası ondan önce güncellenecek.)
+- **Reklamlar:** Evet, uygulama reklam içeriyor (AdMob).
+- **Reklam kimliği:** Evet, kullanılıyor; amaç *Reklam veya pazarlama* (AdMob). (`AD_ID` izni reklam kütüphanesiyle kendiliğinden gelir.)
 - **Uygulama erişimi:** Tüm özellikler özel erişim olmadan kullanılabilir.
-- **İçerik derecelendirmesi (IARC anketi):** Kategori *Oyun*. Şiddet, cinsellik, küfür, kumar yok; kullanıcılar birbiriyle iletişim kurmaz; dijital satın alma yok. Beklenen sonuç: 3+ / Herkes.
+- **İçerik derecelendirmesi (IARC anketi):** Kategori *Oyun*. Şiddet, cinsellik, küfür, kumar yok; kullanıcılar birbiriyle iletişim kurmaz; dijital satın alma **var** (reklamları kaldır). Beklenen sonuç: 3+ / Herkes.
 - **Hedef kitle:** 13 yaş ve üstü (13–15, 16–17, 18+). "Çocukların ilgisini çekiyor mu?" → Hayır.
 - **Haber uygulaması, sağlık, finans özellikleri, devlet uygulaması:** Hayır.
 
 ### Veri güvenliği formu
 
-- Veri topluyor mu? **Evet.** Paylaşıyor mu? **Hayır** (Supabase ve PostHog bizim adımıza veri işleyen hizmet sağlayıcılardır; Play'in tanımında bu "paylaşım" sayılmaz).
+- Veri topluyor mu? **Evet.** Paylaşıyor mu? **Evet**: reklam kütüphanesi (Google AdMob) reklam için veri gönderir. (Supabase ve PostHog bizim adımıza veri işleyen hizmet sağlayıcılardır; Play'in tanımında onlar "paylaşım" sayılmaz.)
 - Aktarım sırasında şifreli mi? **Evet.**
 - Kullanıcı silme isteyebilir mi? **Evet** (oyun içinde: Geri bildirim → Gönderdiğim verileri sil).
-- Toplama isteğe bağlı mı? **Evet**, hepsi için (oyuncu "Paylaş" demeden hiçbir şey gitmez).
+- Toplama isteğe bağlı mı? Oyun verileri için **Evet** (oyuncu "Paylaş" demeden hiçbir şey gitmez); AdMob'un topladıkları için **Hayır** (reklam gösterilirken gider).
 
 | Veri türü | Toplanıyor | Amaç |
 |---|---|---|
@@ -112,8 +113,60 @@ Görseller oyunun o anki haliyle yeniden üretilebilir: kayıtlar `PROMO_SAVES=1
 | Uygulama etkinliği → Kullanıcının oluşturduğu diğer içerik | Evet (şirket adı, notlar, kayıtlı oyun) | Analiz |
 | Uygulama bilgileri ve performans → Kilitlenme günlükleri, Tanılama | Evet (oyun hataları) | Analiz |
 | Cihaz veya diğer kimlikler | Evet (rastgele oyuncu numarası) | Analiz |
+| Cihaz veya diğer kimlikler (reklam kimliği) | Evet, **paylaşılıyor** (AdMob) | Reklam veya pazarlama, Analiz, Dolandırıcılığı önleme |
+| Konum → Yaklaşık konum (IP'den) | Evet, **paylaşılıyor** (AdMob) | Reklam veya pazarlama, Analiz, Dolandırıcılığı önleme |
+| Uygulama etkinliği → Uygulama etkileşimleri (reklamlarla) | Evet, **paylaşılıyor** (AdMob) | Reklam veya pazarlama, Analiz |
+| Uygulama bilgileri ve performans → Kilitlenme günlükleri, Tanılama (reklam kütüphanesi) | Evet, **paylaşılıyor** (AdMob) | Analiz, Dolandırıcılığı önleme |
 
-\* PostHog'da **Data pipeline → GeoIP** dönüştürücüsü kapatılırsa yaklaşık konum toplanmaz; o zaman hem bu satır hem gizlilik politikasındaki cümle kaldırılmalı.
+\* PostHog'da **Data pipeline → GeoIP** dönüştürücüsü kapatılırsa PostHog yaklaşık konum toplamaz; o zaman o satır ve gizlilik politikasındaki cümle kaldırılmalı (AdMob satırı kalır).
+
+AdMob satırları Google'ın kendi rehberine göre: [developers.google.com/admob/android/privacy/play-data-disclosure](https://developers.google.com/admob/android/privacy/play-data-disclosure). Formu doldururken bu sayfanın güncel halini kontrol et.
+
+## 5b. Reklamlar (AdMob) ve "Reklamları kaldır"
+
+Oyunun Android sürümündeki reklamlar (tarayıcı sürümünde reklam yok):
+
+| Reklam | Nerede | Sıklık |
+|---|---|---|
+| Ödüllü (sponsor parası) | Üst çubukta 📺 düğmesi, kasa eksiye düşünce uyarıda | Oyuncu isterse, oyun içinde çeyrekte bir (yarım haftalık ciro kadar para) |
+| Ödüllü geçiş (yıl sonu primi) | Yıl sonu kartında | Yılda bir teklif; arada bir 5 saniye geri sayıp kendisi başlar, oyuncu "Hayır" diyebilir (yılın vergisinin yarısı kadar para) |
+| Geçiş | Lansman raporu kapanınca, gazete kapanınca | Oturumun ilk 3 dakikasında hiç, iki reklam arasında en az 4 dakika |
+| Yerel (gazete ilanı) | Gazete okurken sayfanın altında, dönem ilanı görünümünde | Her gazetede |
+
+"Reklamları kaldır" satın alınınca geçiş reklamı, kendiliğinden başlayan yıl sonu reklamı ve gazete ilanı kalkar; sponsor parası için reklamı oyuncu isterse yine izleyebilir.
+
+### AdMob kurulumu (bir kez)
+
+1. [admob.google.com](https://admob.google.com) → hesap aç (ödeme ve vergi bilgileri dahil).
+2. **Uygulamalar → Uygulama ekle** → Android, "henüz yayında değil". Uygulama kimliğini (`ca-app-pub-…~…`) not al; Play'de yayınlanınca uygulamayı mağaza kaydına bağla.
+3. **Reklam birimleri**: dört birim oluştur ve kimliklerini (`ca-app-pub-…/…`) not al:
+   - *Ödüllü* → `sponsor`
+   - *Ödüllü geçiş* → `yil-sonu`
+   - *Geçiş* → `ara`
+   - *Yerel gelişmiş* → `gazete`
+4. **Gizlilik ve mesajlaşma → GDPR**: Avrupa için onay mesajı oluştur ve yayınla (uygulama bu mesajı kendisi gösterir; yoksa Avrupa'da kişiselleştirilmemiş/sınırlı reklam çıkar).
+5. GitHub → repo → **Settings → Secrets and variables → Actions → Variables** sekmesi → **New repository variable** ile beş değişken (gizli değildir):
+
+| Ad | Değer |
+|---|---|
+| `ADMOB_APP_ID` | uygulama kimliği (`~` işaretli) |
+| `ADMOB_REWARDED` | ödüllü birim |
+| `ADMOB_REWARDED_INTERSTITIAL` | ödüllü geçiş birimi |
+| `ADMOB_INTERSTITIAL` | geçiş birimi |
+| `ADMOB_NATIVE` | yerel gelişmiş birim |
+
+Değişkenler yokken uygulama Google'ın **test reklamlarını** gösterir ("Test Ad" yazar, para kazandırmaz); kapalı testte bu işe yarar, üretime çıkmadan önce değişkenler girilmeli. Kendi telefonunda gerçek reklamlara dokunma (AdMob hesabı kapatılabilir); denemeyi test reklamlarıyla yap.
+
+İsteğe bağlı: `app-ads.txt` dosyası geliştirici web sitesinin **kök** alanında durmalı (`https://ozdoganosman.github.io/app-ads.txt`, yani `ozdoganosman.github.io` adlı ayrı bir repo). Yoksa reklamlar yine çıkar, AdMob yalnızca uyarı gösterir.
+
+### "Reklamları kaldır" ürünü
+
+1. Play Console → **Ayarlar → Ödeme profili** (satıcı hesabı) kur; uygulama içi satış için gerekli.
+2. Önce faturalandırma kitaplığını içeren bir AAB'yi (bu sürümden itibaren hepsi) herhangi bir teste yükle; Play ürün oluşturmayı ancak ondan sonra açar.
+3. **Para kazanma → Ürünler → Uygulama içi ürünler → Ürün oluştur**: kimlik **`remove_ads`** (oyun bu kimliği arar), ad "Reklamları kaldır", açıklama "Geçiş reklamlarını ve gazete ilanını kaldırır", fiyat senin kararın. Etkinleştir.
+4. Deneme: **Ayarlar → Lisans testi**'ne kendi Gmail adresini ekle; test satın alması ücret almaz.
+
+Oyunda: **Ayarlar → Reklamlar → Reklamları kaldır (fiyat)** ve **Satın alımı geri yükle** (başka telefona geçince).
 
 ## 6. Kapalı test ve yayın
 

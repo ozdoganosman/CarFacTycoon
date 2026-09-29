@@ -4,6 +4,7 @@ import { CarSVG } from '../../src/ui/viz/CarSVG';
 import type { BodyId } from '../../src/core/types';
 import { C, CAR_VARS, COND, Caption, Chip, Flash, Punch, SERIF, Shot, TYPE, TopShade, seqSrc, shotSrc } from './ui';
 import MAP_STEPS from './map.json';
+import SOUND from './sound.json';
 
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 
@@ -162,6 +163,51 @@ export const EngineScene: React.FC<{ duration: number }> = ({ duration }) => {
       <Shot src={seqSrc('engine', f, 150)} from={{ x: 540, y: 800, s: 1.1 }} to={{ x: 540, y: 780, s: 1.24 }} duration={duration} anchorY={1160} cropTop={330} />
       <TopShade height={640} />
       <Caption text="Motoru {silindir silindir} kur" top={190} size={100} />
+    </Punch>
+  );
+};
+
+/** A level meter under the caption, so the sound shows even with the phone muted. */
+const Meter: React.FC<{ level: number; hot: boolean }> = ({ level, hot }) => {
+  const f = useCurrentFrame();
+  const bars = 26;
+  return (
+    <div style={{ position: 'absolute', top: 330, left: 0, right: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 22 }}>
+      <Chip bg="rgba(246,234,208,0.95)" color={C.ink} size={40}>
+        🔊 Sesi aç
+      </Chip>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, height: 120 }}>
+        {Array.from({ length: bars }, (_, i) => {
+          const wobble = 0.55 + 0.45 * Math.abs(Math.sin(f * (0.9 + (i % 5) * 0.23) + i * 1.7));
+          const shape = 0.35 + 0.65 * Math.sin((Math.PI * (i + 0.5)) / bars);
+          const h = 10 + 110 * level * wobble * shape;
+          return <div key={i} style={{ width: 11, height: h, borderRadius: 6, background: hot ? C.red : C.gold, boxShadow: '0 0 18px rgba(0,0,0,0.5)' }} />;
+        })}
+      </div>
+    </div>
+  );
+};
+
+/** The engine heard on the test stand: the game's own engine voice, the tachometer at the same revs. */
+export const SoundScene: React.FC<{ duration: number }> = ({ duration }) => {
+  const f = useCurrentFrame();
+  const n = SOUND.rpm.length;
+  const rpm = SOUND.rpm[Math.max(0, Math.min(n - 1, f))];
+  const level = Math.min(1, rpm / SOUND.redline);
+  const hot = rpm > SOUND.redline * 0.97;
+  // The whole picture trembles as the revs climb, hardest past the redline.
+  const amp = hot ? 7 : level > 0.75 ? 3 : 0;
+  const dx = Math.sin(f * 2.3) * amp;
+  const dy = Math.cos(f * 1.9) * amp * 0.6;
+  return (
+    <Punch>
+      <AbsoluteFill style={{ transform: `translate(${dx}px, ${dy}px)` }}>
+        <Shot src={seqSrc('sound', f, n)} from={{ x: 540, y: 1000, s: 1.0 }} to={{ x: 540, y: 990, s: 1.1 }} duration={duration} anchorY={1150} cropTop={330} />
+      </AbsoluteFill>
+      <TopShade height={560} />
+      <Caption text="Motorunu {dinle}" top={170} size={108} />
+      <Meter level={level} hot={hot} />
+      {hot && <AbsoluteFill style={{ boxShadow: 'inset 0 0 160px rgba(200,40,20,0.55)', pointerEvents: 'none' }} />}
     </Punch>
   );
 };
@@ -613,7 +659,7 @@ export const EndScene: React.FC<{ duration: number; cta: string }> = ({ cta }) =
         </div>
       </div>
       <div style={{ position: 'absolute', top: 1230, width: '100%', textAlign: 'center', opacity: info, transform: `translateY(${(1 - info) * 20}px)` }}>
-        <div style={{ fontFamily: TYPE, fontSize: 44, color: 'rgba(246,234,208,0.9)' }}>İnternetsiz · Hesap yok · Reklam yok</div>
+        <div style={{ fontFamily: TYPE, fontSize: 44, color: 'rgba(246,234,208,0.9)' }}>İnternetsiz oynanır · Hesap gerekmez</div>
         <div style={{ marginTop: 36 }}>
           <Chip bg={C.gold} color={C.ink} size={50}>
             {cta}

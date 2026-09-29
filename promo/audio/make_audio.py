@@ -227,6 +227,15 @@ rag(A0, bars_a, bar_a, ["C", "C", "A7", "A7", "D7", "G7", "C", "G7"])
 bar_b = (B1 - B0) / 3
 rag(B0, 3, bar_b, ["F", "D7", "G7"])
 
+# The engine-sound scene: the piano steps back for the game's own engine voice.
+V0, V1 = sec(SC["sound"]), sec(SC["susp"])
+duck = np.ones(mix.shape[1])
+i0, i1, ramp = int(V0 * SR), int(V1 * SR), int(0.3 * SR)
+duck[i0:i1] = 0.1
+duck[i0 - ramp : i0] = np.linspace(1, 0.1, ramp)
+duck[i1 : i1 + ramp] = np.linspace(0.1, 1, ramp)
+mix *= duck
+
 # final "ta-da": big C chord rolled up the keyboard, then a sparkle when the play button pops
 END = sec(SC["end"])
 for i, n in enumerate([24, 36, 43, 52, 55, 60, 64, 67, 72, 76, 79, 84]):
@@ -266,7 +275,7 @@ for i in range(1, 8):
     add(sec(SC["cars"] + i * per) - 0.05, whoosh(0.3, 900, 7000), 0.35, 0.6 - i * 0.15)
 
 # engine: a four-cylinder chugging along
-E0, E1 = sec(SC["engine"]), sec(SC["susp"])
+E0, E1 = sec(SC["engine"]), sec(SC["sound"])
 dur = E1 - E0
 eng = np.zeros(int(dur * SR))
 pulse = thump(70, 0.09, 1.0, 0.6) + noise(0.09, 60, 900) * env(int(0.09 * SR), 0.002, 0.025) * 0.8
@@ -275,6 +284,15 @@ for k in range(int(dur * fire)):
     i = int(k / fire * SR)
     eng[i : i + len(pulse)] += pulse[: len(eng) - i] * (1.0 if k % 4 == 0 else 0.7)
 add(E0, fade(eng, 0.15, 0.3), 0.5)
+
+# the engine heard: rendered from the game's engine voice by capture/shots.mjs (section "sound")
+with wave.open(os.path.join(ROOT, "public", "audio", "engine.wav")) as w:
+    raw = np.frombuffer(w.readframes(w.getnframes()), dtype="<i2").reshape(-1, w.getnchannels()).T / 32767.0
+roar = raw[:, : int((V1 - V0) * SR)].copy()
+fin, fout = int(0.02 * SR), int(0.25 * SR)
+roar[:, :fin] *= np.linspace(0, 1, fin)
+roar[:, -fout:] *= np.linspace(1, 0, fout)
+add(V0, roar, 0.72)
 
 # suspension: bumps in the road
 S0 = sec(SC["susp"])

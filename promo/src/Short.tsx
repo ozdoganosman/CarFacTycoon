@@ -2,7 +2,7 @@ import React from 'react';
 import { AbsoluteFill, Audio, Sequence, staticFile } from 'remotion';
 import timeline from './timeline.json';
 import { Grain, Vignette } from './ui';
-import { Cars, CrisisScene, EndScene, EngineScene, FactoryScene, Hook, LaunchScene, MapScene, PaperScene, RacingScene, ResearchScene, RivalsScene, ScoreScene, SuspScene } from './scenes';
+import { Cars, CrisisScene, EndScene, EngineScene, FactoryScene, Hook, LaunchScene, MapScene, PaperScene, RacingScene, ResearchScene, RivalsScene, ScoreScene, SoundScene, SuspScene } from './scenes';
 
 export type ShortProps = {
   /** The end card's call to action, e.g. where the link is. */
@@ -31,6 +31,9 @@ export const Short: React.FC<ShortProps> = ({ cta, audio }) => {
       </Sequence>
       <Sequence {...span('engine')} name="Motor">
         <EngineScene duration={d('engine')} />
+      </Sequence>
+      <Sequence {...span('sound')} name="Motor sesi">
+        <SoundScene duration={d('sound')} />
       </Sequence>
       <Sequence {...span('susp')} name="Süspansiyon">
         <SuspScene duration={d('susp')} />

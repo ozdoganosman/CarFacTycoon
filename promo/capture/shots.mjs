@@ -18,6 +18,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, '../public/shots');
 const SEQ = join(HERE, '../public/seq');
 const URL = process.env.GAME_URL ?? 'http://localhost:5191/index.html';
+// The engine-sound section imports the game's audio modules, so it needs the Vite dev server in app mode
+// (from the repo root: `npx vite --mode app --port 5193`).
+const DEV_URL = process.env.DEV_URL ?? 'http://localhost:5193/';
 const FPS = 30;
 
 function loadPlaywright() {
@@ -48,13 +51,13 @@ const CLOCK = `(() => {
   window.__step = (ms) => { vt += ms; const q = queue; queue = []; for (const cb of q) cb(vt); };
 })();`;
 
-async function open(saveName, fn, { mutate } = {}) {
+async function open(saveName, fn, { mutate, url = URL } = {}) {
   const page = await browser.newPage({ viewport: { width: 432, height: 768 }, deviceScaleFactor: 2.5 });
   page.on('pageerror', (e) => errors.push(saveName + ': ' + String(e)));
   await page.addInitScript(CLOCK);
   // No playtest collection: the consent question would sit on the headquarters screen.
-  await page.route(/supabase\.co|posthog\.com/, (r) => r.abort());
-  await page.goto(URL);
+  await page.route(/supabase\.co|posthog\.com|fonts\.googleapis|fonts\.gstatic/, (r) => r.abort());
+  await page.goto(url);
   const o = save(saveName);
   if (mutate) mutate(o);
   else o.modals = [];
@@ -216,6 +219,146 @@ if (want('rivals')) {
     await p.waitForTimeout(300);
     await shot(p, 'board');
   });
+}
+
+if (want('sound')) {
+  // The engine on the test stand, heard: idle, a blip, full throttle to the redline and past it (the
+  // valves float, it misses and pops), then back to idle. The sound is the game's own engine voice
+  // rendered offline for this design; the tachometer is moved frame by frame to the same revs.
+  const SECS = 5;
+  await open(
+    'save-design',
+    async (p) => {
+      await nav(p, 'Projeler');
+      await p.locator('.card-item').first().click();
+      await p.waitForTimeout(500);
+      await p.getByRole('tab', { name: 'Motor' }).click();
+      await p.waitForTimeout(600);
+      await center(p, '.engine-sound');
+      await p.evaluate(() => window.scrollBy(0, 40));
+      await p.waitForTimeout(300);
+      const run = await p.evaluate(
+        async ({ secs, fps }) => {
+          const S = await import('/src/ui/audio/engineSound.ts');
+          const V = await import('/src/ui/audio/engineVoice.ts');
+          const spec = S.engineSound.spec;
+          if (!spec) throw new Error('the engine sound panel has no design');
+          const sr = 44100;
+          const ctx = new OfflineAudioContext(2, Math.round(sr * secs), sr);
+          const out = ctx.createGain();
+          out.gain.setValueAtTime(0, 0);
+          out.gain.linearRampToValueAtTime(1, 0.12);
+          out.connect(ctx.destination);
+          const voice = new S.EngineVoice(ctx, spec, out, 0);
+          let seed = 1912;
+          const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+          // Throttle: idle, a blip, idle, flat out into valve float, lift off.
+          const pedal = (t) => (t < 0.8 ? 0 : t < 1.15 ? 1 : t < 1.8 ? 0 : t < 3.9 ? 1 : 0);
+          const dt = 1 / 250;
+          let rpm = spec.idle;
+          let thr = 0;
+          const frames = [];
+          for (let i = 0; i * dt < secs; i++) {
+            const t = i * dt;
+            thr += (pedal(t) - thr) * (1 - Math.exp(-dt / 0.06));
+            const r = V.stepRevs(spec, voice.tone, rpm, thr, dt, t, rnd);
+            rpm = r.rpm;
+            voice.set(t, { rpm, throttle: r.load, level: r.level, float: r.float });
+            if (r.backfire) voice.backfire(t);
+            while (frames.length <= t * fps) frames.push({ rpm, float: r.float, thr, gas: pedal(t) > 0 });
+          }
+          const buf = await ctx.startRendering();
+          const a = buf.getChannelData(0);
+          const b = buf.getChannelData(1);
+          const pcm = new Int16Array(a.length * 2);
+          let peak = 1e-6;
+          for (let i = 0; i < a.length; i++) peak = Math.max(peak, Math.abs(a[i]), Math.abs(b[i]));
+          const g = 0.95 / peak;
+          for (let i = 0; i < a.length; i++) {
+            pcm[2 * i] = Math.round(a[i] * g * 32767);
+            pcm[2 * i + 1] = Math.round(b[i] * g * 32767);
+          }
+          let bin = '';
+          const bytes = new Uint8Array(pcm.buffer);
+          for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+          return { frames, redline: spec.redline, knock: spec.knock, sr, pcm: btoa(bin) };
+        },
+        { secs: SECS, fps: FPS },
+      );
+      // The sound, as a WAV next to the soundtrack (audio/make_audio.py mixes it in).
+      const pcm = Buffer.from(run.pcm, 'base64');
+      const head = Buffer.alloc(44);
+      head.write('RIFF', 0);
+      head.writeUInt32LE(36 + pcm.length, 4);
+      head.write('WAVEfmt ', 8);
+      head.writeUInt32LE(16, 16);
+      head.writeUInt16LE(1, 20);
+      head.writeUInt16LE(2, 22);
+      head.writeUInt32LE(run.sr, 24);
+      head.writeUInt32LE(run.sr * 4, 28);
+      head.writeUInt16LE(4, 32);
+      head.writeUInt16LE(16, 34);
+      head.write('data', 36);
+      head.writeUInt32LE(pcm.length, 40);
+      mkdirSync(join(HERE, '../public/audio'), { recursive: true });
+      writeFileSync(join(HERE, '../public/audio/engine.wav'), Buffer.concat([head, pcm]));
+      writeFileSync(join(HERE, '../src/sound.json'), JSON.stringify({ redline: run.redline, rpm: run.frames.map((f) => Math.round(f.rpm)) }) + '\n');
+      // The panel as the live engine draws it, frame by frame.
+      const dir = seqDir('sound');
+      const n = SECS * FPS;
+      for (let i = 0; i < n; i++) {
+        const f = run.frames[Math.min(i, run.frames.length - 1)];
+        await p.evaluate(
+          ({ f, redline, knock }) => {
+            const max = Math.ceil((redline * 1.2) / 1000) * 1000;
+            document.querySelector('.engine-sound')?.classList.add('is-running');
+            const needle = document.querySelector('.tacho svg g');
+            if (needle) needle.style.transform = `rotate(${-120 + (Math.min(f.rpm, max) / max) * 240}deg)`;
+            const ro = document.querySelector('.tacho-readout');
+            if (ro) {
+              ro.textContent = `${(Math.round(f.rpm / 10) * 10).toLocaleString('tr-TR')} d/d`;
+              ro.classList.toggle('is-red', f.rpm >= redline * 0.97);
+            }
+            const start = document.querySelector('.engine-sound-buttons button');
+            if (start) {
+              start.textContent = '■ Durdur';
+              start.className = 'btn btn-default';
+            }
+            const gas = document.querySelector('.engine-gas');
+            if (gas) {
+              gas.disabled = false;
+              gas.style.background = f.gas ? 'var(--accent)' : '';
+              gas.style.color = f.gas ? '#fff' : '';
+            }
+            const st = document.querySelector('.engine-sound-status');
+            if (st) {
+              let msg = '';
+              let tone = '';
+              if (f.float > 0.05) {
+                msg = 'Supaplar yüzüyor! Kırmızı çizginin üstünde yaylar supapları kapatamıyor: güç düşer, motor tekler ve takırdar. Uzun tutarsan supaplar pistona çarpar.';
+                tone = 'tone-bad';
+              } else if (knock > 0 && f.thr > 0.4 && f.rpm < redline * 0.8) {
+                msg = 'Vuruntu: sıkıştırma dönemin benzinine fazla, yükte silindirler metalik tıkırdıyor.';
+                tone = 'tone-warn';
+              }
+              st.textContent = msg;
+              st.className = `small engine-sound-status ${tone}`;
+            }
+          },
+          { f, redline: run.redline, knock: run.knock },
+        );
+        await p.screenshot({ path: frameFile(dir, i), type: 'jpeg', quality: 88 });
+      }
+    },
+    {
+      url: DEV_URL,
+      // A six in line with overhead valves: a fuller voice than the workshop's four.
+      mutate: (o) => {
+        o.modals = [];
+        Object.assign(o.projects[0].design.engine, { cylinders: 6, layout: 'inline', bore: 82, stroke: 110, compression: 4.3, valvetrain: 'ohv' });
+      },
+    },
+  );
 }
 
 if (want('late')) {

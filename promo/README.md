@@ -1,15 +1,16 @@
 # CarFacTycoon tanıtım videosu (YouTube Shorts)
 
-[Remotion](https://www.remotion.dev) ile yapılmış 54 saniyelik dikey tanıtım videosu: 1080 × 1920, 30 fps, H.264 + AAC.
+[Remotion](https://www.remotion.dev) ile yapılmış 58 saniyelik dikey tanıtım videosu: 1080 × 1920, 30 fps, H.264 + AAC.
 Shorts, Instagram Reels ve TikTok'a doğrudan yüklenebilir.
 
 Sahneler (`src/timeline.json`): kanca (1900 · "otomobil devi kurabilir misin?") → 1900'den 1960'a araba tasarımları →
-motor → süspansiyon denemesi → lansman ve dergi puanları → eyalet eyalet büyüyen bayi haritası → gazete manşeti →
+motor → motor sesi (oyunun kendi motor sesiyle, devir saati aynı devirde) → süspansiyon denemesi → lansman ve dergi puanları → eyalet eyalet büyüyen bayi haritası → gazete manşeti →
 fabrika hattı → rakibin karşı hamlesi ve yönetim kurulu → savaşlar ve krizler → Ar-Ge → yarış → unvan merdiveni →
 kapanış kartı.
 
 Oyun ekranları gerçek oyundan yakalanır; arabalar oyunun kendi `CarSVG` çizimidir. Müzik ve efektler
-`audio/make_audio.py` tarafından sıfırdan sentezlenir (örnek ses yok), yani telif sorunu yoktur.
+`audio/make_audio.py` tarafından sıfırdan sentezlenir (örnek ses yok), yani telif sorunu yoktur. Motor sesi sahnesindeki ses
+oyunun motor sesi motorundan (`src/ui/audio`) çevrim dışı çalınır (`capture/shots.mjs sound` → `public/audio/engine.wav`).
 
 ## Üretmek
 
@@ -21,6 +22,8 @@ pip install numpy                      # ses için
 # 1) Oyun ekranlarını yakala. Uygulama derlemesi fontları kendi içinde taşır, internetsiz ortamda da doğru çıkar.
 (cd .. && npx vite build --mode app && python3 -m http.server 5191 --directory dist-app) &
 GAME_URL=http://localhost:5191/index.html npm run capture   # public/shots ve public/seq
+# Motor sesi bölümü oyunun ses modüllerini içe aktarır: geliştirme sunucusu uygulama kipinde açık olmalı
+(cd .. && npx vite --mode app --port 5193) &
 
 # 2) Ses + video
 npm run render                         # out/carfactycoon-short.mp4
