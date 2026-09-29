@@ -22,7 +22,7 @@ import {
   maxGears,
 } from '../../data/tech';
 import type { CarDesign, EngineDesign, FeatureId, Project } from '../../core/types';
-import { isTurkish, msg, t } from '../../i18n';
+import { isTurkish, msg, t, tc } from '../../i18n';
 import { fmtNumber } from '../../i18n/format';
 import { store, useGameState } from '../store';
 import { kmh, litres, money, secs } from '../format';
@@ -212,7 +212,7 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
                   max={1}
                   step={0.05}
                   onChange={(v) => set({ size: v })}
-                  left={t('Küçük')}
+                  left={tc('boyut', 'Küçük')}
                   right={t('Büyük')}
                   format={(v) => `${Math.round(v * 100)}`}
                   disabled={platformLocked}

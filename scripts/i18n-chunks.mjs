@@ -48,7 +48,7 @@ if (cmd === 'split') {
   let cur = [];
   let words = 0;
   for (const [key, v] of todo) {
-    cur.push({ key, tr: v.tr, ...(english[key] ? { en: english[key] } : {}), at: v.at });
+    cur.push({ key, tr: v.tr, ...(v.ctx ? { context: v.ctx } : {}), ...(english[key] ? { en: english[key] } : {}), at: v.at });
     words += v.tr.split(/\s+/).length;
     if (words >= Number(per)) {
       chunks.push(cur);

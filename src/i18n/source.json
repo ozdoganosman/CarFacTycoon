@@ -8491,6 +8491,11 @@
   "tr": "Boyut",
   "at": "src/ui/screens/Designer.tsx:209"
  },
+ "1pr33ut": {
+  "tr": "Küçük",
+  "ctx": "boyut",
+  "at": "src/ui/screens/Designer.tsx:215"
+ },
  "kayw7z": {
   "tr": "Büyük",
   "at": "src/ui/screens/Designer.tsx:216"
@@ -11402,6 +11407,11 @@
  "owb7d8": {
   "tr": "Sistem",
   "at": "src/ui/screens/Settings.tsx:90"
+ },
+ "1l6sss4": {
+  "tr": "Açık",
+  "ctx": "tema",
+  "at": "src/ui/screens/Settings.tsx:91"
  },
  "3azp51": {
   "tr": "Koyu",

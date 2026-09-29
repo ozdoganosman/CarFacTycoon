@@ -102,6 +102,17 @@ export function template(src: string, params?: Params): string {
   return entry === undefined ? src : pick(entry, params);
 }
 
+/**
+ * A text whose Turkish word has several meanings that other languages tell apart: the context names
+ * the one meant here, e.g. tc('tema', 'Açık') (the light theme) and t('Açık') (a defect still open).
+ */
+export function tc(context: string, src: string, params?: Params): string {
+  if (current.id === 'tr' || !src) return fill(src, params);
+  if (current.id === 'qps') return `⟦${fill(src, params)}⟧`;
+  const entry = catalog?.[keyOf(`${context}\u0004${src}`)];
+  return fill(entry === undefined ? src : pick(entry, params), params);
+}
+
 /** Marks a literal for translation where it is written (a table); show it later with t(value). */
 export const msg = <T extends string>(src: T): T => src;
 

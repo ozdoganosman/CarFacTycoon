@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'fs';
 import { afterEach, describe, expect, it } from 'vitest';
-import { LANGS, keyOf, list, setLanguage, t, type Catalog, type Plural } from '../src/i18n';
+import { LANGS, keyOf, list, setLanguage, t, tc, type Catalog, type Plural } from '../src/i18n';
 import { fmtMoney, fmtNumber, fmtPercent } from '../src/i18n/format';
 import { formatDate } from '../src/core/time';
 import { money } from '../src/core/util';
@@ -65,6 +65,10 @@ describe('the language helpers', () => {
     expect(t('{n} araç', { n: 1 })).toBe('1 car');
     expect(t('{n} araç', { n: 3 })).toBe('3 cars');
     expect(t('Bilinmeyen metin')).toBe('Bilinmeyen metin');
+    setLanguage('en', { [keyOf('Açık')]: 'Open', [keyOf('tema\u0004Açık')]: 'Light' });
+    expect(t('Açık')).toBe('Open');
+    expect(tc('tema', 'Açık')).toBe('Light');
+    setLanguage('en', { [k]: { one: '{n} car', other: '{n} cars' } });
     expect(fmtMoney(1_234_567)).toBe('$1.23M');
     expect(fmtMoney(41_000)).toBe('$41K');
     expect(fmtNumber(2600)).toBe('2,600');

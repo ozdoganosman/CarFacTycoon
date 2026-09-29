@@ -1,4 +1,5 @@
-// Collects every translatable text of the game: the first argument of t(), tx() and msg() calls in src/.
+// Collects every translatable text of the game: the first argument of t(), tx() and msg() calls in src/,
+// and the text of tc(context, text) (a word whose meanings other languages tell apart).
 // Writes src/i18n/source.json ({ key: { tr, at } }, in order of appearance) for the translators and the
 // catalog checks (tests/i18n.test.ts). The key is the same hash the game looks texts up by.
 //
@@ -11,7 +12,7 @@ import ts from 'typescript';
 const ROOT = join(fileURLToPath(import.meta.url), '../..');
 const SRC = join(ROOT, 'src');
 const OUT = join(SRC, 'i18n/source.json');
-const CALLS = new Set(['t', 'tx', 'msg']);
+const CALLS = new Set(['t', 'tx', 'msg', 'tc']);
 
 /** Same as keyOf() in src/i18n/index.ts. */
 function keyOf(src) {
@@ -41,24 +42,28 @@ for (const file of files(SRC)) {
   const rel = relative(ROOT, file);
   if (rel.startsWith('src/i18n/')) continue;
   const text = readFileSync(file, 'utf8');
-  if (!/\b(t|tx|msg)\(/.test(text)) continue;
+  if (!/\b(t|tx|msg|tc)\(/.test(text)) continue;
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
   const visit = (node) => {
     if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && CALLS.has(node.expression.text) && node.arguments.length) {
-      const arg = node.arguments[0];
+      const withContext = node.expression.text === 'tc';
+      const arg = node.arguments[withContext ? 1 : 0];
+      const ctxArg = withContext ? node.arguments[0] : undefined;
       const line = sf.getLineAndCharacterOfPosition(node.getStart()).line + 1;
       const at = `${rel}:${line}`;
-      if (ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg)) {
+      if (withContext && !(ctxArg && ts.isStringLiteral(ctxArg))) errors.push(`${at}: tc() needs a literal context`);
+      else if (arg && (ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg))) {
         const src = arg.text;
+        const ctx = ctxArg?.text;
         if (src.trim()) {
-          const k = keyOf(src);
+          const k = keyOf(ctx ? `${ctx}\u0004${src}` : src);
           const prev = found.get(k);
-          if (prev && prev.tr !== src) errors.push(`key collision ${k}: "${prev.tr}" / "${src}"`);
-          else if (!prev) found.set(k, { tr: src, at });
+          if (prev && (prev.tr !== src || prev.ctx !== ctx)) errors.push(`key collision ${k}: "${prev.tr}" / "${src}"`);
+          else if (!prev) found.set(k, ctx ? { tr: src, ctx, at } : { tr: src, at });
         }
-      } else if (ts.isTemplateExpression(arg)) {
+      } else if (arg && ts.isTemplateExpression(arg)) {
         errors.push(`${at}: ${node.expression.text}() with \${} inside the text; use {placeholders}`);
-      } else if (node.expression.text !== 'msg') {
+      } else if (arg && node.expression.text !== 'msg') {
         dynamic.push(`${at}: ${node.expression.text}(${arg.getText().slice(0, 60)})`);
       }
     }

@@ -6,7 +6,7 @@ import { Button, Choice, Panel, Toggle } from '../components/ui';
 import { AdSettings } from '../components/Sponsor';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { ads } from '../ads';
-import { t } from '../../i18n';
+import { t, tc } from '../../i18n';
 
 type Theme = 'system' | 'light' | 'dark';
 
@@ -88,7 +88,7 @@ export function Settings() {
           }}
           options={[
             { value: 'system', label: t('Sistem') },
-            { value: 'light', label: t('Açık') },
+            { value: 'light', label: tc('tema', 'Açık') },
             { value: 'dark', label: t('Koyu') },
           ]}
         />
