@@ -3,6 +3,7 @@
 //
 //   node scripts/i18n-chunks.mjs split <lang> <outDir> [words per chunk=6000]
 //       → <outDir>/<lang>-<i>.json: [{ key, tr, en?, at }] (en: the English text, when there is one, as a reference)
+//   node scripts/i18n-chunks.mjs check <lang> <file>...   → checks translated chunks, changes nothing
 //   node scripts/i18n-chunks.mjs merge <lang> <file>...
 //       → adds the { key: translation } files to src/i18n/locales/<lang>.json; bad entries are listed and left out
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
@@ -58,6 +59,22 @@ if (cmd === 'split') {
   if (cur.length) chunks.push(cur);
   chunks.forEach((c, i) => writeFileSync(join(outDir, `${lang}-${i + 1}.json`), JSON.stringify(c, null, 1) + '\n'));
   console.log(`${todo.length} texts to translate into ${lang} → ${chunks.length} chunks in ${outDir}`);
+} else if (cmd === 'check') {
+  // Checks translated chunks without touching the catalog.
+  let ok = 0;
+  let bad = 0;
+  for (const file of rest) {
+    const part = JSON.parse(readFileSync(file, 'utf8'));
+    for (const [key, value] of Object.entries(part)) {
+      const p = problems(key, value);
+      if (p.length) {
+        bad++;
+        console.log(`${key}: ${p.join('; ')} — ${JSON.stringify(value).slice(0, 160)}`);
+      } else ok++;
+    }
+  }
+  console.log(`${ok} good, ${bad} with problems`);
+  if (bad) process.exit(1);
 } else if (cmd === 'merge') {
   let added = 0;
   const bad = [];
