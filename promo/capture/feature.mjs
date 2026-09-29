@@ -2,8 +2,8 @@
 // laid out in the game page itself so its fonts and colours apply, with the tagline in one language:
 // fastlane/metadata/android/<locale>/images/featureGraphic.png.
 //
-// Needs the app build served locally (see store.mjs) and the map of the 1928 save in that language from
-// `GAME_LANG=<lang> node capture/shots.mjs map` (public/shots/map-1928.png, public/<lang>/shots/map-1928.png).
+// Needs the app build served locally (see store.mjs); the map and the car come from the 1928 save played in
+// that language.
 // Usage: GAME_LANG=en node promo/capture/feature.mjs   (GAME_URL, CHROME_PATH to override)
 import { createRequire } from 'module';
 import { existsSync, readFileSync } from 'fs';
@@ -21,7 +21,7 @@ const TAGLINE = {
   tr: '1900 Amerika’sında küçük bir atölyeden<br>ülkenin otomobil devine',
   en: 'From a small workshop in 1900 America<br>to the nation’s great car maker',
   de: 'Von der kleinen Werkstatt im Amerika von 1900<br>zum großen Autohersteller des Landes',
-  es: 'De un pequeño taller en la América de 1900<br>al gran fabricante de autos del país',
+  es: 'De un pequeño taller en los EE. UU. de 1900<br>al gran fabricante de autos del país',
   hi: '1900 के अमेरिका की एक छोटी वर्कशॉप से<br>देश की सबसे बड़ी कार कंपनी तक',
   ar: 'من ورشة صغيرة في أمريكا عام 1900<br>إلى أكبر صانع سيارات في البلاد',
 }[LANG];
@@ -41,7 +41,6 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH 
 const own = join(HERE, 'saves', `play-1928-${LANG}.json.gz`);
 const save = JSON.parse(gunzipSync(readFileSync(LANG !== 'tr' && existsSync(own) ? own : join(HERE, 'saves', 'play-1928.json.gz'))).toString('utf8'));
 save.modals = [];
-const map = 'data:image/png;base64,' + readFileSync(join(HERE, LANG === 'tr' ? '../public/shots/map-1928.png' : `../public/${LANG}/shots/map-1928.png`)).toString('base64');
 // The family car that sells best.
 const car = save.models.filter((m) => m.status === 'active' && m.segment === 'family').sort((a, b) => b.unitsSold - a.unitsSold)[0];
 
@@ -54,6 +53,20 @@ await page.evaluate((json) => {
 }, JSON.stringify(save));
 await page.reload();
 await page.locator('.start-actions .btn-default').first().click();
+// The dealer map in the language of the page, at the scale the video uses (432 px wide at 2.5x).
+const mapPage = await browser.newPage({ viewport: { width: 432, height: 768 }, deviceScaleFactor: 2.5 });
+await mapPage.route(/supabase\.co|posthog\.com/, (r) => r.abort());
+await mapPage.goto(URL);
+await mapPage.evaluate((json) => {
+  localStorage.setItem('carfactycoon.save.v1', json);
+  localStorage.setItem('carfactycoon.share', 'off');
+}, JSON.stringify(save));
+await mapPage.reload();
+await mapPage.locator('.start-actions .btn-default').first().click();
+await mapPage.locator('[data-nav="markets"]').first().click();
+await mapPage.waitForTimeout(800);
+const map = 'data:image/png;base64,' + (await mapPage.locator('.usmap').first().screenshot()).toString('base64');
+await mapPage.close();
 await page.locator('[data-nav="models"]').first().click();
 await page.locator('button.link', { hasText: car.name }).first().click();
 await page.waitForTimeout(500);
