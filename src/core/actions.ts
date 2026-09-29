@@ -882,6 +882,15 @@ export function modernizeLine(s: GameState, lineId: string, allowBlack: boolean)
   return ok;
 }
 
+/** A night shift on every section of a line at once. */
+export function setLineNightShift(s: GameState, lineId: string, on: boolean): ActionResult {
+  const line = s.lines.find((l) => l.id === lineId);
+  if (!line) return fail('Hat bulunamadı.');
+  line.nightShift = Object.fromEntries(STAGES.map((st) => [st.id, on]));
+  decide(s, `night:${lineId}`, `${line.name}: gece vardiyası tüm hatta ${on ? 'açık' : 'kapalı'}`);
+  return ok;
+}
+
 export function setNightShift(s: GameState, lineId: string, stage: StageId, on: boolean): ActionResult {
   const line = s.lines.find((l) => l.id === lineId);
   if (!line) return fail('Hat bulunamadı.');

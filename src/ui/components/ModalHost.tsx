@@ -300,9 +300,19 @@ function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idl
   if (reason === 'tested' || reason === 'tooling' || reason === 'launch') {
     const p = s.projects.find((x) => x.id === projectId);
     const weeks = p?.waitSince !== undefined ? s.week - p.waitSince : 0;
+    // Dies left unordered because the till is short: say so, and how much is missing.
+    const line = p ? (p.lineId ?? s.lines.find((l) => !s.models.some((m) => m.id === l.modelId && m.status === 'active'))?.id ?? s.lines[0]?.id) : undefined;
+    const dies = reason === 'tooling' && p && line ? A.toolingQuote(s, p, line, 'soft').cost : 0;
+    const short = dies > s.company.cash;
     const what = {
       tested: { title: 'Testler bitti, sıradaki adım bekliyor', body: 'testleri bitti ama üretim hazırlığına geçilmedi', next: 'Projede “Üretim hazırlığına geç”e bas, sonra hattı ve kalıpları seç.' },
-      tooling: { title: 'Kalıplar sipariş edilmedi', body: 'üretim hazırlığında bekliyor: hat seçilip kalıplar sipariş edilmedi', next: 'Projede hattı seç (boşta hat yoksa küçük bir atölye hattı kur) ve kalıpları sipariş et.' },
+      tooling: short
+        ? {
+            title: 'Kalıplar için para yok',
+            body: `üretim hazırlığında bekliyor: en ucuz kalıplar bile ${money(dies)} tutuyor, kasada ${money(s.company.cash)} var`,
+            next: 'Bankadan kredi al (Finans), ya da projede kalıpçıya vadeli sipariş ver: bedel %15 fazlasıyla borca eklenir.',
+          }
+        : { title: 'Kalıplar sipariş edilmedi', body: 'üretim hazırlığında bekliyor: hat seçilip kalıplar sipariş edilmedi', next: 'Projede hattı seç (boşta hat yoksa küçük bir atölye hattı kur) ve kalıpları sipariş et.' },
       launch: { title: 'Araba hazır, lansman bekliyor', body: 'hazır ama satışa çıkmadı', next: 'Projede fiyatı ve pazarları seçip lansmanı yap.' },
     }[reason];
     return (

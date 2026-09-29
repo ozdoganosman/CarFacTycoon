@@ -20,10 +20,10 @@ test('bot: family car, US HQ', () => {
   report('US family+pickup+city', s);
 });
 
-test('bot: europe HQ', () => {
-  const s = newGame({ companyName: 'Bot', hq: 'europe', seed: 2 });
+test('bot: second town', () => {
+  const s = newGame({ companyName: 'Bot', hq: 'usa', seed: 2 });
   runBot(s, 52 * 61, { segments: ['city', 'family'] });
-  report('EU city+family', s);
+  report('US seed 2 city+family', s);
 });
 
 test('bot: no testing', () => {

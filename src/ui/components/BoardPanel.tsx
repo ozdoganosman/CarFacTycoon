@@ -141,6 +141,10 @@ export function SharesPanel({ s }: { s: GameState }) {
           {sh.seat ? ' ve yönetim kurulunda oturuyor: hedefler daha sıkı.' : '.'}
         </p>
       )}
+      <p className="small muted">
+        Geri alım piyasa fiyatının %10 fazlasına olur ve hisselerin satıldığı fiyatın (yılda %6 faiziyle) altına inmez
+        {sh.ultimatum ? '; son uyarı altındayken bunun da %50 fazlası' : ''}.
+      </p>
       <div className="row board-actions">
         <Button
           small
@@ -241,6 +245,8 @@ export function RivalMovesPanel({ s }: { s: GameState }) {
             {' '}
             · Önde olduğun sınıflar: <b>{led.map((x) => segmentDef(x).name.toLowerCase()).join(', ')}</b>. Rakipler bunu fark etti.
           </>
+        ) : wars.length || (moves[0] && s.week - moves[0].week < 52) ? (
+          <span className="muted"> · Şu an hiçbir sınıfta önde değilsin, ama rakiplerin son hamleleri sürüyor.</span>
         ) : (
           <span className="muted"> · Hiçbir sınıfta önde değilsin: büyük üreticiler seni henüz ciddiye almıyor.</span>
         )}

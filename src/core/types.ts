@@ -512,6 +512,12 @@ export interface ShareState {
   history: BoardYear[];
   /** Dividends paid to outside shareholders so far. */
   dividends: number;
+  /**
+   * What the outside shareholders paid for the whole company, on average, grown by interest since
+   * `basisWeek`: shares are never bought back for less than that (older saves lack it).
+   */
+  basis?: number;
+  basisWeek?: number;
   /** A rival bought a block of shares: it wants a say. */
   raider?: { company: string; stake: number };
   /** A rival sits on the board: the targets are stricter. */

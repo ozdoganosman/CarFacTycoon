@@ -1,4 +1,5 @@
 import * as N from '../../core/network';
+import { CLASS_GAP_WARN, classGap, priceNow } from '../../core/market';
 import { stateDef } from '../../data/states';
 import { cityDef } from '../../data/cities';
 import { engineersBusy, idleEngineers, idleReason } from '../../core/game';
@@ -51,6 +52,10 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
     const cap = lines.reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0) * m.productionRate;
     if (lines.length && demand > cap * 1.25 && m.inventory < cap) out.push({ text: `${m.name} için talep üretimi aşıyor. Darboğazı çöz ya da hat ekle.`, go: () => store.go({ id: 'factory' }) });
     if (m.inventory > Math.max(8, demand * 12)) out.push({ text: `${m.name} stokları birikiyor. Fiyatı ya da üretim hızını düşür.`, go: () => store.go({ id: 'model', modelId: m.id }) });
+    // A price far above its class with buyers staying away (an old index, a hopeful launch price).
+    const gap = classGap(priceNow(m, s.week), m.segment, yearFloat(s.week));
+    if (gap > CLASS_GAP_WARN && lines.length && demand < 0.8 * cap)
+      out.push({ text: `${m.name} fiyatı sınıfın %${Math.round(gap * 100)} üstünde ve hatlar boş kalıyor. Fiyatı gözden geçir.`, go: () => store.go({ id: 'model', modelId: m.id }) });
     if ((s.week - m.refreshWeek) / 52 > 3) out.push({ text: `${m.name} ${Math.floor((s.week - m.refreshWeek) / 52)} yaşında ve her yıl eskiyor; makyaj ya da yeni kuşak düşün.`, go: () => store.go({ id: 'model', modelId: m.id }) });
   }
   // The network: grow while it is small, look after the cars on the road, keep its cost in check.

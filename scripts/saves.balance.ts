@@ -28,8 +28,9 @@ test('generate a first project and a 1940 project', () => {
   if (!r.ok) throw new Error(r.error);
   writeFileSync(`${OUT}/save-novice.json`, serialize(s));
   // The same company in 1940, with a pickup project where diesel is on offer.
-  const t = newGame({ companyName: 'Öncü Motor', hq: 'europe', seed: 8 });
-  runBot(t, 52 * 40, { segments: ['family', 'city'], smart: true });
+  const t = newGame({ companyName: 'Öncü Motor', hq: 'usa', seed: 8 });
+  runBot(t, 52 * 40, { segments: ['city', 'family'], smart: true });
+  if (t.gameOver) throw new Error('1940 fixture company went bankrupt');
   t.modals = [];
   t.projects = [];
   const q = A.startProject(t, { name: 'Yük 40', segment: 'pickup', targetPrice: 0 });
@@ -38,8 +39,9 @@ test('generate a first project and a 1940 project', () => {
 });
 
 test('generate saves', () => {
+  // A city car first: the fixture should reach 1912 in business (a family car first fails on this seed).
   const s = newGame({ companyName: 'Anadolu Motor', hq: 'usa', seed: 8 });
-  runBot(s, 52 * 12 + 20, { segments: ['family', 'city'], smart: true });
+  runBot(s, 52 * 12 + 20, { segments: ['city', 'family'], smart: true });
   if (s.gameOver) throw new Error('fixture company went bankrupt');
   // A fresh project walked through the phases by hand.
   s.modals = [];
@@ -65,7 +67,7 @@ test('generate saves', () => {
   if (!t.ok) throw new Error(t.error);
   for (let i = 0; i < 30 && s.projects.find((p) => p.id === r.id)!.phase !== 'ready'; i++) { tick(s); s.modals = []; }
   writeFileSync(`${OUT}/save-ready.json`, serialize(s));
-  const l = A.launchModel(s, r.id, { price: 1500, markets: ['usa', 'europe'], autoShow: true });
+  const l = A.launchModel(s, r.id, { price: 1500, markets: ['usa'], autoShow: true });
   if (!l.ok) throw new Error(l.error);
   s.modals = s.modals.filter((m) => m.kind === 'launch');
   writeFileSync(`${OUT}/save-reviews.json`, serialize(s));

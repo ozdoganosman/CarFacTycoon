@@ -5,7 +5,8 @@ import { runBot } from './bot';
 
 test('several seeds: a scripted player survives to 1960', () => {
   const survived = { std: 0, smart: 0 };
-  for (const [hq, seed] of [['europe', 2], ['europe', 5], ['europe', 9], ['usa', 3], ['usa', 8]] as const) {
+  // The American market only: five towns' worth of seeds.
+  for (const [hq, seed] of [['usa', 2], ['usa', 5], ['usa', 9], ['usa', 3], ['usa', 8]] as const) {
     for (const smart of [false, true]) {
       const s = newGame({ companyName: 'Bot', hq, seed });
       runBot(s, 52 * 61, { segments: ['city', 'family'], smart });

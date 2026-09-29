@@ -33,4 +33,4 @@ function play(label: string, s: GameState, weeks: number, o: BotOptions) {
 }
 
 test('smart US', () => play('smart US family+city', newGame({ companyName: 'Bot', hq: 'usa', seed: 1 }), 52 * 61, { segments: ['family', 'city'], smart: true }));
-test('smart EU', () => play('smart EU city+family', newGame({ companyName: 'Bot', hq: 'europe', seed: 2 }), 52 * 61, { segments: ['city', 'family'], smart: true }));
+test('smart US seed 2', () => play('smart US seed 2 city+family', newGame({ companyName: 'Bot', hq: 'usa', seed: 2 }), 52 * 61, { segments: ['city', 'family'], smart: true }));

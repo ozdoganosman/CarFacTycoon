@@ -295,6 +295,9 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
   // Keep black paint only where the line (or the model's other lines) already accepts it.
   const blackOk = s.lines.some((l) => l.modelId === line.modelId && l.stations.paint.some((id) => stationDef(id).blackOnly));
   const modern = modernizeQuote(line, s.week, blackOk);
+  const nights = STAGES.filter((st) => line.stations[st.id].length > 0 && line.nightShift?.[st.id]).length;
+  const staffed = STAGES.filter((st) => line.stations[st.id].length > 0).length;
+  const night = nights === 0 ? 'kapalı' : nights >= staffed ? 'açık' : `${nights}/${staffed} bölümde`;
   return (
     <Panel
       title={
@@ -303,11 +306,19 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
           <span className="muted small">
             · {isMilitary ? 'askeri üretim' : model ? model.name : 'boş'}{building ? ` · inşaatta (${line.buildUntilWeek! - s.week} hf)` : ''} · {r.throughput.toFixed(1)} araç/hafta · işçilik {money(upkeep)}/hafta
             {running && <> · darboğaz: {STAGES.find((x) => x.id === r.bottleneck)!.name}</>}
+            {staffed > 0 && <> · gece vardiyası: {night}</>}
           </span>
         </button>
       }
       actions={
         <div className="line-actions">
+          {staffed > 0 && (
+            <Toggle
+              checked={nights > 0 && nights >= staffed}
+              onChange={(v) => store.try((st) => A.setLineNightShift(st, line.id, v))}
+              label="Gece vardiyası (tüm hat)"
+            />
+          )}
           <select
             aria-label="Hatta üretilecek model"
             value={line.modelId ?? ''}

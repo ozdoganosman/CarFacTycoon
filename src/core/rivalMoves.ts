@@ -24,20 +24,27 @@ export function rivalMoves(s: GameState): RivalMovesState {
   return (s.rivalMoves ??= { lastWeek: -1e6, history: [] });
 }
 
-/** Our cars' pull in a class against each rival maker's (current buyers' weights). */
+/**
+ * Cars a week in a class: ours as actually delivered over the last three months (a workshop with a
+ * long waiting list is no threat to anyone), each rival maker's as its buyers take them.
+ */
 function classStanding(s: GameState, seg: SegmentId): { mine: number; share: number; rivals: Map<string, number> } | null {
   const sm = segmentMarket(s, 'usa', seg);
   if (sm.demand <= 0 || sm.totalWeight <= 0) return null;
   let mine = 0;
+  for (const m of s.models) {
+    if (m.segment !== seg || m.status !== 'active') continue;
+    const h = m.history.slice(-13);
+    if (h.length) mine += h.reduce((a, x) => a + x.sold, 0) / h.length;
+  }
   const rivals = new Map<string, number>();
   for (const o of sm.offers) {
-    if (o.kind === 'player') mine += o.weight;
-    else rivals.set(o.companyId, (rivals.get(o.companyId) ?? 0) + o.weight);
+    if (o.kind === 'rival') rivals.set(o.companyId, (rivals.get(o.companyId) ?? 0) + (sm.demand * o.weight) / sm.totalWeight);
   }
-  return { mine, share: mine / sm.totalWeight, rivals };
+  return { mine, share: mine / sm.demand, rivals };
 }
 
-/** Classes where our cars draw more buyers than any single rival maker (and at least an eighth of the class). */
+/** Classes where we sell more cars than any single rival maker (and at least an eighth of the class). */
 export function ledSegments(s: GameState): SegmentId[] {
   const out: SegmentId[] = [];
   for (const seg of SEGMENT_IDS) {
@@ -244,6 +251,8 @@ export function acceptBid(s: GameState) {
     dividends: 0,
     raider: { company: b.company, stake: b.stake },
     seat: b.company,
+    basis: b.price / b.stake,
+    basisWeek: s.week,
   };
   delete st.bid;
   log(s, `${rivalDef(b.company).name} şirketin %${Math.round(b.stake * 100)}’ini ${money(b.price)} karşılığında aldı ve yönetim kurulunda koltuk kazandı.`, 'info');

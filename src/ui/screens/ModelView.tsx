@@ -3,7 +3,7 @@ import * as A from '../../core/actions';
 import { AUTO_HOLD_TEXT } from '../../core/autocap';
 import { materialUnitCost } from '../../core/game';
 import { lineReport } from '../../core/factory';
-import { demandAtPrice, modelScores, priceNow, segmentMarket } from '../../core/market';
+import { CLASS_GAP_WARN, classGap, demandAtPrice, modelScores, priceNow, referencePrice, segmentMarket } from '../../core/market';
 import { scoreStats } from '../../core/scoring';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { formatDate, formatShort, yearFloat } from '../../core/time';
@@ -171,8 +171,15 @@ export function ModelView({ modelId }: { modelId: string }) {
               </Button>
             </div>
             <p className="muted small">
-              Şu anki fiyat {money(priceNow(m, s.week))} · birim malzeme {money(materialUnitCost(s, m))}
+              Şu anki fiyat {money(priceNow(m, s.week))} · sınıf fiyatı {money(referencePrice('usa', m.segment, yearFloat(s.week)))} · birim malzeme{' '}
+              {money(materialUnitCost(s, m))}
             </p>
+            {Math.abs(classGap(priceNow(m, s.week), m.segment, yearFloat(s.week))) > CLASS_GAP_WARN && (
+              <p className="small tone-warn">
+                Fiyat sınıfın %{Math.round(Math.abs(classGap(priceNow(m, s.week), m.segment, yearFloat(s.week))) * 100)}{' '}
+                {classGap(priceNow(m, s.week), m.segment, yearFloat(s.week)) > 0 ? 'üstünde: alıcılar pahalı buluyor' : 'altında: araba başına kâr düşük kalıyor'}.
+              </p>
+            )}
             {(s.week - m.launchWeek) / 52 < 3 && m.priceCeiling !== undefined && draftPrice > m.priceCeiling * priceLevel(yearFloat(s.week)) * (1 + A.HIKE_TOLERANCE) && (
               <p className="small tone-warn">
                 Bu, lansmandan beri en yüksek fiyatına göre %{Math.round(A.HIKE_TOLERANCE * 100)}’den büyük bir zam (enflasyon hariç). Basın bunu fark eder: dergiler puanı yeniden
@@ -182,8 +189,8 @@ export function ModelView({ modelId }: { modelId: string }) {
             <Toggle
               checked={m.indexPrice}
               onChange={(v) => store.act(() => void (m.indexPrice = v))}
-              label="Fiyatı enflasyona endeksle"
-              sub="Açıkken fiyat genel fiyat seviyesiyle birlikte güncellenir."
+              label="Fiyatı sınıfa endeksle"
+              sub="Açıkken fiyat, sınıfın tipik fiyatıyla birlikte değişir: enflasyon, incelen kâr payları ve ucuzlayan seri üretim dahil."
             />
             <p className="muted small">
               Bu fiyatla talep ~{demandAtPrice(s, m, 'usa', draftPrice).toFixed(1)}/hafta ({N.openStates(s).length} eyalette satılıyor; yeni eyaletler için Harita).

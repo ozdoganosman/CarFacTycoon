@@ -98,8 +98,31 @@ export function issueProceeds(s: GameState, pct: number): number {
   return marketCap(s) * pct * (1 - ISSUE_COST);
 }
 
+/** Interest the shareholders' money earns while it is in the company: a listing is no free loan. */
+const BASIS_RATE = 0.06;
+/** Buying shares back under the last warning is a panic the market makes pay for. */
+const ULTIMATUM_BUYBACK = 1.5;
+
+/** What the outside shareholders paid for the whole company, grown by interest to today. */
+export function basisNow(sh: ShareState, week: number): number {
+  return (sh.basis ?? 0) * Math.pow(1 + BASIS_RATE, Math.max(0, week - (sh.basisWeek ?? week)) / 52);
+}
+
+/** Record a sale of `pct` of the company for the whole-company price `value`. */
+function addBasis(sh: ShareState, week: number, pct: number, value: number) {
+  const before = sh.float;
+  sh.basis = (basisNow(sh, week) * before + value * pct) / Math.max(1e-6, before + pct);
+  sh.basisWeek = week;
+}
+
+/**
+ * Shares bought back cost the market price and a premium, never less than what they were sold for
+ * plus interest, and half as much again under the board's last warning.
+ */
 export function buybackCost(s: GameState, pct: number): number {
-  return marketCap(s) * pct * BUYBACK_PREMIUM;
+  const sh = s.shares;
+  const price = Math.max(marketCap(s) * BUYBACK_PREMIUM, sh ? basisNow(sh, s.week) : 0);
+  return price * pct * (sh?.ultimatum ? ULTIMATUM_BUYBACK : 1);
 }
 
 /** Shares on the open market (a raider's block is not for sale). */
@@ -111,6 +134,7 @@ export function goPublic(s: GameState, pct: number): ShareResult {
   const can = canGoPublic(s);
   if (!can.ok) return { ok: false, error: can.why };
   const share = clamp(pct, 0.05, MAX_FLOAT);
+  const cap = marketCap(s);
   const cash = issueProceeds(s, share);
   s.company.cash += cash;
   const year = yearOf(s.week);
@@ -125,6 +149,8 @@ export function goPublic(s: GameState, pct: number): ShareResult {
     target: { year: first, growth: 0, dividend: 0 },
     history: [],
     dividends: 0,
+    basis: cap,
+    basisWeek: s.week,
   };
   s.shares.target = nextTarget(s, first);
   log(s, `Halka arz: şirketin %${Math.round(share * 100)}’i borsada satıldı, kasaya ${money(cash)} girdi. Artık her yıl yönetim kuruluna hesap vereceksin.`, 'good');
@@ -137,8 +163,10 @@ export function issueShares(s: GameState, pct: number): ShareResult {
   const sh = s.shares;
   if (!sh) return { ok: false, error: 'Şirket borsada değil.' };
   if (sh.float + pct > MAX_FLOAT + 1e-6) return { ok: false, error: `Kontrolü kaybetmemek için en fazla %${Math.round(MAX_FLOAT * 100)} dışarıda olabilir.` };
+  const cap = marketCap(s);
   const cash = issueProceeds(s, pct);
   s.company.cash += cash;
+  addBasis(sh, s.week, pct, cap);
   sh.float += pct;
   sh.confidence = clamp(sh.confidence - 4, 0, 100);
   log(s, `Yeni hisse: şirketin %${Math.round(pct * 100)}’i daha satıldı, kasaya ${money(cash)} girdi. Hissedarlar paylarının sulandığından hoşnut değil.`, 'info');
@@ -347,6 +375,7 @@ export function dilute(s: GameState) {
   const sh = s.shares;
   if (!sh?.raider) return;
   const pct = Math.min(0.1, MAX_FLOAT - sh.float);
+  addBasis(sh, s.week, pct, marketCap(s));
   s.company.cash += issueProceeds(s, pct);
   sh.float += pct;
   sh.confidence = clamp(sh.confidence - 8, 0, 100);

@@ -177,15 +177,22 @@ export const researchScale = (yf: number) => 1 + 9 * Math.min(1, Math.max(0, (yf
 /** A big maker's research is big too: a major subject (20 000 in the table) costs about 1.5% of a year's turnover. */
 export const REVENUE_SHARE = 0.015;
 
+/** Turnover at which a company pays the era's full research price: the big makers'. */
+const bigTurnover = (yf: number) => 13e6 * costIndex(yf);
+
 /**
- * Price of learning a subject: the era's table price, or — for a company that has grown large —
- * a share of its turnover, whichever is higher. Being first doubles either.
+ * Price of learning a subject. The era's rise (research grows into a company-sized investment from
+ * 1906) weighs on a company by its size: a small maker, whose engineers adapt what the big ones
+ * worked out, pays part of it (the square root of its turnover against a big maker's), never less than
+ * the 1906 price. A company that has grown large pays a share of its turnover instead, if that is
+ * more. Being first doubles either.
  */
 export function researchCost(def: ResearchDef, yf: number, s?: GameState): number {
   const first = 1 + pioneer(def, yf);
-  const table = def.cost * researchScale(yf) * first * costIndex(yf);
-  if (!s) return table;
+  if (!s) return def.cost * researchScale(yf) * first * costIndex(yf);
   const revenue = s.finance.slice(-52).reduce((a, f) => a + f.revenue, 0);
+  const size = Math.sqrt(Math.min(1, revenue / bigTurnover(yf)));
+  const table = def.cost * (1 + (researchScale(yf) - 1) * size) * first * costIndex(yf);
   return Math.max(table, (def.cost / 20000) * REVENUE_SHARE * revenue * first);
 }
 

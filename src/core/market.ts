@@ -37,11 +37,19 @@ const OTHERS_UTILITY = 50;
  */
 export const appealUtility = (ap: number) => 50 + 25 * Math.tanh((ap - 50) / 25);
 
-/** Base price adjusted for inflation since it was set (if indexing is on). */
-export function priceNow(model: Pick<CarModel, 'price' | 'priceWeek' | 'indexPrice'>, week: number): number {
-  if (!model.indexPrice) return model.price;
-  return (model.price * priceLevel(yearFloat(week))) / priceLevel(yearFloat(model.priceWeek));
+/**
+ * The price today. An indexed price follows its class: what a typical car of the class costs now against
+ * when the price was set (inflation, and also the thinner margins and cheaper mass-produced cars that
+ * keep class prices from rising as fast as prices in general).
+ */
+export function priceNow(model: Pick<CarModel, 'price' | 'priceWeek' | 'indexPrice' | 'segment'>, week: number): number {
+  if (!model.indexPrice || model.priceWeek === week) return model.price;
+  return (model.price * referencePrice('usa', model.segment, yearFloat(week))) / referencePrice('usa', model.segment, yearFloat(model.priceWeek));
 }
+
+/** How far a price stands from its class (0.2 = 20% above), and when it is far enough to say so. */
+export const classGap = (price: number, segment: SegmentId, yf: number) => price / referencePrice('usa', segment, yf) - 1;
+export const CLASS_GAP_WARN = 0.15;
 
 /** Ownership tax capitalised into the purchase decision (e.g. the British RAC horsepower tax). */
 export function ownershipTax(market: MarketId, stats: Pick<CarStats, 'engine'>, yf: number): number {

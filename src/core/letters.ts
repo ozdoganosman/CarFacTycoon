@@ -1,4 +1,6 @@
 import { segmentDef } from '../data/segments';
+import { stateDef } from '../data/states';
+import { STATE_LIST } from './network';
 import { mainMarket } from './feedback';
 import { PRICE_REMARK, modelScores, playerOffer } from './market';
 import { makeRng, pick, type Rng } from './rng';
@@ -105,6 +107,15 @@ export function customerLetters(s: GameState, m: CarModel, count = 3, rng: Rng =
     used.add(t);
     return t;
   };
+  // Owners write from where our cars are: the states with cars of ours on the road, more from where there are more.
+  const owners = STATE_LIST.map((id) => ({ id, n: s.network?.states[id]?.parc ?? 0 })).filter((x) => x.n > 0);
+  const ownersTotal = owners.reduce((a, x) => a + x.n, 0);
+  const home = (): string | undefined => {
+    if (!ownersTotal) return undefined;
+    let r = rng() * ownersTotal;
+    for (const x of owners) if ((r -= x.n) <= 0) return stateDef(x.id).name;
+    return stateDef(owners[owners.length - 1].id).name;
+  };
   for (let i = 0; i < count; i++) {
     const names = NAMES[pick(rng, m.markets.length ? m.markets : [market])];
     const parts: string[] = [];
@@ -139,7 +150,7 @@ export function customerLetters(s: GameState, m: CarModel, count = 3, rng: Rng =
     const stars = Math.max(1, Math.min(5, Math.round(score + (rng() - 0.5) * 0.8)));
     letters.push({
       name: `${pick(rng, names.first)} ${pick(rng, names.last)}`,
-      place: pick(rng, names.places),
+      place: home() ?? pick(rng, names.places),
       role: pick(rng, ROLES[m.segment]),
       stars,
       text: parts.join(' '),

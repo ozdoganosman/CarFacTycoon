@@ -306,6 +306,8 @@ export function searchChance(s: GameState, id: StateId): number {
   const rep = s.company.reputation;
   const nearbyCars = (NEIGHBOURS[id] ?? []).reduce((a, nb) => a + (peek(s, nb)?.parc ?? 0), 0);
   const known = Math.min(0.15, nearbyCars / 4000);
+  // The first two states beyond home always find a dealer: a newcomer's first steps should not hang on luck.
+  if (!isOpen(s, id) && openStates(s).length < 3) return 1;
   const base = isOpen(s, id) ? 0.7 : early(s) ? 0.62 : 0.38;
   return clamp(base + 0.006 * (rep - 30) + known + 0.1 * Math.min(3, n?.tries ?? 0), 0.12, 0.92);
 }

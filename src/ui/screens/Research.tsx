@@ -109,9 +109,9 @@ export function Research() {
         <Stat
           label={
             <>
-              Son 52 hafta Ar-Ge
+              Son 52 hafta prototip, test ve Ar-Ge
               <Info>
-                <p>Araştırma, prototip ve test harcaması. Büyük şirketin araştırması da büyüktür: önemli bir konu cironun yüzde birkaçına mal olur.</p>
+                <p>Araştırma, prototip ve test harcaması bir arada: hiç araştırma yapmayan bir şirket de prototip ve test için para harcar. Büyük şirketin araştırması da büyüktür: önemli bir konu cironun yüzde birkaçına mal olur.</p>
               </Info>
             </>
           }

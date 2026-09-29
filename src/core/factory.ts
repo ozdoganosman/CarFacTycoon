@@ -50,8 +50,15 @@ export function lineUpkeep(state: GameState, line: ProductionLine, utilisation: 
 }
 
 export function stationPrice(id: string, week: number): number {
-  const yf = yearFloat(week);
-  return stationDef(id).cost * costIndex(yf) * capexScale(yf);
+  return stationPriceAt(id, yearFloat(week));
+}
+
+/** Hand tools (the craftsmen's benches of 1900) never got dear like machines: they pay the square root of the plant premium. */
+export const isCraftStation = (def: StationDef) => def.year <= 1900;
+
+export function stationPriceAt(id: string, yf: number): number {
+  const def = stationDef(id);
+  return def.cost * costIndex(yf) * (isCraftStation(def) ? Math.sqrt(capexScale(yf)) : capexScale(yf));
 }
 
 export function stationResale(id: string, week: number): number {
@@ -121,19 +128,33 @@ export function blackPaintIsFaster(yf: number): boolean {
 }
 
 /**
- * A line with today's best stations, balanced: no section gets more stations than the slowest one
- * can feed. Full size by default; a smaller hall (`slots`) for a smaller demand.
+ * A balanced line: as many cars a week as the slowest section can make with today's fastest machines
+ * in every place, and each section reaching that pace in the cheapest way over three years (price plus
+ * wages). A small hall making a few cars a week keeps craftsmen's benches where a moving line would
+ * stand idle. Full size by default; a smaller hall (`slots`) for a smaller demand.
  */
 export function planBalancedLine(yf: number, allowBlack: boolean, slots = MAX_SLOTS): Record<StageId, string[]> {
   const best = bestStations(yf, allowBlack);
   const target = Math.min(...STAGES.map((st) => best[st.id].capacity * slots));
+  const wages = costIndex(yf) * realWage(yf) * PLAN_WEEKS;
   const plan = {} as Record<StageId, string[]>;
   for (const st of STAGES) {
-    const n = Math.min(slots, Math.ceil(target / best[st.id].capacity - 1e-9));
-    plan[st.id] = Array.from({ length: n }, () => best[st.id].id);
+    let pick = { id: best[st.id].id, n: Math.min(slots, Math.ceil(target / best[st.id].capacity - 1e-9)), cost: Infinity };
+    for (const def of STATIONS.filter((x) => x.stage === st.id && x.year <= yf && (allowBlack || !x.blackOnly))) {
+      const n = Math.ceil(target / def.capacity - 1e-9);
+      if (n > slots) continue;
+      // Wages at the share of the machines' pace the line uses (the same curve as lineUpkeep).
+      const use = target / (n * def.capacity);
+      const cost = n * (stationPriceAt(def.id, yf) + def.upkeep * wages * (0.4 + 0.6 * use));
+      if (cost < pick.cost) pick = { id: def.id, n, cost };
+    }
+    plan[st.id] = Array.from({ length: pick.n }, () => pick.id);
   }
   return plan;
 }
+
+/** Years of wages the planner weighs against a machine's price. */
+const PLAN_WEEKS = 150;
 
 /** Money to widen a line from `from` to `to` slots. */
 export function expansionCost(yf: number, from: number, to: number): number {

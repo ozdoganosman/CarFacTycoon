@@ -31,8 +31,12 @@ export const capexScale = (year: number) => interp([[1900, 1.5], [1906, 2], [191
 /** Weeks to put up and equip a new line before it builds its first car. */
 export const lineBuildWeeks = (year: number) => Math.round(interp([[1900, 3], [1913, 8], [1930, 12], [1960, 14]], year));
 
-/** Cost of a new empty production line (building + conveyors). */
-export const newLineCost = (year: number) => interp([[1900, 2500], [1913, 8000], [1930, 25000], [1950, 60000]], year) * costIndex(year) * capexScale(year);
+/**
+ * Cost of a new empty production line: a workshop hall of three places a section. A hall is a
+ * building, not a machine, so it pays only the square root of the plant premium; widening it into a
+ * mass-production hall (`slotCost`) pays all of it.
+ */
+export const newLineCost = (year: number) => interp([[1900, 2500], [1913, 8000], [1930, 25000], [1950, 60000]], year) * costIndex(year) * Math.sqrt(capexScale(year));
 
 /** Cost of adding one more station slot to every stage of a line. */
 export const slotCost = (year: number, slots: number) => (400 + 250 * slots * slots) * costIndex(year) * (year >= 1913 ? 2 : 1) * capexScale(year);
@@ -51,6 +55,11 @@ export const labourShare = (year: number) =>
 export const warPrice = (year: number) => (year >= 1914.6 && year < 1919 ? 1.18 : 1);
 export const priceLevel = (year: number) => costIndex(year) * warPrice(year);
 
+/**
+ * What a car costs in the showroom over its material and labour: the maker's margin and the dealer's
+ * cut together (the class price is what buyers pay). A maker on modern lines keeps a thin margin at
+ * the class price; one building by hand, or paying for dealers everywhere, has to earn it elsewhere.
+ */
 export const priceMarkup = (year: number) => interp([[1900, 1.42], [1908, 1.32], [1915, 1.22], [1930, 1.18], [1960, 1.18]], year);
 
 /** Tooling (dies, jigs) cost as a multiple of the car's material cost. */
