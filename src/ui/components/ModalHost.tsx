@@ -7,6 +7,7 @@ import { segmentDef } from '../../data/segments';
 import { SCORE_TIERS, cashReport, companyValue, finalScore, idleEngineers, idleReason, modelMargins, rescueLoan, type CashReport } from '../../core/game';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { allTech } from '../../core/techtree';
+import { yearOf as yearOfWeek } from '../../core/time';
 import { isBlockingModal } from '../../core/util';
 import type { GameState, ModalItem } from '../../core/types';
 import { store, useGameState } from '../store';
@@ -57,12 +58,21 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
           icon={ev.icon}
           actions={
             ev.choices?.length ? (
-              ev.choices.map((c) => (
-                <button key={c.id} type="button" className="choice-btn" onClick={() => store.act((st) => A.chooseEventOption(st, ev.id, c.id))}>
-                  <b>{c.label}</b>
-                  {c.desc && <small>{c.desc}</small>}
-                </button>
-              ))
+              ev.choices.map((c) => {
+                const desc = typeof c.desc === 'function' ? c.desc(s) : c.desc;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    className="choice-btn"
+                    disabled={c.enabled ? !c.enabled(s) : false}
+                    onClick={() => store.act((st) => A.chooseEventOption(st, ev.id, c.id))}
+                  >
+                    <b>{c.label}</b>
+                    {desc && <small>{desc}</small>}
+                  </button>
+                );
+              })
             ) : (
               <Button kind="primary" onClick={close}>
                 Tamam
@@ -470,6 +480,8 @@ function Insolvency({ s, stage }: { s: GameState; stage: 'first' | 'last' }) {
 
 function GameOver({ s }: { s: GameState }) {
   const bankrupt = s.gameOver?.reason === 'bankrupt';
+  const ousted = s.gameOver?.reason === 'ousted';
+  const board = s.shares?.history.slice(-3) ?? [];
   const totalSold = s.models.reduce((a, m) => a + m.unitsSold, 0);
   const value = companyValue(s);
   const score = finalScore(s);
@@ -480,8 +492,8 @@ function GameOver({ s }: { s: GameState }) {
   ].sort((a, b) => b.units - a.units);
   return (
     <Modal
-      title={bankrupt ? 'Şirket iflas etti' : 'Kampanya tamamlandı: 1960'}
-      icon={bankrupt ? '💀' : '🏆'}
+      title={bankrupt ? 'Şirket iflas etti' : ousted ? `Görevden alındın: ${yearOfWeek(s.week)}` : 'Kampanya tamamlandı: 1960'}
+      icon={bankrupt ? '💀' : ousted ? '🎩' : '🏆'}
       wide
       actions={
         <>
@@ -497,8 +509,36 @@ function GameOver({ s }: { s: GameState }) {
       <p>
         {bankrupt
           ? 'Kasa 12 hafta boyunca ekside kaldı ve bankalar kapıyı kapattı. Paranın nereye gittiği:'
-          : `Unvanın: ${score.tier}. Toplam ${num(totalSold)} araç sattın; şirket değeri ${money(value)}.`}
+          : ousted
+            ? `Hissedarların sabrı tükendi: yönetim kurulu seni görevden aldı ve şirketi başka birine verdi. Ayrılırken şirket ${num(totalSold)} araç satmıştı, değeri ${money(value)}.`
+            : `Unvanın: ${score.tier}. Toplam ${num(totalSold)} araç sattın; şirket değeri ${money(value)}.`}
       </p>
+      {ousted && board.length > 0 && (
+        <table className="table compact">
+          <thead>
+            <tr>
+              <th>Yıl</th>
+              <th className="al-r">Ciro büyümesi</th>
+              <th className="al-r">Temettü</th>
+              <th className="al-r">Güven</th>
+            </tr>
+          </thead>
+          <tbody>
+            {board.map((b) => (
+              <tr key={b.year}>
+                <td>{b.year}</td>
+                <td className="al-r">
+                  {pct(b.growth, 1)} <span className="muted small">/ {pct(b.targetGrowth, 1)}</span>
+                </td>
+                <td className="al-r">
+                  {money(b.dividend)} <span className="muted small">/ {money(b.targetDividend)}</span>
+                </td>
+                <td className="al-r">{Math.round(b.confidence)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
       {bankrupt && <CashFacts r={cashReport(s)} s={s} />}
       {!bankrupt && (
         <>
@@ -572,6 +612,7 @@ export function YearReportBody({ s, year }: { s: GameState; year: number }) {
     .sort((a, b) => b.units - a.units)
     .slice(0, 5);
   const fresh = allTech().filter((t) => t.year === year + 1);
+  const board = s.shares?.history.find((b) => b.year === year);
   return (
     <>
     <div className="report-grid">
@@ -596,6 +637,12 @@ export function YearReportBody({ s, year }: { s: GameState; year: number }) {
         </div>
       ))}
     </div>
+    {board && (
+      <p className={board.met ? 'tone-good' : 'tone-bad'}>
+        🎩 Yönetim kurulu: ciro {pct(board.growth, 1)} (hedef {pct(board.targetGrowth, 1)}), temettü {money(board.dividend)} (hedef {money(board.targetDividend)}).{' '}
+        {board.met ? 'Hedefler tuttu' : 'Hedefler tutmadı'}, güven {Math.round(board.confidence)}/100.
+      </p>
+    )}
     {rivals.length > 0 && (
       <>
         <h4>En çok satan rakipler</h4>

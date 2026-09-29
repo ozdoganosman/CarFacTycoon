@@ -5,7 +5,8 @@ import { engineersBusy, idleEngineers, idleReason } from '../../core/game';
 import { engineerSalary } from '../../data/economy';
 import { racingOutlook, racingPaused } from '../../core/racing';
 import { lineReport } from '../../core/factory';
-import { formatDate, formatShort, yearFloat, yearOf } from '../../core/time';
+import { formatDate, formatShort, weekOfYear, yearFloat, yearOf } from '../../core/time';
+import { boardOutlook } from '../../core/shares';
 import { queueHold, researchDef, researchDefs, rivalAdoption, techState } from '../../core/research';
 import { segmentDef } from '../../data/segments';
 import type { CarModel, GameState, LogCategory } from '../../core/types';
@@ -67,6 +68,16 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
     const revenue = s.finance.slice(-13).reduce((a, f) => a + f.revenue, 0) / 13;
     if (revenue > 0 && N.networkWeekly(s, yf) > revenue * 0.12)
       out.push({ text: `Bayi ve servis ağının gideri satış gelirinin %${Math.round((N.networkWeekly(s, yf) / revenue) * 100)}’i: az satan bayileri kapatmayı düşün.`, go: toMap });
+  }
+  // The board: say it early when this year's targets are slipping.
+  const board = boardOutlook(s);
+  if (s.shares && board?.judged && weekOfYear(s.week) >= 13) {
+    const short = [board.projected < board.needed ? 'ciro' : '', board.dividend < s.shares.target.dividend * 0.98 ? 'temettü' : ''].filter(Boolean);
+    if (short.length)
+      out.push({
+        text: `Yönetim kurulunun ${s.shares.target.year} hedefleri tutmayacak gibi (${short.join(' ve ')}). Güven ${Math.round(s.shares.confidence)}/100${s.shares.ultimatum ? ': son uyarı' : ''}.`,
+        go: () => store.go({ id: 'company' }),
+      });
   }
   // Research standing idle while rivals already build with technology the company has not learned.
   const r = s.research;

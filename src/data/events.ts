@@ -1,6 +1,10 @@
 import { cityDef } from './cities';
+import { segmentDef } from './segments';
 import { stateDef } from './states';
-import { log } from '../core/util';
+import { log, money } from '../core/util';
+import { acceptBid, canDilute, greenmailCost, lastMove, matchPriceWar, refuseBid, rivalMoves } from '../core/rivalMoves';
+import { dilute, grantSeat, greenmail, marketCap } from '../core/shares';
+import { rivalDef } from '../core/rivals';
 import type { GameState } from '../core/types';
 
 // Historical events. Market sizes already follow history (see markets.ts);
@@ -9,7 +13,9 @@ import type { GameState } from '../core/types';
 export interface EventChoice {
   id: string;
   label: string;
-  desc?: string;
+  desc?: string | ((s: GameState) => string);
+  /** A choice the company cannot afford is shown greyed out. */
+  enabled?: (s: GameState) => boolean;
   apply?: (s: GameState) => void;
 }
 
@@ -280,6 +286,184 @@ export const EVENTS: GameEventDef[] = [
   },
 ];
 
+const moveName = (s: GameState) => {
+  const m = lastMove(s);
+  return m ? rivalDef(m.company).name : 'Bir rakip';
+};
+const moveClass = (s: GameState) => {
+  const seg = lastMove(s)?.segment;
+  return seg ? segmentDef(seg).name.toLowerCase() : '';
+};
+const pctTxt = (v: number) => `${v >= 0 ? '+' : '−'}%${Math.abs(Math.round(v * 1000) / 10)}`;
+const targetsText = (s: GameState) => {
+  const t = s.shares?.target;
+  return t ? `${t.year} hedefleri: ciro ${pctTxt(t.growth)}, dış hissedarlara en az ${money(t.dividend)} temettü.` : '';
+};
+
+/**
+ * Pop-ups the game raises itself when something happens (a rival's counter-move, the board's
+ * warnings): never fired by date, their text reads the moment from the save.
+ */
+export const DYNAMIC_EVENTS: GameEventDef[] = [
+  {
+    id: 'rival-priceWar',
+    year: 9999,
+    month: 0,
+    title: 'Fiyat savaşı',
+    icon: '🏷️',
+    body: (s) =>
+      `${moveName(s)}, ${moveClass(s)} sınıfında önümüze geçmemize dayanamadı: fiyatlarını %15 indirdi ve bu fiyatları bir buçuk yıl koruyacağını ilan etti.\n\n` +
+      'Gazeteler "otomobil fiyatları düşüyor" diye yazıyor. Alıcıların bir kısmı ucuz arabaya kayacak.',
+    choices: [
+      {
+        id: 'hold',
+        label: 'Fiyatlarımızı koruyoruz',
+        desc: 'Bir miktar alıcı kaybederiz ama araba başına kâr aynı kalır. Kaliteli ve tanınmış bir araba fiyat savaşını daha rahat atlatır.',
+      },
+      {
+        id: 'match',
+        label: 'Biz de %10 indiriyoruz',
+        desc: (s) => {
+          const seg = lastMove(s)?.segment;
+          const n = s.models.filter((m) => m.status === 'active' && m.segment === seg).length;
+          return `Bu sınıftaki ${n} modelimizin fiyatı %10 düşer: alıcılar kalır, kâr marjı daralır. Savaş bitince eski fiyata dönmek zam sayılmaz.`;
+        },
+        apply: (s) => {
+          const seg = lastMove(s)?.segment;
+          if (seg) matchPriceWar(s, seg);
+          log(s, 'Fiyat savaşına karşılık verdik: fiyatlarımız %10 indi.', 'info');
+        },
+      },
+    ],
+  },
+  {
+    id: 'rival-techLeap',
+    year: 9999,
+    month: 0,
+    title: 'Rakipten teknoloji atağı',
+    icon: '⚙️',
+    body: (s) =>
+      `${moveName(s)}, ${moveClass(s)} sınıfındaki üstünlüğümüze karşı en iyi mühendislerini tek bir arabaya verdi: ${lastMove(s)?.model ?? 'yeni modeli'} bugün tanıtıldı. ` +
+      'Kâğıt üzerinde bizim arabamızdan daha modern.\n\n' +
+      'Yerimizi korumak için yeni bir model ya da makyaj gerekecek. Mühendislerini ve Ar-Ge kuyruğunu gözden geçir.',
+  },
+  {
+    id: 'rival-merger',
+    year: 9999,
+    month: 0,
+    title: 'Büyük birleşme',
+    icon: '🤝',
+    body: (s) => {
+      const m = lastMove(s);
+      const a = m ? rivalDef(m.company).name : 'İki rakip';
+      const b = m?.partner ? rivalDef(m.partner).name : '';
+      return (
+        `${a}, ${b} şirketini satın aldı. Tek başına bize yetişemeyen iki üretici güçlerini birleştirdi: ${b} fabrikası kapanıyor, bayileri artık ${a} arabalarını satıyor.\n\n` +
+        `${a} bundan sonra ülkenin daha fazla köşesinde. ${b} alıcıları yeni bir marka arayacak: bayimiz olan eyaletlerde onlara ulaşmak için iyi bir fırsat.`
+      );
+    },
+  },
+  {
+    id: 'rival-bid',
+    year: 9999,
+    month: 0,
+    title: 'Hisse teklifi',
+    icon: '💼',
+    body: (s) => {
+      const b = rivalMoves(s).bid;
+      const name = b ? rivalDef(b.company).name : 'Bir rakip';
+      return (
+        `${name} bankacıları kapıda: şirketin %${Math.round((b?.stake ?? 0.25) * 100)}’i için ${money(b?.price ?? 0)} öneriyorlar, bugünkü değerinin epey üstünde.\n\n` +
+        `Satarsan kasaya büyük bir para girer ama şirket borsaya açılır ve ${name} yönetim kurulunda oturur: her yıl büyüme ve temettü hedefleri gelir, rakibin koltuğu yüzünden daha sıkı. ` +
+        'Reddedersen savaş açık demektir.'
+      );
+    },
+    choices: [
+      {
+        id: 'accept',
+        label: 'Hisseyi sat',
+        desc: (s) => `Kasaya ${money(rivalMoves(s).bid?.price ?? 0)} girer. Yönetim kurulu kurulur; hedefler tutmazsa baskı artar, en sonunda görevden alınabilirsin.`,
+        apply: acceptBid,
+      },
+      {
+        id: 'refuse',
+        label: 'Reddet',
+        desc: 'Şirket tamamen senin kalır. Rakip, en büyük sınıfında fiyatlarını indirerek karşılık verir.',
+        apply: refuseBid,
+      },
+    ],
+  },
+  {
+    id: 'rival-raid',
+    year: 9999,
+    month: 0,
+    title: 'Hisse baskını',
+    icon: '🦈',
+    body: (s) => {
+      const r = s.shares?.raider;
+      const name = r ? rivalDef(r.company).name : 'Bir rakip';
+      return (
+        `${name}, borsadan sessizce hisse topladı: artık şirketin %${Math.round((r?.stake ?? 0) * 100)}’i onun. Yönetim kurulunda koltuk istiyor.\n\n` +
+        'Bloğu primle geri alabilir, koltuğu verebilir ya da dost bankalara yeni hisse satarak payını sulandırabilirsin.'
+      );
+    },
+    choices: [
+      {
+        id: 'greenmail',
+        label: 'Hisseleri primle geri al',
+        desc: (s) => `${money(greenmailCost(s))} (piyasa fiyatının %35 fazlası). Rakip yönetimden uzak kalır, dışarıdaki payın küçülür.`,
+        enabled: (s) => s.company.cash >= greenmailCost(s),
+        apply: (s) => {
+          const cost = greenmailCost(s);
+          greenmail(s);
+          log(s, `Rakibin hisseleri ${money(cost)} karşılığında geri alındı.`, 'info');
+        },
+      },
+      {
+        id: 'seat',
+        label: 'Koltuğu ver',
+        desc: 'Para harcanmaz, borsa istikrarı sever (güven +4). Ama rakip yönetimde oturdukça hedefler daha sıkı olur.',
+        apply: (s) => {
+          grantSeat(s);
+          log(s, 'Rakip yönetim kuruluna girdi: hedefler sıkılaştı.', 'warn');
+        },
+      },
+      {
+        id: 'dilute',
+        label: 'Yeni hisse çıkar, payını sulandır',
+        desc: (s) => `Dost bankalara %10 yeni hisse satılır (kasaya ~${money(marketCap(s) * 0.1 * 0.92)}). Rakip çekilir ama hissedarlar sulanmadan hoşlanmaz (güven −8).`,
+        enabled: canDilute,
+        apply: (s) => {
+          dilute(s);
+          log(s, 'Yeni hisseler dost bankalara satıldı; baskıncı rakip çekildi.', 'info');
+        },
+      },
+    ],
+  },
+  {
+    id: 'board-warning',
+    year: 9999,
+    month: 0,
+    title: 'Yönetim kurulu huzursuz',
+    icon: '🎩',
+    body: (s) =>
+      `Yönetim kurulunun sana güveni ${Math.round(s.shares?.confidence ?? 0)}/100’e düştü. Hissedarlar büyüme ve temettü bekliyor; toplantıda sesler yükseldi.\n\n` +
+      `${targetsText(s)}\n\n` +
+      'Temettü oranını Şirket ekranından ayarlayabilirsin. Güven 25’in altına inerse son uyarı gelir, sonra görevden alınırsın.',
+  },
+  {
+    id: 'board-ultimatum',
+    year: 9999,
+    month: 0,
+    title: 'Yönetim kurulundan son uyarı',
+    icon: '⚠️',
+    body: (s) =>
+      `Güven ${Math.round(s.shares?.confidence ?? 0)}/100. Yönetim kurulu açık konuştu: bu yılın hedefleri de tutmazsa seni görevden alacak ve şirketi başka birine verecek.\n\n` +
+      `${targetsText(s)}\n\n` +
+      'Çıkış yolları: hedefleri tutturmak ya da dışarıdaki bütün hisseleri geri alıp yönetim kurulundan kurtulmak (Şirket ekranı).',
+  },
+];
+
 export function eventDef(id: string): GameEventDef | undefined {
-  return EVENTS.find((e) => e.id === id);
+  return EVENTS.find((e) => e.id === id) ?? DYNAMIC_EVENTS.find((e) => e.id === id);
 }

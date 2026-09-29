@@ -987,7 +987,9 @@ export function dismissYearReport(s: GameState) {
 
 export function chooseEventOption(s: GameState, eventId: string, choiceId: string) {
   const ev = eventDef(eventId);
-  ev?.choices?.find((c) => c.id === choiceId)?.apply?.(s);
+  const choice = ev?.choices?.find((c) => c.id === choiceId);
+  if (choice?.enabled && !choice.enabled(s)) throw new Error('Bu seçenek şu an mümkün değil.');
+  choice?.apply?.(s);
   decide(s, 'event:' + eventId, `Olay ${eventId}: ${ev?.choices?.find((c) => c.id === choiceId)?.label ?? choiceId}`);
   shiftModal(s);
 }

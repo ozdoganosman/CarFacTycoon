@@ -433,6 +433,10 @@ export interface RivalCompany {
   color: string;
   unitsSold: number;
   yearSold: Record<number, number>;
+  /** Merged into another maker: its cars left the market and its dealers went to that company. */
+  mergedInto?: string;
+  /** Dealers gained in mergers, on top of the company's own network (added to its reach). */
+  sizeBoost?: number;
 }
 
 export interface RivalModel {
@@ -449,6 +453,67 @@ export interface RivalModel {
   active: boolean;
   unitsSold: number;
   cache?: { week: number; scores: Scores; appeal: Record<MarketId, number> };
+  /** A price war: the price is cut by this factor until that week. */
+  priceCut?: { mult: number; until: number };
+}
+
+// ---------------- Rival counter-moves & the stock market ----------------
+
+/** What the big makers do once the player gets ahead of them. */
+export type RivalMoveKind = 'priceWar' | 'techLeap' | 'merger' | 'bid' | 'raid';
+
+export interface RivalMove {
+  week: number;
+  kind: RivalMoveKind;
+  company: string;
+  segment?: SegmentId;
+  /** The company swallowed in a merger. */
+  partner?: string;
+  /** The rival's new car (a technology leap). */
+  model?: string;
+}
+
+export interface RivalMovesState {
+  /** Week of the latest move (moves come at most once a year). */
+  lastWeek: number;
+  history: RivalMove[];
+  /** An offer for a stake in the company waiting for an answer. */
+  bid?: { company: string; stake: number; price: number };
+}
+
+/** One year's report to the board. */
+export interface BoardYear {
+  year: number;
+  growth: number;
+  targetGrowth: number;
+  dividend: number;
+  targetDividend: number;
+  profit: number;
+  met: boolean;
+  confidence: number;
+}
+
+/** The company on the stock exchange: outside shareholders, the board's targets and its patience. */
+export interface ShareState {
+  /** Share of the company in outside hands (0..0.49: the founder keeps control). */
+  float: number;
+  /** Week the shares were first sold. */
+  since: number;
+  /** The board's confidence in the management, 0..100: at zero the founder is voted out. */
+  confidence: number;
+  /** Share of each year's profit paid out as dividends. */
+  payout: number;
+  /** The year the board judges next: revenue must grow by `growth`, dividends reach `dividend`. */
+  target: { year: number; growth: number; dividend: number };
+  history: BoardYear[];
+  /** Dividends paid to outside shareholders so far. */
+  dividends: number;
+  /** A rival bought a block of shares: it wants a say. */
+  raider?: { company: string; stake: number };
+  /** A rival sits on the board: the targets are stricter. */
+  seat?: string;
+  /** The board gave its last warning: miss one more year and the founder goes. */
+  ultimatum?: boolean;
 }
 
 export type ModalItem =
@@ -499,6 +564,8 @@ export interface FinanceWeek {
   investment: number;
   /** Corporate income tax paid (on the previous year's profit). Missing in old saves. */
   tax: number;
+  /** Dividends paid to outside shareholders (not a cost of running the company). */
+  dividend?: number;
 }
 
 export interface YearSummary {
@@ -508,7 +575,7 @@ export interface YearSummary {
   unitsSold: number;
   shareByMarket: Record<MarketId, number>;
   cashEnd: number;
-  costs: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue' | 'auto'>, number>;
+  costs: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue' | 'auto' | 'dividend'>, number>;
 }
 
 export interface Company {
@@ -574,9 +641,13 @@ export interface GameState {
   acquired?: string[];
   /** Dealers, service and cars on the road, state by state (older saves get one on load). */
   network?: NetworkState;
+  /** What the rivals did once the player got ahead (older saves lack it). */
+  rivalMoves?: RivalMovesState;
+  /** Shares sold on the stock exchange (missing while the company is private). */
+  shares?: ShareState;
   /** modeChosen: the player picked the engine designer mode themselves (older saves defaulted to the simple one). */
   settings: { engineerMode: boolean; autoPauseCards: boolean; modeChosen?: boolean; difficulty?: DifficultyId };
-  gameOver?: { reason: 'bankrupt' | 'end'; week: number };
+  gameOver?: { reason: 'bankrupt' | 'end' | 'ousted'; week: number };
   nextId: number;
   /** Number for the next line's name, so names are never reused. */
   nextLineNo?: number;

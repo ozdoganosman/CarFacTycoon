@@ -10,6 +10,8 @@ import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table } from '../co
 
 /** What the money is for: a racing team, buying rivals, and the company's worth. */
 import { TeamPanel } from '../components/TeamPanel';
+import { RivalMovesPanel, SharesPanel } from '../components/BoardPanel';
+import { founderShare } from '../../core/shares';
 
 export function Company() {
   const s = useGameState();
@@ -26,7 +28,7 @@ export function Company() {
       <div className="screen-head">
         <div>
           <h1>Şirket</h1>
-          <p className="muted">Mühendis al, kazandığın parayı markayı büyütmek için kullan: yarışlarda ün kazan, küçük rakipleri satın al.</p>
+          <p className="muted">Mühendis al, kazandığın parayı markayı büyütmek için kullan: yarışlarda ün kazan, küçük rakipleri satın al, borsaya açıl.</p>
         </div>
       </div>
       <div className="stats-row">
@@ -36,7 +38,7 @@ export function Company() {
               Şirket değeri
               <Info>
                 <p>Makineler, stok ve kasa, eksi borç; üstüne markanın kazanç gücü (son bir yılın faaliyet kârının altı katı).</p>
-                <p>Oyun sonu puanına girer.</p>
+                <p>Oyun sonu puanına girer{s.shares ? `: yalnızca senin payın (%${Math.round(founderShare(s) * 100)})` : ''}.</p>
               </Info>
             </>
           }
@@ -47,6 +49,10 @@ export function Company() {
         <Stat label="Yarış zaferi" value={r.wins ?? 0} />
       </div>
       <TeamPanel />
+      <div className="grid-2">
+        <SharesPanel s={s} />
+        <RivalMovesPanel s={s} />
+      </div>
       <div className="grid-2">
         <Panel title="Yarış takımı">
           {!racingOpen ? (

@@ -21,6 +21,8 @@ import { allTech } from './techtree';
 import { knownKnowhow, labSpeed, noteResearch, pumpResearchQueue, researchDef, researcherSalary, startingKnowledge } from './research';
 import { checkBoom, publish, techIssue } from './news';
 import { racingWeek } from './racing';
+import { rivalMovesMonth } from './rivalMoves';
+import { boardYear, founderShare } from './shares';
 import {
   TESTS,
   actualReliability,
@@ -280,7 +282,8 @@ export const SCORE_TIERS: { min: number; name: string }[] = [
 export function finalScore(s: GameState): FinalScore {
   const totalSold = s.models.reduce((a, m) => a + m.unitsSold, 0);
   const rank = [totalSold, ...s.rivals.map((r) => r.unitsSold)].sort((a, b) => b - a).indexOf(totalSold) + 1;
-  const value = companyValue(s);
+  // Only the founder's own part of the company counts: shares sold are no longer theirs.
+  const value = companyValue(s) * founderShare(s);
   // Reviews and races count for the last years of the campaign: an early hit does not carry a whole career.
   const recent = s.models.filter((m) => m.launchWeek >= s.week - 10 * 52);
   const latest = [...s.models].sort((a, b) => b.launchWeek - a.launchWeek)[0];
@@ -292,7 +295,7 @@ export function finalScore(s: GameState): FinalScore {
     // 1st → 400, 2nd → 325, 5th → 225, 10th → 150, 20th → 75, 40th → 0
     { label: 'Tüm zamanların satış sırası', value: `${rank}.`, points: Math.max(0, Math.round(400 * (1 - Math.log(rank) / Math.log(40)))), max: 400 },
     // $1 mn → 300, $1 mr → 450, $10 mr and more → 500
-    { label: 'Şirket değeri', value: money(value), points: Math.min(500, Math.max(0, Math.round(50 * Math.log10(Math.max(1, value))))), max: 500 },
+    { label: s.shares ? `Şirket değeri (senin payın %${Math.round(founderShare(s) * 100)})` : 'Şirket değeri', value: money(value), points: Math.min(500, Math.max(0, Math.round(50 * Math.log10(Math.max(1, value))))), max: 500 },
     { label: 'İtibar', value: `${Math.round(s.company.reputation)}/100`, points: Math.round(3 * s.company.reputation), max: 300 },
     { label: recent.length ? 'Son on yılın dergi puanı (ortalama)' : 'Son arabanın dergi puanı (eski)', value: `${review.toFixed(1)}/10`, points: Math.round(30 * review), max: 300 },
     { label: 'Son yirmi yılın yarış zaferleri', value: String(wins), points: Math.min(200, 25 * wins), max: 200 },
@@ -350,6 +353,7 @@ export function tick(s: GameState): void {
   if (isMonthStart(s.week)) {
     checkStall(s);
     for (const n of updateRivals(s, stateRng(s))) log(s, n.text, n.tone, 'rival');
+    rivalMovesMonth(s, stateRng(s));
   }
   advanceProjects(s);
   advanceResearch(s);
@@ -409,7 +413,7 @@ function closeYear(s: GameState, year: number) {
   const weeks = s.finance.filter((f) => yearOf(f.week) === year);
   const revenue = weeks.reduce((a, f) => a + f.revenue, 0);
   const costs = weeks.reduce(
-    (a, f) => a + f.materials + f.labor + f.salaries + f.dealers + f.marketing + f.rnd + f.warranty + f.interest + f.other + (f.tax ?? 0),
+    (a, f) => a + f.materials + f.labor + f.salaries + f.dealers + (f.freight ?? 0) + f.marketing + f.rnd + f.warranty + f.interest + f.other + (f.tax ?? 0),
     0,
   );
   const shareByMarket = {} as Record<MarketId, number>;
@@ -428,6 +432,12 @@ function closeYear(s: GameState, year: number) {
   for (const k of COST_KEYS) breakdown[k] = weeks.reduce((a, f) => a + (f[k] ?? 0), 0);
   s.years.push({ year, revenue, profit: revenue - costs, unitsSold: units, shareByMarket, cashEnd: s.company.cash, costs: breakdown });
   payCorporateTax(s, year, revenue - (costs - breakdown.tax) - 0.2 * breakdown.investment);
+  // Shareholders get their dividend and the board meets.
+  if (s.week < s.endWeek && boardYear(s, year)) {
+    s.gameOver = { reason: 'ousted', week: s.week };
+    s.modals.push({ kind: 'gameOver' });
+    return;
+  }
   if (year >= 1900 && s.week < s.endWeek) {
     // Only the latest year report is kept; it waits in a corner while time runs on.
     s.modals = s.modals.filter((m) => m.kind !== 'yearReport');

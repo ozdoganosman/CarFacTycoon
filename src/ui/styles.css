@@ -4172,3 +4172,20 @@ fieldset {
 .state-row-status {
   font-size: 0.78rem;
 }
+
+/* ---------- Stock market, board and rival moves ---------- */
+.board-actions {
+  margin: 10px 0;
+}
+.moves-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+.moves-list li {
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.moves-list li:last-child {
+  border-bottom: 0;
+}

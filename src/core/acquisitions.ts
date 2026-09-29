@@ -33,6 +33,7 @@ export function acquisitionTargets(s: GameState): AcquisitionTarget[] {
     // Only American makers: the company plays the American market.
     if (def.home !== 'usa' || !isRivalActive(def, yf) || s.acquired?.includes(def.id)) continue;
     const company = s.rivals.find((c) => c.id === def.id);
+    if (company?.mergedInto) continue;
     const units = company?.yearSold[year] ?? 0;
     if (units <= 0 || units >= mine) continue;
     const models = s.rivalModels.filter((m) => m.companyId === def.id && m.active);

@@ -104,9 +104,10 @@ export function playerReach(state: GameState, market: MarketId): number {
   return dealerCoverage(m.dealerLevel, market === state.company.hq) * (0.35 + 0.65 * m.awareness);
 }
 
-export function rivalSize(companyId: string, yf: number): number {
+/** A rival's reach: its own dealer network, plus the dealers it took over in mergers. */
+export function rivalSize(companyId: string, yf: number, state?: GameState): number {
   const def = RIVALS.find((r) => r.id === companyId)!;
-  return interp(def.size, yf);
+  return interp(def.size, yf) + (state?.rivals.find((c) => c.id === companyId)?.sizeBoost ?? 0);
 }
 
 export const rivalReputation = (companyId: string) => 45 + 0.3 * RIVALS.find((r) => r.id === companyId)!.skill;
@@ -177,7 +178,9 @@ export function rivalScores(state: GameState, rm: RivalModel): { scores: Scores;
 }
 
 export function rivalPriceNow(rm: RivalModel, week: number): number {
-  return (rm.price * priceLevel(yearFloat(week))) / rm.priceIndexAtLaunch;
+  // A price war cuts the list price for a while.
+  const cut = rm.priceCut && week < rm.priceCut.until ? rm.priceCut.mult : 1;
+  return (rm.price * priceLevel(yearFloat(week)) * cut) / rm.priceIndexAtLaunch;
 }
 
 // ---- offers & shares ----
@@ -265,7 +268,7 @@ export function rivalOffer(state: GameState, rm: RivalModel, market: MarketId): 
   const pt = priceTerm(rm.segment, market, price, yf);
   const brand = brandTerm(rivalReputation(rm.companyId), rm.segment);
   const hype = 4 * HYPE_WEIGHT * Math.exp(-(state.week - rm.launchWeek) / 40);
-  const reach = rivalSize(rm.companyId, yf) * (isImport ? 0.45 : 1);
+  const reach = rivalSize(rm.companyId, yf, state) * (isImport ? 0.45 : 1);
   const age = datedPenalty((state.week - rm.launchWeek) / 52);
   const utility = appealUtility(ap[market]) + pt + brand + hype + age;
   return {

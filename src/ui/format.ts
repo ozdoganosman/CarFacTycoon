@@ -54,4 +54,5 @@ export const COST_NAMES: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue' | 
   other: 'Genel gider ve depo',
   tax: 'Kurumlar vergisi',
   investment: 'Yatırım (hat, kalıp, bayi)',
+  dividend: 'Temettü ve hisse geri alımı',
 };

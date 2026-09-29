@@ -164,7 +164,7 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
   ensureRivals(state);
   for (const def of RIVALS) {
     const company = state.rivals.find((c) => c.id === def.id)!;
-    const active = isRivalActive(def, yf) && !state.acquired?.includes(def.id);
+    const active = isRivalActive(def, yf) && !state.acquired?.includes(def.id) && !company.mergedInto;
     const ownModels = state.rivalModels.filter((m) => m.companyId === def.id && m.active);
     if (!active) {
       if (def.closes && yf >= def.closes && ownModels.length && !state.acquired?.includes(def.id)) {
@@ -223,6 +223,7 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
 
     // Update export markets of existing models (e.g. Hartwell reaching Europe in 1911).
     for (const rm of state.rivalModels.filter((m) => m.companyId === def.id && m.active)) {
+      if (rm.priceCut && week >= rm.priceCut.until) delete rm.priceCut;
       for (const ex of def.exports ?? []) {
         if (yf >= ex.from && (!ex.segments || ex.segments.includes(rm.segment)) && !rm.markets.includes(ex.market)) {
           rm.markets.push(ex.market);

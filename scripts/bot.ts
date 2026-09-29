@@ -30,7 +30,9 @@ export function botStep(s: GameState, o: BotOptions = {}) {
     const m = s.modals.find(isBlockingModal) ?? s.modals[0];
     if (m.kind === 'event') {
       const ev = eventDef(m.eventId);
-      if (ev?.choices?.length) A.chooseEventOption(s, m.eventId, ev.choices[0].id);
+      // The bot has no plan for a board: it keeps the company to itself.
+      const choice = ev?.choices?.find((c) => (m.eventId !== 'rival-bid' || c.id === 'refuse') && (!c.enabled || c.enabled(s)));
+      if (choice) A.chooseEventOption(s, m.eventId, choice.id);
       else A.dismissModal(s);
     } else if (m.kind === 'recall' || m.kind === 'service') {
       // Recall when the company can pay for it; a company on the edge keeps quiet and hopes.
