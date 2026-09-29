@@ -1,5 +1,6 @@
 import type { MarketId, SegmentId } from '../core/types';
 import { interp } from './tech';
+import { msg } from '../i18n';
 
 export interface TaxRule {
   from: number;
@@ -26,9 +27,9 @@ export interface MarketDef {
 export const MARKETS: MarketDef[] = [
   {
     id: 'usa',
-    name: 'ABD',
+    name: msg('ABD'),
     flag: '🇺🇸',
-    desc: 'Geniş yollar, ucuz benzin. Büyük motor, hız ve konfor sever. 1910’lardan sonra dünyanın en büyük pazarı.',
+    desc: msg('Geniş yollar, ucuz benzin. Büyük motor, hız ve konfor sever. 1910’lardan sonra dünyanın en büyük pazarı.'),
     size: [
       [1900, 4000], [1903, 11000], [1905, 24000], [1907, 43000], [1909, 124000], [1910, 181000],
       [1912, 356000], [1914, 548000], [1916, 1500000], [1917, 1750000], [1918, 940000], [1919, 1650000],
@@ -57,9 +58,9 @@ export const MARKETS: MarketDef[] = [
   },
   {
     id: 'europe',
-    name: 'Avrupa',
+    name: msg('Avrupa'),
     flag: '🇪🇺',
-    desc: 'Dar yollar, pahalı benzin, vergiler. Küçük, az yakan ve iyi yol tutan araç sever. İngiltere 1910-1947 arası arabaları silindir çapına göre vergilendirir.',
+    desc: msg('Dar yollar, pahalı benzin, vergiler. Küçük, az yakan ve iyi yol tutan araç sever. İngiltere 1910-1947 arası arabaları silindir çapına göre vergilendirir.'),
     size: [
       [1900, 5000], [1905, 20000], [1910, 60000], [1913, 100000], [1914, 80000], [1915, 30000],
       [1918, 20000], [1920, 90000], [1925, 300000], [1929, 450000], [1930, 400000], [1932, 330000],
@@ -78,8 +79,8 @@ export const MARKETS: MarketDef[] = [
     },
     tariff: [[1900, 0.15], [1914, 0.15], [1915, 0.33], [1956, 0.33], [1957, 0.2], [1960, 0.2]],
     taxes: [
-      { from: 1910, to: 1947, kind: 'racHp', rate: 14, label: 'Vergi beygiri (RAC): silindir çapı² × silindir sayısı' },
-      { from: 1948, to: 1999, kind: 'cc', rate: 0.12, label: 'Motor hacmi vergisi' },
+      { from: 1910, to: 1947, kind: 'racHp', rate: 14, label: msg('Vergi beygiri (RAC): silindir çapı² × silindir sayısı') },
+      { from: 1948, to: 1999, kind: 'cc', rate: 0.12, label: msg('Motor hacmi vergisi') },
     ],
     shipping: 70,
   },

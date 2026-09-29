@@ -1,4 +1,5 @@
 import type { AttrKey } from '../core/types';
+import { msg } from '../i18n';
 
 // Body dies and assembly fixtures. Cheap soft tools get a car to market fast
 // but every panel needs hand fitting; hardened precision tools cost a fortune
@@ -21,8 +22,8 @@ export interface ToolingDef {
 export const TOOLING: ToolingDef[] = [
   {
     id: 'soft',
-    name: 'Yumuşak kalıplar',
-    desc: 'Ahşap ve dökme demir kalıplar; paneller elle düzeltilir. Ucuz ve çabuk hazır, ama kapılar tam oturmaz, gövde tıkırdar ve fire çoktur.',
+    name: msg('Yumuşak kalıplar'),
+    desc: msg('Ahşap ve dökme demir kalıplar; paneller elle düzeltilir. Ucuz ve çabuk hazır, ama kapılar tam oturmaz, gövde tıkırdar ve fire çoktur.'),
     costMult: 0.5,
     weeksMult: 0.6,
     materialMult: 1.06,
@@ -30,8 +31,8 @@ export const TOOLING: ToolingDef[] = [
   },
   {
     id: 'standard',
-    name: 'Çelik kalıplar',
-    desc: 'Dönemin olağan çelik pres kalıpları ve montaj fikstürleri.',
+    name: msg('Çelik kalıplar'),
+    desc: msg('Dönemin olağan çelik pres kalıpları ve montaj fikstürleri.'),
     costMult: 1,
     weeksMult: 1,
     materialMult: 1,
@@ -39,8 +40,8 @@ export const TOOLING: ToolingDef[] = [
   },
   {
     id: 'precision',
-    name: 'Hassas kalıplar',
-    desc: 'Sertleştirilmiş çelik kalıplar ve hassas fikstürler. Pahalı ve geç hazırlanır; paneller milimetrik oturur, fire azdır.',
+    name: msg('Hassas kalıplar'),
+    desc: msg('Sertleştirilmiş çelik kalıplar ve hassas fikstürler. Pahalı ve geç hazırlanır; paneller milimetrik oturur, fire azdır.'),
     costMult: 1.8,
     weeksMult: 1.35,
     materialMult: 0.96,

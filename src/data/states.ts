@@ -1,4 +1,5 @@
 import type { SegmentId } from '../core/types';
+import { msg } from '../i18n';
 
 // The 48 states (the District of Columbia counts with Maryland; Alaska and Hawaii only
 // joined in 1959 and are left out). Where a car can be sold, and how many.
@@ -78,14 +79,14 @@ const BY_ID = Object.fromEntries(STATES.map((s) => [s.id, s])) as Record<StateId
 export const stateDef = (id: StateId) => BY_ID[id];
 
 export const REGION_NAMES: Record<RegionId, string> = {
-  newEngland: 'Yeni İngiltere',
-  mideast: 'Doğu Kıyısı',
-  greatLakes: 'Büyük Göller',
-  plains: 'Ovalar',
-  southeast: 'Güney',
-  southwest: 'Güneybatı',
-  rockies: 'Kayalık Dağlar',
-  farWest: 'Batı Kıyısı',
+  newEngland: msg('Yeni İngiltere'),
+  mideast: msg('Doğu Kıyısı'),
+  greatLakes: msg('Büyük Göller'),
+  plains: msg('Ovalar'),
+  southeast: msg('Güney'),
+  southwest: msg('Güneybatı'),
+  rockies: msg('Kayalık Dağlar'),
+  farWest: msg('Batı Kıyısı'),
 };
 
 /**

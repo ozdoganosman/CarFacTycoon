@@ -1,5 +1,6 @@
 import type { MarketId, SegmentId } from '../core/types';
 import { makeMinorRivals } from './minorRivals';
+import { msg } from '../i18n';
 
 // Fictional rival manufacturers, loosely inspired by the real history of the industry.
 
@@ -51,7 +52,7 @@ const MAJOR_RIVALS: RivalDef[] = [
         name: 'Model H',
         life: 19,
         priceMult: 0.85,
-        note: 'Basit, sağlam ve ucuz. Hartwell onu herkesin alabileceği bir araba olarak tanıtıyor.',
+        note: msg('Basit, sağlam ve ucuz. Hartwell onu herkesin alabileceği bir araba olarak tanıtıyor.'),
       },
     ],
   },
@@ -112,7 +113,7 @@ const MAJOR_RIVALS: RivalDef[] = [
         name: 'Runabout',
         life: 5,
         priceMult: 0.85,
-        note: 'Hafif, basit ve ucuz: Amerika’nın ilk çok satan otomobili olmaya aday.',
+        note: msg('Hafif, basit ve ucuz: Amerika’nın ilk çok satan otomobili olmaya aday.'),
       },
     ],
   },
