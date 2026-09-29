@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react';
+import { t, msg } from '../../../i18n';
+import { tx } from '../../i18n';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Button, Slider } from './controls';
@@ -9,7 +11,7 @@ const T_LINE = 93; // min per chassis on the moving line (1914)
 const SIM_RATE = 30; // simulated minutes per screen second at speed 1
 const LOOP = 1560; // restart after 26 simulated hours
 
-const TASKS = ['Aks', 'Tekerlek', 'Motor', 'Kaporta'];
+const TASKS = [msg('Aks'), msg('Tekerlek'), msg('Motor'), msg('Kaporta')];
 const taskColors = (c: ThemeColors) => [c.accent2, c.good, c.warn, c.accent];
 
 /** A part being fitted glows in its task colour, then settles to its normal colour. */
@@ -164,7 +166,7 @@ function laneHeader(ctx: Ctx, w: number, pad: number, y: number, title: string, 
 /** Counter at the top-right of a lane's scene. */
 function counter(ctx: Ctx, w: number, pad: number, y: number, done: number, f: number, c: ThemeColors, color: string) {
   const nw = text(ctx, String(done), w - pad, y, { size: f + 8, weight: 800, mono: true, color, align: 'right', baseline: 'top' });
-  text(ctx, 'biten araç', w - pad - nw - 6, y + (f + 8) * 0.5, { size: 11, color: c.muted, align: 'right', baseline: 'middle' });
+  text(ctx, t('biten araç'), w - pad - nw - 6, y + (f + 8) * 0.5, { size: 11, color: c.muted, align: 'right', baseline: 'middle' });
   const s = 12;
   const perRow = Math.max(4, Math.floor((w * 0.4) / (s + 3)));
   const shown = Math.min(done, perRow);
@@ -194,12 +196,12 @@ function drawLine(ctx: Ctx, w: number, h: number, c: ThemeColors, simMin: number
   // clock
   const hh = Math.floor(simMin / 60);
   const mm = Math.floor(simMin % 60);
-  text(ctx, `Geçen süre: ${hh} sa ${String(mm).padStart(2, '0')} dk`, pad, 8, { size: 11, mono: true, weight: 600, color: c.ink, baseline: 'top' });
+  text(ctx, t('Geçen süre: {h} sa {m} dk', { h: hh, m: String(mm).padStart(2, '0') }), pad, 8, { size: 11, mono: true, weight: 600, color: c.ink, baseline: 'top' });
 
   // ----- top: stationary assembly -----
   {
     const { y0, yScene, yG } = lanes[0];
-    laneHeader(ctx, w, pad, y0 + 2, 'Sabit istasyon (1908)', narrow ? '≈12,5 saat / şasi · ekip her işi yapar' : 'Ekip tek şasinin etrafında dolaşıp her işi yapar · ≈12,5 saat / şasi', f, c);
+    laneHeader(ctx, w, pad, y0 + 2, t('Sabit istasyon (1908)'), narrow ? t('≈12,5 saat / şasi · ekip her işi yapar') : t('Ekip tek şasinin etrafında dolaşıp her işi yapar · ≈12,5 saat / şasi'), f, c);
     counter(ctx, w, pad, yScene, Math.floor(simMin / T_STATIC), f, c, c.muted);
     ctx.strokeStyle = c.line;
     ctx.lineWidth = 2;
@@ -227,11 +229,11 @@ function drawLine(ctx: Ctx, w: number, h: number, c: ThemeColors, simMin: number
       ctx.fillRect(bx, by, bw, bh);
       ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
     }
-    text(ctx, 'Parçalar', pileX, yG + 5, { size: 11, color: c.muted, align: 'center', baseline: 'top' });
+    text(ctx, t('Parçalar'), pileX, yG + 5, { size: 11, color: c.muted, align: 'center', baseline: 'top' });
     ctx.globalAlpha = 1 - drive;
     drawCar(ctx, bayX + drive * span * 1.5, yG, L, a, c);
     ctx.globalAlpha = 1;
-    text(ctx, drive > 0 ? 'Bitti!' : `Şimdi herkes: ${TASKS[task]}`, bayX, yG + 5, {
+    text(ctx, drive > 0 ? t('Bitti!') : t('Şimdi herkes: {task}', { task: t(TASKS[task]) }), bayX, yG + 5, {
       size: 11,
       color: drive > 0 ? c.good : tc[task],
       align: 'center',
@@ -278,14 +280,14 @@ function drawLine(ctx: Ctx, w: number, h: number, c: ThemeColors, simMin: number
   // ----- bottom: moving line -----
   {
     const { y0, yScene, yG } = lanes[1];
-    laneHeader(ctx, w, pad, y0 + 2, 'Hareketli hat (1913)', narrow ? '≈93 dk / şasi · herkes tek iş' : 'Şasi zincirle ilerler, her işçi tek bir işi tekrarlar · ≈93 dk / şasi', f, c);
+    laneHeader(ctx, w, pad, y0 + 2, t('Hareketli hat (1913)'), narrow ? t('≈93 dk / şasi · herkes tek iş') : t('Şasi zincirle ilerler, her işçi tek bir işi tekrarlar · ≈93 dk / şasi'), f, c);
     counter(ctx, w, pad, yScene, Math.floor(simMin / T_LINE), f, c, c.accent);
     // station bays + task names
     for (let k = 0; k < 4; k++) {
       const sx = x0 + span * (k + 1);
       ctx.fillStyle = alpha(tc[k], 0.1);
       ctx.fillRect(sx - span * 0.46, yG - L * 0.62, span * 0.92, L * 0.62);
-      text(ctx, TASKS[k], sx, yG + 7, { size: 11, color: tc[k], align: 'center', baseline: 'top', weight: 700, maxWidth: span * 0.96 });
+      text(ctx, t(TASKS[k]), sx, yG + 7, { size: 11, color: tc[k], align: 'center', baseline: 'top', weight: 700, maxWidth: span * 0.96 });
     }
     // chain conveyor: links move at line speed; arrow shows direction
     const off = mod((simMin / T_LINE) * span, 12);
@@ -360,27 +362,23 @@ export function MovingLine() {
     <AnimFrame
       name="movingLine"
       canvasRef={ref}
-      label="Üstte sabit istasyonda bir ekip tek şasi üzerinde tüm işleri yapıyor; altta şasiler zincirle istasyonlardan geçiyor ve çok daha hızlı araç çıkıyor."
+      label={t('Üstte sabit istasyonda bir ekip tek şasi üzerinde tüm işleri yapıyor; altta şasiler zincirle istasyonlardan geçiyor ve çok daha hızlı araç çıkıyor.')}
       controls={
         <>
-          <Slider label="Hız" value={speed} min={0.25} max={3} step={0.25} onChange={setSpeed} format={(v) => `${fmt(v, 2)}×`} />
+          <Slider label={t('Hız')} value={speed} min={0.25} max={3} step={0.25} onChange={setSpeed} format={(v) => `${fmt(v, 2)}×`} />
           <Button
             onClick={() => {
               sim.current.min = 0;
               sim.current.hold = 0;
             }}
           >
-            Sıfırla
+            {t('Sıfırla')}
           </Button>
         </>
       }
-      note={
-        <>
-          Ford Highland Park, 1913–14: <strong>şasi montajı ≈12,5 saatten ≈93 dakikaya</strong> indi. İşçi parça
-          aramaya yürümez; iş ona gelir ve her işçi tek bir işi tekrarlayarak hızlanır. Bedeli: tekdüze, yıpratıcı iş ve
-          yüksek işçi devri (Ford 1914’te günlüğü 5 dolara çıkardı).
-        </>
-      }
+      note={tx(
+        'Ford Highland Park, 1913–14: <strong>şasi montajı ≈12,5 saatten ≈93 dakikaya</strong> indi. İşçi parça aramaya yürümez; iş ona gelir ve her işçi tek bir işi tekrarlayarak hızlanır. Bedeli: tekdüze, yıpratıcı iş ve yüksek işçi devri (Ford 1914’te günlüğü 5 dolara çıkardı).',
+      )}
     />
   );
 }

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { t } from '../../../i18n';
+import { tx } from '../../i18n';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Toggle } from './controls';
@@ -164,8 +166,8 @@ function wheel(ctx: Ctx, pr: (x: number, y: number, z: number) => [number, numbe
 }
 
 function drawPanel(ctx: Ctx, b: Box, c: ThemeColors, load: Load, amt: number, kind: 'ladder' | 'mono', f: number) {
-  const title = kind === 'ladder' ? 'Şasi + gövde (merdiven şasi)' : 'Monokok (yekpare gövde)';
-  const sub = kind === 'ladder' ? 'Gövde, cıvatalarla şasinin üstüne oturur' : 'Taban, yan ve tavan tek kutu: yükü birlikte taşır';
+  const title = kind === 'ladder' ? t('Şasi + gövde (merdiven şasi)') : t('Monokok (yekpare gövde)');
+  const sub = kind === 'ladder' ? t('Gövde, cıvatalarla şasinin üstüne oturur') : t('Taban, yan ve tavan tek kutu: yükü birlikte taşır');
   text(ctx, title, b.x + 12, b.y + 8, { size: f, weight: 700, color: c.ink, baseline: 'top', maxWidth: b.w - 20 });
   text(ctx, sub, b.x + 12, b.y + 8 + f * 1.35, { size: 11, color: c.muted, baseline: 'top', maxWidth: b.w - 20 });
 
@@ -250,7 +252,7 @@ function drawPanel(ctx: Ctx, b: Box, c: ThemeColors, load: Load, amt: number, ki
   } else {
     const [mx, my] = pr(LX / 2, kind === 'ladder' ? 1.28 : 1.14, 0);
     arrow(ctx, mx, my - 44, mx, my - 44 + 16 + 22 * L, { color: c.bad, width: 3 });
-    text(ctx, 'yük', mx + 8, my - 42, { size: 11, weight: 700, color: c.bad, baseline: 'top' });
+    text(ctx, t('yük'), mx + 8, my - 42, { size: 11, weight: 700, color: c.bad, baseline: 'top' });
     for (const x of AXLES) {
       const [rx, ry] = pr(x, -0.25, -W / 2 - 0.05);
       ctx.fillStyle = c.muted;
@@ -265,7 +267,7 @@ function drawPanel(ctx: Ctx, b: Box, c: ThemeColors, load: Load, amt: number, ki
 
   // live deformation readout
   if (load === 'torsion') {
-    const def = `burulma ${fmt((TWIST[kind] * 180 * amt) / Math.PI, 1)}°`;
+    const def = t('burulma {v}°', { v: fmt((TWIST[kind] * 180 * amt) / Math.PI, 1) });
     text(ctx, def, b.x + b.w - 12, draw.y + 2, { size: 11, weight: 700, mono: true, color: c.bad, align: 'right', baseline: 'top' });
   }
 
@@ -284,8 +286,8 @@ function drawPanel(ctx: Ctx, b: Box, c: ThemeColors, load: Load, amt: number, ki
     ctx.fillRect(bx + labW, y, (bw - labW - 44) * (v / max), 10);
     text(ctx, txt, bx + bw, y + 5, { size: 11, weight: 700, mono: true, color: c.ink, align: 'right', baseline: 'middle' });
   };
-  bar(by, 'Ağırlık', weight, 1, c.muted, `${Math.round(weight * 100)}`);
-  bar(by + 22, 'Rijitlik', stiff, 3, c.good, `${stiff}×`);
+  bar(by, t('Ağırlık'), weight, 1, c.muted, `${Math.round(weight * 100)}`);
+  bar(by + 22, t('Rijitlik'), stiff, 3, c.good, `${stiff}×`);
 }
 
 export function Monocoque() {
@@ -323,26 +325,21 @@ export function Monocoque() {
     <AnimFrame
       name="monocoque"
       canvasRef={ref}
-      label="Merdiven şasili araç ile monokok gövdeli araç aynı burulma ya da eğilme yükü altında: merdiven şasi belirgin şekilde daha çok esniyor."
+      label={t('Merdiven şasili araç ile monokok gövdeli araç aynı burulma ya da eğilme yükü altında: merdiven şasi belirgin şekilde daha çok esniyor.')}
       controls={
         <Toggle
-          label="Yük"
+          label={t('Yük')}
           value={load}
           options={[
-            { value: 'torsion', label: 'Burulma' },
-            { value: 'bending', label: 'Eğilme' },
+            { value: 'torsion', label: t('Burulma') },
+            { value: 'bending', label: t('Eğilme') },
           ]}
           onChange={setLoad}
         />
       }
-      note={
-        <>
-          Açık profilli iki kiriş (merdiven) burulmaya zayıftır; kapalı bir kutu ise aynı malzemeyle kat kat rijittir.
-          Monokokta gövde sacı da yük taşır: araç <strong>daha hafif, daha alçak ve daha rijit</strong> olur (Lancia Lambda
-          1922; Citroën Traction Avant 1934 yaygınlaştırdı). Bedeli: pahalı pres kalıpları, zor onarım ve model değişikliği.
-          Esnemeler görünür olsun diye abartılmıştır.
-        </>
-      }
+      note={tx(
+        'Açık profilli iki kiriş (merdiven) burulmaya zayıftır; kapalı bir kutu ise aynı malzemeyle kat kat rijittir. Monokokta gövde sacı da yük taşır: araç <strong>daha hafif, daha alçak ve daha rijit</strong> olur (Lancia Lambda 1922; Citroën Traction Avant 1934 yaygınlaştırdı). Bedeli: pahalı pres kalıpları, zor onarım ve model değişikliği. Esnemeler görünür olsun diye abartılmıştır.',
+      )}
     />
   );
 }

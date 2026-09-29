@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react';
+import { t, msg } from '../../../i18n';
+import { fmtPercent } from '../../../i18n/format';
 import type { BodyId, SuspensionTypeId } from '../../../core/types';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
@@ -38,11 +40,11 @@ const I_ROLL = M * 0.55 * 0.55;
 const BUMP_TRAVEL = 0.09; // compression before the bump stop
 
 const SECTIONS = [
-  { x: 8, name: 'Parke taş' },
-  { x: 25.5, name: 'Çukur (sol teker)' },
-  { x: 32.5, name: 'Kasis' },
-  { x: 42, name: 'Dalgalı yol' },
-  { x: 74, name: 'Viraj' },
+  { x: 8, name: msg('Parke taş') },
+  { x: 25.5, name: msg('Çukur (sol teker)') },
+  { x: 32.5, name: msg('Kasis') },
+  { x: 42, name: msg('Dalgalı yol') },
+  { x: 74, name: msg('Viraj') },
 ];
 
 /** Road height (m) at course position x under the left (-1), right (1) or both (0) wheels. */
@@ -183,7 +185,8 @@ export function suspParams(p: SuspensionSimProps): SuspParams {
   const cs: [number, number] = [2 * zeta * Math.sqrt(ks[0] * massF), 2 * zeta * Math.sqrt(ks[1] * massR)];
   const fric: [number, number] = [dry + leafRub(front), dry + leafRub(rear)];
   const mu: [number, number] = [front === 'solid' ? 85 : 48, rear === 'solid' ? 95 : 52];
-  const tyre = kh.has('kh:radialTires') ? 'Radyal' : kh.has('kh:balloonTires') ? 'Balon' : 'Yüksek basınçlı dar lastik';
+  // Turkish, compared below; shown with t().
+  const tyre = kh.has('kh:radialTires') ? msg('Radyal') : kh.has('kh:balloonTires') ? msg('Balon') : msg('Yüksek basınçlı dar lastik');
   const kt = tyre === 'Radyal' ? 250_000 : tyre === 'Balon' ? 210_000 : 340_000;
   const antiRoll = kh.has('kh:antiRoll');
   const fRollHz = fn * 1.6 * (antiRoll ? 1.35 : 1);
@@ -321,9 +324,9 @@ export function driveTest(props: SuspensionSimProps, kmh: number, seconds: numbe
 }
 
 export function comfortWord(rms: number): { word: string; tone: 'good' | 'warn' | 'bad' } {
-  if (rms < 1.3) return { word: 'Rahat', tone: 'good' };
-  if (rms < 2.6) return { word: 'Sarsıntılı', tone: 'warn' };
-  return { word: 'Çok sert', tone: 'bad' };
+  if (rms < 1.3) return { word: t('Rahat'), tone: 'good' };
+  if (rms < 2.6) return { word: t('Sarsıntılı'), tone: 'warn' };
+  return { word: t('Çok sert'), tone: 'bad' };
 }
 
 function drawSim(ctx: Ctx, w: number, h: number, c: ThemeColors, s: Sim, p: SuspParams, v: number) {
@@ -371,7 +374,7 @@ function drawSim(ctx: Ctx, w: number, h: number, c: ThemeColors, s: Sim, p: Susp
       ctx.moveTo(px, gy + 2);
       ctx.lineTo(px, gy - 22);
       ctx.stroke();
-      text(ctx, sec.name, px + 3, gy - 22, { size: f - 2, color: c.muted, baseline: 'middle', bg: alpha(c.panel, 0.85) });
+      text(ctx, t(sec.name), px + 3, gy - 22, { size: f - 2, color: c.muted, baseline: 'middle', bg: alpha(c.panel, 0.85) });
     }
   }
 
@@ -559,14 +562,14 @@ function drawSim(ctx: Ctx, w: number, h: number, c: ThemeColors, s: Sim, p: Susp
       ctx.lineWidth = 2;
       ctx.stroke();
     }
-    if (s.bump[i] > 0) text(ctx, 'Dayandı!', wx, wy - R * k - 6, { size: f - 1, weight: 700, color: c.bad, align: 'center', baseline: 'bottom', bg: alpha(c.panel, 0.9) });
+    if (s.bump[i] > 0) text(ctx, t('Dayandı!'), wx, wy - R * k - 6, { size: f - 1, weight: 700, color: c.bad, align: 'center', baseline: 'bottom', bg: alpha(c.panel, 0.9) });
   }
 
   // live measures, top left
   const rms = Math.sqrt(s.acc2);
   const cw = comfortWord(rms);
   const loadVar = Math.sqrt(s.load2);
-  const grip = loadVar < 0.2 && s.air < 0.01 ? { word: 'Yola yapışık', tone: 'good' as const } : loadVar < 0.35 && s.air < 0.04 ? { word: 'Tekerler seğiriyor', tone: 'warn' as const } : { word: 'Tekerler sekiyor', tone: 'bad' as const };
+  const grip = loadVar < 0.2 && s.air < 0.01 ? { word: t('Yola yapışık'), tone: 'good' as const } : loadVar < 0.35 && s.air < 0.04 ? { word: t('Tekerler seğiriyor'), tone: 'warn' as const } : { word: t('Tekerler sekiyor'), tone: 'bad' as const };
   let ty = 8;
   const row = (label: string, word: string, t: 'good' | 'warn' | 'bad', detail: string) => {
     const x0 = side.x + 10;
@@ -575,9 +578,15 @@ function drawSim(ctx: Ctx, w: number, h: number, c: ThemeColors, s: Sim, p: Susp
     text(ctx, ` ${detail}`, x0 + lw + ww, ty, { size: f - 2, color: c.muted, baseline: 'top' });
     ty += f * 1.35;
   };
-  row('Yolcu', cw.word, cw.tone, `(${fmt(rms, 1)} m/s² sarsıntı)`);
-  row('Yol tutuş', grip.word, grip.tone, `(lastik yükü ±%${fmt(loadVar * 100)}${s.air > 0.005 ? `, %${fmt(s.air * 100)} havada` : ''})`);
-  text(ctx, `${fmt(v * 3.6)} km/s · dikey hareketler ${EX} kat büyütüldü`, side.x + 10, ty, { size: f - 3, color: c.muted, baseline: 'top' });
+  row(t('Yolcu'), cw.word, cw.tone, t('({v} m/s² sarsıntı)', { v: fmt(rms, 1) }));
+  const tyreLoad = fmtPercent(loadVar, 0);
+  row(
+    t('Yol tutuş'),
+    grip.word,
+    grip.tone,
+    s.air > 0.005 ? t('(lastik yükü ±{load}, {air} havada)', { load: tyreLoad, air: fmtPercent(s.air, 0) }) : t('(lastik yükü ±{load})', { load: tyreLoad }),
+  );
+  text(ctx, t('{speed} km/s · dikey hareketler {x} kat büyütüldü', { speed: fmt(v * 3.6), x: EX }), side.x + 10, ty, { size: f - 3, color: c.muted, baseline: 'top' });
 
   // ---------- front view ----------
   drawFront(ctx, front, c, s, p, v, f, wide);
@@ -608,9 +617,9 @@ function drawSim(ctx: Ctx, w: number, h: number, c: ThemeColors, s: Sim, p: Susp
     ctx.stroke();
     text(ctx, title, strip.x + 4, y + 2, { size: f - 3, color, weight: 600, baseline: 'top', bg: alpha(c.panel, 0.8) });
   };
-  text(ctx, 'Son 6 saniye', strip.x, strip.y, { size: f - 1, weight: 600, color: c.ink, baseline: 'top' });
-  tracePlot(strip.y + f * 1.3, 'Yolcunun hissettiği sarsıntı', c.accent, (q) => q.acc, -8, 8, 0);
-  tracePlot(strip.y + f * 1.3 + half, 'Ön lastiğin yola basma kuvveti (kırmızı: havada)', c.good, (q) => q.load, 0, 2.2, 1, 0.1);
+  text(ctx, t('Son 6 saniye'), strip.x, strip.y, { size: f - 1, weight: 600, color: c.ink, baseline: 'top' });
+  tracePlot(strip.y + f * 1.3, t('Yolcunun hissettiği sarsıntı'), c.accent, (q) => q.acc, -8, 8, 0);
+  tracePlot(strip.y + f * 1.3 + half, t('Ön lastiğin yola basma kuvveti (kırmızı: havada)'), c.good, (q) => q.load, 0, 2.2, 1, 0.1);
 }
 
 function mix2(a: number, b: number, t: number) {
@@ -626,7 +635,7 @@ function drawFront(ctx: Ctx, box: { x: number; y: number; w: number; h: number }
     ctx.strokeStyle = alpha(c.line, 1);
     ctx.stroke();
   }
-  text(ctx, 'Önden', box.x + 8, box.y + 8, { size: f - 1, weight: 700, color: c.ink, baseline: 'top' });
+  text(ctx, t('Önden'), box.x + 8, box.y + 8, { size: f - 1, weight: 700, color: c.ink, baseline: 'top' });
   const k = Math.min((box.w - 20) / 2.3, (box.h - f * 3.4) / 2.05);
   const cx = box.x + box.w / 2 - (wide ? 0 : 4);
   const gy = box.y + box.h - f * 1.6;
@@ -781,23 +790,23 @@ function drawFront(ctx: Ctx, box: { x: number; y: number; w: number; h: number }
     ctx.lineTo(bx - len + 2, by + 5);
     ctx.closePath();
     ctx.fill();
-    text(ctx, `Viraj ${fmt(lat, 2)} g`, box.x + box.w - 10, box.y + 8, { size: f - 2, weight: 700, color: c.bad, align: 'right', baseline: 'top' });
+    text(ctx, t('Viraj {v} g', { v: fmt(lat, 2) }), box.x + box.w - 10, box.y + 8, { size: f - 2, weight: 700, color: c.bad, align: 'right', baseline: 'top' });
   }
   const rollDeg = (s.rollPeak * 180) / Math.PI;
-  text(ctx, `Virajda yatma: ${fmt(rollDeg, 1)}°`, box.x + 8, box.y + box.h - f * 0.3, {
+  text(ctx, t('Virajda yatma: {v}°', { v: fmt(rollDeg, 1) }), box.x + 8, box.y + box.h - f * 0.3, {
     size: f - 2,
     color: rollDeg > 5 ? c.bad : rollDeg > 3 ? c.warn : c.muted,
     weight: 600,
     baseline: 'bottom',
   });
-  if (p.antiRoll && wide) text(ctx, 'Viraj demiri', box.x + box.w - 10, box.y + box.h - f * 0.3, { size: f - 3, color: c.accent2, align: 'right', baseline: 'bottom' });
+  if (p.antiRoll && wide) text(ctx, t('Viraj demiri'), box.x + box.w - 10, box.y + box.h - f * 0.3, { size: f - 3, color: c.accent2, align: 'right', baseline: 'bottom' });
   ctx.restore();
 }
 
 const DAMPER_NAMES: Record<Damper, string> = {
-  none: 'Yok: yalnız yaprak sürtünmesi',
-  friction: 'Sürtünmeli',
-  hydraulic: 'Hidrolik',
+  none: msg('Yok: yalnız yaprak sürtünmesi'),
+  friction: msg('Sürtünmeli'),
+  hydraulic: msg('Hidrolik'),
 };
 
 function eraSpeed(year: number) {
@@ -817,22 +826,24 @@ export function SuspensionSim(props: SuspensionSimProps) {
     [props.suspension, props.balance, (props.knowhow ?? []).join(','), kmh],
     { aspect: (w) => (w >= 620 ? 2.3 : w / 360), minHeight: 300, maxHeight: 420 },
   );
-  const layout = p.front === p.rear ? (p.front === 'solid' ? 'Önde ve arkada sabit aks' : 'Dört teker bağımsız') : 'Önde bağımsız, arkada sabit aks';
+  const layout = p.front === p.rear ? (p.front === 'solid' ? t('Önde ve arkada sabit aks') : t('Dört teker bağımsız')) : t('Önde bağımsız, arkada sabit aks');
+  const damper = t(DAMPER_NAMES[p.damper]);
+  const tyre = t(p.tyre);
   return (
     <AnimFrame
       name="suspensionSim"
       canvasRef={ref}
-      label={`Süspansiyon deneme yolu: ${layout}, ${DAMPER_NAMES[p.damper]} amortisör, ${p.tyre} lastik, ${kmh} km/s.`}
+      label={t('Süspansiyon deneme yolu: {layout}, {damper} amortisör, {tyre} lastik, {speed} km/s.', { layout, damper, tyre, speed: kmh })}
       readouts={
         <>
-          <Readout label="Düzen" value={layout} />
-          <Readout label="Gövde salınımı" value={`${fmt(p.fn, 1)} Hz`} />
-          <Readout label="Amortisör" value={DAMPER_NAMES[p.damper]} />
-          <Readout label="Lastik" value={p.tyre} />
-          <Readout label="Yaysız kütle (ön)" value={`${p.mu[0]} kg`} />
+          <Readout label={t('Düzen')} value={layout} />
+          <Readout label={t('Gövde salınımı')} value={t('{v} Hz', { v: fmt(p.fn, 1) })} />
+          <Readout label={t('Amortisör')} value={damper} />
+          <Readout label={t('Lastik')} value={tyre} />
+          <Readout label={t('Yaysız kütle (ön)')} value={t('{v} kg', { v: p.mu[0] })} />
         </>
       }
-      controls={<Slider label="Hız" value={kmh} min={10} max={100} step={5} onChange={setKmh} format={(x) => `${x} km/s`} />}
+      controls={<Slider label={t('Hız')} value={kmh} min={10} max={100} step={5} onChange={setKmh} format={(x) => t('{v} km/s', { v: x })} />}
     />
   );
 }

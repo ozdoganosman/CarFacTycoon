@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { CYLINDER_OPTIONS } from '../../../data/tech';
+import { t } from '../../../i18n';
+import { fmtPercent } from '../../../i18n/format';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Readout, Slider } from './controls';
@@ -179,13 +181,13 @@ export interface Balance {
 
 export function balanceOf(n: number, layout: 'inline' | 'v'): Balance {
   const vee = layout === 'v' && n >= 6;
-  if (n === 1) return { label: 'Çok sarsıntılı', tone: 'bad', note: 'Pistonu dengeleyen başka piston yok: motor her turda zıplar.' };
-  if (n === 2) return { label: 'Çok sarsıntılı', tone: 'bad', note: 'İki piston birlikte inip çıkar: tek silindir gibi zıplar.' };
-  if (n === 3) return { label: 'Yalpalıyor', tone: 'warn', note: 'Uçtaki pistonlar motoru bir öne bir arkaya yatırır.' };
-  if (n === 4) return { label: 'Hafif titrek', tone: 'warn', note: 'Pistonlar karşılıklı çalışır ama yüksek devirde vızıldar.' };
-  if (vee && n === 6) return { label: 'Az yalpalı', tone: 'warn', note: '60° V6’da küçük bir yalpa kalır.' };
-  if (vee && n === 8) return { label: 'Dengeli', tone: 'good', note: 'Çapraz krank ve karşı ağırlıklar sarsıntıyı söndürür.' };
-  return { label: 'Kusursuz dengeli', tone: 'good', note: 'Pistonların kuvvetleri birbirini tamamen götürür.' };
+  if (n === 1) return { label: t('Çok sarsıntılı'), tone: 'bad', note: t('Pistonu dengeleyen başka piston yok: motor her turda zıplar.') };
+  if (n === 2) return { label: t('Çok sarsıntılı'), tone: 'bad', note: t('İki piston birlikte inip çıkar: tek silindir gibi zıplar.') };
+  if (n === 3) return { label: t('Yalpalıyor'), tone: 'warn', note: t('Uçtaki pistonlar motoru bir öne bir arkaya yatırır.') };
+  if (n === 4) return { label: t('Hafif titrek'), tone: 'warn', note: t('Pistonlar karşılıklı çalışır ama yüksek devirde vızıldar.') };
+  if (vee && n === 6) return { label: t('Az yalpalı'), tone: 'warn', note: t('60° V6’da küçük bir yalpa kalır.') };
+  if (vee && n === 8) return { label: t('Dengeli'), tone: 'good', note: t('Çapraz krank ve karşı ağırlıklar sarsıntıyı söndürür.') };
+  return { label: t('Kusursuz dengeli'), tone: 'good', note: t('Pistonların kuvvetleri birbirini tamamen götürür.') };
 }
 
 /** How far the block is thrown about by its pistons at crank angle th (px and rad). */
@@ -398,7 +400,7 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
     }
     ctx.stroke();
     // label above the wheel: below it would run into the torque strip's heading
-    text(ctx, 'Volan', Math.min(fx + fwd / 2, w - 20), cy - fr - 3, { size: f - 2, color: c.muted, align: 'center', baseline: 'bottom' });
+    text(ctx, t('Volan'), Math.min(fx + fwd / 2, w - 20), cy - fr - 3, { size: f - 2, color: c.muted, align: 'center', baseline: 'bottom' });
   }
 
   const labels: { x: number; y: number; cyl: Cyl; l: number }[] = [];
@@ -605,7 +607,7 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
   {
     let lx = eng.x + 10;
     const ly = eng.y + eng.h - f * 0.6;
-    ['Emme', 'Sıkıştırma', 'İş', 'Egzoz'].forEach((name, i) => {
+    [t('Emme'), t('Sıkıştırma'), t('İş'), t('Egzoz')].forEach((name, i) => {
       ctx.fillStyle = alpha(sc[i], i === 2 ? 0.8 : 0.5);
       ctx.fillRect(lx, ly - 5, 10, 10);
       lx += 14 + text(ctx, name, lx + 14, ly, { size: f - 2, color: c.muted, baseline: 'middle' }) + 10;
@@ -682,14 +684,17 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
     ctx.fillStyle = c.ink;
     ctx.fill();
   };
-  const everyText = n === 1 ? 'İki turda tek ateşleme: krank üç zaman boyunca volanla döner.' : `Her ${fmt(cfg.step)}°’de bir ateşleme; turda ${fmt(n / 2, n % 2 ? 1 : 0)}.`;
+  const everyText =
+    n === 1
+      ? t('İki turda tek ateşleme: krank üç zaman boyunca volanla döner.')
+      : t('Her {deg}°’de bir ateşleme; turda {per}.', { deg: fmt(cfg.step), per: fmt(n / 2, n % 2 ? 1 : 0) });
 
   if (sidePanel) {
     const ix = w - infoW - 4;
     let y = 10;
     text(ctx, a.title, ix, y, { size: f + 3, weight: 700, color: c.ink, baseline: 'top', maxWidth: infoW - 8 });
     y += (f + 3) * 1.5;
-    text(ctx, 'Ateşleme sırası', ix, y, { size: f - 1, color: c.muted, baseline: 'top' });
+    text(ctx, t('Ateşleme sırası'), ix, y, { size: f - 1, color: c.muted, baseline: 'top' });
     y += f * 1.4;
     y = drawChips(ix, y, chip, chipsPerRow) + 2;
     y = paragraph(ctx, everyText, ix, y, infoW - 8, { size: f - 1, color: c.ink, maxLines: 2 }) + f * 0.5;
@@ -699,7 +704,7 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
     if (R >= 14) {
       const scy = y + f * 0.7 + R;
       drawStar(ix + R + f * 0.8, scy, R, true);
-      paragraph(ctx, 'Krank, milin ucundan bakınca: aynı yöndeki kollar birlikte iner çıkar.', ix + 2 * R + f * 2.2, scy - f * 1.2, infoW - 2 * R - f * 2.6, { size: f - 3, color: c.muted, maxLines: 3 });
+      paragraph(ctx, t('Krank, milin ucundan bakınca: aynı yöndeki kollar birlikte iner çıkar.'), ix + 2 * R + f * 2.2, scy - f * 1.2, infoW - 2 * R - f * 2.6, { size: f - 3, color: c.muted, maxLines: 3 });
     }
   } else {
     text(ctx, `${a.title}${wide ? '' : ` · ${a.balance.label}`}`, 10, 8, { size: f + 1, weight: 700, color: c.ink, baseline: 'top', maxWidth: wide ? w * 0.5 : w - 20 });
@@ -722,11 +727,19 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
   const headY = strip.y;
   const lv = a.live;
   const toNm = lv && a.fullMean > 0 ? lv.fullTorqueNm / a.fullMean : 0;
-  const pullsBack = trace.min < 0 ? ' · arada krankı geri çeker' : '';
-  const head = lv ? `Anlık tork · ${fmt(Math.round(lv.rpm / 10) * 10)} d/d · gaz %${Math.round(lv.throttle * 100)}` : 'Krank milindeki anlık tork · iki tur (720°)';
-  const peakText = lv
-    ? `ortalama ${fmt(Math.max(0, trace.mean * toNm))} Nm · tepe ${fmt(trace.max * toNm)} Nm${pullsBack}`
-    : `Tepe: ortalamanın ${fmt(trace.max / trace.mean, 1)} katı${pullsBack}`;
+  const pullsBack = trace.min < 0;
+  const head = lv
+    ? t('Anlık tork · {rpm} d/d · gaz {throttle}', { rpm: fmt(Math.round(lv.rpm / 10) * 10), throttle: fmtPercent(lv.throttle, 0) })
+    : t('Krank milindeki anlık tork · iki tur (720°)');
+  const nm = lv ? { mean: fmt(Math.max(0, trace.mean * toNm)), peak: fmt(trace.max * toNm) } : null;
+  const times = fmt(trace.max / trace.mean, 1);
+  const peakText = nm
+    ? pullsBack
+      ? t('ortalama {mean} Nm · tepe {peak} Nm · arada krankı geri çeker', nm)
+      : t('ortalama {mean} Nm · tepe {peak} Nm', nm)
+    : pullsBack
+      ? t('Tepe: ortalamanın {v} katı · arada krankı geri çeker', { v: times })
+      : t('Tepe: ortalamanın {v} katı', { v: times });
   const headW = text(ctx, head, strip.x, headY, { size: f - 1, weight: 600, color: c.ink, baseline: 'top' });
   ctx.font = font(f - 2);
   // On a narrow screen the peak note goes under the heading instead of over it.
@@ -749,8 +762,8 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
   const Xt = (deg: number) => px + (deg / 720) * pw;
   ctx.fillStyle = alpha(c.line, 0.35);
   ctx.fillRect(Xt(360), py, pw / 2, ph);
-  text(ctx, '1. tur', Xt(6), py + 3, { size: f - 3, color: c.muted, baseline: 'top' });
-  text(ctx, '2. tur', Xt(366), py + 3, { size: f - 3, color: c.muted, baseline: 'top' });
+  text(ctx, t('1. tur'), Xt(6), py + 3, { size: f - 3, color: c.muted, baseline: 'top' });
+  text(ctx, t('2. tur'), Xt(366), py + 3, { size: f - 3, color: c.muted, baseline: 'top' });
   // each cylinder's own push
   const last = trace.total.length - 1;
   trace.per.forEach((pts) => {
@@ -801,7 +814,7 @@ function drawEngine(ctx: Ctx, w: number, h: number, c: ThemeColors, a: DrawArgs)
   ctx.lineTo(px + pw, Yt(trace.mean));
   ctx.stroke();
   ctx.setLineDash([]);
-  text(ctx, 'ortalama', px + pw - 2, Math.max(py + f, Yt(trace.mean) - 2), { size: f - 3, color: c.accent, align: 'right', baseline: 'bottom' });
+  text(ctx, t('ortalama'), px + pw - 2, Math.max(py + f, Yt(trace.mean) - 2), { size: f - 3, color: c.accent, align: 'right', baseline: 'bottom' });
   // cursor
   const ci = Math.round(mod(th, 720) / trace.step);
   const cxp = Xt(ci * trace.step);
@@ -834,7 +847,9 @@ export function EngineBlock({ cylinders, layout, bore, stroke, diesel = false, l
   const g = useMemo(() => geometry(stroke / bore, diesel), [stroke, bore, diesel]);
   const opt = CYLINDER_OPTIONS.find((o) => o.cylinders === cylinders && o.layout === layout);
   const cc = (Math.PI / 4) * bore * bore * stroke / 1000;
-  const title = `${opt?.label ?? `${cylinders} silindir`} · ${fmt((cc * cylinders) / 1000, 1)} L${diesel ? ' dizel' : ''}`;
+  const kind = opt ? t(opt.label) : t('{n} silindir', { n: cylinders });
+  const litres = fmt((cc * cylinders) / 1000, 1);
+  const title = diesel ? t('{kind} · {v} L dizel', { kind, v: litres }) : t('{kind} · {v} L', { kind, v: litres });
 
   const ref = useCanvasAnimation(
     (ctx, _t, w, h, c, dt) => {
@@ -852,23 +867,25 @@ export function EngineBlock({ cylinders, layout, bore, stroke, diesel = false, l
     <AnimFrame
       name="engineBlock"
       canvasRef={ref}
-      label={`${title}: ateşleme sırası ${cfg.order.join('-')}. ${balance.label}.`}
+      label={t('{title}: ateşleme sırası {order}. {balance}.', { title, order: cfg.order.join('-'), balance: balance.label })}
       readouts={
         <>
-          <Readout label="Silindir başına" value={`${fmt(cc)} cc`} />
-          <Readout label="Ateşleme aralığı" value={`${fmt(cfg.step)}°`} />
-          <Readout label="Tork tepesi" value={`ortalamanın ${fmt(trace.max / trace.mean, 1)} katı`} />
-          <Readout label="Denge" value={balance.label} />
+          <Readout label={t('Silindir başına')} value={t('{v} cc', { v: fmt(cc) })} />
+          <Readout label={t('Ateşleme aralığı')} value={`${fmt(cfg.step)}°`} />
+          <Readout label={t('Tork tepesi')} value={t('ortalamanın {v} katı', { v: fmt(trace.max / trace.mean, 1) })} />
+          <Readout label={t('Denge')} value={balance.label} />
         </>
       }
       controls={
         live ? (
           <p className="muted small">
-            Motor çalışıyor: çizim gerçek devri {WATCH_SLOWDOWN} kat yavaş izliyor. Tork eğrisi gazla büyür; yüksek devirde pistonların ataleti dalgayı artırır,
-            blok da daha çok sarsılır.
+            {t(
+              'Motor çalışıyor: çizim gerçek devri {slow} kat yavaş izliyor. Tork eğrisi gazla büyür; yüksek devirde pistonların ataleti dalgayı artırır, blok da daha çok sarsılır.',
+              { slow: WATCH_SLOWDOWN },
+            )}
           </p>
         ) : (
-          <Slider label="Hız" value={speed} min={0.05} max={1.5} step={0.05} onChange={setSpeed} format={(v) => `${fmt(v, 2)} tur/sn`} />
+          <Slider label={t('Hız')} value={speed} min={0.05} max={1.5} step={0.05} onChange={setSpeed} format={(v) => t('{v} tur/sn', { v: fmt(v, 2) })} />
         )
       }
     />

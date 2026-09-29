@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { t } from '../../i18n';
 
 export interface Series {
   id: string;
@@ -117,7 +118,7 @@ export function LineChart(props: {
         </div>
       )}
       {empty ? (
-        <div className="chart-empty" style={{ height }}>Henüz veri yok</div>
+        <div className="chart-empty" style={{ height }}>{t('Henüz veri yok')}</div>
       ) : (
         <svg
           width={width}
@@ -230,7 +231,7 @@ export function BarChart(props: {
   return (
     <figure className="chart" ref={ref}>
       {props.bars.length === 0 ? (
-        <div className="chart-empty" style={{ height }}>Henüz veri yok</div>
+        <div className="chart-empty" style={{ height }}>{t('Henüz veri yok')}</div>
       ) : (
         <svg width={width} height={height} role="img" aria-label={props.ariaLabel} onPointerLeave={() => setHover(null)}>
           {ticks.map((t) => (

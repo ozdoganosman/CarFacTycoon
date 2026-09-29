@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react';
+import { t } from '../../../i18n';
+import { tx } from '../../i18n';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Slider, Toggle } from './controls';
@@ -110,11 +112,11 @@ function drawGearbox(ctx: Ctx, w: number, h: number, c: ThemeColors, g: Gearing,
   for (let N = 0; N <= F_AXIS; N += 2000) {
     text(ctx, String(N / 1000), m.l - 6, Y(N), { size: 11, color: c.muted, align: 'right', baseline: 'middle', mono: true });
   }
-  text(ctx, 'Hız (km/sa)', m.l + pw, h - 4, { size: 11, color: c.muted, align: 'right', baseline: 'bottom' });
+  text(ctx, t('Hız (km/sa)'), m.l + pw, h - 4, { size: 11, color: c.muted, align: 'right', baseline: 'bottom' });
   ctx.save();
   ctx.translate(12, m.t + ph / 2);
   ctx.rotate(-Math.PI / 2);
-  text(ctx, 'Çekiş kuvveti (kN)', 0, 0, { size: 11, color: c.muted, align: 'center', baseline: 'middle' });
+  text(ctx, t('Çekiş kuvveti (kN)'), 0, 0, { size: 11, color: c.muted, align: 'center', baseline: 'middle' });
   ctx.restore();
 
   ctx.save();
@@ -214,9 +216,9 @@ function drawGearbox(ctx: Ctx, w: number, h: number, c: ThemeColors, g: Gearing,
   const labX = narrow ? 34 : 30;
   const hy = Y((P_PEAK * ETA) / (labX / 3.6));
   if (hy > m.t + 10) {
-    text(ctx, 'İdeal: sabit güç', X(labX) + 6, hy - 4, { size: f - 1, weight: 600, color: c.ink, bg: alpha(c.panel, 0.85), pad: 2 });
+    text(ctx, t('İdeal: sabit güç'), X(labX) + 6, hy - 4, { size: f - 1, weight: 600, color: c.ink, bg: alpha(c.panel, 0.85), pad: 2 });
   }
-  text(ctx, 'Yol direnci', X(V_AXIS) - 3, Y(roadLoad(V_AXIS / 3.6)) - 9, { size: 11, color: c.muted, align: 'right', bg: alpha(c.panel, 0.85), pad: 2 });
+  text(ctx, t('Yol direnci'), X(V_AXIS) - 3, Y(roadLoad(V_AXIS / 3.6)) - 9, { size: 11, color: c.muted, align: 'right', bg: alpha(c.panel, 0.85), pad: 2 });
 
   // ----- marker on the envelope -----
   const kmhNow = sim.v * 3.6;
@@ -283,12 +285,12 @@ function drawGearbox(ctx: Ctx, w: number, h: number, c: ThemeColors, g: Gearing,
   ctx.fillStyle = c.ink;
   ctx.fill();
   text(ctx, `${fmt(Math.round(cur.rpm / 10) * 10)}`, gcx, gcy + gr * 0.42, { size: f, weight: 700, mono: true, color: c.ink, align: 'center', baseline: 'middle' });
-  text(ctx, 'd/dk', gcx, gcy + gr * 0.42 + f, { size: 11, color: c.muted, align: 'center', baseline: 'middle' });
+  text(ctx, t('d/dk'), gcx, gcy + gr * 0.42 + f, { size: 11, color: c.muted, align: 'center', baseline: 'middle' });
   // gear & speed readout under the gauge
-  const gearTxt = cur.gear < 0 ? '—' : rpmAt(sim.v, g.ratios[0]) < N_LAUNCH ? '1. vites (kalkış)' : `${cur.gear + 1}. vites`;
+  const gearTxt = cur.gear < 0 ? '—' : rpmAt(sim.v, g.ratios[0]) < N_LAUNCH ? t('1. vites (kalkış)') : t('{gear}. vites', { gear: cur.gear + 1 });
   text(ctx, gearTxt, gcx, gcy + gr + 14, { size: f, weight: 700, color: c.accent2, align: 'center', baseline: 'middle' });
-  text(ctx, `${fmt(kmhNow)} km/sa`, gcx, gcy + gr + 14 + f * 1.3, { size: f - 1, mono: true, color: c.ink, align: 'center', baseline: 'middle' });
-  text(ctx, 'güç bandı', gcx - gr * 0.05, gcy - gr - 6, { size: 11, color: c.good, align: 'center', baseline: 'bottom', weight: 600 });
+  text(ctx, t('{v} km/sa', { v: fmt(kmhNow) }), gcx, gcy + gr + 14 + f * 1.3, { size: f - 1, mono: true, color: c.ink, align: 'center', baseline: 'middle' });
+  text(ctx, t('güç bandı'), gcx - gr * 0.05, gcy - gr - 6, { size: 11, color: c.good, align: 'center', baseline: 'bottom', weight: 600 });
 }
 
 export function Gearbox() {
@@ -333,26 +335,22 @@ export function Gearbox() {
     <AnimFrame
       name="gearbox"
       canvasRef={ref}
-      label="Şanzıman grafiği: her vitesin çekiş kuvveti eğrisi, ideal sabit güç eğrisi ve aracın izlediği testere dişi zarf."
+      label={t('Şanzıman grafiği: her vitesin çekiş kuvveti eğrisi, ideal sabit güç eğrisi ve aracın izlediği testere dişi zarf.')}
       controls={
         <>
           <Toggle
-            label="Vites sayısı"
+            label={t('Vites sayısı')}
             value={count}
             options={[2, 3, 4, 5].map((n) => ({ value: n, label: String(n) }))}
             onChange={setCount}
           />
-          <Slider label="Oranlar" value={spread} min={0} max={1} step={0.05} onChange={setSpread} ends={['Kısa', 'Uzun']} />
+          <Slider label={t('Oranlar')} value={spread} min={0} max={1} step={0.05} onChange={setSpread} ends={[t('Kısa'), t('Uzun')]} />
         </>
       }
-      note={
-        <>
-          Motor en çok gücü dar bir devir aralığında (yeşil bant, ~{fmt(N_PPEAK)} d/dk) verir. Her vites o gücü başka bir
-          hıza taşır; <strong>vites sayısı arttıkça</strong> turuncu testere dişi, kesikli ideal eğriye yaklaşır ve motor
-          güç tepesine yakın kalır. Kısa oranlar kalkışı güçlendirir ama son hızı devir sınırına dayar; fazla uzun oranlarda
-          son viteste motor güç tepesine hiç çıkamaz.
-        </>
-      }
+      note={tx(
+        'Motor en çok gücü dar bir devir aralığında (yeşil bant, ~{rpm} d/dk) verir. Her vites o gücü başka bir hıza taşır; <strong>vites sayısı arttıkça</strong> turuncu testere dişi, kesikli ideal eğriye yaklaşır ve motor güç tepesine yakın kalır. Kısa oranlar kalkışı güçlendirir ama son hızı devir sınırına dayar; fazla uzun oranlarda son viteste motor güç tepesine hiç çıkamaz.',
+        { rpm: fmt(N_PPEAK) },
+      )}
     />
   );
 }

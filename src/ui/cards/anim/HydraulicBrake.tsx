@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { t } from '../../../i18n';
+import { tx } from '../../i18n';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Slider } from './controls';
@@ -24,7 +26,7 @@ interface Box {
   h: number;
 }
 
-function drawMain(ctx: Ctx, b: Box, c: ThemeColors, u: number, ratio: number, t: number, f: number, narrow: boolean) {
+function drawMain(ctx: Ctx, b: Box, c: ThemeColors, u: number, ratio: number, time: number, f: number, narrow: boolean) {
   const F1 = F1_MAX * u;
   const p = F1 / A1; // N/cm²  (1 N/cm² = 0.1 bar)
   const A2 = A1 * ratio;
@@ -41,11 +43,11 @@ function drawMain(ctx: Ctx, b: Box, c: ThemeColors, u: number, ratio: number, t:
     text(ctx, value, fx0 + lw + 6, fy0, { size: f, weight: 700, color, baseline: 'top', mono: true });
     fy0 += lh;
   };
-  line('F₁ =', `${fmt(F1)} N`, c.accent);
-  line('p = F₁/A₁ =', `${fmt(p / 10, 1)} bar`, c.accent2);
-  line('F₂ = p·A₂ =', `${fmt(F2)} N`, c.good);
+  line('F₁ =', t('{v} N', { v: fmt(F1) }), c.accent);
+  line('p = F₁/A₁ =', t('{v} bar', { v: fmt(p / 10, 1) }), c.accent2);
+  line('F₂ = p·A₂ =', t('{v} N', { v: fmt(F2) }), c.good);
   if (!narrow) {
-    text(ctx, `A₁ = ${fmt(A1, 1)} cm²   A₂ = ${fmt(A2, 1)} cm²  (×${fmt(ratio, 1)})`, fx0, fy0 + 2, { size: 11, color: c.muted, baseline: 'top', mono: true });
+    text(ctx, t('A₁ = {a1} cm²   A₂ = {a2} cm²  (×{ratio})', { a1: fmt(A1, 1), a2: fmt(A2, 1), ratio: fmt(ratio, 1) }), fx0, fy0 + 2, { size: 11, color: c.muted, baseline: 'top', mono: true });
   }
 
   // ----- geometry -----
@@ -97,8 +99,8 @@ function drawMain(ctx: Ctx, b: Box, c: ThemeColors, u: number, ratio: number, t:
   // foot force
   const footLen = 16 + 22 * u;
   arrow(ctx, pad.x - footLen - 12, pad.y, pad.x - 8, pad.y, { color: c.ink, width: 2 });
-  text(ctx, 'ayak', pad.x - footLen - 12, pad.y + 7, { size: 11, color: c.muted, baseline: 'top' });
-  text(ctx, `pedal ×${PEDAL_RATIO}`, pivot.x + 8, pivot.y + 4, { size: 11, color: c.muted, baseline: 'top' });
+  text(ctx, t('ayak'), pad.x - footLen - 12, pad.y + 7, { size: 11, color: c.muted, baseline: 'top' });
+  text(ctx, t('pedal ×{ratio}', { ratio: PEDAL_RATIO }), pivot.x + 8, pivot.y + 4, { size: 11, color: c.muted, baseline: 'top' });
 
   // master cylinder body
   ctx.fillStyle = alpha(fluid, fluidA);
@@ -123,7 +125,7 @@ function drawMain(ctx: Ctx, b: Box, c: ThemeColors, u: number, ratio: number, t:
   ctx.fillRect(pistonX - 10, yAx - r1 + 1, 10, r1 * 2 - 2);
   ctx.strokeStyle = c.ink;
   ctx.strokeRect(pistonX - 10, yAx - r1 + 1, 10, r1 * 2 - 2);
-  text(ctx, narrow ? 'A₁' : 'ana silindir (A₁)', mc0 + mcLen / 2, yAx + r1 + 6, { size: 11, color: c.muted, align: 'center', baseline: 'top' });
+  text(ctx, narrow ? 'A₁' : t('ana silindir (A₁)'), mc0 + mcLen / 2, yAx + r1 + 6, { size: 11, color: c.muted, align: 'center', baseline: 'top' });
   // F1 arrow on the piston
   const kN = (Rd * 0.55) / (F1_MAX * 4); // px per N, shared by F1 and F2 arrows
   if (F1 > 5) arrow(ctx, pistonX - 10 - F1 * kN - 4, yAx - r1 - 24, pistonX - 6, yAx - r1 - 24, { color: c.accent, width: 2.5 });
@@ -173,10 +175,10 @@ function drawMain(ctx: Ctx, b: Box, c: ThemeColors, u: number, ratio: number, t:
   ctx.moveTo(gx, gy);
   ctx.lineTo(gx + Math.cos(ga) * gr * 0.8, gy + Math.sin(ga) * gr * 0.8);
   ctx.stroke();
-  if (!narrow) text(ctx, `p = ${fmt(p / 10, 1)} bar`, gx + gr + 5, gy, { size: 11, weight: 700, mono: true, color: c.accent2, baseline: 'middle' });
+  if (!narrow) text(ctx, t('p = {v} bar', { v: fmt(p / 10, 1) }), gx + gr + 5, gy, { size: 11, weight: 700, mono: true, color: c.accent2, baseline: 'middle' });
 
   // ----- drum brake -----
-  const spin = t * (2.4 * (1 - 0.85 * u)); // drum slows while braking (visual only)
+  const spin = time * (2.4 * (1 - 0.85 * u)); // drum slows while braking (visual only)
   ctx.beginPath();
   ctx.arc(xd, yd, Rd, 0, TAU);
   ctx.fillStyle = mix(c.panel, c.metal, 0.12);
@@ -255,12 +257,12 @@ function drawMain(ctx: Ctx, b: Box, c: ThemeColors, u: number, ratio: number, t:
     arrow(ctx, xd + wcHalf + 2, yAx - r2 - 10, xd + wcHalf + 2 + l2, yAx - r2 - 10, { color: c.good, width: 2.5 });
   }
   text(ctx, 'F₂', xd + wcHalf + 2, yAx - r2 - 16, { size: 12, weight: 700, color: c.good, baseline: 'bottom' });
-  text(ctx, narrow ? 'A₂' : 'tekerlek silindiri (A₂)', xd, yAx + r2 + 12, { size: 11, color: c.muted, align: 'center', baseline: 'top' });
+  text(ctx, narrow ? 'A₂' : t('tekerlek silindiri (A₂)'), xd, yAx + r2 + 12, { size: 11, color: c.muted, align: 'center', baseline: 'top' });
 }
 
 /** Top view of a chassis with four brakes; `share` = braking force fraction per wheel (FL, FR, RL, RR). */
 function drawMini(ctx: Ctx, b: Box, c: ThemeColors, u: number, hydraulic: boolean, f: number) {
-  const title = hydraulic ? 'Hidrolik: 4 tekerde eşit' : 'Mekanik halat: eşitsiz';
+  const title = hydraulic ? t('Hidrolik: 4 tekerde eşit') : t('Mekanik halat: eşitsiz');
   text(ctx, title, b.x + b.w / 2, b.y + 4, { size: f - 1, weight: 700, color: hydraulic ? c.good : c.bad, align: 'center', baseline: 'top' });
   const share = hydraulic ? [1, 1, 1, 1] : [0.95, 0.55, 0.8, 0.4]; // stretched / badly adjusted cables
   const ch = Math.max(40, b.h - 44);
@@ -309,10 +311,10 @@ function drawMini(ctx: Ctx, b: Box, c: ThemeColors, u: number, hydraulic: boolea
   ctx.fill();
   if (!hydraulic && u > 0.3) {
     // uneven force → the car pulls towards the stronger side
-    text(ctx, 'sola çeker!', cx, cy + ch / 2 + 6, { size: 11, weight: 700, color: c.bad, align: 'center', baseline: 'top' });
+    text(ctx, t('sola çeker!'), cx, cy + ch / 2 + 6, { size: 11, weight: 700, color: c.bad, align: 'center', baseline: 'top' });
   }
   if (hydraulic && u > 0.3) {
-    text(ctx, 'düz durur', cx, cy + ch / 2 + 6, { size: 11, weight: 700, color: c.good, align: 'center', baseline: 'top' });
+    text(ctx, t('düz durur'), cx, cy + ch / 2 + 6, { size: 11, weight: 700, color: c.good, align: 'center', baseline: 'top' });
   }
 }
 
@@ -346,7 +348,9 @@ export function HydraulicBrake() {
     <AnimFrame
       name="hydraulicBrake"
       canvasRef={ref}
-      label="Hidrolik fren: pedal küçük ana silindir pistonunu iter, basınç tüm hatta aynıdır, büyük tekerlek silindiri pistonları pabuçları daha büyük kuvvetle iter. Altta hidrolik ve halatlı frenlerde dört tekerleğin fren kuvveti karşılaştırılıyor."
+      label={t(
+        'Hidrolik fren: pedal küçük ana silindir pistonunu iter, basınç tüm hatta aynıdır, büyük tekerlek silindiri pistonları pabuçları daha büyük kuvvetle iter. Altta hidrolik ve halatlı frenlerde dört tekerleğin fren kuvveti karşılaştırılıyor.',
+      )}
       controls={
         <Slider
           label="A₂ / A₁"
@@ -358,14 +362,9 @@ export function HydraulicBrake() {
           format={(v) => `×${fmt(v, 1)}`}
         />
       }
-      note={
-        <>
-          <strong>Pascal ilkesi:</strong> kapalı sıvıya uygulanan basınç her yöne ve her noktaya aynen iletilir (p = F/A).
-          Tekerlek pistonu ana pistondan kaç kat büyükse kuvvet o kadar katlanır; bedeli, küçük pistonun daha uzun yol
-          almasıdır. Aynı basınç dört tekere eşit dağıldığından araç düz durur (Duesenberg 1921, Lockheed sistemi;
-          Chrysler 1924).
-        </>
-      }
+      note={tx(
+        '<strong>Pascal ilkesi:</strong> kapalı sıvıya uygulanan basınç her yöne ve her noktaya aynen iletilir (p = F/A). Tekerlek pistonu ana pistondan kaç kat büyükse kuvvet o kadar katlanır; bedeli, küçük pistonun daha uzun yol almasıdır. Aynı basınç dört tekere eşit dağıldığından araç düz durur (Duesenberg 1921, Lockheed sistemi; Chrysler 1924).',
+      )}
     />
   );
 }

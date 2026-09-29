@@ -1,6 +1,7 @@
 import { memo, useMemo, type ReactElement } from 'react';
 import type { StateId } from '../../data/states';
 import { CITY_XY, MAP_H, MAP_W, NATION_D, STATE_SHAPES } from '../../data/usmap';
+import { t } from '../../i18n';
 
 // The United States as a turn-of-the-century atlas plate: laid paper, engraved water
 // lines along the coasts, pastel state tints with a darker border wash, period
@@ -125,16 +126,16 @@ const Plate = memo(function Plate() {
       ))}
       <path d={NATION_D} fill={PAPER} />
       <text className="usmap-water" x={40} y={300} transform="rotate(-90 40 300)">
-        PASİFİK OKYANUSU
+        {t('PASİFİK OKYANUSU')}
       </text>
       <text className="usmap-water" x={948} y={360} transform="rotate(-90 948 360)">
-        ATLANTİK OKYANUSU
+        {t('ATLANTİK OKYANUSU')}
       </text>
       <text className="usmap-water" x={640} y={574}>
-        MEKSİKA KÖRFEZİ
+        {t('MEKSİKA KÖRFEZİ')}
       </text>
       <text className="usmap-land" x={440} y={14}>
-        K A N A D A
+        {t('K A N A D A')}
       </text>
 
     </g>
@@ -161,7 +162,8 @@ const Compass = memo(function Compass({ x, y, r }: { x: number; y: number; r: nu
       })}
       <circle r={r * 0.08} fill={PAPER} stroke={INK} strokeWidth={0.5} />
       <text y={-r * 1.2} className="usmap-compass">
-        K
+        {/* Kuzey (north) */}
+        {t('K')}
       </text>
     </g>
   );
@@ -240,7 +242,7 @@ function Cartouche({ title, subtitle, company, year }: { title: string; subtitle
           </text>
         ))}
         <text x={4 * px100 + 6} y={4} className="usmap-scale" textAnchor="start">
-          mil
+          {t('mil')}
         </text>
       </g>
     </g>
@@ -320,7 +322,7 @@ export function UsMap(p: UsMapProps) {
       {/* State names (and Mexico, whose name would hide under Texas on the plate) */}
       <g pointerEvents="none">
         <text className="usmap-land" x={306} y={542} aria-hidden>
-          M E K S İ K A
+          {t('M E K S İ K A')}
         </text>
         {ids.map((id) => {
           const [x, y] = labelOf(id);

@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import { STAGES, stationDef } from '../../data/stations';
 import type { ProductionLine, StageId } from '../../core/types';
 import { readThemeColors } from '../theme';
+import { isTurkish, t } from '../../i18n';
+import { fmtNumber } from '../../i18n/format';
 
 // Animated production line. Each stage works at its own rate; bodies queue up in
 // front of the slowest station (the bottleneck) and the stations after it starve.
@@ -162,10 +164,11 @@ export function LineViz(props: {
         ctx.fillStyle = isB ? colors.bad : colors.ink;
         ctx.font = "600 12px Inter, 'Noto Sans Devanagari', 'Noto Sans Arabic', system-ui, sans-serif";
         ctx.textAlign = 'center';
-        ctx.fillText(st.name.split(' ')[0], x, top + 13);
+        ctx.fillText(t(st.name).split(' ')[0], x, top + 13);
         ctx.fillStyle = colors.muted;
         ctx.font = "11px ui-monospace, Menlo, 'Noto Sans Devanagari', 'Noto Sans Arabic', monospace";
-        ctx.fillText(`${perStage[st.id].toFixed(1)}/hf`, x, conveyorY - 12);
+        const rate = perStage[st.id];
+        ctx.fillText(t('{v}/hf', { v: isTurkish() ? rate.toFixed(1) : fmtNumber(rate, 1) }), x, conveyorY - 12);
         // work light
         if (busy[i]) {
           ctx.fillStyle = colors.fire;
@@ -195,7 +198,7 @@ export function LineViz(props: {
         ctx.fillStyle = colors.muted;
         ctx.font = "12px Inter, 'Noto Sans Devanagari', 'Noto Sans Arabic', system-ui, sans-serif";
         ctx.textAlign = 'left';
-        ctx.fillText(dataRef.current.label ?? 'Hat boşta', 10, h - 8);
+        ctx.fillText(dataRef.current.label ?? t('Hat boşta'), 10, h - 8);
       }
       void finished;
       raf = requestAnimationFrame(frame);
@@ -216,5 +219,5 @@ export function LineViz(props: {
     };
   }, []);
 
-  return <canvas ref={ref} className="lineviz" aria-label="Üretim hattı animasyonu: darboğaz kırmızı gösterilir" role="img" />;
+  return <canvas ref={ref} className="lineviz" aria-label={t('Üretim hattı animasyonu: darboğaz kırmızı gösterilir')} role="img" />;
 }

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { t } from '../../../i18n';
+import { tx } from '../../i18n';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Slider } from './controls';
@@ -303,12 +305,12 @@ function drawScene(ctx: Ctx, b: Box, c: ThemeColors, pose: Pose, h: number, titl
     const vw = text(ctx, v, x + lw + 5, y0, { size: 11, weight: 700, mono: true, color, baseline: 'top' });
     x += lw + vw + 16;
   };
-  kv('Gövde eğimi', `${fmt(tilt, 1)}°`, col(tilt, 1.5));
-  kv('Kamber', `sol ${fmt(camL, 1)}° · sağ ${fmt(camR, 1)}°`, col(Math.max(camL, camR), 1.5));
+  kv(t('Gövde eğimi'), `${fmt(tilt, 1)}°`, col(tilt, 1.5));
+  kv(t('Kamber'), t('sol {l}° · sağ {r}°', { l: fmt(camL, 1), r: fmt(camR, 1) }), col(Math.max(camL, camR), 1.5));
   if (!good && h > 0.02) {
-    text(ctx, 'Tümsek diğer tekerleği de eğdi', b.x + 12, y0 + f * 1.35, { size: 11, weight: 700, color: c.bad, baseline: 'top' });
+    text(ctx, t('Tümsek diğer tekerleği de eğdi'), b.x + 12, y0 + f * 1.35, { size: 11, weight: 700, color: c.bad, baseline: 'top' });
   } else if (good && h > 0.02) {
-    text(ctx, 'Yalnız tümseğe çıkan teker hareket etti', b.x + 12, y0 + f * 1.35, { size: 11, weight: 700, color: c.good, baseline: 'top' });
+    text(ctx, t('Yalnız tümseğe çıkan teker hareket etti'), b.x + 12, y0 + f * 1.35, { size: 11, weight: 700, color: c.good, baseline: 'top' });
   }
 }
 
@@ -316,13 +318,13 @@ export function IndependentSuspension() {
   const [H, setH] = useState(10); // cm
 
   const ref = useCanvasAnimation(
-    (ctx, t, w, h, c) => {
+    (ctx, time, w, h, c) => {
       const f = fs(w);
-      const bh = bump(t, H / 100);
+      const bh = bump(time, H / 100);
       const wide = w >= 620;
       const A: Box = wide ? { x: 0, y: 0, w: w / 2, h } : { x: 0, y: 0, w, h: h / 2 };
       const B: Box = wide ? { x: w / 2, y: 0, w: w / 2, h } : { x: 0, y: h / 2, w, h: h / 2 };
-      drawScene(ctx, A, c, solidPose(bh), bh, 'Sabit (rijit) aks', 'İki teker tek kirişe bağlı', false, f);
+      drawScene(ctx, A, c, solidPose(bh), bh, t('Sabit (rijit) aks'), t('İki teker tek kirişe bağlı'), false, f);
       ctx.strokeStyle = c.line;
       ctx.setLineDash([4, 4]);
       ctx.lineWidth = 1;
@@ -336,7 +338,7 @@ export function IndependentSuspension() {
       }
       ctx.stroke();
       ctx.setLineDash([]);
-      drawScene(ctx, B, c, independentPose(bh), bh, 'Bağımsız süspansiyon', 'Her tekerin kendi salıncak kolları var', true, f);
+      drawScene(ctx, B, c, independentPose(bh), bh, t('Bağımsız süspansiyon'), t('Her tekerin kendi salıncak kolları var'), true, f);
     },
     [H],
     { aspect: (w) => (w >= 620 ? 2.0 : 0.62) },
@@ -346,17 +348,15 @@ export function IndependentSuspension() {
     <AnimFrame
       name="independentSuspension"
       canvasRef={ref}
-      label="Önden görünüş: sol teker tümseğe çıkıyor. Sabit aksta tüm aks ve gövde yatıyor, iki teker de eğiliyor; bağımsız süspansiyonda yalnız o teker hareket ediyor, gövde düz kalıyor."
+      label={t(
+        'Önden görünüş: sol teker tümseğe çıkıyor. Sabit aksta tüm aks ve gövde yatıyor, iki teker de eğiliyor; bağımsız süspansiyonda yalnız o teker hareket ediyor, gövde düz kalıyor.',
+      )}
       controls={
-        <Slider label="Tümsek" value={H} min={3} max={16} step={1} onChange={setH} format={(v) => `${v} cm`} />
+        <Slider label={t('Tümsek')} value={H} min={3} max={16} step={1} onChange={setH} format={(v) => t('{v} cm', { v })} />
       }
-      note={
-        <>
-          Sabit aksta iki teker aynı kirişe bağlıdır: biri tümseğe çıkınca kiriş yatar, <strong>öteki teker de eğilir</strong>,
-          gövde sallanır, direksiyon titrer (“shimmy”). Bağımsız süspansiyonda her teker kendi kollarıyla yaylanır; yolla
-          temas ve konfor artar (GM “Knee-Action”, Mercedes, Citroën: 1930’lar).
-        </>
-      }
+      note={tx(
+        'Sabit aksta iki teker aynı kirişe bağlıdır: biri tümseğe çıkınca kiriş yatar, <strong>öteki teker de eğilir</strong>, gövde sallanır, direksiyon titrer (“shimmy”). Bağımsız süspansiyonda her teker kendi kollarıyla yaylanır; yolla temas ve konfor artar (GM “Knee-Action”, Mercedes, Citroën: 1930’lar).',
+      )}
     />
   );
 }

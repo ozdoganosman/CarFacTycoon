@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react';
+import { t } from '../../../i18n';
+import { tx } from '../../i18n';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Button, Slider } from './controls';
@@ -51,7 +53,7 @@ function rack(ctx: Ctx, b: Box, n: number, done: number, color: string, c: Theme
   roundRect(ctx, inner.x, inner.y, inner.w, inner.h, 6);
   ctx.fill();
   const nw = text(ctx, String(n), b.x + b.w - 2, b.y - 2, { size: 15, weight: 800, mono: true, color: n > 3 ? c.bad : c.good, align: 'right', baseline: 'top' });
-  text(ctx, narrow ? 'Bekleyen' : 'Kurumayı bekleyen gövde', b.x + 2, b.y, { size: 11, color: c.muted, baseline: 'top', maxWidth: b.w - nw - 10 });
+  text(ctx, narrow ? t('Bekleyen') : t('Kurumayı bekleyen gövde'), b.x + 2, b.y, { size: 11, color: c.muted, baseline: 'top', maxWidth: b.w - nw - 10 });
   // largest icon size that fits the whole capacity in the box
   let iconL = 44;
   let cols = 1;
@@ -68,7 +70,7 @@ function rack(ctx: Ctx, b: Box, n: number, done: number, color: string, c: Theme
     bodyShape(ctx, inner.x + 6 + col * (iconL + 4), inner.y + 6 + (row + 1) * rowH - 4, iconL);
     ctx.fill();
   }
-  text(ctx, `biten: ${fmt(done)}`, inner.x + inner.w - 6, inner.y + inner.h - 5, { size: 11, mono: true, weight: 700, color: c.ink, align: 'right', baseline: 'bottom' });
+  text(ctx, t('biten: {count}', { count: fmt(done) }), inner.x + inner.w - 6, inner.y + inner.h - 5, { size: 11, mono: true, weight: 700, color: c.ink, align: 'right', baseline: 'bottom' });
 }
 
 function timeline(ctx: Ctx, b: Box, segs: [number, number, string][], cursor: number, c: ThemeColors, ticks: boolean, note: string, noteColor: string) {
@@ -94,7 +96,7 @@ function timeline(ctx: Ctx, b: Box, segs: [number, number, string][], cursor: nu
     for (let d = 0; d <= AXIS_DAYS; d += 7) {
       ctx.fillStyle = c.muted;
       ctx.fillRect(X(d), y + bh, 1, 4);
-      const lab = d === 0 ? '0' : `${d / 7} hf`;
+      const lab = d === 0 ? '0' : t('{n} hf', { n: d / 7 });
       text(ctx, lab, X(d), y + bh + 5, { size: 11, color: c.muted, align: d === 0 ? 'left' : 'center', baseline: 'top' });
     }
   }
@@ -102,12 +104,12 @@ function timeline(ctx: Ctx, b: Box, segs: [number, number, string][], cursor: nu
   text(ctx, note, Math.max(segEnd + 8, b.x + 8), y + bh / 2, { size: 11, weight: 700, color: noteColor, baseline: 'middle', maxWidth: b.x + b.w - segEnd - 8 });
 }
 
-function drawDuco(ctx: Ctx, w: number, h: number, c: ThemeColors, day: number, t: number) {
+function drawDuco(ctx: Ctx, w: number, h: number, c: ThemeColors, day: number, time: number) {
   const f = fs(w);
   const narrow = w < 520;
   const clockH = 22;
-  text(ctx, `Gün ${fmt(Math.floor(day))}`, 12, 6, { size: f, weight: 700, mono: true, color: c.ink, baseline: 'top' });
-  text(ctx, '(her iki atölyeye günde 1 gövde girer)', 12 + f * 4.8, 6 + 1, { size: 11, color: c.muted, baseline: 'top' });
+  text(ctx, t('Gün {day}', { day: fmt(Math.floor(day)) }), 12, 6, { size: f, weight: 700, mono: true, color: c.ink, baseline: 'top' });
+  text(ctx, t('(her iki atölyeye günde 1 gövde girer)'), 12 + f * 4.8, 6 + 1, { size: 11, color: c.muted, baseline: 'top' });
   const laneH = (h - clockH) / 2;
   const varnishC = c.accent;
   const ducoC = c.accent2;
@@ -119,8 +121,8 @@ function drawDuco(ctx: Ctx, w: number, h: number, c: ThemeColors, day: number, t
     laneHeader(
       ctx,
       L,
-      isV ? 'Fırçayla vernik (≈1920)' : 'Duco sprey lak (1924)',
-      isV ? `${COATS} kat; her kat günlerce kurur, sonra zımparalanır` : 'Tabancayla püskürtülür, saatler içinde kurur',
+      isV ? t('Fırçayla vernik (≈1920)') : t('Duco sprey lak (1924)'),
+      isV ? t('{n} kat; her kat günlerce kurur, sonra zımparalanır', { n: COATS }) : t('Tabancayla püskürtülür, saatler içinde kurur'),
       f,
       c,
       isV ? varnishC : ducoC,
@@ -175,12 +177,12 @@ function drawDuco(ctx: Ctx, w: number, h: number, c: ThemeColors, day: number, t
         ctx.lineWidth = 1.2;
         for (let i = 0; i < 3; i++) {
           const wx = bx + bodyL * (0.25 + i * 0.25);
-          const ph = mod(t * 0.6 + i * 0.33, 1);
+          const ph = mod(time * 0.6 + i * 0.33, 1);
           ctx.globalAlpha = 1 - ph;
           ctx.beginPath();
           for (let k = 0; k <= 10; k++) {
             const yy = by - bodyL * 0.45 - ph * 14 - k * 1.6;
-            const xx = wx + Math.sin(k * 0.8 + t * 3 + i) * 3;
+            const xx = wx + Math.sin(k * 0.8 + time * 3 + i) * 3;
             if (k) ctx.lineTo(xx, yy);
             else ctx.moveTo(xx, yy);
           }
@@ -188,12 +190,12 @@ function drawDuco(ctx: Ctx, w: number, h: number, c: ThemeColors, day: number, t
           ctx.globalAlpha = 1;
         }
       }
-      const status = done ? 'Bitti: 1. gövde' : brushing ? `${coat}. kat sürülüyor` : `${coat}. kat kuruyor…`;
+      const status = done ? t('Bitti: 1. gövde') : brushing ? t('{coat}. kat sürülüyor', { coat }) : t('{coat}. kat kuruyor…', { coat });
       text(ctx, status, anim.x, anim.y, { size: 11, weight: 700, color: brushing ? varnishC : c.muted, baseline: 'top' });
     } else {
       // spray loop: the gun passes along the body, then the next body rolls in
       const cyc = 1.5;
-      const q = mod(t, cyc) / cyc;
+      const q = mod(time, cyc) / cyc;
       const sprayQ = clamp(q / 0.65, 0, 1);
       const slide = sstep(0.75, 1, q);
       const ox = -slide * (bodyL + 20);
@@ -232,8 +234,8 @@ function drawDuco(ctx: Ctx, w: number, h: number, c: ThemeColors, day: number, t
         ctx.fillRect(gx - 1.5, gy - 12, 3, 8);
         ctx.fillRect(gx + 3, gy - 20, 3, 8);
         for (let i = 0; i < 18; i++) {
-          const r1 = hash01(i + Math.floor(t * 30) * 17);
-          const r2 = hash01(i * 3 + Math.floor(t * 30) * 5);
+          const r1 = hash01(i + Math.floor(time * 30) * 17);
+          const r2 = hash01(i * 3 + Math.floor(time * 30) * 5);
           const dd = r1 * bodyL * 0.3;
           ctx.fillStyle = alpha(ducoC, 0.7 * (1 - r1));
           ctx.beginPath();
@@ -241,7 +243,7 @@ function drawDuco(ctx: Ctx, w: number, h: number, c: ThemeColors, day: number, t
           ctx.fill();
         }
       }
-      text(ctx, 'püskürtme', anim.x, anim.y, { size: 11, weight: 700, color: ducoC, baseline: 'top' });
+      text(ctx, t('püskürtme'), anim.x, anim.y, { size: 11, weight: 700, color: ducoC, baseline: 'top' });
     }
 
     // --- drying rack: bodies that must wait ---
@@ -265,7 +267,7 @@ function drawDuco(ctx: Ctx, w: number, h: number, c: ThemeColors, day: number, t
       timeline(ctx, tl, segs, clamp(day, 0, T_VARNISH), c, true, '', c.ink);
     } else {
       segs.push([0, 0.05, ducoC], [0.05, 0.2, alpha(ducoC, 0.35)], [0.2, T_DUCO, c.good]);
-      timeline(ctx, tl, segs, Math.min(mod(day, 1), T_DUCO), c, false, '≈ 6 saat (aynı ölçek!)', ducoC);
+      timeline(ctx, tl, segs, Math.min(mod(day, 1), T_DUCO), c, false, t('≈ 6 saat (aynı ölçek!)'), ducoC);
     }
   }
   // divider
@@ -306,28 +308,23 @@ export function Duco() {
     <AnimFrame
       name="duco"
       canvasRef={ref}
-      label="Fırçayla vernik kat kat sürülüp haftalarca kururken gövdeler raflarda birikiyor; Duco sprey lak birkaç saatte kuruyor ve raf boş kalıyor."
+      label={t('Fırçayla vernik kat kat sürülüp haftalarca kururken gövdeler raflarda birikiyor; Duco sprey lak birkaç saatte kuruyor ve raf boş kalıyor.')}
       controls={
         <>
-          <Slider label="Hız" value={speed} min={0.25} max={3} step={0.25} onChange={setSpeed} format={(v) => `${fmt(v, 2)} gün/sn`} />
+          <Slider label={t('Hız')} value={speed} min={0.25} max={3} step={0.25} onChange={setSpeed} format={(v) => t('{v} gün/sn', { v: fmt(v, 2) })} />
           <Button
             onClick={() => {
               sim.current.day = 0;
               sim.current.hold = 0;
             }}
           >
-            Sıfırla
+            {t('Sıfırla')}
           </Button>
         </>
       }
-      note={
-        <>
-          Vernikle boyamak haftalar sürer; her gün giren gövdeler rafta bekler, fabrika alanı ve sermaye bağlanır. Bu
-          yüzden Model T 1914–25 arası yalnız <strong>siyah “Japan” emaye</strong> ile boyandı: en hızlı kuruyan boya
-          oydu. DuPont’un nitroselüloz <strong>Duco</strong> lakı (ilk kez 1924 Oakland’da) tabancayla püskürtülür, saatler
-          içinde kurur ve renkli araçları ucuzlatır.
-        </>
-      }
+      note={tx(
+        'Vernikle boyamak haftalar sürer; her gün giren gövdeler rafta bekler, fabrika alanı ve sermaye bağlanır. Bu yüzden Model T 1914–25 arası yalnız <strong>siyah “Japan” emaye</strong> ile boyandı: en hızlı kuruyan boya oydu. DuPont’un nitroselüloz <strong>Duco</strong> lakı (ilk kez 1924 Oakland’da) tabancayla püskürtülür, saatler içinde kurur ve renkli araçları ucuzlatır.',
+      )}
     />
   );
 }

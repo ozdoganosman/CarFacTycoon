@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { t } from '../../../i18n';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Button } from './controls';
@@ -40,8 +41,8 @@ function drawHandCrank(ctx: Ctx, b: Box, c: ThemeColors, s: StarterState, f: num
   const tLoop = s.crankT % CRANK_PERIOD;
   const kick = tLoop >= 3.0 && tLoop < 3.35;
   const after = tLoop >= 3.0;
-  text(ctx, 'El manivelası', b.x + 12, b.y + 12, { size: f + 1, weight: 700, color: c.ink, baseline: 'top' });
-  text(ctx, '1912 öncesi', b.x + 12, b.y + 12 + (f + 1) * 1.35, { size: 11, color: c.muted, baseline: 'top' });
+  text(ctx, t('El manivelası'), b.x + 12, b.y + 12, { size: f + 1, weight: 700, color: c.ink, baseline: 'top' });
+  text(ctx, t('1912 öncesi'), b.x + 12, b.y + 12 + (f + 1) * 1.35, { size: 11, color: c.muted, baseline: 'top' });
 
   const headerH = 12 + (f + 1) * 1.35 + 11 * 1.3 + 8;
   const ground = b.y + b.h - 30;
@@ -173,9 +174,9 @@ function drawHandCrank(ctx: Ctx, b: Box, c: ThemeColors, s: StarterState, f: num
       ctx.lineTo(hand.x + Math.cos(an) * 17, hand.y + Math.sin(an) * 17);
     }
     ctx.stroke();
-    text(ctx, 'GERİ TEPME!', cx, rTop - 8, { size: f + 2, weight: 800, color: c.bad, align: 'center', baseline: 'bottom' });
+    text(ctx, t('GERİ TEPME!'), cx, rTop - 8, { size: f + 2, weight: 800, color: c.bad, align: 'center', baseline: 'bottom' });
   }
-  text(ctx, after ? 'Erken ateşleme krankı ters çevirir: kol, bilek kırılır.' : 'Motoru elle çevirmek ağır ve yorucu.', b.x + b.w / 2, b.y + b.h - 8, {
+  text(ctx, after ? t('Erken ateşleme krankı ters çevirir: kol, bilek kırılır.') : t('Motoru elle çevirmek ağır ve yorucu.'), b.x + b.w / 2, b.y + b.h - 8, {
     size: 11,
     color: after ? c.bad : c.muted,
     align: 'center',
@@ -200,8 +201,8 @@ function ground(ctx: Ctx, x: number, y: number, color: string) {
   ctx.stroke();
 }
 
-function drawStarter(ctx: Ctx, b: Box, c: ThemeColors, s: StarterState, t: number, f: number) {
-  text(ctx, 'Elektrikli marş', b.x + 12, b.y + 12, { size: f + 1, weight: 700, color: c.ink, baseline: 'top' });
+function drawStarter(ctx: Ctx, b: Box, c: ThemeColors, s: StarterState, time: number, f: number) {
+  text(ctx, t('Elektrikli marş'), b.x + 12, b.y + 12, { size: f + 1, weight: 700, color: c.ink, baseline: 'top' });
   text(ctx, 'Cadillac 1912 · Charles Kettering', b.x + 12, b.y + 12 + (f + 1) * 1.35, { size: 11, color: c.muted, baseline: 'top' });
 
   const top = b.y + 12 + (f + 1) * 1.35 + 11 * 1.3 + 12;
@@ -220,7 +221,7 @@ function drawStarter(ctx: Ctx, b: Box, c: ThemeColors, s: StarterState, t: numbe
   const dist = Rf + Rp + (1 - s.engage) * back;
   const px = fx + ux * dist;
   const py = fy + uy * dist;
-  const current = s.phase === 'engage' || s.phase === 'crank' || (s.phase === 'fire' && t - s.since < 0.25);
+  const current = s.phase === 'engage' || s.phase === 'crank' || (s.phase === 'fire' && time - s.since < 0.25);
 
   // mesh: when a ring tooth points at the pinion, a pinion gap must point back at the ring
   if (s.engage > 0.02) s.pinion = phi + Math.PI + Math.PI / N_PINION - (s.ring - phi) * (N_RING / N_PINION);
@@ -289,7 +290,7 @@ function drawStarter(ctx: Ctx, b: Box, c: ThemeColors, s: StarterState, t: numbe
   ctx.strokeStyle = c.ink;
   ctx.lineWidth = 1.2;
   ctx.stroke();
-  text(ctx, 'volan', fx, fy + Rf * 0.62, { size: 11, color: c.ink, align: 'center', baseline: 'middle', weight: 600 });
+  text(ctx, t('volan'), fx, fy + Rf * 0.62, { size: 11, color: c.ink, align: 'center', baseline: 'middle', weight: 600 });
 
   // ----- pinion -----
   gearPath(ctx, px, py, Rp - 1.25 * m, Rp + m, N_PINION, s.pinion);
@@ -303,7 +304,7 @@ function drawStarter(ctx: Ctx, b: Box, c: ThemeColors, s: StarterState, t: numbe
   ctx.fillStyle = c.panel;
   ctx.fill();
   ctx.stroke();
-  text(ctx, 'pinyon', px + 4, py + Rp + m + 4, { size: 11, color: c.accent2, align: 'left', baseline: 'top', weight: 600 });
+  text(ctx, t('pinyon'), px + 4, py + Rp + m + 4, { size: 11, color: c.accent2, align: 'left', baseline: 'top', weight: 600 });
 
   // ----- battery (top-left), switch and wiring -----
   const bw = Math.max(46, Rf * 0.6);
@@ -322,7 +323,7 @@ function drawStarter(ctx: Ctx, b: Box, c: ThemeColors, s: StarterState, t: numbe
     ctx.lineTo(bx + (bw * i) / 3, by + bh - 3);
     ctx.stroke();
   }
-  text(ctx, '6 V akü', bx + 16, by + bh + 3, { size: 11, color: c.muted, baseline: 'top' });
+  text(ctx, t('6 V akü'), bx + 16, by + bh + 3, { size: 11, color: c.muted, baseline: 'top' });
   text(ctx, '+', bx + bw - 6, by - 1, { size: 12, weight: 700, color: c.ink, align: 'center', baseline: 'bottom' });
   ground(ctx, bx + 8, by + bh + 26, c.muted);
   ctx.beginPath();
@@ -372,7 +373,7 @@ function drawStarter(ctx: Ctx, b: Box, c: ThemeColors, s: StarterState, t: numbe
     ctx.fillStyle = c.ink;
     ctx.fill();
   }
-  text(ctx, 'düğme', wx + 7, (swA + swB) / 2, { size: 11, color: c.muted, baseline: 'middle' });
+  text(ctx, t('düğme'), wx + 7, (swA + swB) / 2, { size: 11, color: c.muted, baseline: 'middle' });
   // current dots along the live wire
   if (current) {
     const segs: number[] = [];
@@ -384,7 +385,7 @@ function drawStarter(ctx: Ctx, b: Box, c: ThemeColors, s: StarterState, t: numbe
     }
     ctx.fillStyle = c.warn;
     for (let k = 0; k < 10; k++) {
-      let dd = (t * 70 + (k * total) / 10) % total;
+      let dd = (time * 70 + (k * total) / 10) % total;
       let i = 0;
       while (i < segs.length - 1 && dd > segs[i]) dd -= segs[i++];
       const q = segs[i] ? dd / segs[i] : 0;
@@ -392,21 +393,21 @@ function drawStarter(ctx: Ctx, b: Box, c: ThemeColors, s: StarterState, t: numbe
       ctx.arc(lerp(path[i][0], path[i + 1][0], q), lerp(path[i][1], path[i + 1][1], q), 2.6, 0, TAU);
       ctx.fill();
     }
-    text(ctx, '≈200 A', wx + 7, (wy + swA) / 2, { size: 11, weight: 700, mono: true, color: c.warn, baseline: 'middle' });
+    text(ctx, t('≈200 A'), wx + 7, (wy + swA) / 2, { size: 11, weight: 700, mono: true, color: c.warn, baseline: 'middle' });
   }
 
   // ----- status + rpm -----
   const status: Record<Phase, [string, string]> = {
-    idle: ['Hazır: marşa basın', c.muted],
-    engage: ['Pinyon öne kayar, volana kavrar', c.accent2],
-    crank: ['Marş motoru motoru çeviriyor', c.warn],
-    fire: ['Ateşledi! Pinyon geri fırlar', c.good],
-    run: ['Motor kendi gücüyle çalışıyor', c.good],
-    stop: ['Kontak kapatıldı', c.muted],
+    idle: [t('Hazır: marşa basın'), c.muted],
+    engage: [t('Pinyon öne kayar, volana kavrar'), c.accent2],
+    crank: [t('Marş motoru motoru çeviriyor'), c.warn],
+    fire: [t('Ateşledi! Pinyon geri fırlar'), c.good],
+    run: [t('Motor kendi gücüyle çalışıyor'), c.good],
+    stop: [t('Kontak kapatıldı'), c.muted],
   };
   const [msg, col] = status[s.phase];
   text(ctx, msg, b.x + 12, b.y + b.h - 12 - f * 1.35, { size: f - 1, weight: 700, color: col, baseline: 'bottom', maxWidth: b.w - 24 });
-  text(ctx, `Motor: ${fmt(Math.round(s.rpm / 10) * 10)} d/dk`, b.x + 12, b.y + b.h - 10, { size: f - 1, weight: 600, mono: true, color: c.ink, baseline: 'bottom' });
+  text(ctx, t('Motor: {rpm} d/dk', { rpm: fmt(Math.round(s.rpm / 10) * 10) }), b.x + 12, b.y + b.h - 10, { size: f - 1, weight: 600, mono: true, color: c.ink, baseline: 'bottom' });
 }
 
 function step(s: StarterState, t: number, dt: number) {
@@ -504,7 +505,7 @@ export function ElectricStarter() {
     <AnimFrame
       name="electricStarter"
       canvasRef={ref}
-      label="Solda motoru elle çeviren biri ve geri tepme tehlikesi; sağda akü, marş motoru ve volan dişlisine kavrayan pinyon ile elektrikli marş."
+      label={t('Solda motoru elle çeviren biri ve geri tepme tehlikesi; sağda akü, marş motoru ve volan dişlisine kavrayan pinyon ile elektrikli marş.')}
       controls={
         <Button
           primary
@@ -517,16 +518,12 @@ export function ElectricStarter() {
             }
           }}
         >
-          Marşa bas
+          {t('Marşa bas')}
         </Button>
       }
-      note={
-        <>
-          Kettering’in marşı küçük bir elektrik motoruyla krankı çevirir; pinyon (Bendix) ancak marş sırasında volan
-          dişlisine girer, motor çalışınca geri fırlar. Elle çevirme zahmeti ve tehlikesi bitti; otomobil kadın ve yaşlı
-          sürücülere de açıldı.
-        </>
-      }
+      note={t(
+        'Kettering’in marşı küçük bir elektrik motoruyla krankı çevirir; pinyon (Bendix) ancak marş sırasında volan dişlisine girer, motor çalışınca geri fırlar. Elle çevirme zahmeti ve tehlikesi bitti; otomobil kadın ve yaşlı sürücülere de açıldı.',
+      )}
     />
   );
 }

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { t, msg } from '../../../i18n';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Readout, Slider } from './controls';
@@ -44,18 +45,19 @@ const EX_CLOSE = 730;
 const SPARK = 352; // ignition slightly before TDC
 const N_PARTICLES = 42;
 
+// Shown with t(); a description may use {cr}, the compression ratio.
 const STAGES = [
-  { name: 'Emme', title: '1. zaman · Emme', desc: 'Piston iner, emme supabı açık: benzin-hava karışımı silindire dolar.' },
-  { name: 'Sıkıştırma', title: '2. zaman · Sıkıştırma', desc: `Supaplar kapalı; piston çıkar ve karışımı ~1/${CR} hacme sıkıştırır.` },
-  { name: 'İş', title: '3. zaman · İş (Ateşleme)', desc: 'Buji ateşler; yanan gaz genleşip pistonu iter. Güç veren tek zaman budur.' },
-  { name: 'Egzoz', title: '4. zaman · Egzoz', desc: 'Egzoz supabı açık: piston çıkarken yanmış gazı dışarı süpürür.' },
+  { name: msg('Emme'), title: msg('1. zaman · Emme'), desc: msg('Piston iner, emme supabı açık: benzin-hava karışımı silindire dolar.') },
+  { name: msg('Sıkıştırma'), title: msg('2. zaman · Sıkıştırma'), desc: msg('Supaplar kapalı; piston çıkar ve karışımı ~1/{cr} hacme sıkıştırır.') },
+  { name: msg('İş'), title: msg('3. zaman · İş (Ateşleme)'), desc: msg('Buji ateşler; yanan gaz genleşip pistonu iter. Güç veren tek zaman budur.') },
+  { name: msg('Egzoz'), title: msg('4. zaman · Egzoz'), desc: msg('Egzoz supabı açık: piston çıkarken yanmış gazı dışarı süpürür.') },
 ];
 
 const DIESEL_STAGES = [
-  { name: 'Emme', title: '1. zaman · Emme', desc: 'Piston iner, emme supabı açık: silindire yalnızca hava dolar.' },
-  { name: 'Sıkıştırma', title: '2. zaman · Sıkıştırma', desc: 'Supaplar kapalı; piston havayı ~1/17 hacme sıkıştırır ve hava 500 °C’yi geçer.' },
-  { name: 'İş', title: '3. zaman · İş (Püskürtme)', desc: 'Enjektör mazotu kızgın havaya püskürtür, yakıt kendiliğinden tutuşur. Buji yoktur.' },
-  { name: 'Egzoz', title: '4. zaman · Egzoz', desc: 'Egzoz supabı açık: piston çıkarken yanmış gazı dışarı süpürür.' },
+  { name: msg('Emme'), title: msg('1. zaman · Emme'), desc: msg('Piston iner, emme supabı açık: silindire yalnızca hava dolar.') },
+  { name: msg('Sıkıştırma'), title: msg('2. zaman · Sıkıştırma'), desc: msg('Supaplar kapalı; piston havayı ~1/17 hacme sıkıştırır ve hava 500 °C’yi geçer.') },
+  { name: msg('İş'), title: msg('3. zaman · İş (Püskürtme)'), desc: msg('Enjektör mazotu kızgın havaya püskürtür, yakıt kendiliğinden tutuşur. Buji yoktur.') },
+  { name: msg('Egzoz'), title: msg('4. zaman · Egzoz'), desc: msg('Egzoz supabı açık: piston çıkarken yanmış gazı dışarı süpürür.') },
 ];
 
 /** Valve lift 0..1: a smooth cos² bump between open and close crank angles (degrees). */
@@ -150,7 +152,7 @@ function pinHeight(g: Geo, a: number) {
 // looks bigger; larger engines shrink to fit.
 const REF = geometry(100, 110);
 
-function drawFourStroke(ctx: Ctx, w: number, h: number, c: ThemeColors, thetaDeg: number, t: number, B: number, S: number, diesel = false) {
+function drawFourStroke(ctx: Ctx, w: number, h: number, c: ThemeColors, thetaDeg: number, time: number, B: number, S: number, diesel = false) {
   const th = mod(thetaDeg, 720);
   const a = rad(th);
   const stage = Math.min(3, Math.floor(th / 180));
@@ -221,8 +223,8 @@ function drawFourStroke(ctx: Ctx, w: number, h: number, c: ThemeColors, thetaDeg
     const u = hash01(i * 3 + 1);
     const v = hash01(i * 7 + 2);
     const jig = (0.6 + gs.heat * 2.2) * dotR;
-    const px = X(-g.B / 2 + g.B * (0.05 + 0.9 * u)) + Math.sin(t * (3 + gs.heat * 9) + i * 1.7) * jig;
-    const py = chamberTop + (chamberBot - chamberTop) * (0.08 + 0.84 * v) + Math.cos(t * (2.6 + gs.heat * 8) + i) * jig * 0.7;
+    const px = X(-g.B / 2 + g.B * (0.05 + 0.9 * u)) + Math.sin(time * (3 + gs.heat * 9) + i * 1.7) * jig;
+    const py = chamberTop + (chamberBot - chamberTop) * (0.08 + 0.84 * v) + Math.cos(time * (2.6 + gs.heat * 8) + i) * jig * 0.7;
     ctx.beginPath();
     ctx.arc(px, py, dotR, 0, TAU);
     ctx.fill();
@@ -368,7 +370,7 @@ function drawFourStroke(ctx: Ctx, w: number, h: number, c: ThemeColors, thetaDeg
       const n = 6;
       ctx.fillStyle = mix(p.color, c.ink, 0.15);
       for (let i = 0; i < n; i++) {
-        let q = mod(t * 0.9 + i / n, 1);
+        let q = mod(time * 0.9 + i / n, 1);
         if (!p.inflow) q = 1 - q; // exhaust flows outward
         // path: outer end → corner → seat
         const xm = s * g.xv;
@@ -529,11 +531,11 @@ function drawFourStroke(ctx: Ctx, w: number, h: number, c: ThemeColors, thetaDeg
   ctx.stroke();
   ctx.setLineDash([]);
   dimLine(ctx, xDim, Y(crownTDC), xDim, Y(crownBDC), c.ink);
-  text(ctx, 'ÜÖN', xDim + 9, Y(crownTDC), { ...lab, baseline: 'middle', weight: 600 });
-  text(ctx, 'AÖN', xDim + 9, Y(crownBDC), { ...lab, baseline: 'middle', weight: 600 });
+  text(ctx, t('ÜÖN'), xDim + 9, Y(crownTDC), { ...lab, baseline: 'middle', weight: 600 });
+  text(ctx, t('AÖN'), xDim + 9, Y(crownBDC), { ...lab, baseline: 'middle', weight: 600 });
   const yMid = (Y(crownTDC) + Y(crownBDC)) / 2;
-  text(ctx, 'Strok', xDim + 8, yMid - 2, { size: f - 1, color: c.ink, weight: 600, baseline: 'bottom' });
-  text(ctx, `${fmt(S)} mm`, xDim + 8, yMid + 2, { size: f - 1, color: c.ink, weight: 600, baseline: 'top' });
+  text(ctx, t('Strok'), xDim + 8, yMid - 2, { size: f - 1, color: c.ink, weight: 600, baseline: 'bottom' });
+  text(ctx, t('{v} mm', { v: fmt(S) }), xDim + 8, yMid + 2, { size: f - 1, color: c.ink, weight: 600, baseline: 'top' });
   // bore dimension across the top
   const yBore = Y(g.top) - 6;
   dimLine(ctx, X(-g.B / 2), yBore, X(g.B / 2), yBore, c.ink);
@@ -548,11 +550,11 @@ function drawFourStroke(ctx: Ctx, w: number, h: number, c: ThemeColors, thetaDeg
   ctx.stroke();
   ctx.globalAlpha = 1;
   ctx.setLineDash([]);
-  text(ctx, `Çap ${fmt(B)} mm`, X(0), yBore - 4, { size: f - 1, color: c.ink, align: 'center', weight: 600 });
+  text(ctx, t('Çap {v} mm', { v: fmt(B) }), X(0), yBore - 4, { size: f - 1, color: c.ink, align: 'center', weight: 600 });
   // port labels
   const portLabelY = Y((portTop + portBot) / 2);
-  text(ctx, 'Emme', X(portOuter) - 4, portLabelY, { ...lab, align: 'right', baseline: 'middle', color: c.accent2, weight: 600 });
-  text(ctx, 'Egzoz', X(-portOuter) + 4, portLabelY, { ...lab, align: 'left', baseline: 'middle', weight: 600 });
+  text(ctx, t('Emme'), X(portOuter) - 4, portLabelY, { ...lab, align: 'right', baseline: 'middle', color: c.accent2, weight: 600 });
+  text(ctx, t('Egzoz'), X(-portOuter) + 4, portLabelY, { ...lab, align: 'left', baseline: 'middle', weight: 600 });
   // part labels on the left (wide layouts only)
   if (wide) {
     const xl = eng.x + 6;
@@ -570,10 +572,10 @@ function drawFourStroke(ctx: Ctx, w: number, h: number, c: ThemeColors, thetaDeg
       ctx.fillStyle = c.muted;
       ctx.fill();
     };
-    leader('Piston', X(-g.B / 2 + pgap) + 6, Y(crown - g.ph * 0.55));
+    leader(t('Piston'), X(-g.B / 2 + pgap) + 6, Y(crown - g.ph * 0.55));
     const midY = (yPin + pinY) / 2;
-    leader('Biyel', X(pinX / 2) - 3, Y(midY));
-    leader('Krank', X(-g.Rw * 0.6), Y(-g.Rw * 0.35));
+    leader(t('Biyel'), X(pinX / 2) - 3, Y(midY));
+    leader(t('Krank'), X(-g.Rw * 0.6), Y(-g.Rw * 0.35));
   }
 
   // ----- info panel -----
@@ -625,9 +627,9 @@ function drawInfo(
   // title + description
   const x0 = box.x + pad;
   let y = box.y + pad;
-  text(ctx, st.title, x0, y, { size: f + 3, weight: 700, color: stage === 1 ? c.ink : sc[stage], baseline: 'top', maxWidth: textW });
+  text(ctx, t(st.title), x0, y, { size: f + 3, weight: 700, color: stage === 1 ? c.ink : sc[stage], baseline: 'top', maxWidth: textW });
   y += (f + 3) * 1.45;
-  y = paragraph(ctx, st.desc, x0, y, textW, { size: wide ? f : f - 1, color: c.ink, maxLines: wide ? 4 : 3 });
+  y = paragraph(ctx, t(st.desc, { cr: CR }), x0, y, textW, { size: wide ? f : f - 1, color: c.ink, maxLines: wide ? 4 : 3 });
 
   // cycle ring: 720° = two crank turns = one working cycle
   const ringCy = wide ? clamp(y + 18 + ringR, box.y + box.h * 0.42, box.y + box.h - ringR - f * 5.2) : box.y + box.h / 2;
@@ -663,11 +665,11 @@ function drawInfo(
   ctx.lineCap = 'butt';
   text(ctx, `${Math.floor(th)}°`, ringCx, ringCy, { size: ringR >= 40 ? f : 11, mono: true, weight: 600, color: c.ink, align: 'center', baseline: 'middle' });
   if (!wide) return;
-  text(ctx, '2 krank turu = 1 çevrim', ringCx, ringCy + ringR + thick * 0.5 + f * 1.2, { size: f - 1, color: c.muted, align: 'center', baseline: 'middle' });
+  text(ctx, t('2 krank turu = 1 çevrim'), ringCx, ringCy + ringR + thick * 0.5 + f * 1.2, { size: f - 1, color: c.muted, align: 'center', baseline: 'middle' });
 
   // valve status + spark
   let yy = box.y + box.h - pad - f * 2.7;
-  const row = (label: string, on: boolean, color: string, onText: string, offText: string) => {
+  const row = (label: string, on: boolean, color: string) => {
     ctx.beginPath();
     ctx.arc(x0 + 5, yy, 5, 0, TAU);
     if (on) {
@@ -678,13 +680,13 @@ function drawInfo(
       ctx.lineWidth = 1.2;
       ctx.stroke();
     }
-    text(ctx, `${label}: ${on ? onText : offText}`, x0 + 16, yy, { size: f - 1, color: on ? c.ink : c.muted, baseline: 'middle', weight: on ? 600 : 500 });
+    text(ctx, label, x0 + 16, yy, { size: f - 1, color: on ? c.ink : c.muted, baseline: 'middle', weight: on ? 600 : 500 });
     yy += f * 1.35;
   };
-  row('Emme supabı', inOpen, c.accent2, 'açık', 'kapalı');
-  row('Egzoz supabı', exOpen, c.muted, 'açık', 'kapalı');
-  if (diesel) row('Enjektör', sparkOn, c.fire, 'püskürtüyor!', 'bekliyor');
-  else row('Buji', sparkOn, c.fire, 'kıvılcım!', 'bekliyor');
+  row(inOpen ? t('Emme supabı: açık') : t('Emme supabı: kapalı'), inOpen, c.accent2);
+  row(exOpen ? t('Egzoz supabı: açık') : t('Egzoz supabı: kapalı'), exOpen, c.muted);
+  if (diesel) row(sparkOn ? t('Enjektör: püskürtüyor!') : t('Enjektör: bekliyor'), sparkOn, c.fire);
+  else row(sparkOn ? t('Buji: kıvılcım!') : t('Buji: bekliyor'), sparkOn, c.fire);
 }
 
 export function FourStroke({ bore, stroke, rpm, controls = true, diesel = false }: FourStrokeProps) {
@@ -710,29 +712,30 @@ export function FourStroke({ bore, stroke, rpm, controls = true, diesel = false 
   // Mean piston speed: the piston covers 2 strokes per crank turn
   const vp = (2 * (S / 1000) * n) / 60;
   const ratio = S / B;
-  const kind = ratio > 1.1 ? 'uzun stroklu' : ratio < 0.9 ? 'kısa stroklu' : 'kareye yakın';
+  const r2 = fmt(ratio, 2);
+  const shape = ratio > 1.1 ? t('{v} · uzun stroklu', { v: r2 }) : ratio < 0.9 ? t('{v} · kısa stroklu', { v: r2 }) : t('{v} · kareye yakın', { v: r2 });
 
   return (
     <AnimFrame
       name="fourStroke"
       canvasRef={ref}
-      label={`Dört zamanlı motor: ${fmt(B)} mm çap, ${fmt(S)} mm strok. Emme, sıkıştırma, iş ve egzoz zamanları.`}
+      label={t('Dört zamanlı motor: {bore} mm çap, {stroke} mm strok. Emme, sıkıştırma, iş ve egzoz zamanları.', { bore: fmt(B), stroke: fmt(S) })}
       readouts={
         <>
-          <Readout label="Silindir hacmi" value={`${fmt(cc)} cc`} />
-          <Readout label={`Ort. piston hızı @ ${fmt(n)} d/dk`} value={`${fmt(vp, 1)} m/s`} />
-          <Readout label="Strok/çap" value={`${fmt(ratio, 2)} · ${kind}`} />
+          <Readout label={t('Silindir hacmi')} value={t('{v} cc', { v: fmt(cc) })} />
+          <Readout label={t('Ort. piston hızı @ {rpm} d/dk', { rpm: fmt(n) })} value={t('{v} m/s', { v: fmt(vp, 1) })} />
+          <Readout label={t('Strok/çap')} value={shape} />
         </>
       }
       controls={
         controls ? (
           <>
-            <Slider label="Hız" value={speed} min={0.05} max={1.5} step={0.05} onChange={setSpeed} format={(v) => `${fmt(v, 2)} tur/sn`} />
+            <Slider label={t('Hız')} value={speed} min={0.05} max={1.5} step={0.05} onChange={setSpeed} format={(v) => t('{v} tur/sn', { v: fmt(v, 2) })} />
             {bore === undefined ? (
-              <Slider label="Çap" value={boreS} min={60} max={130} step={1} onChange={setBoreS} format={(v) => `${v} mm`} />
+              <Slider label={t('Çap')} value={boreS} min={60} max={130} step={1} onChange={setBoreS} format={(v) => t('{v} mm', { v })} />
             ) : null}
             {stroke === undefined ? (
-              <Slider label="Strok" value={strokeS} min={60} max={150} step={1} onChange={setStrokeS} format={(v) => `${v} mm`} />
+              <Slider label={t('Strok')} value={strokeS} min={60} max={150} step={1} onChange={setStrokeS} format={(v) => t('{v} mm', { v })} />
             ) : null}
           </>
         ) : undefined

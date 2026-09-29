@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react';
+import { t } from '../../../i18n';
+import { tx } from '../../i18n';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Button, Toggle } from './controls';
@@ -126,14 +128,14 @@ function drawDials(ctx: Ctx, b: Box, c: ThemeColors, s: Sim, f: number) {
   const r = Math.min(b.h * 0.34, 26);
   const cyD = b.y + b.h / 2;
   const items = [
-    { x: b.x + 12 + r, ang: s.shaftAng, rpm: RPM_SHAFT, color: c.accent2, label: 'Kovan + mil', sub: 'tekerleklere bağlı' },
-    { x: b.x + b.w / 2 + 6 + r, ang: s.gearAng, rpm: s.gearRpm, color: c.accent, label: 'Dişli', sub: 'motor tarafı' },
+    { x: b.x + 12 + r, ang: s.shaftAng, rpm: RPM_SHAFT, color: c.accent2, label: t('Kovan + mil'), sub: t('tekerleklere bağlı') },
+    { x: b.x + b.w / 2 + 6 + r, ang: s.gearAng, rpm: s.gearRpm, color: c.accent, label: t('Dişli'), sub: t('motor tarafı') },
   ];
   for (const it of items) {
     dial(ctx, it.x, cyD, r, it.ang, it.color, c);
     const tx = it.x + r + 8;
     text(ctx, it.label, tx, cyD - f * 0.55, { size: f - 1, weight: 700, color: it.color, baseline: 'bottom' });
-    text(ctx, `${fmt(Math.round(it.rpm / 10) * 10)} d/dk`, tx, cyD, { size: f, weight: 700, mono: true, color: c.ink, baseline: 'middle' });
+    text(ctx, t('{rpm} d/dk', { rpm: fmt(Math.round(it.rpm / 10) * 10) }), tx, cyD, { size: f, weight: 700, mono: true, color: c.ink, baseline: 'middle' });
     if (b.w >= 420) text(ctx, it.sub, tx, cyD + f * 0.6, { size: 11, color: c.muted, baseline: 'top' });
   }
 }
@@ -151,7 +153,7 @@ function drawSection(ctx: Ctx, b: Box, c: ThemeColors, s: Sim) {
   const ringPush = s.sleeve >= CONTACT - 0.02 ? 0.05 : 0;
   const scroll = (ang: number, pitch: number) => mod((ang / TAU) * pitch * 6, pitch);
 
-  text(ctx, 'Kesit', b.x + 10, b.y + 4, { size: 11, weight: 700, color: c.muted, baseline: 'top' });
+  text(ctx, t('Kesit'), b.x + 10, b.y + 4, { size: 11, weight: 700, color: c.muted, baseline: 'top' });
 
   for (const sgn of [-1, 1]) {
     const Y = (v: number) => yc - sgn * v * U;
@@ -270,16 +272,16 @@ function drawSection(ctx: Ctx, b: Box, c: ThemeColors, s: Sim) {
   ctx.moveTo(fx, yc - 1.7 * U);
   ctx.lineTo(fx, b.y + 16);
   ctx.stroke();
-  text(ctx, 'çatal', fx + 6, b.y + 18, { size: 11, color: c.muted, baseline: 'top' });
+  text(ctx, t('çatal'), fx + 6, b.y + 18, { size: 11, color: c.muted, baseline: 'top' });
   if (s.phase === 'approach' || s.phase === 'engage' || s.phase === 'clash') {
     arrow(ctx, fx + 6, b.y + 18 + 18, fx + 6 + U * 0.9, b.y + 18 + 18, { color: c.ink, width: 2, head: 7 });
   }
   // labels
   const lab = (s1: string, x: number, y: number, color: string, align: CanvasTextAlign = 'center') =>
     text(ctx, s1, x, y, { size: 11, weight: 700, color, align, baseline: 'top' });
-  lab('kovan', X(sleeveOff + 1.0), yc + 1.95 * U, shaftC);
-  lab('pirinç halka', X(2.35), yc + 2.35 * U, mix(brass, c.ink, 0.25), 'center');
-  lab('dişli', X(4.3), yc + 2.6 * U, gearC);
+  lab(t('kovan'), X(sleeveOff + 1.0), yc + 1.95 * U, shaftC);
+  lab(t('pirinç halka'), X(2.35), yc + 2.35 * U, mix(brass, c.ink, 0.25), 'center');
+  lab(t('dişli'), X(4.3), yc + 2.6 * U, gearC);
 
   // sparks at the teeth when clashing
   for (const p of s.sparks) {
@@ -291,7 +293,7 @@ function drawSection(ctx: Ctx, b: Box, c: ThemeColors, s: Sim) {
 
 /** Unrolled view of the dog teeth: the sleeve's teeth (top) must drop into the gear's gaps (bottom). */
 function drawComb(ctx: Ctx, b: Box, c: ThemeColors, s: Sim) {
-  text(ctx, 'Dişlerin açılımı', b.x + 10, b.y + 4, { size: 11, weight: 700, color: c.muted, baseline: 'top' });
+  text(ctx, t('Dişlerin açılımı'), b.x + 10, b.y + 4, { size: 11, weight: 700, color: c.muted, baseline: 'top' });
   const pitch = clamp(b.w / 7, 22, 40);
   const tw = pitch * 0.5;
   const th = clamp(b.h * 0.2, 14, 30);
@@ -338,13 +340,13 @@ function drawComb(ctx: Ctx, b: Box, c: ThemeColors, s: Sim) {
   const dRpm = s.gearRpm - RPM_SHAFT;
   const msg =
     s.phase === 'clash'
-      ? 'Dişler birbirine çarpıyor!'
+      ? t('Dişler birbirine çarpıyor!')
       : s.phase === 'sync'
-        ? 'Hızlar eşitleniyor…'
+        ? t('Hızlar eşitleniyor…')
         : s.phase === 'engage' || s.phase === 'engaged'
-          ? 'Hız farkı yok: dişler boşluklara kayar'
+          ? t('Hız farkı yok: dişler boşluklara kayar')
           : Math.abs(dRpm) > 20
-            ? 'Hız farkı: dişler boşluk bulamaz'
+            ? t('Hız farkı: dişler boşluk bulamaz')
             : '';
   const col = s.phase === 'clash' ? c.bad : s.phase === 'engage' || s.phase === 'engaged' ? c.good : c.muted;
   if (msg) text(ctx, msg, b.x + b.w / 2, b.y + b.h - 2, { size: 11, weight: 700, color: col, align: 'center', baseline: 'bottom', maxWidth: b.w - 8 });
@@ -368,29 +370,29 @@ export function Synchromesh() {
   const now = useRef(0);
 
   const ref = useCanvasAnimation(
-    (ctx, t, w, h, c, dt) => {
-      now.current = t;
+    (ctx, time, w, h, c, dt) => {
+      now.current = time;
       const s = sim.current;
       if (s.synchro !== synchro && (s.phase === 'neutral' || s.phase === 'release')) s.synchro = synchro;
-      if (dt > 0) step(s, t, dt);
+      if (dt > 0) step(s, time, dt);
       const f = fs(w);
       const wide = w >= 560;
       // shake the whole drawing while the teeth clash
       const shake = s.phase === 'clash' ? 2.2 : 0;
       ctx.save();
-      if (shake) ctx.translate((hash01(Math.floor(t * 60)) - 0.5) * shake * 2, (hash01(Math.floor(t * 60) + 7) - 0.5) * shake * 2);
+      if (shake) ctx.translate((hash01(Math.floor(time * 60)) - 0.5) * shake * 2, (hash01(Math.floor(time * 60) + 7) - 0.5) * shake * 2);
       const dialsH = 64;
       drawDials(ctx, { x: 0, y: 4, w: wide ? w * 0.62 : w, h: dialsH }, c, s, f);
       // speed difference readout
       const diff = Math.abs(s.gearRpm - RPM_SHAFT);
-      const diffTxt = `${fmt(Math.round(diff / 10) * 10)} d/dk`;
+      const diffTxt = t('{rpm} d/dk', { rpm: fmt(Math.round(diff / 10) * 10) });
       const diffCol = diff < 20 ? c.good : c.bad;
       if (wide) {
-        text(ctx, 'Fark', w * 0.62 + 10, 4 + dialsH / 2 - 2, { size: 11, color: c.muted, baseline: 'bottom' });
+        text(ctx, t('Fark'), w * 0.62 + 10, 4 + dialsH / 2 - 2, { size: 11, color: c.muted, baseline: 'bottom' });
         text(ctx, diffTxt, w * 0.62 + 10, 4 + dialsH / 2 + 2, { size: f + 2, weight: 800, mono: true, color: diffCol, baseline: 'top' });
       } else {
         const tw = text(ctx, diffTxt, w - 12, dialsH + 14, { size: f, weight: 800, mono: true, color: diffCol, align: 'right', baseline: 'top' });
-        text(ctx, 'Fark:', w - 12 - tw - 6, dialsH + 14, { size: 11, color: c.muted, align: 'right', baseline: 'top' });
+        text(ctx, t('Fark:'), w - 12 - tw - 6, dialsH + 14, { size: 11, color: c.muted, align: 'right', baseline: 'top' });
       }
       const top = dialsH + 10;
       const sec: Box = wide ? { x: 0, y: top, w: w * 0.58, h: h - top } : { x: 0, y: top, w, h: (h - top) * 0.58 };
@@ -419,8 +421,8 @@ export function Synchromesh() {
             s.sparks.push({ x: src.x, y: src.y, vx: (Math.random() - 0.5) * 220, vy: -60 - Math.random() * 160, life: 0.35 + Math.random() * 0.25 });
           }
         }
-        const k = (t - s.since) * 9;
-        text(ctx, 'KRRRT!', cp.x + Math.sin(k * 3) * 3, comb.y + 22, { size: f + 6, weight: 900, color: c.bad, align: 'center', baseline: 'top' });
+        const k = (time - s.since) * 9;
+        text(ctx, t('KRRRT!'), cp.x + Math.sin(k * 3) * 3, comb.y + 22, { size: f + 6, weight: 900, color: c.bad, align: 'center', baseline: 'top' });
       }
       ctx.restore();
     },
@@ -432,15 +434,15 @@ export function Synchromesh() {
     <AnimFrame
       name="synchromesh"
       canvasRef={ref}
-      label="Senkromeç: vites kovanı dişliye takılmadan önce pirinç koni sürtünerek iki parçanın devrini eşitler; senkromeç yoksa farklı hızdaki dişler çarpışır."
+      label={t('Senkromeç: vites kovanı dişliye takılmadan önce pirinç koni sürtünerek iki parçanın devrini eşitler; senkromeç yoksa farklı hızdaki dişler çarpışır.')}
       controls={
         <>
           <Toggle
-            label="Senkromeç"
+            label={t('Senkromeç')}
             value={synchro}
             options={[
-              { value: true, label: 'açık' },
-              { value: false, label: 'kapalı' },
+              { value: true, label: t('açık') },
+              { value: false, label: t('kapalı') },
             ]}
             onChange={setSynchro}
           />
@@ -456,17 +458,13 @@ export function Synchromesh() {
               }
             }}
           >
-            Vitese tak
+            {t('Vitese tak')}
           </Button>
         </>
       }
-      note={
-        <>
-          Köpek dişleri ancak iki parça <strong>aynı hızda</strong> dönerken birbirinin boşluğuna girebilir. Senkromeçsiz
-          kutuda sürücü “çift debriyaj” ile devri kendisi eşitlemek zorundaydı. Senkromeçte önce pirinç halka koniye
-          sürtünür, dişliyi milin hızına getirir; sonra kovan sessizce kayar (Cadillac, 1928).
-        </>
-      }
+      note={tx(
+        'Köpek dişleri ancak iki parça <strong>aynı hızda</strong> dönerken birbirinin boşluğuna girebilir. Senkromeçsiz kutuda sürücü “çift debriyaj” ile devri kendisi eşitlemek zorundaydı. Senkromeçte önce pirinç halka koniye sürtünür, dişliyi milin hızına getirir; sonra kovan sessizce kayar (Cadillac, 1928).',
+      )}
     />
   );
 }

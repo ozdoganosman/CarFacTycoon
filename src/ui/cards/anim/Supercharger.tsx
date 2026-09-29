@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react';
+import { t } from '../../../i18n';
+import { tx } from '../../i18n';
 import type { ThemeColors } from '../../theme';
 import { useCanvasAnimation } from '../useCanvasAnimation';
 import { AnimFrame, Readout, Slider } from './controls';
@@ -37,8 +39,8 @@ function rotorPath(ctx: Ctx, cx: number, cy: number, R0: number, A: number, ang:
   ctx.closePath();
 }
 
-function drawBlower(ctx: Ctx, b: Box, c: ThemeColors, ang: number, boost: number, t: number, f: number) {
-  text(ctx, 'Roots kompresörü (kesit)', b.x + 12, b.y + 8, { size: f, weight: 700, color: c.ink, baseline: 'top' });
+function drawBlower(ctx: Ctx, b: Box, c: ThemeColors, ang: number, boost: number, time: number, f: number) {
+  text(ctx, t('Roots kompresörü (kesit)'), b.x + 12, b.y + 8, { size: f, weight: 700, color: c.ink, baseline: 'top' });
   const R0 = Math.min(b.w / 5.4, (b.h - 30) / 5.2, 60);
   const A = 0.42 * R0;
   const gap = Math.max(2, R0 * 0.06);
@@ -130,7 +132,7 @@ function drawBlower(ctx: Ctx, b: Box, c: ThemeColors, ang: number, boost: number
   const speedIn = 30 + 60 * boost;
   const nIn = 10;
   for (let i = 0; i < nIn; i++) {
-    const q = mod(t * speedIn / (yPortTop - ductTop) + i / nIn, 1);
+    const q = mod(time * speedIn / (yPortTop - ductTop) + i / nIn, 1);
     const x = bcx + (hash01(i * 7) - 0.5) * port * 0.7;
     ctx.fillStyle = alpha(air, 0.85);
     ctx.beginPath();
@@ -140,20 +142,21 @@ function drawBlower(ctx: Ctx, b: Box, c: ThemeColors, ang: number, boost: number
   const density = model(boost).pr;
   const nOut = Math.round(10 * density);
   for (let i = 0; i < nOut; i++) {
-    const q = mod((t * speedIn) / density / (ductBot - yPortBot) + i / nOut, 1);
+    const q = mod((time * speedIn) / density / (ductBot - yPortBot) + i / nOut, 1);
     const x = bcx + (hash01(i * 13 + 1) - 0.5) * port * 0.7;
     ctx.fillStyle = alpha(hot, 0.9);
     ctx.beginPath();
     ctx.arc(x, yPortBot + q * (ductBot - yPortBot), dot, 0, TAU);
     ctx.fill();
   }
-  text(ctx, 'hava (1 bar)', bcx + port / 2 + 6, ductTop + 4, { size: 11, color: c.muted, baseline: 'top' });
-  text(ctx, `motora: ${fmt(1 + boost, 2)} bar`, bcx + port / 2 + 6, ductBot - 2, { size: 11, weight: 700, color: boost > 0.02 ? mix(c.accent2, c.ink, 0.2) : c.muted, baseline: 'bottom' });
-  text(ctx, 'krank milinden', b.x + 12, ductBot - 2 - 13, { size: 11, color: c.muted, baseline: 'bottom' });
-  text(ctx, 'kayış/dişliyle döner', b.x + 12, ductBot - 2, { size: 11, color: c.muted, baseline: 'bottom' });
+  text(ctx, t('hava (1 bar)'), bcx + port / 2 + 6, ductTop + 4, { size: 11, color: c.muted, baseline: 'top' });
+  text(ctx, t('motora: {v} bar', { v: fmt(1 + boost, 2) }), bcx + port / 2 + 6, ductBot - 2, { size: 11, weight: 700, color: boost > 0.02 ? mix(c.accent2, c.ink, 0.2) : c.muted, baseline: 'bottom' });
+  // One sentence on two lines (\n), the last one at the bottom.
+  const drive = t('krank milinden\nkayış/dişliyle döner').split('\n');
+  drive.forEach((l, i) => text(ctx, l, b.x + 12, ductBot - 2 - 13 * (drive.length - 1 - i), { size: 11, color: c.muted, baseline: 'bottom' }));
 }
 
-function drawCylinders(ctx: Ctx, b: Box, c: ThemeColors, boost: number, t: number, f: number) {
+function drawCylinders(ctx: Ctx, b: Box, c: ThemeColors, boost: number, time: number, f: number) {
   const m = model(boost);
   const gapX = 18;
   const cw = Math.min((b.w - gapX - 24) / 2, 140);
@@ -161,10 +164,10 @@ function drawCylinders(ctx: Ctx, b: Box, c: ThemeColors, boost: number, t: numbe
   const y0 = b.y + 28 + (b.h - 78 - ch) / 2;
   const x0 = b.x + (b.w - (cw * 2 + gapX)) / 2;
   const items = [
-    { label: 'Doğal emişli', n: 22, color: c.accent2, x: x0 },
-    { label: 'Kompresörlü', n: Math.round(22 * m.air), color: mix(c.accent2, c.fire, clamp(m.dT / 90, 0, 1)), x: x0 + cw + gapX },
+    { label: t('Doğal emişli'), n: 22, color: c.accent2, x: x0 },
+    { label: t('Kompresörlü'), n: Math.round(22 * m.air), color: mix(c.accent2, c.fire, clamp(m.dT / 90, 0, 1)), x: x0 + cw + gapX },
   ];
-  text(ctx, 'Bir emme zamanında silindirdeki hava', b.x + b.w / 2, b.y + 8, { size: f - 1, weight: 700, color: c.ink, align: 'center', baseline: 'top', maxWidth: b.w - 12 });
+  text(ctx, t('Bir emme zamanında silindirdeki hava'), b.x + b.w / 2, b.y + 8, { size: f - 1, weight: 700, color: c.ink, align: 'center', baseline: 'top', maxWidth: b.w - 12 });
   for (const it of items) {
     // cylinder walls + head
     ctx.strokeStyle = c.ink;
@@ -185,15 +188,15 @@ function drawCylinders(ctx: Ctx, b: Box, c: ThemeColors, boost: number, t: numbe
     for (let i = 0; i < it.n; i++) {
       const u = hash01(i * 3 + 1);
       const v = hash01(i * 7 + 2);
-      const jx = Math.sin(t * 5 + i * 1.3) * 2.5;
-      const jy = Math.cos(t * 4.3 + i) * 2.5;
+      const jx = Math.sin(time * 5 + i * 1.3) * 2.5;
+      const jy = Math.cos(time * 4.3 + i) * 2.5;
       ctx.fillStyle = it.color;
       ctx.beginPath();
       ctx.arc(inner.x + dot + u * (inner.w - 2 * dot) + jx, inner.y + dot + v * (inner.h - 2 * dot) + jy, dot, 0, TAU);
       ctx.fill();
     }
     text(ctx, it.label, it.x + cw / 2, y0 + ch + 8, { size: 11, weight: 700, color: c.ink, align: 'center', baseline: 'top' });
-    text(ctx, `${it.n} birim hava`, it.x + cw / 2, y0 + ch + 8 + 14, { size: 11, mono: true, color: c.muted, align: 'center', baseline: 'top' });
+    text(ctx, t('{n} birim hava', { n: it.n }), it.x + cw / 2, y0 + ch + 8 + 14, { size: 11, mono: true, color: c.muted, align: 'center', baseline: 'top' });
   }
 }
 
@@ -235,26 +238,24 @@ export function Supercharger() {
     <AnimFrame
       name="supercharger"
       canvasRef={ref}
-      label="Roots kompresörü: iki loblu rotor ters yönlerde dönüp havayı gövde duvarı boyunca taşır ve emme manifolduna basar; kompresörlü silindirde daha çok hava vardır."
+      label={t(
+        'Roots kompresörü: iki loblu rotor ters yönlerde dönüp havayı gövde duvarı boyunca taşır ve emme manifolduna basar; kompresörlü silindirde daha çok hava vardır.',
+      )}
       readouts={
         <>
-          <Readout label="Şarj basıncı" value={`+${fmt(boost, 2)} bar`} />
-          <Readout label="Hava" value={`×${fmt(m.air, 2)}`} />
-          <Readout label="Güç" value={pct(m.power)} />
-          <Readout label="Yakıt" value={pct(m.fuel)} />
-          <Readout label="Emme havası" value={`+${fmt(m.dT)} °C`} />
+          <Readout label={t('Şarj basıncı')} value={t('+{v} bar', { v: fmt(boost, 2) })} />
+          <Readout label={t('Hava')} value={`×${fmt(m.air, 2)}`} />
+          <Readout label={t('Güç')} value={pct(m.power)} />
+          <Readout label={t('Yakıt')} value={pct(m.fuel)} />
+          <Readout label={t('Emme havası')} value={t('+{v} °C', { v: fmt(m.dT) })} />
         </>
       }
       controls={
-        <Slider label="Şarj basıncı" value={boost} min={0} max={0.7} step={0.05} onChange={setBoost} format={(v) => `${fmt(v, 2)} bar`} />
+        <Slider label={t('Şarj basıncı')} value={boost} min={0} max={0.7} step={0.05} onChange={setBoost} format={(v) => t('{v} bar', { v: fmt(v, 2) })} />
       }
-      note={
-        <>
-          Motor gücü, silindire sığan hava kadardır: kompresör havayı sıkıştırıp <strong>aynı silindire daha çok hava</strong>{' '}
-          basar, böylece daha çok yakıt yakılır. Bedeli: kompresörü krank döndürdüğü için güç harcar, sıkışan hava ısınır
-          (vuruntu riski) ve yakıt tüketimi güçten hızlı artar (Mercedes, Bentley “Blower”, 1920’ler).
-        </>
-      }
+      note={tx(
+        'Motor gücü, silindire sığan hava kadardır: kompresör havayı sıkıştırıp <strong>aynı silindire daha çok hava</strong> basar, böylece daha çok yakıt yakılır. Bedeli: kompresörü krank döndürdüğü için güç harcar, sıkışan hava ısınır (vuruntu riski) ve yakıt tüketimi güçten hızlı artar (Mercedes, Bentley “Blower”, 1920’ler).',
+      )}
     />
   );
 }
