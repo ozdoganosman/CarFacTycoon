@@ -111,7 +111,8 @@ await page.evaluate(
       .fade { background: linear-gradient(270deg, #1f1c18 0%, #1f1c18 50%, rgba(31,28,24,.8) 58%, rgba(31,28,24,0) 74%),
                           linear-gradient(0deg, rgba(31,28,24,.9) 0%, rgba(31,28,24,0) 30%); }
       .text { left: auto; right: 56px; text-align: right; }
-      .car { right: auto; left: 40px; transform: scaleX(-1); }`;
+      .car { right: auto; left: 40px; transform: scaleX(-1); }
+      .years { direction: ltr; unicode-bidi: isolate; }`;
     document.head.appendChild(css);
   },
   { map, svg, tagline: TAGLINE, rtl: LANG === 'ar' },
