@@ -7,7 +7,7 @@ import { isRivalActive, launchRivalModel, rivalDef } from './rivals';
 import type { Rng } from './rng';
 import { GREENMAIL_PREMIUM, MAX_FLOAT, marketCap } from './shares';
 import { yearFloat, yearOf } from './time';
-import type { GameState, RivalMove, RivalMoveKind, RivalMovesState, SegmentId } from './types';
+import type { CarDesign, GameState, RivalMove, RivalMoveKind, RivalMovesState, SegmentId } from './types';
 import { log, money, pushModal } from './util';
 
 // The big makers leave a small newcomer alone. Once the player gets ahead of them
@@ -116,7 +116,7 @@ export function matchPriceWar(s: GameState, seg: SegmentId) {
   }
 }
 
-function techLeap(s: GameState, seg: SegmentId, rng: Rng): boolean {
+export function techLeap(s: GameState, seg: SegmentId, rng: Rng): boolean {
   const yf = yearFloat(s.week);
   // The most gifted engineers among the makers that build this class.
   const cands = liveRivals(s)
@@ -125,11 +125,61 @@ function techLeap(s: GameState, seg: SegmentId, rng: Rng): boolean {
     .sort((a, b) => b.skill - a.skill);
   if (!cands.length) return false;
   const def = cands[Math.min(cands.length - 1, rng() < 0.7 ? 0 : 1)];
+  const first = classFirst(s, seg, yf);
   s.rivalModels.filter((m) => m.companyId === def.id && m.segment === seg && m.active).forEach((m) => (m.active = false));
-  const rm = launchRivalModel(s, def, seg, s.week, rng, undefined, TECH_LEAP_BONUS);
-  record(s, { kind: 'techLeap', company: def.id, segment: seg, model: rm.name });
-  log(s, `${def.name}, ${segmentDef(seg).name.toLowerCase()} sınıfındaki üstünlüğümüze karşı ${rm.name} modelini çıkardı: mühendislerinin en iddialı işi.`, 'warn', 'rival');
+  const rm = launchRivalModel(s, def, seg, s.week, rng, undefined, TECH_LEAP_BONUS, first ? FIRSTS[first].apply : undefined);
+  record(s, { kind: 'techLeap', company: def.id, segment: seg, model: rm.name, first });
+  log(
+    s,
+    first
+      ? `${def.name}, ${segmentDef(seg).name.toLowerCase()} sınıfının ilk ${FIRSTS[first].name} arabasını çıkardı: ${rm.name}.`
+      : `${def.name}, ${segmentDef(seg).name.toLowerCase()} sınıfındaki üstünlüğümüze karşı ${rm.name} modelini çıkardı: mühendislerinin en iddialı işi.`,
+    'warn',
+    'rival',
+  );
   return true;
+}
+
+/** What a car built to beat ours can bring to its class for the first time, newest first. */
+export const FIRSTS: Record<NonNullable<RivalMove['first']>, { year: number; name: string; has: (d: CarDesign) => boolean; apply: (d: CarDesign) => void }> = {
+  automatic: {
+    year: 1940,
+    name: 'otomatik şanzımanlı',
+    has: (d) => d.gearbox.type === 'automatic',
+    apply: (d) => {
+      d.gearbox.type = 'automatic';
+      d.gearbox.gears = 4;
+    },
+  },
+  ifs: {
+    year: 1934,
+    name: 'bağımsız ön süspansiyonlu',
+    has: (d) => d.suspension !== 'leaf',
+    apply: (d) => {
+      if (d.suspension === 'leaf') d.suspension = 'ifs';
+    },
+  },
+  synchro: {
+    year: 1928,
+    name: 'senkromeçli vitesli',
+    has: (d) => d.gearbox.type !== 'sliding',
+    apply: (d) => {
+      if (d.gearbox.type === 'sliding') d.gearbox.type = 'synchro';
+    },
+  },
+};
+
+/** The newest technology of the day that no car of the class has yet (sports cars and pickups skip the automatic). */
+function classFirst(s: GameState, seg: SegmentId, yf: number): RivalMove['first'] {
+  const designs = [
+    ...s.models.filter((m) => m.status === 'active' && m.segment === seg).map((m) => m.design),
+    ...s.rivalModels.filter((m) => m.active && m.segment === seg).map((m) => m.design),
+  ];
+  for (const id of Object.keys(FIRSTS) as NonNullable<RivalMove['first']>[]) {
+    if (yf < FIRSTS[id].year || (id === 'automatic' && (seg === 'sport' || seg === 'pickup'))) continue;
+    if (!designs.some(FIRSTS[id].has)) return id;
+  }
+  return undefined;
 }
 
 export function mergeRivals(s: GameState, rng: Rng): boolean {

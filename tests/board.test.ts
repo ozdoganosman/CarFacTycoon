@@ -4,7 +4,7 @@ import { acquisitionTargets } from '../src/core/acquisitions';
 import { COST_KEYS, finalScore, newGame, tick } from '../src/core/game';
 import { rivalPriceNow } from '../src/core/market';
 import { makeRng } from '../src/core/rng';
-import { mergeRivals, rivalMovesMonth, startPriceWar } from '../src/core/rivalMoves';
+import { lastMove, mergeRivals, rivalMovesMonth, startPriceWar, techLeap } from '../src/core/rivalMoves';
 import { rivalDef, updateRivals } from '../src/core/rivals';
 import { deserialize, serialize } from '../src/core/save';
 import { boardYear, buyBack, canGoPublic, goPublic, marketCap } from '../src/core/shares';
@@ -57,6 +57,19 @@ describe('rival counter-moves', () => {
     expect(rivalPriceNow(rm, s.week)).toBeCloseTo(before * 0.85, 0);
     expect(rivalPriceNow(rm, s.week + 80)).toBeGreaterThan(before * 0.95);
     expect(s.rivalMoves!.history[0]).toMatchObject({ kind: 'priceWar', company: rm.companyId, segment: 'family' });
+  });
+
+  it('a car built to beat ours brings its class a first: the automatic after 1940', () => {
+    const s = game(1948);
+    for (const m of s.rivalModels) if (m.segment === 'family' && m.design.gearbox.type === 'automatic') m.design.gearbox.type = 'synchro';
+    expect(techLeap(s, 'family', makeRng(5))).toBe(true);
+    const move = lastMove(s)!;
+    expect(move.first).toBe('automatic');
+    const car = s.rivalModels.find((m) => m.active && m.name === move.model && m.companyId === move.company)!;
+    expect(car.design.gearbox.type).toBe('automatic');
+    // Once one maker has it, the next leap is just a better car.
+    expect(techLeap(s, 'family', makeRng(6))).toBe(true);
+    expect(lastMove(s)!.first).toBeUndefined();
   });
 
   it('a merger takes one maker off the market and gives its dealers to the other', () => {

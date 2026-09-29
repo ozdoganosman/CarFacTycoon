@@ -2,7 +2,7 @@ import { cityDef } from './cities';
 import { segmentDef } from './segments';
 import { stateDef } from './states';
 import { log, money } from '../core/util';
-import { acceptBid, canDilute, greenmailCost, lastMove, matchPriceWar, refuseBid, rivalMoves } from '../core/rivalMoves';
+import { FIRSTS, acceptBid, canDilute, greenmailCost, lastMove, matchPriceWar, refuseBid, rivalMoves } from '../core/rivalMoves';
 import { dilute, grantSeat, greenmail, marketCap } from '../core/shares';
 import { rivalDef } from '../core/rivals';
 import type { GameState } from '../core/types';
@@ -344,7 +344,9 @@ export const DYNAMIC_EVENTS: GameEventDef[] = [
     icon: '⚙️',
     body: (s) =>
       `${moveName(s)}, ${moveClass(s)} sınıfındaki üstünlüğümüze karşı en iyi mühendislerini tek bir arabaya verdi: ${lastMove(s)?.model ?? 'yeni modeli'} bugün tanıtıldı. ` +
-      'Kâğıt üzerinde bizim arabamızdan daha modern.\n\n' +
+      (lastMove(s)?.first
+        ? `Sınıfının ilk ${FIRSTS[lastMove(s)!.first!].name} arabası: gazeteler ondan söz ediyor, alıcılar bizim arabamızda da aynısını soracak.\n\n`
+        : 'Kâğıt üzerinde bizim arabamızdan daha modern.\n\n') +
       'Yerimizi korumak için yeni bir model ya da makyaj gerekecek. Mühendislerini ve Ar-Ge kuyruğunu gözden geçir.',
   },
   {

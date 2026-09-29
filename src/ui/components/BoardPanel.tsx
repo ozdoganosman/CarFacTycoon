@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { MOVE_NAMES, ledSegments, salesRank } from '../../core/rivalMoves';
+import { FIRSTS, MOVE_NAMES, ledSegments, salesRank } from '../../core/rivalMoves';
 import { rivalDef } from '../../core/rivals';
 import {
   FLOAT_STEPS,
@@ -191,7 +191,9 @@ function moveText(m: RivalMove): string {
     case 'priceWar':
       return `${name}, ${seg} sınıfında fiyatlarını %15 indirdi.`;
     case 'techLeap':
-      return `${name}, ${seg} sınıfına ${m.model ?? 'yeni bir model'} ile saldırdı.`;
+      return m.first
+        ? `${name}, ${seg} sınıfının ilk ${FIRSTS[m.first].name} arabasını çıkardı: ${m.model ?? ''}.`
+        : `${name}, ${seg} sınıfına ${m.model ?? 'yeni bir model'} ile saldırdı.`;
     case 'merger':
       return `${name}, ${m.partner ? rivalDef(m.partner).name : 'bir rakibi'} şirketini yuttu.`;
     case 'bid':

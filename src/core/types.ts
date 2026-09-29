@@ -471,6 +471,8 @@ export interface RivalMove {
   partner?: string;
   /** The rival's new car (a technology leap). */
   model?: string;
+  /** The technology it brought to its class first (a technology leap). */
+  first?: 'automatic' | 'ifs' | 'synchro';
 }
 
 export interface RivalMovesState {
