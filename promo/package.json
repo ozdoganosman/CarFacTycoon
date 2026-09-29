@@ -9,6 +9,7 @@
     "fonts": "node capture/fonts.mjs",
     "audio": "python3 audio/make_audio.py",
     "render": "python3 audio/make_audio.py && remotion render src/index.ts Short out/carfactycoon-short.mp4",
+    "render:en": "python3 audio/make_audio.py && remotion render src/index.ts ShortEN out/carfactycoon-short-en.mp4",
     "typecheck": "tsc -p ."
   },
   "dependencies": {

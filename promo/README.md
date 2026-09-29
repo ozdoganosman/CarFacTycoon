@@ -29,23 +29,36 @@ GAME_URL=http://localhost:5191/index.html npm run capture   # public/shots ve pu
 npm run render                         # out/carfactycoon-short.mp4
 ```
 
+### İngilizce video
+
+Yazılar `src/lang.tsx` içindedir (Türkçe ve İngilizce); oyun ekranları o dilde, o dilde oynanmış kayıtlardan çekilir:
+
+```bash
+(cd .. && PROMO_SAVES=1 PROMO_LANG=en npx vitest run --config vitest.balance.config.ts scripts/promo-saves.balance.ts)
+GAME_LANG=en npm run capture          # public/en/shots, public/en/seq, src/lang/map.en.json
+npm run render:en                      # out/carfactycoon-short-en.mp4
+```
+
 Chromium'u Remotion kendisi indirir; indiremediği ortamda `--browser-executable=/yol/chrome-headless-shell` ekleyin
 (yakalama betiği için `CHROME_PATH`). Fontlar `public/fonts` içindedir (Google Fonts, OFL); yenilemek için `npm run fonts`.
 
-Önizleme ve düzenleme: `npm run studio`. Kapanıştaki çağrı metni bir prop'tur:
+Önizleme ve düzenleme: `npm run studio` (`Short` Türkçe, `ShortEN` İngilizce). Kapanıştaki çağrı metni bir prop'tur:
 
 ```bash
-npx remotion render src/index.ts Short out/short.mp4 --props='{"cta":"oyun.link/carfac","audio":true}'
+npx remotion render src/index.ts Short out/short.mp4 --props='{"lang":"tr","cta":"oyun.link/carfac","audio":true}'
 ```
 
 `audio: false` sessiz video verir (müziği YouTube'un kendi kitaplığından eklemek için).
 
 ## Dosyalar
 
-- `src/Short.tsx`: sahnelerin sırası, `src/scenes.tsx`: sahneler, `src/ui.tsx`: başlık, çekim, film greni gibi parçalar.
+- `src/Short.tsx`: sahnelerin sırası, `src/scenes.tsx`: sahneler, `src/ui.tsx`: başlık, çekim, film greni gibi parçalar,
+  `src/lang.tsx`: her dilin yazıları ve ekranların yeri.
 - `capture/shots.mjs`: oyunu telefon boyutunda (432 × 768 @2.5x) açıp ekranları çeker. Canvas animasyonları sanal bir
   saatle, CSS animasyonları ileri sarılarak kare kare alınır; bu yüzden 30 fps akıcı oynar.
 - `capture/saves/`: yakalamada kullanılan kayıtlar. `play-*` kayıtları `scripts/promo-saves.balance.ts` ile güncel
   kurallarla oynanır (akıllı bot, Türkçe model adları): `PROMO_SAVES=1 npx vitest run --config vitest.balance.config.ts scripts/promo-saves.balance.ts`.
-- `capture/store.mjs`, `capture/feature.mjs`: Google Play ekran görüntüleri ve öne çıkan görsel (`docs/play/`).
+  `PROMO_LANG=en` (de, es, hi, ar) oyunu o dilde oynar: `play-*-en.json.gz`.
+- `capture/store.mjs`, `capture/feature.mjs`: Google Play ekran görüntüleri ve öne çıkan görsel, dil başına
+  (`GAME_LANG=en`, `../fastlane/metadata/android/<yerel>/images/`).
 - `audio/make_audio.py`: ragtime piyano, daktilo, perde, flaş, alkış, damga, patlama, yarış arabası, yazar kasa.

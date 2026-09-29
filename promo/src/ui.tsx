@@ -195,10 +195,6 @@ export const Shot: React.FC<{
   );
 };
 
-export const shotSrc = (name: string) => staticFile(`shots/${name}.png`);
-export const seqSrc = (name: string, i: number, count: number) =>
-  staticFile(`seq/${name}/${String(Math.max(0, Math.min(count - 1, Math.floor(i)))).padStart(4, '0')}.jpg`);
-
 /** Quick white flash on a cut. */
 export const Flash: React.FC<{ at?: number; length?: number; max?: number }> = ({ at = 0, length = 6, max = 0.55 }) => {
   const f = useCurrentFrame();

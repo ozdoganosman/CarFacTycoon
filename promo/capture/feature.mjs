@@ -2,7 +2,8 @@
 // laid out in the game page itself so its fonts and colours apply, with the tagline in one language:
 // fastlane/metadata/android/<locale>/images/featureGraphic.png.
 //
-// Needs the app build served locally (see store.mjs) and public/shots/map-1928.png from `node capture/shots.mjs map`.
+// Needs the app build served locally (see store.mjs) and the map of the 1928 save in that language from
+// `GAME_LANG=<lang> node capture/shots.mjs map` (public/shots/map-1928.png, public/<lang>/shots/map-1928.png).
 // Usage: GAME_LANG=en node promo/capture/feature.mjs   (GAME_URL, CHROME_PATH to override)
 import { createRequire } from 'module';
 import { existsSync, readFileSync } from 'fs';
@@ -40,7 +41,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH 
 const own = join(HERE, 'saves', `play-1928-${LANG}.json.gz`);
 const save = JSON.parse(gunzipSync(readFileSync(LANG !== 'tr' && existsSync(own) ? own : join(HERE, 'saves', 'play-1928.json.gz'))).toString('utf8'));
 save.modals = [];
-const map = 'data:image/png;base64,' + readFileSync(join(HERE, '../public/shots/map-1928.png')).toString('base64');
+const map = 'data:image/png;base64,' + readFileSync(join(HERE, LANG === 'tr' ? '../public/shots/map-1928.png' : `../public/${LANG}/shots/map-1928.png`)).toString('base64');
 // The family car that sells best.
 const car = save.models.filter((m) => m.status === 'active' && m.segment === 'family').sort((a, b) => b.unitsSold - a.unitsSold)[0];
 
@@ -56,7 +57,8 @@ await page.locator('.start-actions .btn-default').first().click();
 await page.locator('[data-nav="models"]').first().click();
 await page.locator('button.link', { hasText: car.name }).first().click();
 await page.waitForTimeout(500);
-const svg = await page.locator('.model-car svg, svg[role=img]').first().evaluate((el) => el.outerHTML);
+// The game's car drawing (CarSVG, 440 x 180), not one of the charts on the same screen.
+const svg = await page.locator('svg[role=img][viewBox="0 0 440 180"]').first().evaluate((el) => el.outerHTML);
 
 await page.evaluate(
   ({ map, svg, tagline, rtl }) => {
