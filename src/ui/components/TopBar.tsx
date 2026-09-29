@@ -1,6 +1,7 @@
 import { formatDate } from '../../core/time';
 import { store, useGameState, type Speed } from '../store';
 import { money, recentProfit, signedMoney } from '../format';
+import { SponsorChip } from './Sponsor';
 
 const SPEEDS: { s: Speed; label: string; title: string }[] = [
   { s: 0, label: '❚❚', title: 'Duraklat (boşluk)' },
@@ -28,6 +29,7 @@ export function TopBar() {
           <span>Kasa</span>
           <b className={s.company.cash < 0 ? 'tone-bad' : ''}>{money(s.company.cash)}</b>
         </div>
+        <SponsorChip />
         <div className="kpi" title="Son 4 haftanın ortalama haftalık kârı (yatırımlar hariç)">
           <span>Haftalık</span>
           <b className={weekly < 0 ? 'tone-bad' : 'tone-good'}>{signedMoney(weekly)}</b>

@@ -8,6 +8,7 @@ import { MARKETS } from '../../data/markets';
 import { RIVALS } from '../../data/rivals';
 import { ATTRS, ATTR_NAMES, segmentDef } from '../../data/segments';
 import type { AttrKey, CarStats, GameState, LaunchReport, MarketId } from '../../core/types';
+import { ads } from '../ads';
 import { store } from '../store';
 import { kmh, litres, money, num, pct, secs } from '../format';
 import { Button, ScoreBar } from './ui';
@@ -287,7 +288,11 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
 export function LaunchReportView({ s, modelId, report: r }: { s: GameState; modelId: string; report: LaunchReport }) {
   const m = s.models.find((x) => x.id === modelId);
   if (!m) return null;
-  const close = () => store.act(A.dismissModal);
+  // The launch is over: a natural break for an advertisement (src/ui/ads.ts decides).
+  const close = () => {
+    store.act(A.dismissModal);
+    void ads.breakpoint();
+  };
   const headline =
     r.capacity < 0.05
       ? 'Üretim durmuş'

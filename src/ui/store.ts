@@ -72,6 +72,8 @@ class GameStore {
     this.newsResume = null;
     if (speed && this.state && !this.state.gameOver && !this.state.modals.some(isBlockingModal)) this.run(speed);
     this.notify();
+    // Putting the paper down is a natural break (src/ui/ads.ts decides whether it shows anything).
+    void import('./ads').then((m) => m.ads.breakpoint());
   }
 
   notify() {
@@ -183,6 +185,16 @@ class GameStore {
     this.resumeSpeed = null;
     this.newsResume = null;
     if (this.speed !== 0) this.run(0);
+  }
+
+  /** A full-screen advertisement: stop the clock, and start it again as it was once it is gone. */
+  pauseFor(): () => void {
+    const speed = this.speed;
+    if (speed !== 0) this.run(0);
+    return () => {
+      const s = this.state;
+      if (speed !== 0 && this.speed === 0 && s && !s.gameOver && !this.newsOpen && !s.modals.some(isBlockingModal)) this.run(speed);
+    };
   }
 
   /** The player's own choice of speed (also cancels a pending auto-resume). */

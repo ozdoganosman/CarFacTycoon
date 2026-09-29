@@ -10,6 +10,7 @@ import { deserialize, serialize } from './core/save';
 import { recordError } from './core/util';
 import { ErrorBoundary } from './ui/components/ErrorBoundary';
 import { initSync } from './ui/claudeLink';
+import { ads, fakeBackend, useFakeAds } from './ui/ads';
 
 try {
   const t = localStorage.getItem('carfactycoon.theme');
@@ -55,3 +56,5 @@ else start(hot?.data ?? {});
 void initSync();
 // Inside the Android app: back button, background pause, splash (src/native).
 if (Capacitor.isNativePlatform()) void import('./native/native').then((m) => m.initNative());
+// Advertisement stand-ins for trying the app's screens in a browser (src/ui/ads.ts).
+else if (useFakeAds()) ads.setBackend(fakeBackend());

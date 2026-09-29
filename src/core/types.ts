@@ -578,6 +578,15 @@ export interface FinanceWeek {
   dividend?: number;
 }
 
+export interface SponsorState {
+  /** Week of the last paid advertisement the player chose to watch. */
+  lastWeek?: number;
+  /** The last year whose year-end bonus was paid. */
+  lastYear?: number;
+  total: number;
+  count: number;
+}
+
 export interface YearSummary {
   year: number;
   revenue: number;
@@ -609,6 +618,8 @@ export interface Company {
   lossCarry?: number;
   /** Last year's corporate tax still to pay, in quarterly instalments. */
   taxOwed?: number;
+  /** The last corporate tax bill and the year it was for. */
+  taxBill?: { year: number; amount: number };
   taxInstalments?: number;
   highWages: boolean;
 }
@@ -655,6 +666,8 @@ export interface GameState {
   rivalMoves?: RivalMovesState;
   /** Shares sold on the stock exchange (missing while the company is private). */
   shares?: ShareState;
+  /** Sponsor money for watching an advertisement (Android app): when it was last paid and how much in all. */
+  sponsor?: SponsorState;
   /** modeChosen: the player picked the engine designer mode themselves (older saves defaulted to the simple one). */
   settings: { engineerMode: boolean; autoPauseCards: boolean; modeChosen?: boolean; difficulty?: DifficultyId };
   gameOver?: { reason: 'bankrupt' | 'end' | 'ousted'; week: number };

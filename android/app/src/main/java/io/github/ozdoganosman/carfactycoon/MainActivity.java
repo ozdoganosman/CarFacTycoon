@@ -15,6 +15,8 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // The newspaper's advertisement (the game's own plugin; the others come from npm).
+        registerPlugin(PaperAdPlugin.class);
         super.onCreate(savedInstanceState);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             // Use the space beside a notch too; the game keeps its content clear of it (src/native/native.css).

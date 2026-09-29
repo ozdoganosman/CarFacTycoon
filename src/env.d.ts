@@ -4,6 +4,11 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL?: string;
   /** Its publishable key. */
   readonly VITE_SUPABASE_KEY?: string;
+  /** AdMob ad units of the Android app (see src/native/ads.ts); Google's test units when missing. */
+  readonly VITE_ADMOB_REWARDED?: string;
+  readonly VITE_ADMOB_REWARDED_INTERSTITIAL?: string;
+  readonly VITE_ADMOB_INTERSTITIAL?: string;
+  readonly VITE_ADMOB_NATIVE?: string;
 }
 
 interface ImportMeta {

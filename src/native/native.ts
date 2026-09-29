@@ -62,6 +62,8 @@ export function initNative() {
     store.save();
   });
   hapticTaps();
+  // Advertisements and the "remove ads" purchase (after the consent question where the law asks for it).
+  void import('./ads').then((m) => m.initAds()).catch(() => {});
   // The first frame is on screen: let the splash go.
   requestAnimationFrame(() => void SplashScreen.hide({ fadeOutDuration: 200 }).catch(() => {}));
 }

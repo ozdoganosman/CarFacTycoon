@@ -10,6 +10,8 @@ android {
         // CI sets these (android.yml): the version code must grow with every upload to Google Play.
         versionCode ((System.getenv("VERSION_CODE") ?: "1") as int)
         versionName System.getenv("VERSION_NAME") ?: "0.1.0"
+        // The AdMob app id (CI: ADMOB_APP_ID); Google's sample id otherwise, which only shows test ads.
+        manifestPlaceholders = [admobAppId: System.getenv("ADMOB_APP_ID") ?: "ca-app-pub-3940256099942544~3347511713"]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -50,6 +52,7 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    implementation "com.google.android.gms:play-services-ads:$playServicesAdsVersion"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

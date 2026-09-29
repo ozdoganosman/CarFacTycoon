@@ -32,7 +32,14 @@ jobs:
           cache: gradle
       - run: npm ci
       # Type check, the app build, then copy it into android/.
+      # AdMob ad units: repository variables (Settings → Secrets and variables → Actions → Variables);
+      # without them the app shows Google's test ads (see docs/google-play.md).
       - run: npm run build:app
+        env:
+          VITE_ADMOB_REWARDED: ${{ vars.ADMOB_REWARDED }}
+          VITE_ADMOB_REWARDED_INTERSTITIAL: ${{ vars.ADMOB_REWARDED_INTERSTITIAL }}
+          VITE_ADMOB_INTERSTITIAL: ${{ vars.ADMOB_INTERSTITIAL }}
+          VITE_ADMOB_NATIVE: ${{ vars.ADMOB_NATIVE }}
       - name: Upload key
         id: key
         env:
@@ -50,6 +57,7 @@ jobs:
           # Google Play needs a larger version code for every upload.
           VERSION_CODE: ${{ github.run_number }}
           VERSION_NAME: 0.1.${{ github.run_number }}
+          ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID }}
           ANDROID_KEYSTORE_PATH: ${{ steps.key.outputs.path }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}

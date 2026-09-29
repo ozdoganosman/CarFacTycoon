@@ -4189,3 +4189,81 @@ fieldset {
 .moves-list li:last-child {
   border-bottom: 0;
 }
+
+/* ---------- Advertisements (Android app; see src/ui/components/Sponsor.tsx) ---------- */
+.sponsor-chip {
+  align-self: center;
+  border: 1px solid color-mix(in srgb, var(--topbar-ink) 35%, transparent);
+  background: color-mix(in srgb, #8fd49a 16%, transparent);
+  color: var(--topbar-ink);
+  font: 600 0.8rem/1 var(--font-mono);
+  padding: 6px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sponsor-chip:hover {
+  background: color-mix(in srgb, #8fd49a 28%, transparent);
+}
+.year-offer {
+  display: grid;
+  gap: 6px;
+  font-size: 0.88rem;
+  padding: 8px 10px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.year-offer-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.modal .year-offer {
+  margin-top: 12px;
+}
+/* The strip the app draws its advertisement over, at the foot of the newspaper reader. */
+.paper-adslot {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  width: min(560px, calc(100vw - 24px));
+  height: 92px;
+  z-index: 121;
+  border-radius: 4px;
+}
+.paper-backdrop:has(.paper-adslot) {
+  padding-bottom: 124px;
+}
+.paper-adslot-fake {
+  height: 100%;
+  box-sizing: border-box;
+  background: #f3ead6;
+  color: #2a2620;
+  border: 1.5px solid #2a2620;
+  font-family: Georgia, 'Times New Roman', serif;
+  padding: 6px 12px;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+}
+.paper-adslot-fake small {
+  text-align: center;
+  letter-spacing: 0.25em;
+  font-weight: 700;
+  color: #6b6255;
+  border-bottom: 1px solid #2a2620;
+  padding-bottom: 2px;
+}
+.fake-ad {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: #333;
+  color: #fff;
+  font: 600 1.2rem/1.3 var(--font-ui);
+}

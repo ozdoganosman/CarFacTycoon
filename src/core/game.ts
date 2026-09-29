@@ -516,6 +516,7 @@ function payCorporateTax(s: GameState, year: number, taxable: number) {
   const rate = corporateTaxRate(year, s.company.hq);
   const tax = base * rate;
   if (tax < 1) return;
+  s.company.taxBill = { year, amount: tax };
   // Paid in four instalments over the year (any unpaid rest of an older bill comes due now).
   if (s.company.taxOwed) spend(s, s.company.taxOwed, 'tax');
   s.company.taxOwed = tax;

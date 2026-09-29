@@ -3,6 +3,8 @@ import * as A from '../../core/actions';
 import { deserialize, serialize } from '../../core/save';
 import { store, useGameState } from '../store';
 import { Button, Choice, Panel, Toggle } from '../components/ui';
+import { AdSettings } from '../components/Sponsor';
+import { ads } from '../ads';
 
 type Theme = 'system' | 'light' | 'dark';
 
@@ -84,6 +86,11 @@ export function Settings() {
           ]}
         />
       </Panel>
+      {ads.backend && (
+        <Panel title="Reklamlar">
+          <AdSettings />
+        </Panel>
+      )}
       <Panel title="Kayıt">
         <p className="muted small">
           Oyun her çeyrek otomatik olarak bu tarayıcıya kaydedilir. Başka bir cihazda devam etmek için kayıt kodunu kopyala ve orada yapıştırıp yükle ya da bir kayıt dosyası

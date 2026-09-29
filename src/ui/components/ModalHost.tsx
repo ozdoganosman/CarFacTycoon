@@ -16,6 +16,7 @@ import { COST_NAMES, money, num, pct, signedMoney } from '../format';
 import { Button } from './ui';
 import { CardAnimation } from './CardAnimation';
 import { LaunchReportView, LaunchShow } from './LaunchShow';
+import { SponsorButton, YearOffer } from './Sponsor';
 
 function Modal(props: { title: ReactNode; icon?: string; children: ReactNode; actions: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -463,6 +464,7 @@ function Insolvency({ s, stage }: { s: GameState; stage: 'first' | 'last' }) {
               Açığı kapatacak kadar kredi al ({money(loan)})
             </Button>
           )}
+          <SponsorButton />
           <Button
             onClick={() => {
               store.act(A.dismissModal);
@@ -700,6 +702,7 @@ export function YearCard() {
     return (
       <Modal title={`${year} yılı raporu`} icon="📊" actions={<Button kind="primary" onClick={close}>Kapat</Button>}>
         <YearReportBody s={s} year={year} />
+        <YearOffer year={year} />
       </Modal>
     );
   }
@@ -719,6 +722,7 @@ export function YearCard() {
           Kâr <b className={y.profit < 0 ? 'tone-bad' : 'tone-good'}>{money(y.profit)}</b>
         </span>
       </div>
+      <YearOffer year={year} />
       <Button kind="ghost" onClick={() => setOpen(true)}>
         Raporu aç
       </Button>

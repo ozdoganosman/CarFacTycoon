@@ -5,6 +5,7 @@ import { store, useGameState } from '../store';
 import { money } from '../format';
 import { CarSVG } from '../viz/CarSVG';
 import { Button } from './ui';
+import { PaperAdSlot } from './Sponsor';
 
 // Period front pages. Three mastheads follow the look of the press of their
 // day: blackletter and dense columns before 1920, high-contrast display type
@@ -92,6 +93,7 @@ export function NewspaperHost() {
         </button>
         <Newspaper s={s} issue={issue} />
       </div>
+      <PaperAdSlot />
     </div>
   );
 }
