@@ -39,53 +39,18 @@ Play Console → **Uygulama oluştur**: ad `CarFacTycoon`, varsayılan dil Türk
 
 ## 4. Mağaza sayfası
 
-**Uygulama adı** (en çok 30): `CarFacTycoon – Araba Fabrikası`
-
-**Kısa açıklama** (en çok 80):
-- TR: `1900 Amerika'sı: arabanı tasarla, fabrikanı kur, eyalet eyalet büyü.`
-- EN: `America, 1900: design your cars, build the factory, grow state by state.`
-
-**Uzun açıklama (TR):**
-
-```
-1900 yılı, Amerika. Küçük bir atölye, bir avuç mühendis ve biraz para. Amacın 1960'a kadar ülkenin büyük otomobil markalarından biri olmak.
-
-• Nereden başlayacağını seç: ucuz parçalı Detroit, dev pazarlı New York, boş topraklı Los Angeles ya da dört şehir daha.
-• Arabanı parça parça tasarla: gövde, şasi, süspansiyon, şanzıman ve silindir silindir motor. Sıkıştırmayı artır, vuruntuyu dinle, tork eğrisinin değiştiğini gör.
-• Prototipleri test et, gizli kusurları lansmandan önce bul. Lansman günü dergiler arabanı puanlar, alıcılar mektup yazar.
-• Eyalet eyalet büyü: dönem haritasında bayi ara, servis atölyesi aç, yollardaki arabalarını ve hurdaya çıkanları gör. Ağ büyüdükçe gideri de büyür.
-• Fabrikanı kur: pres, gövde, boya ve montaj, darboğazlar, gece vardiyası, yürüyen bant.
-• Öne geçersen büyük rakipler karşılık verir: fiyat savaşları, sana karşı yapılmış yeni modeller, birleşmeler, hisse baskınları.
-• Borsaya açıl: sermaye gelir, ama yönetim kurulu her yıl büyüme ve temettü ister. Hedefleri tutturamazsan görevden alınırsın.
-• Dönemin gerçek teknolojilerini araştır, savaş yıllarını ve 1929 buhranını atlat. Gazeteler her yeniliği manşetten duyurur; "neden böyle çalışıyor?" kartlarıyla gerçek otomobil mühendisliğini öğren.
-
-İnternetsiz oynanır, hesap gerekmez. Reklam içerir; tek seferlik bir satın almayla kaldırılabilir. İstersen kısa bir reklam izleyip sponsordan şirketine para alabilirsin.
-```
-
-**Uzun açıklama (EN):**
-
-```
-America, 1900. A small workshop, a handful of engineers and a little money. Your goal: one of the country's great car makers by 1960.
-
-• Pick your town: Detroit's cheap parts, New York's huge market, Los Angeles' open country, or four more.
-• Design your car part by part: body, chassis, suspension, gearbox and an engine you tune cylinder by cylinder. Raise the compression, listen for knock, watch the torque curve change.
-• Test your prototypes and find hidden flaws before launch. On launch day the magazines rate your car and owners write letters.
-• Grow state by state: look for dealers on a period map, open service shops, see how many of your cars are on the road and how many go to the scrapyard. The bigger the network, the dearer it gets.
-• Build your factory: presses, body, paint and assembly, bottlenecks, night shifts, the moving line.
-• Get ahead and the big makers fight back: price wars, cars built to beat yours, mergers, raids on your shares.
-• Go public: the capital comes in, but the board wants growth and dividends every year. Miss the targets and you are voted out.
-• Research the real technologies of the era and live through the war years and the 1929 crash. Period newspapers announce every breakthrough; "why does it work like this?" cards teach real automotive engineering as you play.
-
-Plays offline, no account needed. Contains ads, which a one-time purchase removes; watch a short ad when you like and a sponsor pays your company. The game is in Turkish.
-```
-
-(İngilizce metin mağazada ayrı dil olarak eklenebilir; oyunun kendisi şimdilik yalnızca Türkçe, İngilizce metnin son cümlesi bunu söylüyor.)
+Oyun altı dilde oynanır (Türkçe, English, Deutsch, Español, हिन्दी, العربية); mağaza sayfası da her dilde hazırdır.
+Metinlerin tek kaynağı `fastlane/metadata/android/<dil>/` klasörleridir (ad en çok 30, kısa açıklama en çok 80, uzun
+açıklama en çok 4000 karakter; hepsi sınırın içinde). Varsayılan dil Türkçe: `tr-TR/title.txt` →
+`CarFacTycoon – Araba Fabrikası`.
 
 **Mağaza sayfası dosyaları** (`fastlane/metadata/android/<dil>/`, Play'in ve fastlane'in beklediği düzen):
 - `title.txt`, `short_description.txt`, `full_description.txt`: tr-TR, en-US, de-DE, es-419, hi-IN, ar.
 - `images/icon.png` (512×512), `images/featureGraphic.png` (1024×500, `promo/capture/feature.mjs`),
   `images/phoneScreenshots/01-harita.jpg … 08-gazete.jpg` (1080×1920, `promo/capture/store.mjs`).
-- Tanıtım videosu (YouTube bağlantısı, herkese açık ya da liste dışı): `promo/` içindeki Remotion projesi, `promo/README.md`.
+- Tanıtım videosu (YouTube bağlantısı, herkese açık ya da liste dışı): `promo/` içindeki Remotion projesi, Türkçe
+  (`npm run render`) ve İngilizce (`npm run render:en`); ayrıntı `promo/README.md`. İngilizce video en-US ve diğer
+  dillerin girişine, Türkçe video tr-TR girişine eklenir.
 
 Play Console'da her dil **Mağaza varlığı → Ana mağaza girişi → Çevirileri yönet → Kendi çevirilerini ekle** ile eklenir;
 metinler ve görseller o dilin klasöründen yapıştırılır/yüklenir. Paket yüklemeden önce yapılabilir.
