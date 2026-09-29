@@ -1,0 +1,35 @@
+/* The app build carries its fonts (Latin + Turkish letters only), so it works offline
+   and never flashes a fallback font. The web builds load the same families from Google Fonts. */
+@import '@fontsource/bitter/latin-500.css';
+@import '@fontsource/bitter/latin-ext-500.css';
+@import '@fontsource/bitter/latin-700.css';
+@import '@fontsource/bitter/latin-ext-700.css';
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-ext-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/inter/latin-ext-500.css';
+@import '@fontsource/inter/latin-600.css';
+@import '@fontsource/inter/latin-ext-600.css';
+@import '@fontsource/inter/latin-700.css';
+@import '@fontsource/inter/latin-ext-700.css';
+@import '@fontsource/jetbrains-mono/latin-400.css';
+@import '@fontsource/jetbrains-mono/latin-ext-400.css';
+@import '@fontsource/jetbrains-mono/latin-600.css';
+@import '@fontsource/jetbrains-mono/latin-ext-600.css';
+@import '@fontsource/unifrakturmaguntia/latin-400.css';
+@import '@fontsource/playfair-display/latin-700.css';
+@import '@fontsource/playfair-display/latin-ext-700.css';
+@import '@fontsource/playfair-display/latin-900.css';
+@import '@fontsource/playfair-display/latin-ext-900.css';
+@import '@fontsource/playfair-display/latin-400-italic.css';
+@import '@fontsource/playfair-display/latin-ext-400-italic.css';
+@import '@fontsource/oswald/latin-500.css';
+@import '@fontsource/oswald/latin-ext-500.css';
+@import '@fontsource/oswald/latin-700.css';
+@import '@fontsource/oswald/latin-ext-700.css';
+@import '@fontsource/old-standard-tt/latin-400.css';
+@import '@fontsource/old-standard-tt/latin-ext-400.css';
+@import '@fontsource/old-standard-tt/latin-700.css';
+@import '@fontsource/old-standard-tt/latin-ext-700.css';
+@import '@fontsource/old-standard-tt/latin-400-italic.css';
+@import '@fontsource/old-standard-tt/latin-ext-400-italic.css';

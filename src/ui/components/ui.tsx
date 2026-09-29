@@ -1,5 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { useBackClose } from '../back';
 
 export function Panel(props: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; tight?: boolean }) {
   return (
@@ -249,6 +250,7 @@ export function Info({ children, label = 'Ayrıntı' }: { children: ReactNode; l
     const top = r.bottom + 8 + h < window.innerHeight || r.top - 8 - h < 0 ? r.bottom + 6 : r.top - 6 - h;
     setPos({ left, top, width });
   }, [open]);
+  useBackClose(open, () => setOpen(false));
   useEffect(() => {
     if (!open) return;
     const close = () => setOpen(false);
@@ -260,7 +262,13 @@ export function Info({ children, label = 'Ayrıntı' }: { children: ReactNode; l
     };
   }, [open]);
   return (
-    <span className="info" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    // Hover and focus open it for a mouse or keyboard; a finger taps it open and closed
+    // (on a tap the browser also sends hover and focus, which would undo the tap).
+    <span
+      className="info"
+      onPointerEnter={(e) => e.pointerType === 'mouse' && setOpen(true)}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && setOpen(false)}
+    >
       <button
         type="button"
         ref={btn}
@@ -272,7 +280,7 @@ export function Info({ children, label = 'Ayrıntı' }: { children: ReactNode; l
           e.stopPropagation();
           setOpen((o) => !o);
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={(e) => e.currentTarget.matches(':focus-visible') && setOpen(true)}
         onBlur={() => setOpen(false)}
       >
         i

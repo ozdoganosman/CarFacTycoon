@@ -1,8 +1,8 @@
 import { serialize } from '../core/save';
 import { formatDate } from '../core/time';
 import type { GameState } from '../core/types';
-import { startAnalytics, stopAnalytics } from './analytics';
-import { COLLECTOR_URL, playerId, postPlaytest } from './collector';
+import { resetAnalytics, startAnalytics, stopAnalytics } from './analytics';
+import { COLLECTOR_URL, forgetPlayer, newPlayerId, playerId, postPlaytest } from './collector';
 
 // Sends the player's game where it can be studied: on claude.ai, through the
 // page's shared database (the "db" capability), where Claude reads the
@@ -260,6 +260,22 @@ export function disableSharing() {
   }
   stopAnalytics();
   setStatus({ mode: 'disabled' });
+}
+
+/**
+ * The public build's "delete my data": sharing stops, everything this player sent is
+ * deleted, and a new player id is used from now on. Returns how many games went.
+ */
+export async function forgetMe(): Promise<{ deleted: number; player: string }> {
+  const player = playerId();
+  disableSharing();
+  resetAnalytics();
+  // A copy on its way now would arrive after the deletion: let it land first.
+  for (let i = 0; busy && i < 100; i++) await new Promise((r) => setTimeout(r, 100));
+  const deleted = await forgetPlayer(player);
+  newPlayerId();
+  lastWeek = -1;
+  return { deleted, player };
 }
 
 /** Keep the game's own document fresh: every in-game quarter (at most once a minute) and right after an error. */

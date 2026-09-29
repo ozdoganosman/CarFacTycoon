@@ -1,7 +1,8 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { serialize } from '../../core/save';
-import { allowSharing, disableSharing, onSyncStatus, playtestSink, sendErrorText, sendPlaytest, syncNow, syncStatus, type SinkKind, type SyncStatus } from '../claudeLink';
+import { allowSharing, disableSharing, forgetMe, onSyncStatus, playtestSink, sendErrorText, sendPlaytest, syncNow, syncStatus, type SinkKind, type SyncStatus } from '../claudeLink';
 import { store, useGameState } from '../store';
+import { useBackClose } from '../back';
 import { Button } from './ui';
 
 type Phase = 'idle' | 'sending' | 'sent' | 'error';
@@ -60,6 +61,9 @@ function statusText(st: SyncStatus, kind: SinkKind | null | undefined): string {
   }
 }
 
+/** The privacy policy of the public build and the Android app (public/privacy.html, on GitHub Pages). */
+export const PRIVACY_URL = 'https://ozdoganosman.github.io/CarFacTycoon/privacy.html';
+
 /** What is and is not collected, said before the player decides. */
 const PRIVACY =
   'Adın ya da e-postan sorulmaz; bu tarayıcıya rastgele bir oyuncu numarası verilir. Şirkete verdiğin ad ve yazdığın notlar oyunla birlikte gider. Veriler AB’deki sunucularda (Supabase, PostHog) durur, reklam için kullanılmaz, kimseyle paylaşılmaz. İstediğin an menüdeki Geri bildirim’den kapatabilirsin.';
@@ -76,7 +80,10 @@ export function ShareBar() {
       <div className="claude-share" role="note">
         <span>
           <b>Oyununu geliştiriciyle paylaşır mısın?</b> Oyunu düzeltmek ve dengelemek için oyunun (tasarımların, kararların, satışların, karşılaştığın hatalar) arada bir
-          kendiliğinden gönderilir; hangi ekranlarda ne yaptığın ve oyun ekranının kaydı da tutulur. <span className="muted">{PRIVACY}</span>
+          kendiliğinden gönderilir; hangi ekranlarda ne yaptığın ve oyun ekranının kaydı da tutulur. <span className="muted">{PRIVACY}</span>{' '}
+          <a href={PRIVACY_URL} target="_blank" rel="noopener noreferrer">
+            Gizlilik politikası
+          </a>
         </span>
         <span className="claude-share-btns">
           <Button kind="ghost" onClick={disableSharing}>
@@ -118,10 +125,29 @@ export function SendToClaude() {
   const hasDb = kind === undefined ? null : kind !== null;
   const dev = kind === 'developer';
 
+  const [forgot, setForgot] = useState('');
   const close = () => {
     setOpen(false);
+    setForgot('');
     if (phase !== 'sending') setPhase('idle');
   };
+
+  const forget = async () => {
+    const ok = await store.ask({
+      title: 'Gönderdiğin veriler silinsin mi?',
+      body: 'Geliştiriciye giden oyun kayıtların ve notların hemen silinir, paylaşım kapanır. Oynanış istatistiklerin de silinmek üzere işaretlenir. Bu tarayıcı bundan sonra yeni bir oyuncu numarası kullanır.',
+      confirm: 'Verilerimi sil',
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      const { deleted } = await forgetMe();
+      setForgot(`Silindi: ${deleted} oyun kaydı. Paylaşım kapalı; istersen yeniden açabilirsin.`);
+    } catch {
+      setForgot('Silinemedi: bağlantını kontrol edip yeniden dene.');
+    }
+  };
+  useBackClose(open, close);
 
   const send = async () => {
     const sink = await playtestSink();
@@ -211,6 +237,18 @@ export function SendToClaude() {
                       Otomatik paylaşımı aç
                     </button>
                   )}
+                  {dev && (
+                    <p className="send-privacy small">
+                      <a href={PRIVACY_URL} target="_blank" rel="noopener noreferrer">
+                        Gizlilik politikası
+                      </a>
+                      {' · '}
+                      <button type="button" className="link-btn small" onClick={() => void forget()}>
+                        Gönderdiğim verileri sil
+                      </button>
+                    </p>
+                  )}
+                  {forgot && <p className="small">{forgot}</p>}
                 </>
               )}
             </div>

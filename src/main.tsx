@@ -1,4 +1,6 @@
 import { StrictMode } from 'react';
+import { Capacitor } from '@capacitor/core';
+import 'virtual:app-extras';
 import { createRoot } from 'react-dom/client';
 import { App } from './ui/App';
 import './ui/styles.css';
@@ -51,3 +53,5 @@ function start(data: unknown) {
 if (hot?.ready) hot.ready(start);
 else start(hot?.data ?? {});
 void initSync();
+// Inside the Android app: back button, background pause, splash (src/native).
+if (Capacitor.isNativePlatform()) void import('./native/native').then((m) => m.initNative());

@@ -81,6 +81,12 @@ export function stopAnalytics() {
   }
 }
 
+/** The player deleted their data: stop, and forget this browser's analytics identity. */
+export function resetAnalytics() {
+  stopAnalytics();
+  ph?.reset();
+}
+
 export function track(event: string, props: Props = {}) {
   if (stopped) return;
   if (ph) ph.capture(event, props);

@@ -1,0 +1,31 @@
+/* The Android app: behave like a game, not a web page. Only in the app build. */
+
+html,
+body {
+  /* No rubber-band scrolling or pull-to-refresh on the page itself. */
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  /* No "copy / share" callout on a long press. */
+  -webkit-touch-callout: none;
+}
+
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* What the player types or copies stays selectable. */
+input,
+textarea,
+[contenteditable='true'],
+.selectable {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Keep clear of notches and rounded corners (values come from Capacitor's SystemBars). */
+#root {
+  box-sizing: border-box;
+  padding: var(--safe-area-inset-top, 0px) var(--safe-area-inset-right, 0px) var(--safe-area-inset-bottom, 0px)
+    var(--safe-area-inset-left, 0px);
+}

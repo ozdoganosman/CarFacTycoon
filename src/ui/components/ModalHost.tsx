@@ -10,6 +10,7 @@ import { allTech } from '../../core/techtree';
 import { isBlockingModal } from '../../core/util';
 import type { GameState, ModalItem } from '../../core/types';
 import { store, useGameState } from '../store';
+import { useBackClose } from '../back';
 import { COST_NAMES, money, num, pct, signedMoney } from '../format';
 import { Button } from './ui';
 import { CardAnimation } from './CardAnimation';
@@ -633,6 +634,7 @@ export function YearCard() {
     const t = setTimeout(() => store.act(A.dismissYearReport), 25000);
     return () => clearTimeout(t);
   }, [year, open]);
+  useBackClose(open && year !== null, () => store.act(A.dismissYearReport));
   if (year === null) return null;
   const y = s.years.find((x) => x.year === year);
   if (!y) return null;

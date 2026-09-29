@@ -13,6 +13,7 @@ const ph = vi.hoisted(() => ({
   opt_out_capturing: vi.fn(),
   startSessionRecording: vi.fn(),
   stopSessionRecording: vi.fn(),
+  reset: vi.fn(),
 }));
 vi.mock('posthog-js', () => ({ default: ph }));
 
@@ -30,6 +31,7 @@ function fakeStorage() {
 
 let posts: { url: string; init: RequestInit }[];
 let answer: number;
+let forgetAnswer: number;
 const settle = () => new Promise((r) => setTimeout(r, 20));
 const bodyOf = (i = 0) => JSON.parse(String(posts[i].init.body)).p;
 const events = () => ph.capture.mock.calls.map((c) => c[0] as string);
@@ -41,11 +43,14 @@ beforeEach(() => {
   vi.stubEnv('VITE_SUPABASE_KEY', 'sb_publishable_test');
   posts = [];
   answer = 204;
+  forgetAnswer = 200;
   vi.stubGlobal('window', {});
   vi.stubGlobal('location', { origin: 'https://game.example', pathname: '/CarFacTycoon/' });
   vi.stubGlobal('localStorage', fakeStorage());
   vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
     posts.push({ url, init });
+    // forget_player answers with the number of playtests it deleted.
+    if (url.endsWith('/rpc/forget_player')) return new Response(forgetAnswer === 200 ? '2' : '{}', { status: forgetAnswer });
     return new Response(null, { status: answer });
   });
 });
@@ -151,6 +156,37 @@ describe('playtest collector', () => {
     const analytics = await import('../src/ui/analytics');
     await analytics.startAnalytics();
     expect(ph.init).not.toHaveBeenCalled();
+  });
+});
+
+describe('deleting my data', () => {
+  it('deletes what the player sent, stops sharing and analytics, and uses a new player id', async () => {
+    const link = await import('../src/ui/claudeLink');
+    const { playerId } = await import('../src/ui/collector');
+    await link.initSync();
+    await link.allowSharing(newGame({ companyName: 'Test', hq: 'usa', seed: 5 }));
+    await settle();
+    const before = playerId();
+
+    expect(await link.forgetMe()).toEqual({ deleted: 2, player: before });
+    const del = posts.find((p) => p.url.endsWith('/rpc/forget_player'))!;
+    expect(del.url).toBe(`${DB}/rest/v1/rpc/forget_player`);
+    expect(JSON.parse(String(del.init.body))).toEqual({ p_player: before });
+    expect((del.init.headers as Record<string, string>).apikey).toBe('sb_publishable_test');
+    expect(link.syncStatus().mode).toBe('disabled');
+    expect(ph.opt_out_capturing).toHaveBeenCalled();
+    expect(ph.reset).toHaveBeenCalled();
+    expect(playerId()).not.toBe(before);
+  });
+
+  it('keeps the player id when the deletion fails, so it can be tried again', async () => {
+    forgetAnswer = 500;
+    const link = await import('../src/ui/claudeLink');
+    const { playerId } = await import('../src/ui/collector');
+    const before = playerId();
+    await expect(link.forgetMe()).rejects.toMatchObject({ code: 'rejected' });
+    expect(playerId()).toBe(before);
+    expect(link.syncStatus().mode).toBe('disabled');
   });
 });
 

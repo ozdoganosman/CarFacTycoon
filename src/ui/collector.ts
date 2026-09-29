@@ -30,6 +30,28 @@ export function playerId(): string {
   }
 }
 
+/** A new id from now on (after the player deleted their data, nothing new links to the old one). */
+export function newPlayerId() {
+  try {
+    localStorage.removeItem(PLAYER_KEY);
+  } catch {
+    /* nothing stored */
+  }
+  return playerId();
+}
+
+/** Deletes everything this player sent (and records the request); returns how many playtests went. */
+export async function forgetPlayer(player = playerId()): Promise<number> {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return 0;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/forget_player`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
+    body: JSON.stringify({ p_player: player }),
+  });
+  if (!res.ok) throw Object.assign(new Error(`Collector answered ${res.status}`), { code: 'rejected', status: res.status });
+  return Number(await res.json()) || 0;
+}
+
 /** Largest playtest the collector takes (the save is gzipped first; a long game is ~300 KB). */
 export const MAX_BODY = 2_500_000;
 

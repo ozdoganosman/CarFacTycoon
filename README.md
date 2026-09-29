@@ -32,7 +32,13 @@ Bu sürümde **Claude’a gönder** yerine **Geri bildirim** vardır: oyuncuya b
 - **Oyun kayıtları → Supabase** (AB, Frankfurt): oyunun tamamı aynı aralıklarla `playtests` tablosuna gider (`<oyuncu>-g<seed>` kimliğiyle, her gönderim öncekinin üstüne yazılır; notlu gönderimler ayrı satırdır). Sayfadaki anahtar yalnızca `submit_playtest` işlevini çağırabilir: tabloyu okuyamaz, başka oyuncunun kaydını değiştiremez. Şema `supabase/migrations/` içinde, proje adresi ve anahtarı `src/ui/collector.ts` içindedir (derlemede `VITE_SUPABASE_URL`/`VITE_SUPABASE_KEY`, Pages'te `SUPABASE_URL`/`SUPABASE_KEY` depo değişkenleri onları geçersiz kılar). Kayıtlar Supabase panelindeki Table Editor'dan görülür; `data` sütunu gzip + base64 kayıttır.
 - **Nasıl oynandığı → PostHog** (AB bulutu, `src/ui/analytics.ts`): ekran geçişleri sayfa görüntülemesi olarak, önemli kararlar (`decision`), yıl sonları (`year_end`: ciro, kâr, satış), hatalar (`game_error`), oyunun başlaması ve bitişi (`game_started`/`game_resumed`, `game_over` ve puan), tıklamalar ve oturum kayıtları (giriş alanları maskeli). PostHog projesinde **Settings → Project → IP data capture → Discard client IP data** açık tutulmalıdır.
 
+Oyuncu **Geri bildirim → Gönderdiğim verileri sil** ile paylaşımı kapatır, gönderdiği oyunları siler (`forget_player`) ve yeni bir oyuncu numarasına geçer; aynı numara PostHog'dan da silinsin diye `deletion_requests` tablosuna yazılır. Oyun kayıtları 24 aydan eski olunca her gece silinir. Gizlilik politikası `public/privacy.html` (Pages'te `/privacy.html`).
+
 claude.ai'deki kopya bunların hiçbirini kullanmaz, yalnızca sayfanın veritabanına yazar.
+
+### Android uygulaması (Google Play)
+
+`--mode app` derlemesi (`dist-app/`) Capacitor ile `android/` içindeki yerel uygulamaya konur: yazı tipleri pakete gömülü (internetsiz çalışır), sistem çubukları gizli, yakınlaştırma ve sayfa kaydırma kapalı, telefonun yazı boyutu düzeni bozmaz, geri tuşu önce açık pencereyi kapatır sonra bir önceki ekrana döner, uygulama arka plana geçince oyun durur ve kaydedilir (`src/native/`). `npm run build:app` derleyip `android/`e kopyalar; Android SDK'sı olan bir bilgisayarda `npx cap open android` Android Studio'da açar. GitHub Actions'taki **Android** iş akışı her push'ta telefona kurulacak `app-debug.apk` ve Play'e yüklenecek `app-release.aab` üretir. Simge ve açılış ekranı kaynakları `assets/` (Android kaynaklarına `npx @capacitor/assets generate --android` ile dönüşür), mağaza görselleri ve yayın adımları [`docs/google-play.md`](docs/google-play.md).
 
 ## Ana döngü
 

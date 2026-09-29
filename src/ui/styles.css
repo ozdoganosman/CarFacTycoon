@@ -719,6 +719,8 @@ fieldset {
 
 /* Toggle */
 .toggle {
+  /* Holds its hidden checkbox: positioned against the page, it made the whole page scroll. */
+  position: relative;
   display: flex;
   gap: 10px;
   align-items: flex-start;
@@ -2780,6 +2782,10 @@ fieldset {
   text-decoration: underline;
   cursor: pointer;
   font: inherit;
+}
+.claude-share a,
+.send-privacy a {
+  color: var(--link, var(--accent));
 }
 .bubble-quality {
   background: #8a63c9;

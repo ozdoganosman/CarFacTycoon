@@ -1,0 +1,65 @@
+name: Android
+
+# The Google Play app: the game's `--mode app` build inside the Capacitor shell (android/).
+# Every run leaves two files under "Artifacts":
+#   - app-debug.apk: install it on a phone to try the build;
+#   - app-release.aab: upload it to Google Play (signed only when the upload key secrets exist,
+#     see docs/google-play.md).
+on:
+  push:
+    branches: [main, claude/peaceful-cray-agq64v]
+    paths-ignore: ['promo/**', 'docs/**', '**/*.md']
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      # Type check, the app build, then copy it into android/.
+      - run: npm run build:app
+      - name: Upload key
+        id: key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+            echo "path=$RUNNER_TEMP/upload.jks" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No upload key in the secrets: the release bundle is unsigned (see docs/google-play.md)."
+          fi
+      - name: Build
+        working-directory: android
+        env:
+          # Google Play needs a larger version code for every upload.
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: 0.1.${{ github.run_number }}
+          ANDROID_KEYSTORE_PATH: ${{ steps.key.outputs.path }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon assembleDebug bundleRelease
+      - uses: actions/upload-artifact@v4
+        with:
+          name: carfactycoon-android-0.1.${{ github.run_number }}
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+          if-no-files-found: error

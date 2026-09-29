@@ -9,3 +9,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** App-only styles and fonts in the Android build; empty elsewhere (see vite.config.ts). */
+declare module 'virtual:app-extras';
