@@ -3,6 +3,7 @@ import { AbsoluteFill, Easing, Img, interpolate, random, spring, useCurrentFrame
 import { CarSVG } from '../../src/ui/viz/CarSVG';
 import type { BodyId } from '../../src/core/types';
 import { C, CAR_VARS, COND, Caption, Chip, Flash, Punch, SERIF, Shot, TYPE, TopShade, seqSrc, shotSrc } from './ui';
+import MAP_STEPS from './map.json';
 
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 
@@ -250,7 +251,68 @@ export const LaunchScene: React.FC<{ duration: number }> = ({ duration }) => {
   );
 };
 
-// ---------------------------------------------------------------- 6. newspaper
+// ---------------------------------------------------------------- 6. the dealer map, state by state
+
+const MAP_CHIPS = ['Bayi ara', 'Servis kur', 'Nakliye öde'];
+
+export const MapScene: React.FC<{ duration: number }> = ({ duration }) => {
+  const f = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const per = (duration - 12) / MAP_STEPS.length;
+  const idx = Math.min(MAP_STEPS.length - 1, Math.floor(f / per));
+  const local = f - idx * per;
+  const step = MAP_STEPS[idx];
+  const prev = idx > 0 ? MAP_STEPS[idx - 1] : undefined;
+  const fadeIn = idx === 0 ? 1 : interpolate(local, [0, 8], [0, 1], clamp);
+  const count = prev ? Math.round(prev.states + (step.states - prev.states) * interpolate(local, [0, 14], [0, 1], clamp)) : step.states;
+  const zoom = interpolate(f, [0, duration], [1.0, 1.08], clamp);
+  const stamp = spring({ frame: local - 2, fps, config: { damping: 11, stiffness: 180 } });
+  return (
+    <AbsoluteFill style={{ background: `radial-gradient(ellipse 80% 60% at 50% 55%, #3a2a18 0%, #1c140c 60%, ${C.dark} 100%)`, overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', left: 0, right: 0, top: 560, display: 'flex', justifyContent: 'center', transform: `scale(${zoom})` }}>
+        <div style={{ position: 'relative', width: 1000, height: 640, boxShadow: '0 40px 80px rgba(0,0,0,0.6)' }}>
+          {prev && fadeIn < 1 && <Img src={shotSrc(`map-${prev.year}`)} style={{ position: 'absolute', inset: 0, width: 1000, height: 640, objectFit: 'contain' }} />}
+          <Img src={shotSrc(`map-${step.year}`)} style={{ position: 'absolute', inset: 0, width: 1000, height: 640, objectFit: 'contain', opacity: fadeIn }} />
+        </div>
+      </div>
+      <div
+        style={{
+          position: 'absolute',
+          top: 1260,
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'baseline',
+          gap: 36,
+          color: C.cream,
+          transform: `scale(${0.8 + 0.2 * stamp})`,
+        }}
+      >
+        <span style={{ fontFamily: SERIF, fontWeight: 900, fontSize: 150, lineHeight: 1, textShadow: '0 8px 0 rgba(0,0,0,0.4)' }}>{step.year}</span>
+        <span style={{ fontFamily: TYPE, fontSize: 58, color: C.gold }}>{count} eyalet</span>
+      </div>
+      <div style={{ position: 'absolute', top: 1500, left: 60, right: 60, display: 'flex', gap: 18, justifyContent: 'center', flexWrap: 'wrap' }}>
+        {MAP_CHIPS.map((c, i) => {
+          const s = spring({ frame: f - 20 - i * 9, fps, config: { damping: 11, stiffness: 170 } });
+          return (
+            <div key={c} style={{ transform: `scale(${s})`, opacity: Math.min(1, s * 2) }}>
+              <Chip bg="rgba(246,234,208,0.95)" color={C.ink} size={44}>
+                {c}
+              </Chip>
+            </div>
+          );
+        })}
+      </div>
+      <TopShade height={520} />
+      <Caption text="Eyalet eyalet {büyü}" top={200} size={112} />
+      {MAP_STEPS.slice(1).map((_, i) => (
+        <Flash key={i} at={(i + 1) * per} length={4} max={0.22} />
+      ))}
+    </AbsoluteFill>
+  );
+};
+
+// ---------------------------------------------------------------- 6b. newspaper
 
 export const PaperScene: React.FC<{ duration: number }> = ({ duration }) => {
   const f = useCurrentFrame();
@@ -285,6 +347,33 @@ export const PaperScene: React.FC<{ duration: number }> = ({ duration }) => {
   );
 };
 
+// ---------------------------------------------------------------- 7b. rivals strike back, the board wants its due
+
+export const RivalsScene: React.FC<{ duration: number }> = ({ duration }) => {
+  const f = useCurrentFrame();
+  const split = Math.round(duration * 0.52);
+  const first = f < split;
+  const since = first ? f : f - split;
+  const shake = since < 8 ? (8 - since) * 2.2 : 0;
+  const sx = (random(`rx${f}`) - 0.5) * shake;
+  const sy = (random(`ry${f}`) - 0.5) * shake;
+  return (
+    <Punch>
+      <AbsoluteFill style={{ transform: `translate(${sx}px, ${sy}px)` }}>
+        {first ? (
+          <Shot src={shotSrc('rival')} from={{ x: 540, y: 960, s: 1.06 }} to={{ x: 540, y: 960, s: 1.16 }} duration={split} anchorY={1130} cropTop={330} />
+        ) : (
+          <Shot src={shotSrc('board')} from={{ x: 540, y: 900, s: 1.04 }} to={{ x: 540, y: 1000, s: 1.12 }} duration={duration - split} frame={since} anchorY={1120} cropTop={330} />
+        )}
+      </AbsoluteFill>
+      <TopShade height={640} />
+      {first ? <Caption text="Öne geç, {rakipler saldırsın}" top={190} size={100} /> : <Caption text="Borsaya açıl, {kurula hesap ver}" top={190} size={96} />}
+      <Flash at={0} length={5} max={0.35} />
+      <Flash at={split} length={5} max={0.3} />
+    </Punch>
+  );
+};
+
 // ---------------------------------------------------------------- 7. factory
 
 export const FactoryScene: React.FC<{ duration: number }> = ({ duration }) => {
@@ -301,10 +390,10 @@ export const FactoryScene: React.FC<{ duration: number }> = ({ duration }) => {
 // ---------------------------------------------------------------- 8. crises
 
 const CRISES = [
-  { year: '1914', title: 'Avrupa’da savaş', sub: 'Sivil satışlar çöktü, çelik pahalandı.' },
+  { year: '1914', title: 'Avrupa’da savaş', sub: 'Çelik pahalandı: malzeme %25 zamlı.' },
+  { year: '1920', title: 'Savaş sonrası durgunluk', sub: 'Alıcılar çekildi, stoklar şişti.' },
   { year: '1929', title: 'Kara Perşembe', sub: 'Borsa çöktü. Bankalar krediyi kısıyor.' },
   { year: '1942', title: 'Sivil üretim durdu', sub: 'Fabrikalar tank ve cip üretiyor.' },
-  { year: '1956', title: 'Süveyş krizi', sub: 'Avrupa’da benzin karneye bağlandı.' },
 ];
 
 export const CrisisScene: React.FC<{ duration: number }> = () => {
@@ -499,7 +588,7 @@ export const EndScene: React.FC<{ duration: number; cta: string }> = ({ cta }) =
           transform: `translateY(${(1 - sub) * 30}px)`,
         }}
       >
-        1900–1960 · Otomobil fabrikanı kur
+        Amerika 1900–1960 · Otomobil fabrikanı kur
       </div>
       <div style={{ position: 'absolute', top: 560, left: 0, right: 0, display: 'flex', justifyContent: 'center', transform: `translateX(${(1 - car) * -900}px)` }}>
         <Car body="sedan" year={1957} cylinders={8} size={0.85} styling={0.95} color="#c0392b" width={940} />
@@ -520,11 +609,11 @@ export const EndScene: React.FC<{ duration: number; cta: string }> = ({ cta }) =
             textTransform: 'uppercase',
           }}
         >
-          ▶ Tarayıcında ücretsiz oyna
+          ▶ Ücretsiz oyna
         </div>
       </div>
       <div style={{ position: 'absolute', top: 1230, width: '100%', textAlign: 'center', opacity: info, transform: `translateY(${(1 - info) * 20}px)` }}>
-        <div style={{ fontFamily: TYPE, fontSize: 44, color: 'rgba(246,234,208,0.9)' }}>Kurulum yok · Türkçe · Telefonda da çalışır</div>
+        <div style={{ fontFamily: TYPE, fontSize: 44, color: 'rgba(246,234,208,0.9)' }}>İnternetsiz · Hesap yok · Reklam yok</div>
         <div style={{ marginTop: 36 }}>
           <Chip bg={C.gold} color={C.ink} size={50}>
             {cta}

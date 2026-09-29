@@ -1,12 +1,14 @@
 // Captures the game screens the promo is cut from, at phone size (432 x 768 CSS px at 2.5x = 1080 x 1920).
 //
-// Needs the game served at http://localhost:4173 (from the repo root: `npx vite build && npx vite preview --port 4173`).
-// Usage: node capture/shots.mjs [all|design|launch|factory|late]
+// Needs the app build served locally, which carries its own fonts (from the repo root: `npx vite build --mode app`,
+// then `python3 -m http.server 5191 --directory dist-app`); GAME_URL points elsewhere.
+// Usage: node capture/shots.mjs [all|design|launch|factory|map|rivals|late]
+// Saves come from scripts/promo-saves.balance.ts (a smart-bot campaign on today's rules).
 //
 // Animations are captured frame by frame on a virtual clock (canvas scenes) or by seeking the CSS
 // animations, so the sequences play back smoothly at 30 fps whatever the screenshot speed.
 import { createRequire } from 'module';
-import { mkdirSync, readFileSync, rmSync } from 'fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { gunzipSync } from 'zlib';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
@@ -15,7 +17,7 @@ const require = createRequire(import.meta.url);
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, '../public/shots');
 const SEQ = join(HERE, '../public/seq');
-const URL = process.env.GAME_URL ?? 'http://localhost:4173/';
+const URL = process.env.GAME_URL ?? 'http://localhost:5191/index.html';
 const FPS = 30;
 
 function loadPlaywright() {
@@ -50,11 +52,16 @@ async function open(saveName, fn, { mutate } = {}) {
   const page = await browser.newPage({ viewport: { width: 432, height: 768 }, deviceScaleFactor: 2.5 });
   page.on('pageerror', (e) => errors.push(saveName + ': ' + String(e)));
   await page.addInitScript(CLOCK);
+  // No playtest collection: the consent question would sit on the headquarters screen.
+  await page.route(/supabase\.co|posthog\.com/, (r) => r.abort());
   await page.goto(URL);
   const o = save(saveName);
   if (mutate) mutate(o);
   else o.modals = [];
-  await page.evaluate((json) => localStorage.setItem('carfactycoon.save.v1', json), JSON.stringify(o));
+  await page.evaluate((json) => {
+    localStorage.setItem('carfactycoon.save.v1', json);
+    localStorage.setItem('carfactycoon.share', 'off');
+  }, JSON.stringify(o));
   await page.reload();
   await page.getByRole('button', { name: 'Kaldığın yerden devam et' }).click();
   await page.waitForTimeout(500);
@@ -133,10 +140,16 @@ if (want('design')) {
   });
 }
 
+/** The best-reviewed car on sale, shown as if just launched. */
+const launchOf = (o) => {
+  const best = o.models.filter((m) => m.status === 'active').sort((a, b) => b.reviewScore - a.reviewScore)[0];
+  o.modals = [{ kind: 'launch', modelId: best.id, venue: `${Math.floor(1900 + best.launchWeek / 52)} ABD Otomobil Fuarı` }];
+};
+
 if (want('launch')) {
   // The best-reviewed car of the 1928 save, shown as if just launched.
   await open(
-    'promo-1928',
+    'play-1928',
     async (p) => {
       await cssFrames(p, 'reveal', 60);
       await p.waitForTimeout(1800);
@@ -150,12 +163,12 @@ if (want('launch')) {
       await p.waitForTimeout(1200);
       await shot(p, 'review-final');
     },
-    { mutate: (o) => (o.modals = [{ kind: 'launch', modelId: 'm745', venue: '1924 ABD Otomobil Fuarı' }]) },
+    { mutate: launchOf },
   );
 }
 
 if (want('factory')) {
-  await open('promo-1928', async (p) => {
+  await open('play-1928', async (p) => {
     await nav(p, 'Fabrika');
     await p.waitForTimeout(800);
     await center(p, 'canvas');
@@ -164,8 +177,49 @@ if (want('factory')) {
   });
 }
 
+// The dealer map as the network grows, and how many states sell our cars at each moment.
+if (want('map')) {
+  const steps = [];
+  for (const year of [1903, 1908, 1928]) {
+    const name = `play-${year}`;
+    const o = save(name);
+    // States that sell our cars: those with a dealer, and the factory's own.
+    const cities = { detroit: 'MI', cleveland: 'OH', chicago: 'IL', hartford: 'CT', newyork: 'NY', stlouis: 'MO', losangeles: 'CA' };
+    const home = cities[o.company.city ?? 'detroit'];
+    const states = Object.entries(o.network?.states ?? {}).filter(([id, n]) => n.dealers > 0 || id === home).length;
+    steps.push({ year, states });
+    await open(name, async (p) => {
+      await nav(p, 'Harita');
+      await p.waitForTimeout(700);
+      await center(p, '.usmap');
+      await p.waitForTimeout(300);
+      await p.locator('.usmap').first().screenshot({ path: `${OUT}/map-${year}.png` });
+    });
+  }
+  writeFileSync(join(HERE, '../src/map.json'), JSON.stringify(steps, null, 2) + '\n');
+}
+
+// A rival answers our lead; the board wants its growth and dividend.
+if (want('rivals')) {
+  await open(
+    'play-1928-rival',
+    async (p) => {
+      await p.waitForTimeout(700);
+      await shot(p, 'rival');
+    },
+    { mutate: () => {} },
+  );
+  await open('play-1928', async (p) => {
+    await nav(p, 'Şirket');
+    await p.waitForTimeout(500);
+    await p.locator('.panel:has-text("Borsa ve yönetim kurulu")').first().evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await p.waitForTimeout(300);
+    await shot(p, 'board');
+  });
+}
+
 if (want('late')) {
-  await open('promo-1928', async (p) => {
+  await open('play-1928', async (p) => {
     await p.waitForTimeout(300);
     await shot(p, 'hq-1928');
     await nav(p, 'Ar-Ge');
@@ -185,7 +239,7 @@ if (want('late')) {
     await shot(p, 'paper-2');
   });
   await open(
-    'promo-end',
+    'play-end',
     async (p) => {
       await p.waitForTimeout(800);
       await shot(p, 'score');
@@ -193,10 +247,12 @@ if (want('late')) {
     { mutate: (o) => (o.modals = [{ kind: 'gameOver' }]) },
   );
   await open(
-    'promo-end',
+    'play-end',
     async (p) => {
       await nav(p, 'Şirket');
       await p.waitForTimeout(500);
+      await p.locator('.panel:has-text("Yarış takımı")').first().evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      await p.waitForTimeout(300);
       await shot(p, 'company');
     },
     {

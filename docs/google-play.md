@@ -42,47 +42,52 @@ Play Console → **Uygulama oluştur**: ad `CarFacTycoon`, varsayılan dil Türk
 **Uygulama adı** (en çok 30): `CarFacTycoon – Araba Fabrikası`
 
 **Kısa açıklama** (en çok 80):
-- TR: `1900'lerden 1960'a: arabalarını tasarla, fabrikanı kur, markanı büyüt.`
-- EN: `From 1900 to 1960: design your cars, build your factory, grow your brand.`
+- TR: `1900 Amerika'sı: arabanı tasarla, fabrikanı kur, eyalet eyalet büyü.`
+- EN: `America, 1900: design your cars, build the factory, grow state by state.`
 
 **Uzun açıklama (TR):**
 
 ```
-1900 yılı. Küçük bir atölye, iki mühendis ve biraz para. Amacın 1960'a kadar dünya çapında bir otomobil markası kurmak.
+1900 yılı, Amerika. Küçük bir atölye, bir avuç mühendis ve biraz para. Amacın 1960'a kadar ülkenin büyük otomobil markalarından biri olmak.
 
-• Arabanı parça parça tasarla: gövde, şasi, süspansiyon, şanzıman ve silindir silindir motor. Sıkıştırma oranını artır, vuruntuyu dinle, tork eğrisinin nasıl değiştiğini gör.
-• Mühendislerini doğru alanlara yönlendir, prototipleri test et, gizli kusurları lansmandan önce bul.
-• Lansman günü dergiler arabanı puanlar; alıcıların neyi sevdiğini zamanla öğren.
-• Fabrikanı kur: pres, gövde, boya ve montaj istasyonları, darboğazlar, gece vardiyaları, yürüyen bant.
-• Dönemin gerçek teknolojilerini araştır: senkromeçli şanzıman, üstten kam, V8, hidrolik fren…
-• Savaş yılları, 1929 buhranı, işçi ücretleri kararları ve rakip markalar. Dönem gazeteleri her yeniliği manşetten duyurur.
-• Her teknoloji için "neden böyle çalışıyor?" kartları: oynarken gerçek otomobil mühendisliği öğren.
+• Nereden başlayacağını seç: ucuz parçalı Detroit, dev pazarlı New York, boş topraklı Los Angeles ya da dört şehir daha.
+• Arabanı parça parça tasarla: gövde, şasi, süspansiyon, şanzıman ve silindir silindir motor. Sıkıştırmayı artır, vuruntuyu dinle, tork eğrisinin değiştiğini gör.
+• Prototipleri test et, gizli kusurları lansmandan önce bul. Lansman günü dergiler arabanı puanlar, alıcılar mektup yazar.
+• Eyalet eyalet büyü: dönem haritasında bayi ara, servis atölyesi aç, yollardaki arabalarını ve hurdaya çıkanları gör. Ağ büyüdükçe gideri de büyür.
+• Fabrikanı kur: pres, gövde, boya ve montaj, darboğazlar, gece vardiyası, yürüyen bant.
+• Öne geçersen büyük rakipler karşılık verir: fiyat savaşları, sana karşı yapılmış yeni modeller, birleşmeler, hisse baskınları.
+• Borsaya açıl: sermaye gelir, ama yönetim kurulu her yıl büyüme ve temettü ister. Hedefleri tutturamazsan görevden alınırsın.
+• Dönemin gerçek teknolojilerini araştır, savaş yıllarını ve 1929 buhranını atlat. Gazeteler her yeniliği manşetten duyurur; "neden böyle çalışıyor?" kartlarıyla gerçek otomobil mühendisliğini öğren.
 
-İnternetsiz oynanır, hesap gerekmez.
+İnternetsiz oynanır, hesap gerekmez, reklam yok.
 ```
 
 **Uzun açıklama (EN):**
 
 ```
-It's 1900. A small workshop, two engineers and a little money. Your goal: a world-class car brand by 1960.
+America, 1900. A small workshop, a handful of engineers and a little money. Your goal: one of the country's great car makers by 1960.
 
+• Pick your town: Detroit's cheap parts, New York's huge market, Los Angeles' open country, or four more.
 • Design your car part by part: body, chassis, suspension, gearbox and an engine you tune cylinder by cylinder. Raise the compression, listen for knock, watch the torque curve change.
-• Point your engineers at the right areas, test your prototypes and find hidden flaws before launch.
-• On launch day the magazines rate your car; learn over time what buyers really want.
-• Build your factory: presses, body, paint and assembly stations, bottlenecks, night shifts, the moving line.
-• Research the real technologies of the era: synchromesh, overhead cams, the V8, hydraulic brakes…
-• War years, the 1929 crash, decisions on workers' wages and rival brands. Period newspapers announce every breakthrough.
-• "Why does it work like this?" cards for every technology: learn real automotive engineering as you play.
+• Test your prototypes and find hidden flaws before launch. On launch day the magazines rate your car and owners write letters.
+• Grow state by state: look for dealers on a period map, open service shops, see how many of your cars are on the road and how many go to the scrapyard. The bigger the network, the dearer it gets.
+• Build your factory: presses, body, paint and assembly, bottlenecks, night shifts, the moving line.
+• Get ahead and the big makers fight back: price wars, cars built to beat yours, mergers, raids on your shares.
+• Go public: the capital comes in, but the board wants growth and dividends every year. Miss the targets and you are voted out.
+• Research the real technologies of the era and live through the war years and the 1929 crash. Period newspapers announce every breakthrough; "why does it work like this?" cards teach real automotive engineering as you play.
 
-Plays offline, no account needed.
+Plays offline, no account needed, no ads. The game is in Turkish.
 ```
 
-(İngilizce metin mağazada ayrı dil olarak eklenebilir; oyunun kendisi şimdilik yalnızca Türkçe, bu yüzden İngilizce sayfada bunu belirtmek dürüst olur.)
+(İngilizce metin mağazada ayrı dil olarak eklenebilir; oyunun kendisi şimdilik yalnızca Türkçe, İngilizce metnin son cümlesi bunu söylüyor.)
 
 **Grafikler** (`docs/play/`):
 - Uygulama simgesi 512×512: `icon-512.png`
-- Öne çıkan görsel 1024×500: `feature-graphic.png`
-- Telefon ekran görüntüleri 1080×1920: `screenshots/01-merkez.jpg` … `08-final.jpg` (en az 2, en çok 8)
+- Öne çıkan görsel 1024×500: `feature-graphic.png` (`promo/capture/feature.mjs`)
+- Telefon ekran görüntüleri 1080×1920: `screenshots/01-harita.jpg` … `08-gazete.jpg` (en az 2, en çok 8; `promo/capture/store.mjs`)
+- Tanıtım videosu (YouTube bağlantısı, herkese açık ya da liste dışı): `promo/` içindeki Remotion projesi, `promo/README.md`
+
+Görseller oyunun o anki haliyle yeniden üretilebilir: kayıtlar `PROMO_SAVES=1 npx vitest run --config vitest.balance.config.ts scripts/promo-saves.balance.ts`, sonra uygulama derlemesi (`npx vite build --mode app`, `dist-app` klasörünü 5191 portunda sun) ve betikler.
 
 ## 5. Uygulama içeriği (Policy → App content)
 

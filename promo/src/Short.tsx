@@ -2,7 +2,7 @@ import React from 'react';
 import { AbsoluteFill, Audio, Sequence, staticFile } from 'remotion';
 import timeline from './timeline.json';
 import { Grain, Vignette } from './ui';
-import { Cars, CrisisScene, EndScene, EngineScene, FactoryScene, Hook, LaunchScene, PaperScene, RacingScene, ResearchScene, ScoreScene, SuspScene } from './scenes';
+import { Cars, CrisisScene, EndScene, EngineScene, FactoryScene, Hook, LaunchScene, MapScene, PaperScene, RacingScene, ResearchScene, RivalsScene, ScoreScene, SuspScene } from './scenes';
 
 export type ShortProps = {
   /** The end card's call to action, e.g. where the link is. */
@@ -38,11 +38,17 @@ export const Short: React.FC<ShortProps> = ({ cta, audio }) => {
       <Sequence {...span('launch')} name="Lansman">
         <LaunchScene duration={d('launch')} />
       </Sequence>
+      <Sequence {...span('map')} name="Harita">
+        <MapScene duration={d('map')} />
+      </Sequence>
       <Sequence {...span('paper')} name="Gazete">
         <PaperScene duration={d('paper')} />
       </Sequence>
       <Sequence {...span('factory')} name="Fabrika">
         <FactoryScene duration={d('factory')} />
+      </Sequence>
+      <Sequence {...span('rivals')} name="Rakipler ve kurul">
+        <RivalsScene duration={d('rivals')} />
       </Sequence>
       <Sequence {...span('crisis')} name="Krizler">
         <CrisisScene duration={d('crisis')} />

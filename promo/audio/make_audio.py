@@ -220,8 +220,10 @@ def rag(start, bars, bar_len, chords, melody=True, drums=True, vel=1.0):
 
 A0, A1 = sec(SC["cars"]), sec(SC["crisis"])
 B0, B1 = sec(SC["research"]), sec(SC["end"])
-bar_a = (A1 - A0) / 14
-rag(A0, 14, bar_a, ["C", "C", "A7", "A7", "D7", "G7", "C", "G7"])
+# The same tempo whatever the length of the first part (about 1.9 s a bar).
+bars_a = max(1, round((A1 - A0) / 1.914))
+bar_a = (A1 - A0) / bars_a
+rag(A0, bars_a, bar_a, ["C", "C", "A7", "A7", "D7", "G7", "C", "G7"])
 bar_b = (B1 - B0) / 3
 rag(B0, 3, bar_b, ["F", "D7", "G7"])
 
@@ -255,7 +257,7 @@ for n in (24, 36, 48):
 add(sec(40), thump(45, 0.7, 1.0), 0.9)
 
 # cuts
-for fr in ("cars", "engine", "susp", "launch", "factory", "research", "score"):
+for fr in ("cars", "engine", "susp", "launch", "map", "factory", "rivals", "research", "score"):
     add(sec(SC[fr]) - 0.2, whoosh(0.45), 0.55, rng.uniform(-0.5, 0.5))
 
 # cars sliding in
@@ -290,6 +292,22 @@ for fr in (84, 106, 128):
 for i, n in enumerate([60, 64, 67, 72]):
     add(sec(L0 + 136) + i * 0.09, mx(honky(n, 1.4, 0.9), honky(n + 12, 1.0, 0.5)), 0.8, 0.1)
 add(sec(L0 + 146), clap_crowd(1.8, 380), 0.9)
+
+# map: a stamp for each year the network grows
+M0, M1 = SC["map"], TL["scenes"]["map"][1]
+steps = len(json.load(open(os.path.join(ROOT, "src", "map.json"))))
+per_m = (M1 - M0 - 12) / steps
+for i in range(steps):
+    add(sec(M0 + i * per_m + 2), stamp_hit(0.8), 0.7, -0.3 + 0.6 * i / max(1, steps - 1))
+    add(sec(M0 + i * per_m + 4), bell(midi(72 + 3 * i), 0.6), 0.35, 0.2)
+
+# rivals: a boom as the rival strikes, the cash register as the board counts the dividend
+R0r, R1r = SC["rivals"], TL["scenes"]["rivals"][1]
+split = round((R1r - R0r) * 0.52)
+add(sec(R0r), boom(0.9), 0.9, -0.2)
+tk2 = tarr(0.9)
+coins2 = noise(0.9, 3000, 12000) * np.exp(-tk2 / 0.25) * 0.3 * (1 + np.sin(2 * np.pi * 30 * tk2))
+add(sec(R0r + split), mx(bell(1760, 1.0), coins2), 0.7, 0.2)
 
 # newspaper: spin and slap
 P0 = SC["paper"]
