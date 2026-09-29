@@ -40,7 +40,7 @@ and `bg` is hp. Names of companies, people, cities, states and car models are ne
 | Çekicilik | Appeal | Attraktivität | Atractivo | आकर्षण | الجاذبية |
 | Talep | Demand | Nachfrage | Demanda | माँग | الطلب |
 | Pazar payı | Market share | Marktanteil | Cuota de mercado | बाज़ार हिस्सेदारी | الحصة السوقية |
-| Sınıf fiyatı | Class price | Klassenpreis | Precio de la clase | श्रेणी मूल्य | سعر الفئة |
+| Sınıf fiyatı | Class price | Klassenpreis | Precio del segmento | श्रेणी मूल्य | سعر الفئة |
 | Bayi | Dealer | Händler | Concesionario | डीलर | وكيل |
 | Servis atölyesi | Service shop | Werkstatt | Taller de servicio | सर्विस वर्कशॉप | ورشة صيانة |
 | Nakliye | Freight | Fracht | Flete | माल-भाड़ा | الشحن |
