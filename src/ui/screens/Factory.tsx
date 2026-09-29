@@ -24,11 +24,13 @@ import { priceNow } from '../../core/market';
 import { STAGES, STATIONS, stationDef } from '../../data/stations';
 import type { CarModel, ComponentKey, GameState, ProductionLine, StageId } from '../../core/types';
 import { store, useGameState } from '../store';
-import { money, num } from '../format';
+import { money, num, pct } from '../format';
 import { Badge, Button, Panel, Toggle } from '../components/ui';
 import { LineViz } from '../viz/LineViz';
+import { t, msg } from '../../i18n';
+import { tx } from '../i18n';
 
-const SHOP_NAMES: Record<ComponentKey, string> = { engine: 'Motor atölyesi', gearbox: 'Şanzıman atölyesi', electrics: 'Elektrik atölyesi' };
+const SHOP_NAMES: Record<ComponentKey, string> = { engine: msg('Motor atölyesi'), gearbox: msg('Şanzıman atölyesi'), electrics: msg('Elektrik atölyesi') };
 
 export function Factory() {
   const s = useGameState();
@@ -38,33 +40,33 @@ export function Factory() {
     <div className="screen">
       <div className="screen-head">
         <div>
-          <h1>Fabrika</h1>
-          <p className="muted">En yavaş istasyon bütün hattın hızını belirler. Darboğaz kırmızı yanar.</p>
+          <h1>{t('Fabrika')}</h1>
+          <p className="muted">{t('En yavaş istasyon bütün hattın hızını belirler. Darboğaz kırmızı yanar.')}</p>
         </div>
-        <Button kind="ghost" onClick={() => store.try((st) => A.buyLine(st), 'Boş hat kuruldu')}>
-          + Boş hat, elle doldur ({money(newLineCost(yf))})
+        <Button kind="ghost" onClick={() => store.try((st) => A.buyLine(st), t('Boş hat kuruldu'))}>
+          {t('+ Boş hat, elle doldur ({cost})', { cost: money(newLineCost(yf)) })}
         </Button>
       </div>
       <CapacityPlanner />
       {military && (
         <p className="note">
-          Askeri sözleşme sürüyor. Askeri üretimdeki hatlar masrafını ve araç başına {money(55 * costIndex(yf))} kâr getirir.
+          {t('Askeri sözleşme sürüyor. Askeri üretimdeki hatlar masrafını ve araç başına {profit} kâr getirir.', { profit: money(55 * costIndex(yf)) })}
         </p>
       )}
       {s.lines.map((l, i) => (
         <LinePanel key={l.id} line={l} military={military} defaultOpen={s.lines.length <= 3 || i === 0} />
       ))}
-      <Panel title="Parça atölyeleri (yap ya da satın al)">
-        <p className="muted small">Atölye kurarsan o parçayı kendin üretebilirsin: tedarikçiden %15 ucuz, kalite mühendislik becerine bağlı.</p>
+      <Panel title={t('Parça atölyeleri (yap ya da satın al)')}>
+        <p className="muted small">{t('Atölye kurarsan o parçayı kendin üretebilirsin: tedarikçiden %15 ucuz, kalite mühendislik becerine bağlı.')}</p>
         <div className="shops">
           {(Object.keys(SHOP_NAMES) as ComponentKey[]).map((k) => (
             <div key={k} className="shop">
-              <b>{SHOP_NAMES[k]}</b>
+              <b>{t(SHOP_NAMES[k])}</b>
               {s.company.shops[k] ? (
-                <Badge tone="good">Kuruldu</Badge>
+                <Badge tone="good">{t('Kuruldu')}</Badge>
               ) : (
-                <Button small onClick={() => store.try((st) => A.buildShop(st, k), `${SHOP_NAMES[k]} kuruldu`)}>
-                  Kur ({money(shopCost(yf))})
+                <Button small onClick={() => store.try((st) => A.buildShop(st, k), t('{shop} kuruldu', { shop: t(SHOP_NAMES[k]) }))}>
+                  {t('Kur ({cost})', { cost: money(shopCost(yf)) })}
                 </Button>
               )}
             </div>
@@ -127,7 +129,7 @@ function CapacityPlanner() {
   const payback = margin > 0 ? each / (margin * perLine(allowBlack) * 52) : Infinity;
   const build = lineBuildWeeks(yf);
   return (
-    <Panel title="Kapasite planlayıcı" className="planner">
+    <Panel title={t('Kapasite planlayıcı')} className="planner">
       {active.length ? (
         <>
           <div className="planner-models">
@@ -139,17 +141,22 @@ function CapacityPlanner() {
                   <button type="button" onClick={() => setPick(x.id)}>
                     <b>{x.name}</b>
                     <span className="small">
-                      talep ~{d.toFixed(0)}/hf · üretim {c.toFixed(1)}/hf
+                      {t('talep ~{demand}/hf · üretim {output}/hf', { demand: d.toFixed(0), output: c.toFixed(1) })}
                     </span>
-                    {d > c * 1.1 && d - c >= 0.5 && <span className="small tone-bad">~{(d - c).toFixed(0)} araç/hf kaçıyor</span>}
+                    {d > c * 1.1 && d - c >= 0.5 && <span className="small tone-bad">{t('~{n} araç/hf kaçıyor', { n: Math.round(d - c) })}</span>}
                     {x.autoCapacity && x.autoHold && d > c * 1.05 && (
                       <span className="small tone-warn">
-                        otomatik durdu: {AUTO_HOLD_TEXT[x.autoHold]}
-                        {x.autoHint && <b className="auto-hint"> Çıkış yolu: {x.autoHint}.</b>}
+                        {t('otomatik durdu: {reason}', { reason: t(AUTO_HOLD_TEXT[x.autoHold]) })}
+                        {x.autoHint && <b className="auto-hint">{' '}{t('Çıkış yolu: {hint}.', { hint: x.autoHint })}</b>}
                       </span>
                     )}
                   </button>
-                  <Toggle checked={!!x.autoCapacity} onChange={(v) => store.act((st) => A.setModelAutoCapacity(st, x.id, v))} label="Otomatik" title="Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır." />
+                  <Toggle
+                    checked={!!x.autoCapacity}
+                    onChange={(v) => store.act((st) => A.setModelAutoCapacity(st, x.id, v))}
+                    label={t('Otomatik')}
+                    title={t('Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır.')}
+                  />
                 </div>
               );
             })}
@@ -157,22 +164,43 @@ function CapacityPlanner() {
           {m && (
             <div className="planner-form">
               <p>
-                <b>Anahtar teslim hat:</b> bugünün en iyi makineleriyle ve dengeli kurulur (hiçbir bölüm darboğazın besleyebileceğinden fazla makine
-                almaz). {m.name} için {size} yerli hat başına <b>+{perLine(allowBlack).toFixed(1)} araç/hf</b>, kalıp dahil <b>{money(each)}</b>. Binası ve makineleri{' '}
-                <b>{build} haftada</b> kurulur.{' '}
+                {tx(
+                  '<b>Anahtar teslim hat:</b> bugünün en iyi makineleriyle ve dengeli kurulur (hiçbir bölüm darboğazın besleyebileceğinden fazla makine almaz). {model} için {size} yerli hat başına <b>+{output} araç/hf</b>, kalıp dahil <b>{cost}</b>. Binası ve makineleri <b>{n} haftada</b> kurulur.',
+                  { model: m.name, size, output: perLine(allowBlack).toFixed(1), cost: money(each), n: build },
+                )}{' '}
                 {payback < Infinity ? (
                   <>
-                    Ürettiği her araç satılırsa araç başına ~{money(margin)} kalır: hat kendini <b className={payback > 3 ? 'tone-warn' : ''}>~{payback < 1 ? `${Math.max(1, Math.round(payback * 12))} ayda` : `${payback.toFixed(1)} yılda`}</b> öder.
+                    {payback < 1
+                      ? tx(
+                          'Ürettiği her araç satılırsa araç başına ~{margin} kalır: hat kendini <pay>~{n} ayda</pay> öder.',
+                          { margin: money(margin), n: Math.max(1, Math.round(payback * 12)) },
+                          { pay: (c, k) => <b key={k} className={payback > 3 ? 'tone-warn' : ''}>{c}</b> },
+                        )
+                      : tx(
+                          'Ürettiği her araç satılırsa araç başına ~{margin} kalır: hat kendini <pay>~{years} yılda</pay> öder.',
+                          { margin: money(margin), years: payback.toFixed(1) },
+                          { pay: (c, k) => <b key={k} className={payback > 3 ? 'tone-warn' : ''}>{c}</b> },
+                        )}
                   </>
                 ) : (
-                  <span className="tone-bad">Bu fiyatla araç başına para kalmıyor: yeni hat kendini ödemez.</span>
+                  <span className="tone-bad">{t('Bu fiyatla araç başına para kalmıyor: yeni hat kendini ödemez.')}</span>
                 )}
               </p>
-              <div className="preset-chips" role="radiogroup" aria-label="Hat boyu">
-                <span className="small muted">Hat boyu (bölüm başına yer):</span>
+              <div className="preset-chips" role="radiogroup" aria-label={t('Hat boyu')}>
+                <span className="small muted">{t('Hat boyu (bölüm başına yer):')}</span>
                 {SIZES.map((k) => (
-                  <button key={k} type="button" role="radio" aria-checked={size === k} className={`chip ${size === k ? 'is-on' : ''}`} onClick={() => setSizePick(k)} title={`${outputAt(allowBlack, k).toFixed(1)} araç/hf · ${money(turnkeyLineCost(s.week, allowBlack, k) + A.retoolCost(s, m))}`}>
-                    {k} yer · {outputAt(allowBlack, k).toFixed(0)}/hf{k === fits && sizePick === undefined ? ' (açığa göre)' : ''}
+                  <button
+                    key={k}
+                    type="button"
+                    role="radio"
+                    aria-checked={size === k}
+                    className={`chip ${size === k ? 'is-on' : ''}`}
+                    onClick={() => setSizePick(k)}
+                    title={t('{output} araç/hf · {cost}', { output: outputAt(allowBlack, k).toFixed(1), cost: money(turnkeyLineCost(s.week, allowBlack, k) + A.retoolCost(s, m)) })}
+                  >
+                    {k === fits && sizePick === undefined
+                      ? t('{n} yer · {output}/hf (açığa göre)', { n: k, output: outputAt(allowBlack, k).toFixed(0) })
+                      : t('{n} yer · {output}/hf', { n: k, output: outputAt(allowBlack, k).toFixed(0) })}
                   </button>
                 ))}
               </div>
@@ -180,49 +208,62 @@ function CapacityPlanner() {
                 <Toggle
                   checked={black}
                   onChange={setBlack}
-                  label={`Siyah vernik fırını kullan: hat başına ${perLine(false).toFixed(1)} yerine ${perLine(true).toFixed(1)} araç/hf`}
-                  sub="Çok daha hızlı kurur ama araç yalnızca siyah olur: prestij −5."
+                  label={t('Siyah vernik fırını kullan: hat başına {normal} yerine {black} araç/hf', { normal: perLine(false).toFixed(1), black: perLine(true).toFixed(1) })}
+                  sub={t('Çok daha hızlı kurur ama araç yalnızca siyah olur: prestij −5.')}
                 />
               )}
               {shopEach < each * 0.5 && (
                 <div className="planner-row planner-shop">
                   <span className="small">
-                    <b>Küçük atölye hattı:</b> başlangıçtaki atölye gibi, el işçiliği makineleriyle. Yavaş ve araç başına işçiliği pahalı ama ucuz: +{shopCap.toFixed(1)} araç/hf,
-                    kalıp dahil <b>{money(shopEach)}</b>.
+                    {tx(
+                      '<b>Küçük atölye hattı:</b> başlangıçtaki atölye gibi, el işçiliği makineleriyle. Yavaş ve araç başına işçiliği pahalı ama ucuz: +{output} araç/hf, kalıp dahil <b>{cost}</b>.',
+                      { output: shopCap.toFixed(1), cost: money(shopEach) },
+                    )}
                   </span>
-                  <Button disabled={s.company.cash < shopEach} onClick={() => store.try((st) => A.buildWorkshopLine(st, m.id), `Atölye hattı kuruldu: ${m.name}`)}>
-                    Atölye hattı kur
+                  <Button disabled={s.company.cash < shopEach} onClick={() => store.try((st) => A.buildWorkshopLine(st, m.id), t('Atölye hattı kuruldu: {model}', { model: m.name }))}>
+                    {t('Atölye hattı kur')}
                   </Button>
                 </div>
               )}
               <div className="planner-row">
-                <div className="stepper" role="group" aria-label="Kurulacak hat sayısı">
-                  <button type="button" className="icon-btn" onClick={() => setCount(Math.max(1, count - 1))} aria-label="Bir hat az">
+                <div className="stepper" role="group" aria-label={t('Kurulacak hat sayısı')}>
+                  <button type="button" className="icon-btn" onClick={() => setCount(Math.max(1, count - 1))} aria-label={t('Bir hat az')}>
                     −
                   </button>
-                  <b>{count} hat</b>
-                  <button type="button" className="icon-btn icon-add" onClick={() => setCount(Math.min(20, count + 1))} aria-label="Bir hat fazla">
+                  <b>{t('{n} hat', { n: count })}</b>
+                  <button type="button" className="icon-btn icon-add" onClick={() => setCount(Math.min(20, count + 1))} aria-label={t('Bir hat fazla')}>
                     +
                   </button>
                 </div>
                 <span className="muted small">
-                  Toplam {money(each * count)} · +{(perLine(allowBlack) * count).toFixed(0)} araç/hf
-                  {demand > cap && ` · açığı kapatmak için ~${Math.ceil((demand - cap) / Math.max(0.1, perLine(allowBlack)))} hat`}
-                  {` · kasan ${affordable} hatta yetiyor`}
+                  {t('Toplam {cost} · +{output} araç/hf', { cost: money(each * count), output: (perLine(allowBlack) * count).toFixed(0) })}
+                  {demand > cap && ` · ${t('açığı kapatmak için ~{n} hat', { n: Math.ceil((demand - cap) / Math.max(0.1, perLine(allowBlack))) })}`}
+                  {` · ${t('kasan {n} hatta yetiyor', { n: affordable })}`}
                 </span>
                 <Button
                   kind="primary"
                   disabled={count > affordable}
                   onClick={async () => {
                     const okd = await store.ask({
-                      title: `${count} yeni hat kurulsun mu?`,
-                      body: `${m.name} için ${count} anahtar teslim hat: ${money(each * count)} şimdi ödenir, hatlar ${build} hafta sonra üretime başlar (+${(perLine(allowBlack) * count).toFixed(0)} araç/hf). Talep şu an ~${demand.toFixed(0)}/hf, üretim ${cap.toFixed(1)}/hf.`,
-                      confirm: `${count} hat kur`,
+                      title: t('{n} yeni hat kurulsun mu?', { n: count }),
+                      body: t(
+                        '{model} için {n} anahtar teslim hat: {cost} şimdi ödenir, hatlar {weeks} hafta sonra üretime başlar (+{output} araç/hf). Talep şu an ~{demand}/hf, üretim {cap}/hf.',
+                        {
+                          model: m.name,
+                          n: count,
+                          cost: money(each * count),
+                          weeks: build,
+                          output: (perLine(allowBlack) * count).toFixed(0),
+                          demand: demand.toFixed(0),
+                          cap: cap.toFixed(1),
+                        },
+                      ),
+                      confirm: t('{n} hat kur', { n: count }),
                     });
-                    if (okd) store.try((st) => A.buildTurnkeyLines(st, count, m.id, allowBlack, size), `${count} hat inşa ediliyor: ${m.name}`);
+                    if (okd) store.try((st) => A.buildTurnkeyLines(st, count, m.id, allowBlack, size), t('{n} hat inşa ediliyor: {model}', { n: count, model: m.name }));
                   }}
                 >
-                  {count} hat kur
+                  {t('{n} hat kur', { n: count })}
                 </Button>
               </div>
               {(() => {
@@ -232,15 +273,26 @@ function CapacityPlanner() {
                 if (short <= 0 || payback > 2) return null;
                 return room >= short ? (
                   <p className="note small planner-loan">
-                    Kasada {money(s.company.cash)} var, eksik {money(short)}. Hat ~{payback < 1 ? `${Math.max(1, Math.round(payback * 12))} ayda` : `${payback.toFixed(1)} yılda`} kendini
-                    ödüyorsa eksiği kredi ile kapatmak mantıklı olabilir (faiz yılda %{Math.round(credit(s).rate * 100)}).{' '}
-                    <Button small onClick={() => store.try((st) => A.takeLoan(st, Math.ceil(short / 1000) * 1000), 'Kredi alındı')}>
-                      {money(Math.ceil(short / 1000) * 1000)} kredi al
+                    {payback < 1
+                      ? t('Kasada {cash} var, eksik {short}. Hat ~{n} ayda kendini ödüyorsa eksiği kredi ile kapatmak mantıklı olabilir (faiz yılda {rate}).', {
+                          cash: money(s.company.cash),
+                          short: money(short),
+                          n: Math.max(1, Math.round(payback * 12)),
+                          rate: pct(credit(s).rate, 0),
+                        })
+                      : t('Kasada {cash} var, eksik {short}. Hat ~{years} yılda kendini ödüyorsa eksiği kredi ile kapatmak mantıklı olabilir (faiz yılda {rate}).', {
+                          cash: money(s.company.cash),
+                          short: money(short),
+                          years: payback.toFixed(1),
+                          rate: pct(credit(s).rate, 0),
+                        })}{' '}
+                    <Button small onClick={() => store.try((st) => A.takeLoan(st, Math.ceil(short / 1000) * 1000), t('Kredi alındı'))}>
+                      {t('{amount} kredi al', { amount: money(Math.ceil(short / 1000) * 1000) })}
                     </Button>
                   </p>
                 ) : (
                   <p className="note small planner-loan">
-                    Kasa ve banka kredisi ({money(Math.max(0, room))}) bu hattı kurmaya yetmiyor: daha küçük bir hat boyu seç ya da hatları tek tek büyüt.
+                    {t('Kasa ve banka kredisi ({credit}) bu hattı kurmaya yetmiyor: daha küçük bir hat boyu seç ya da hatları tek tek büyüt.', { credit: money(Math.max(0, room)) })}
                   </p>
                 );
               })()}
@@ -248,28 +300,30 @@ function CapacityPlanner() {
           )}
         </>
       ) : (
-        <p className="muted">Satışta model yok. Hat kurmadan önce bir araç çıkar.</p>
+        <p className="muted">{t('Satışta model yok. Hat kurmadan önce bir araç çıkar.')}</p>
       )}
       {upgrades.length > 0 && (
         <div className="planner-upgrade">
           <span>
-            <b>{upgrades.length} hat eski makinelerle çalışıyor.</b> Hepsini bugünün makineleriyle yenile: net {money(upgradeCost)} (eski makineler satılır), 2 hafta
-            kurulum.
+            {tx('<b>{n} hat eski makinelerle çalışıyor.</b> Hepsini bugünün makineleriyle yenile: net {cost} (eski makineler satılır), 2 hafta kurulum.', {
+              n: upgrades.length,
+              cost: money(upgradeCost),
+            })}
           </span>
           <Button
             disabled={s.company.cash < upgradeCost}
             onClick={async () => {
               const okd = await store.ask({
-                title: `${upgrades.length} hat yenilensin mi?`,
-                body: `Eski makineler satılır, yerine bugünün makineleri gelir: net ${money(upgradeCost)}. Her hat kurulum sırasında 2 hafta üretmez.`,
-                confirm: 'Hepsini yenile',
+                title: t('{n} hat yenilensin mi?', { n: upgrades.length }),
+                body: t('Eski makineler satılır, yerine bugünün makineleri gelir: net {cost}. Her hat kurulum sırasında 2 hafta üretmez.', { cost: money(upgradeCost) }),
+                confirm: t('Hepsini yenile'),
               });
               if (!okd) return;
               for (const u of upgrades) store.try((st) => A.modernizeLine(st, u.l.id, allowBlack));
-              store.showToast(`${upgrades.length} hat yenilendi`, 'good');
+              store.showToast(t('{n} hat yenilendi', { n: upgrades.length }), 'good');
             }}
           >
-            Hepsini yenile
+            {t('Hepsini yenile')}
           </Button>
         </div>
       )}
@@ -297,16 +351,18 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
   const modern = modernizeQuote(line, s.week, blackOk);
   const nights = STAGES.filter((st) => line.stations[st.id].length > 0 && line.nightShift?.[st.id]).length;
   const staffed = STAGES.filter((st) => line.stations[st.id].length > 0).length;
-  const night = nights === 0 ? 'kapalı' : nights >= staffed ? 'açık' : `${nights}/${staffed} bölümde`;
+  const night = nights === 0 ? t('kapalı') : nights >= staffed ? t('açık') : t('{on}/{all} bölümde', { on: nights, all: staffed });
   return (
     <Panel
       title={
         <button type="button" className="line-title" onClick={() => setOpen(!open)} aria-expanded={open}>
           <span aria-hidden>{open ? '▾' : '▸'}</span> {line.name}{' '}
           <span className="muted small">
-            · {isMilitary ? 'askeri üretim' : model ? model.name : 'boş'}{building ? ` · inşaatta (${line.buildUntilWeek! - s.week} hf)` : ''} · {r.throughput.toFixed(1)} araç/hafta · işçilik {money(upkeep)}/hafta
-            {running && <> · darboğaz: {STAGES.find((x) => x.id === r.bottleneck)!.name}</>}
-            {staffed > 0 && <> · gece vardiyası: {night}</>}
+            · {isMilitary ? t('askeri üretim') : model ? model.name : t('boş')}
+            {building ? ` · ${t('inşaatta ({n} hf)', { n: line.buildUntilWeek! - s.week })}` : ''} ·{' '}
+            {t('{output} araç/hafta · işçilik {cost}/hafta', { output: r.throughput.toFixed(1), cost: money(upkeep) })}
+            {running && <> · {t('darboğaz: {stage}', { stage: t(STAGES.find((x) => x.id === r.bottleneck)!.name) })}</>}
+            {staffed > 0 && <> · {t('gece vardiyası: {state}', { state: night })}</>}
           </span>
         </button>
       }
@@ -316,34 +372,34 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
             <Toggle
               checked={nights > 0 && nights >= staffed}
               onChange={(v) => store.try((st) => A.setLineNightShift(st, line.id, v))}
-              label="Gece vardiyası (tüm hat)"
+              label={t('Gece vardiyası (tüm hat)')}
             />
           )}
           <select
-            aria-label="Hatta üretilecek model"
+            aria-label={t('Hatta üretilecek model')}
             value={line.modelId ?? ''}
             onChange={async (e) => {
               const v = e.target.value || undefined;
               if (v) {
                 const m = s.models.find((x) => x.id === v)!;
                 const ok = await store.ask({
-                  title: `${line.name} hattında ${m.name} üretilsin mi?`,
-                  body: `Hat yeniden ayarlanır: 3 hafta üretim durur ve ${money(A.retoolCost(s, m))} kalıp masrafı çıkar.`,
-                  confirm: 'Hattı ayarla',
+                  title: t('{line} hattında {model} üretilsin mi?', { line: line.name, model: m.name }),
+                  body: t('Hat yeniden ayarlanır: 3 hafta üretim durur ve {cost} kalıp masrafı çıkar.', { cost: money(A.retoolCost(s, m)) }),
+                  confirm: t('Hattı ayarla'),
                 });
                 if (!ok) return;
               }
               store.try((st) => A.assignLine(st, line.id, v));
             }}
           >
-            <option value="">— Boş —</option>
+            <option value="">{t('— Boş —')}</option>
             {active.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name} ({money(A.retoolCost(s, m))})
               </option>
             ))}
           </select>
-          {military && <Toggle checked={!!line.military} onChange={(v) => store.try((st) => A.setLineMilitary(st, line.id, v))} label="Askeri üretim" />}
+          {military && <Toggle checked={!!line.military} onChange={(v) => store.try((st) => A.setLineMilitary(st, line.id, v))} label={t('Askeri üretim')} />}
         </div>
       }
     >
@@ -354,7 +410,13 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
         perStage={r.perStage}
         bottleneck={r.bottleneck}
         running={running}
-        label={building ? `İnşaat sürüyor: ${line.buildUntilWeek! - s.week} hafta sonra üretime hazır` : retooling ? 'Kalıp değişimi sürüyor…' : 'Hat boşta: bir model ata'}
+        label={
+          building
+            ? t('İnşaat sürüyor: {n} hafta sonra üretime hazır', { n: line.buildUntilWeek! - s.week })
+            : retooling
+              ? t('Kalıp değişimi sürüyor…')
+              : t('Hat boşta: bir model ata')
+        }
       />
       <div className="stages">
         {STAGES.map((st) => (
@@ -363,18 +425,18 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
       </div>
       <div className="row-between">
         <span className="muted small">
-          Bölüm başına yer: {line.slots}/{MAX_SLOTS}
-          {model && !isMilitary && ` · ${model.name} üretim zorluğu ${model.stats.complexity.toFixed(2)}`}
+          {t('Bölüm başına yer: {slots}/{max}', { slots: line.slots, max: MAX_SLOTS })}
+          {model && !isMilitary && ` · ${t('{model} üretim zorluğu {value}', { model: model.name, value: model.stats.complexity.toFixed(2) })}`}
         </span>
         <span className="line-btns">
           {line.slots < MAX_SLOTS && (
-            <Button small onClick={() => store.try((st) => A.expandLine(st, line.id), 'Hat genişletildi')}>
-              Hattı genişlet ({money(slotCost(yf, line.slots))})
+            <Button small onClick={() => store.try((st) => A.expandLine(st, line.id), t('Hat genişletildi'))}>
+              {t('Hattı genişlet ({cost})', { cost: money(slotCost(yf, line.slots)) })}
             </Button>
           )}
           {modern.after > modern.before * 1.02 && (
-            <Button small kind="primary" onClick={() => store.try((st) => A.modernizeLine(st, line.id, blackOk), `${line.name} yenilendi`)}>
-              Yenile: ham kapasite {num(modern.before)} → {num(modern.after)} ({money(Math.max(0, modern.cost))})
+            <Button small kind="primary" onClick={() => store.try((st) => A.modernizeLine(st, line.id, blackOk), t('{line} yenilendi', { line: line.name }))}>
+              {t('Yenile: ham kapasite {before} → {after} ({cost})', { before: num(modern.before), after: num(modern.after), cost: money(Math.max(0, modern.cost)) })}
             </Button>
           )}
         </span>
@@ -400,27 +462,29 @@ function StageColumn({ line, stage, bottleneck, capacity, wage }: { line: Produc
   return (
     <div className={`stage ${bottleneck ? 'is-bottleneck' : ''}`}>
       <div className="stage-head">
-        <b>{def.name}</b>
-        <span className={bottleneck ? 'tone-bad' : 'muted'}>{capacity.toFixed(1)}/hf</span>
+        <b>{t(def.name)}</b>
+        <span className={bottleneck ? 'tone-bad' : 'muted'}>{t('{v}/hf', { v: capacity.toFixed(1) })}</span>
       </div>
-      {bottleneck && <Badge tone="bad">Darboğaz</Badge>}
+      {bottleneck && <Badge tone="bad">{t('Darboğaz')}</Badge>}
       <ul className="stations">
         {groups.map(({ id, count }) => {
           const d = stationDef(id);
           return (
-            <li key={id} title={d.desc}>
+            <li key={id} title={t(d.desc)}>
               <span className="station-name">
-                {d.name} {count > 1 && <b>×{count}</b>}
+                {t(d.name)} {count > 1 && <b>×{count}</b>}
                 <small className="muted">
-                  {d.capacity}/hf · {money(d.upkeep * wage)}/hf{count > 1 ? ' (her biri)' : ''}
+                  {count > 1
+                    ? t('{cap}/hf · {cost}/hf (her biri)', { cap: d.capacity, cost: money(d.upkeep * wage) })
+                    : t('{cap}/hf · {cost}/hf', { cap: d.capacity, cost: money(d.upkeep * wage) })}
                 </small>
               </span>
               <span className="station-btns">
                 <button
                   type="button"
                   className="icon-btn"
-                  aria-label={`Bir ${d.name} sat`}
-                  title="Birini sat (%30 geri alınır)"
+                  aria-label={t('Bir {station} sat', { station: t(d.name) })}
+                  title={t('Birini sat (%30 geri alınır)')}
                   onClick={() => store.try((st) => A.sellStation(st, line.id, stage, line.stations[stage].lastIndexOf(id)))}
                 >
                   −
@@ -428,8 +492,8 @@ function StageColumn({ line, stage, bottleneck, capacity, wage }: { line: Produc
                 <button
                   type="button"
                   className="icon-btn icon-add"
-                  aria-label={`Bir ${d.name} daha al`}
-                  title={full ? 'Yer yok' : `Bir tane daha al (${money(stationPrice(id, s.week))})`}
+                  aria-label={t('Bir {station} daha al', { station: t(d.name) })}
+                  title={full ? t('Yer yok') : t('Bir tane daha al ({cost})', { cost: money(stationPrice(id, s.week)) })}
                   disabled={full || d.year > yf}
                   onClick={() => store.try((st) => A.buyStation(st, line.id, stage, id))}
                 >
@@ -440,30 +504,31 @@ function StageColumn({ line, stage, bottleneck, capacity, wage }: { line: Produc
           );
         })}
         {line.slots - line.stations[stage].length > 0 && (
-          <li className="slot-empty">{line.slots - line.stations[stage].length} boş yer</li>
+          <li className="slot-empty">{t('{n} boş yer', { n: line.slots - line.stations[stage].length })}</li>
         )}
       </ul>
       <select
-        aria-label={`${def.name} bölümüne istasyon ekle`}
+        aria-label={t('{stage} bölümüne istasyon ekle', { stage: t(def.name) })}
         value=""
         disabled={full}
         onChange={(e) => e.target.value && store.try((st) => A.buyStation(st, line.id, stage, e.target.value))}
       >
-        <option value="">{full ? 'Yer yok' : '+ İstasyon ekle'}</option>
+        <option value="">{full ? t('Yer yok') : t('+ İstasyon ekle')}</option>
         {options.map((o) => (
           <option key={o.id} value={o.id}>
-            {o.name}: {o.capacity}/hf · {money(stationPrice(o.id, s.week))}
-            {o.blackOnly ? ' · sadece siyah' : ''}
+            {o.blackOnly
+              ? t('{station}: {cap}/hf · {cost} · sadece siyah', { station: t(o.name), cap: o.capacity, cost: money(stationPrice(o.id, s.week)) })
+              : t('{station}: {cap}/hf · {cost}', { station: t(o.name), cap: o.capacity, cost: money(stationPrice(o.id, s.week)) })}
           </option>
         ))}
       </select>
-      <span className="muted small">{num(line.stations[stage].reduce((a, id) => a + stationDef(id).capacity, 0))} ham kapasite</span>
+      <span className="muted small">{t('{v} ham kapasite', { v: num(line.stations[stage].reduce((a, id) => a + stationDef(id).capacity, 0)) })}</span>
       {line.stations[stage].length > 0 && (
         <Toggle
           checked={!!line.nightShift?.[stage]}
           onChange={(v) => store.try((st) => A.setNightShift(st, line.id, stage, v))}
-          label="Gece vardiyası"
-          sub={`+%${Math.round((NIGHT_SHIFT_OUTPUT - 1) * 100)} kapasite · işçilik ×${NIGHT_SHIFT_COST}`}
+          label={t('Gece vardiyası')}
+          sub={t('+{extra} kapasite · işçilik ×{cost}', { extra: pct(NIGHT_SHIFT_OUTPUT - 1, 0), cost: NIGHT_SHIFT_COST })}
         />
       )}
     </div>

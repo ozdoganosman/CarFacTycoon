@@ -5,8 +5,10 @@ import { RACING_LEVELS, RACING_YEAR, racingBudget, racingOutlook, racingPaused, 
 import { yearFloat } from '../../core/time';
 import { MARKETS } from '../../data/markets';
 import { store, useGameState } from '../store';
-import { money, num, pctOf } from '../format';
+import { money, num, pct as fmtPct, pctOf } from '../format';
 import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table } from '../components/ui';
+import { t } from '../../i18n';
+import { tx } from '../i18n';
 
 /** What the money is for: a racing team, buying rivals, and the company's worth. */
 import { TeamPanel } from '../components/TeamPanel';
@@ -22,31 +24,35 @@ export function Company() {
   const racingOpen = yf >= RACING_YEAR;
   const paused = racingPaused(s.company.hq, yf);
   const outlook = racingOutlook(s, Math.max(1, r.level));
-  const pct = (v: number) => `%${Math.round(v * 100)}`;
+  const pct = (v: number) => fmtPct(v, 0);
   return (
     <div className="screen">
       <div className="screen-head">
         <div>
-          <h1>Şirket</h1>
-          <p className="muted">Mühendis al, kazandığın parayı markayı büyütmek için kullan: yarışlarda ün kazan, küçük rakipleri satın al, borsaya açıl.</p>
+          <h1>{t('Şirket')}</h1>
+          <p className="muted">{t('Mühendis al, kazandığın parayı markayı büyütmek için kullan: yarışlarda ün kazan, küçük rakipleri satın al, borsaya açıl.')}</p>
         </div>
       </div>
       <div className="stats-row">
         <Stat
           label={
             <>
-              Şirket değeri
+              {t('Şirket değeri')}
               <Info>
-                <p>Makineler, stok ve kasa, eksi borç; üstüne markanın kazanç gücü (son bir yılın faaliyet kârının altı katı).</p>
-                <p>Oyun sonu puanına girer{s.shares ? `: yalnızca senin payın (%${Math.round(founderShare(s) * 100)})` : ''}.</p>
+                <p>{t('Makineler, stok ve kasa, eksi borç; üstüne markanın kazanç gücü (son bir yılın faaliyet kârının altı katı).')}</p>
+                <p>
+                  {s.shares
+                    ? t('Oyun sonu puanına girer: yalnızca senin payın ({share}).', { share: pct(founderShare(s)) })
+                    : t('Oyun sonu puanına girer.')}
+                </p>
               </Info>
             </>
           }
           value={money(value)}
         />
-        <Stat label="İtibar" value={Math.round(s.company.reputation)} sub="/ 100" />
-        <Stat label="Yarış ünü" value={r.fame.toFixed(1)} sub={`bütün modellere prestij +${racingPrestige(s).toFixed(1)}`} />
-        <Stat label="Yarış zaferi" value={r.wins ?? 0} />
+        <Stat label={t('İtibar')} value={Math.round(s.company.reputation)} sub="/ 100" />
+        <Stat label={t('Yarış ünü')} value={r.fame.toFixed(1)} sub={t('bütün modellere prestij +{v}', { v: racingPrestige(s).toFixed(1) })} />
+        <Stat label={t('Yarış zaferi')} value={r.wins ?? 0} />
       </div>
       <TeamPanel />
       <div className="grid-2">
@@ -54,89 +60,117 @@ export function Company() {
         <RivalMovesPanel s={s} />
       </div>
       <div className="grid-2">
-        <Panel title="Yarış takımı">
+        <Panel title={t('Yarış takımı')}>
           {!racingOpen ? (
-            <Empty>Otomobil yarışları {RACING_YEAR}’dan itibaren bir markanın vitrini olur.</Empty>
+            <Empty>{t('Otomobil yarışları {year}’dan itibaren bir markanın vitrini olur.', { year: RACING_YEAR })}</Empty>
           ) : (
             <>
               <p className="muted small">
-                Her yıl Eylül’de sezonun büyük yarışı koşulur. Sonucu en iyi arabanın hızı, yol tutuşu ve dayanıklılığı, mühendislerin becerisi ve takımın bütçesi belirler.
-                Zaferler bütün modellerinin prestijini ve markanın bilinirliğini artırır; ün, yarışmayı bırakınca yavaş yavaş söner.
+                {t(
+                  'Her yıl Eylül’de sezonun büyük yarışı koşulur. Sonucu en iyi arabanın hızı, yol tutuşu ve dayanıklılığı, mühendislerin becerisi ve takımın bütçesi belirler. Zaferler bütün modellerinin prestijini ve markanın bilinirliğini artırır; ün, yarışmayı bırakınca yavaş yavaş söner.',
+                )}
               </p>
-              {paused && <p className="note">Savaş sürüyor: yarışlar yapılmıyor. Takım bekler, bütçe harcanmaz.</p>}
+              {paused && <p className="note">{t('Savaş sürüyor: yarışlar yapılmıyor. Takım bekler, bütçe harcanmaz.')}</p>}
               {outlook ? (
                 <p className={`small ${outlook.podium < 0.2 ? 'tone-bad' : ''}`}>
-                  Takımın arabası: <b>{outlook.model}</b> ({Math.floor(outlook.age)} yaşında). {r.level ? 'Bu bütçeyle' : 'Amatör bütçeyle'} kazanma şansı{' '}
-                  <b>{pct(outlook.win)}</b>, ilk üç <b>{pct(outlook.podium)}</b>.
-                  {outlook.podium < 0.2 && ' Bu arabayla yarışmak para yakmak olur: daha hızlı, yeni bir araba ya da daha büyük bir bütçe gerekiyor.'}
+                  {r.level
+                    ? tx('Takımın arabası: <b>{model}</b> ({n} yaşında). Bu bütçeyle kazanma şansı <b>{win}</b>, ilk üç <b>{podium}</b>.', {
+                        model: outlook.model,
+                        n: Math.floor(outlook.age),
+                        win: pct(outlook.win),
+                        podium: pct(outlook.podium),
+                      })
+                    : tx('Takımın arabası: <b>{model}</b> ({n} yaşında). Amatör bütçeyle kazanma şansı <b>{win}</b>, ilk üç <b>{podium}</b>.', {
+                        model: outlook.model,
+                        n: Math.floor(outlook.age),
+                        win: pct(outlook.win),
+                        podium: pct(outlook.podium),
+                      })}
+                  {outlook.podium < 0.2 && ` ${t('Bu arabayla yarışmak para yakmak olur: daha hızlı, yeni bir araba ya da daha büyük bir bütçe gerekiyor.')}`}
                 </p>
               ) : (
-                <p className="small muted">Satışta araban yok: yarışacak bir araba gerekiyor.</p>
+                <p className="small muted">{t('Satışta araban yok: yarışacak bir araba gerekiyor.')}</p>
               )}
               <Choice
                 value={r.level}
                 onChange={(v) => store.try((st) => setRacingLevel(st, v))}
                 options={RACING_LEVELS.map((l, i) => {
                   const o = racingOutlook(s, i);
+                  const cost = { budget: money(racingBudget(s, i)), share: pctOf(l.share, l.share * 100 % 1 ? 1 : 0), floor: money(l.floor) };
                   return {
                     value: i,
-                    label: l.name,
+                    label: t(l.name),
                     sub: i
-                      ? `${l.desc} Yılda ~${money(racingBudget(s, i))} (cironun ${pctOf(l.share, l.share * 100 % 1 ? 1 : 0)}, en az ${money(l.floor)}).${o ? ` Kazanma şansı ${pct(o.win)}, ilk üç ${pct(o.podium)}.` : ''}`
-                      : l.desc,
+                      ? `${t(l.desc)} ${
+                          o
+                            ? t('Yılda ~{budget} (cironun {share}, en az {floor}). Kazanma şansı {win}, ilk üç {podium}.', { ...cost, win: pct(o.win), podium: pct(o.podium) })
+                            : t('Yılda ~{budget} (cironun {share}, en az {floor}).', cost)
+                        }`
+                      : t(l.desc),
                   };
                 })}
               />
-              <p className="small">Ün</p>
-              <Progress value={Math.min(8, r.fame)} max={8} label={`${Math.min(8, r.fame).toFixed(1)} / 8${r.fame > 8 ? " (dolu)" : ""}`} />
+              <p className="small">{t('Ün')}</p>
+              <Progress
+                value={Math.min(8, r.fame)}
+                max={8}
+                label={r.fame > 8 ? t('{v} / 8 (dolu)', { v: Math.min(8, r.fame).toFixed(1) }) : `${Math.min(8, r.fame).toFixed(1)} / 8`}
+              />
               {r.last && (
                 <p className="small">
-                  {r.last.year} sezonu, {r.last.race}: <b>{r.last.model}</b>{' '}
-                  {r.last.result === 'win' ? '🏆 birinci oldu' : r.last.result === 'podium' ? 'ilk üçe girdi' : 'dereceye giremedi'}.
+                  {r.last.result === 'win'
+                    ? tx('{year} sezonu, {race}: <b>{model}</b> 🏆 birinci oldu.', { year: r.last.year, race: r.last.race, model: r.last.model })
+                    : r.last.result === 'podium'
+                      ? tx('{year} sezonu, {race}: <b>{model}</b> ilk üçe girdi.', { year: r.last.year, race: r.last.race, model: r.last.model })
+                      : tx('{year} sezonu, {race}: <b>{model}</b> dereceye giremedi.', { year: r.last.year, race: r.last.race, model: r.last.model })}
                 </p>
               )}
             </>
           )}
         </Panel>
-        <Panel title="Rakip satın al">
+        <Panel title={t('Rakip satın al')}>
           <p className="muted small">
-            Senden küçük üreticiler satılık. Satın aldığında modelleri piyasadan çekilir (müşterileri yeni bir marka arar), mühendisleri sana katılır, bayileri senin
-            arabalarını satar: en kalabalık eyaletlerde, henüz satış yapmadıkların dahil, yeni bayilerin olur.
+            {t(
+              'Senden küçük üreticiler satılık. Satın aldığında modelleri piyasadan çekilir (müşterileri yeni bir marka arar), mühendisleri sana katılır, bayileri senin arabalarını satar: en kalabalık eyaletlerde, henüz satış yapmadıkların dahil, yeni bayilerin olur.',
+            )}
           </p>
           {targets.length ? (
             <Table
-              head={['Şirket', 'Geçen yıl', 'Mühendis', 'Bedel', '']}
+              head={[t('Şirket'), t('Geçen yıl'), t('Mühendis'), t('Bedel'), '']}
               align={['l', 'r', 'r', 'r', 'r']}
-              rows={targets.slice(0, 10).map((t) => [
+              rows={targets.slice(0, 10).map((tg) => [
                 <span key="n">
-                  {MARKETS.find((m) => m.id === t.home)!.flag} {t.name}
+                  {MARKETS.find((m) => m.id === tg.home)!.flag} {tg.name}
                 </span>,
-                `${num(t.units)} araç`,
-                `+${t.engineers}`,
-                money(t.price),
+                t('{count} araç', { count: num(tg.units) }),
+                `+${tg.engineers}`,
+                money(tg.price),
                 <Button
                   key="b"
                   small
-                  disabled={s.company.cash < t.price}
+                  disabled={s.company.cash < tg.price}
                   onClick={() =>
                     store
                       .ask({
-                        title: `${t.name} satın alınsın mı?`,
-                        body: `Bedel ${money(t.price)} (kasan ${money(s.company.cash)}). ${t.engineers} mühendis katılır (maaşları da gelir), ${t.name} modelleri piyasadan çekilir, bayileri senin arabalarını satar. Bu işlem geri alınamaz.`,
-                        confirm: `${money(t.price)} öde, satın al`,
+                        title: t('{company} satın alınsın mı?', { company: tg.name }),
+                        body: t(
+                          'Bedel {price} (kasan {cash}). {n} mühendis katılır (maaşları da gelir), {company} modelleri piyasadan çekilir, bayileri senin arabalarını satar. Bu işlem geri alınamaz.',
+                          { price: money(tg.price), cash: money(s.company.cash), n: tg.engineers, company: tg.name },
+                        ),
+                        confirm: t('{price} öde, satın al', { price: money(tg.price) }),
                         danger: true,
                       })
-                      .then((yes) => yes && store.try((st) => A.acquireRival(st, t.id), `${t.name} satın alındı`))
+                      .then((yes) => yes && store.try((st) => A.acquireRival(st, tg.id), t('{company} satın alındı', { company: tg.name })))
                   }
                 >
-                  Satın al
+                  {t('Satın al')}
                 </Button>,
               ])}
             />
           ) : (
-            <Empty>Şu an satılık rakip yok: senden küçük ve satış yapan bir üretici çıktığında burada görünür.</Empty>
+            <Empty>{t('Şu an satılık rakip yok: senden küçük ve satış yapan bir üretici çıktığında burada görünür.')}</Empty>
           )}
-          {(s.acquired?.length ?? 0) > 0 && <p className="small muted">Şimdiye kadar {s.acquired!.length} şirket satın aldın.</p>}
+          {(s.acquired?.length ?? 0) > 0 && <p className="small muted">{t('Şimdiye kadar {n} şirket satın aldın.', { n: s.acquired!.length })}</p>}
         </Panel>
       </div>
     </div>

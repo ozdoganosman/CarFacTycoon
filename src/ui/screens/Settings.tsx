@@ -6,6 +6,7 @@ import { Button, Choice, Panel, Toggle } from '../components/ui';
 import { AdSettings } from '../components/Sponsor';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { ads } from '../ads';
+import { t } from '../../i18n';
 
 type Theme = 'system' | 'light' | 'dark';
 
@@ -38,16 +39,16 @@ export function Settings() {
     setCode(text);
     try {
       await navigator.clipboard.writeText(text);
-      store.showToast('Kayıt kodu panoya kopyalandı', 'good');
+      store.showToast(t('Kayıt kodu panoya kopyalandı'), 'good');
     } catch {
-      store.showToast('Panoya kopyalanamadı: aşağıdaki kutudaki metni seçip kopyala', 'info');
+      store.showToast(t('Panoya kopyalanamadı: aşağıdaki kutudaki metni seçip kopyala'), 'info');
     }
   };
 
   const loadText = (text: string) => {
     try {
       store.load(deserialize(text.trim()));
-      store.showToast('Kayıt yüklendi', 'good');
+      store.showToast(t('Kayıt yüklendi'), 'good');
     } catch (err) {
       store.showToast((err as Error).message, 'bad');
     }
@@ -56,61 +57,64 @@ export function Settings() {
   return (
     <div className="screen">
       <div className="screen-head">
-        <h1>Ayarlar</h1>
+        <h1>{t('Ayarlar')}</h1>
       </div>
       <Panel title="Dil · Language">
         <LanguagePicker />
       </Panel>
-      <Panel title="Oynanış">
+      <Panel title={t('Oynanış')}>
         <Toggle
           checked={s.settings.engineerMode}
           onChange={(v) => store.act((st) => A.setEngineerMode(st, v))}
-          label="Mühendis modu"
-          sub="Açıkken (varsayılan) motorun silindir düzeni, çapı, stroku, sıkıştırma oranı, supap düzeni, yakıt sistemi ve kompresörü ayrı ayrı ayarlanır ve her ayarın ne işe yaradığı yazar. Karışık gelirse kapat: hazır motorlar ve tek bir karakter kaydırıcısıyla çalışırsın."
+          label={t('Mühendis modu')}
+          sub={t(
+            'Açıkken (varsayılan) motorun silindir düzeni, çapı, stroku, sıkıştırma oranı, supap düzeni, yakıt sistemi ve kompresörü ayrı ayrı ayarlanır ve her ayarın ne işe yaradığı yazar. Karışık gelirse kapat: hazır motorlar ve tek bir karakter kaydırıcısıyla çalışırsın.',
+          )}
         />
         <Toggle
           checked={s.settings.autoPauseCards}
           onChange={(v) => store.act((st) => A.setAutoPauseCards(st, v))}
-          label="Yeni teknoloji kartlarını göster"
-          sub="Yeni bir teknoloji açıldığında “Neden böyle çalışıyor?” kartı açılır ve oyun durur."
+          label={t('Yeni teknoloji kartlarını göster')}
+          sub={t('Yeni bir teknoloji açıldığında “Neden böyle çalışıyor?” kartı açılır ve oyun durur.')}
         />
-        <p className="muted small">Kısayollar: boşluk = duraklat/devam, 1-2-3 = hız.</p>
+        <p className="muted small">{t('Kısayollar: boşluk = duraklat/devam, 1-2-3 = hız.')}</p>
       </Panel>
-      <Panel title="Görünüm">
+      <Panel title={t('Görünüm')}>
         <Choice
           value={theme}
-          onChange={(t) => {
-            setTheme(t);
-            applyTheme(t);
+          onChange={(th) => {
+            setTheme(th);
+            applyTheme(th);
           }}
           options={[
-            { value: 'system', label: 'Sistem' },
-            { value: 'light', label: 'Açık' },
-            { value: 'dark', label: 'Koyu' },
+            { value: 'system', label: t('Sistem') },
+            { value: 'light', label: t('Açık') },
+            { value: 'dark', label: t('Koyu') },
           ]}
         />
       </Panel>
       {ads.backend && (
-        <Panel title="Reklamlar">
+        <Panel title={t('Reklamlar')}>
           <AdSettings />
         </Panel>
       )}
-      <Panel title="Kayıt">
+      <Panel title={t('Kayıt')}>
         <p className="muted small">
-          Oyun her çeyrek otomatik olarak bu tarayıcıya kaydedilir. Başka bir cihazda devam etmek için kayıt kodunu kopyala ve orada yapıştırıp yükle ya da bir kayıt dosyası
-          seç.
+          {t(
+            'Oyun her çeyrek otomatik olarak bu tarayıcıya kaydedilir. Başka bir cihazda devam etmek için kayıt kodunu kopyala ve orada yapıştırıp yükle ya da bir kayıt dosyası seç.',
+          )}
         </p>
         <div className="row">
           <Button
             onClick={() => {
               store.save();
-              store.showToast('Kaydedildi', 'good');
+              store.showToast(t('Kaydedildi'), 'good');
             }}
           >
-            Şimdi kaydet
+            {t('Şimdi kaydet')}
           </Button>
-          <Button onClick={copySave}>Kayıt kodunu kopyala</Button>
-          <Button onClick={() => fileRef.current?.click()}>Kayıt dosyası yükle</Button>
+          <Button onClick={copySave}>{t('Kayıt kodunu kopyala')}</Button>
+          <Button onClick={() => fileRef.current?.click()}>{t('Kayıt dosyası yükle')}</Button>
           <input
             ref={fileRef}
             type="file"
@@ -126,31 +130,31 @@ export function Settings() {
             onClick={async () => {
               if (
                 await store.ask({
-                  title: 'Ana menüye dönülsün mü?',
-                  body: 'Oyun bu tarayıcıya kaydedilir; ana menüden kaldığın yerden devam edebilirsin.',
-                  confirm: 'Ana menü',
+                  title: t('Ana menüye dönülsün mü?'),
+                  body: t('Oyun bu tarayıcıya kaydedilir; ana menüden kaldığın yerden devam edebilirsin.'),
+                  confirm: t('Ana menü'),
                 })
               )
                 store.quit();
             }}
           >
-            Ana menü
+            {t('Ana menü')}
           </Button>
         </div>
         <label className="field save-code">
-          <span>Kayıt kodu</span>
+          <span>{t('Kayıt kodu')}</span>
           <textarea
             id="save-code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             onFocus={(e) => e.target.select()}
             rows={3}
-            placeholder="Başka bir cihazdan kopyaladığın kayıt kodunu buraya yapıştır"
+            placeholder={t('Başka bir cihazdan kopyaladığın kayıt kodunu buraya yapıştır')}
           />
         </label>
         <div className="row">
           <Button disabled={!code.trim()} onClick={() => loadText(code)}>
-            Koddan yükle
+            {t('Koddan yükle')}
           </Button>
         </div>
       </Panel>

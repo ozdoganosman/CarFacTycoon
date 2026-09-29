@@ -21,6 +21,8 @@ import { StatsPanel } from '../components/StatsPanel';
 import { CarSVG } from '../viz/CarSVG';
 import { LineChart } from '../viz/LineChart';
 import { weeklySold } from './HQ';
+import { t } from '../../i18n';
+import { tx } from '../i18n';
 
 export function ModelView({ modelId }: { modelId: string }) {
   const s = useGameState();
@@ -42,28 +44,28 @@ export function ModelView({ modelId }: { modelId: string }) {
       <div className="screen-head">
         <div>
           <button type="button" className="link small" onClick={() => store.go({ id: 'models' })}>
-            ← Modeller
+            ← {t('Modeller')}
           </button>
           <h1>
-            {m.name} {m.generation > 1 && <span className="muted">({m.generation}. kuşak)</span>}
+            {m.name} {m.generation > 1 && <span className="muted">{t('({gen}. kuşak)', { gen: m.generation })}</span>}
           </h1>
           <p className="muted">
-            {segmentDef(m.segment).icon} {segmentDef(m.segment).name} · çıkış {formatDate(m.launchWeek)}
-            {m.faceliftCount ? ` · ${m.faceliftCount} makyaj` : ''} · {active ? `${age.toFixed(1)} yaşında` : 'üretimden kalktı'}
+            {segmentDef(m.segment).icon} {t(segmentDef(m.segment).name)} · {t('çıkış {date}', { date: formatDate(m.launchWeek) })}
+            {m.faceliftCount ? ` · ${t('{n} makyaj', { n: m.faceliftCount })}` : ''} · {active ? t('{age} yaşında', { age: age.toFixed(1) }) : t('üretimden kalktı')}
           </p>
         </div>
         {active && (
           <div className="head-actions">
             <Button
               disabled={hasFacelift}
-              title="Kısa bir proje: tasarım, donanım ve ayar güncellemesi"
+              title={t('Kısa bir proje: tasarım, donanım ve ayar güncellemesi')}
               onClick={() => {
                 const r = store.act((st) => A.startFacelift(st, m.id));
                 if (r?.ok) store.go({ id: 'project', projectId: r.id });
                 else if (r) store.showToast(r.error, 'bad');
               }}
             >
-              Makyaj yap
+              {t('Makyaj yap')}
             </Button>
             <Button
               disabled={hasFacelift}
@@ -75,87 +77,91 @@ export function ModelView({ modelId }: { modelId: string }) {
                 else if (r) store.showToast(r.error, 'bad');
               }}
             >
-              Yeni kuşak tasarla
+              {t('Yeni kuşak tasarla')}
             </Button>
             <Button
               kind="danger"
               onClick={async () => {
                 const ok = await store.ask({
-                  title: `${m.name} üretimden kaldırılsın mı?`,
-                  body: 'Kalan stok bayilerde indirimle satılır ve hatlar boşa çıkar.',
-                  confirm: 'Üretimden kaldır',
+                  title: t('{model} üretimden kaldırılsın mı?', { model: m.name }),
+                  body: t('Kalan stok bayilerde indirimle satılır ve hatlar boşa çıkar.'),
+                  confirm: t('Üretimden kaldır'),
                   danger: true,
                 });
                 if (ok) store.act((st) => A.retireModel(st, m.id));
               }}
             >
-              Üretimden kaldır
+              {t('Üretimden kaldır')}
             </Button>
           </div>
         )}
       </div>
 
       <div className="stats-row">
-        <Stat label="Haftalık satış" value={weeklySold(m).toFixed(1)} sub={`talep ${demand.toFixed(1)}`} />
-        <Stat label="Stok" value={num(m.inventory)} tone={m.inventory > demand * 12 && m.inventory > 10 ? 'warn' : undefined} />
-        <Stat label="Toplam satış" value={num(m.unitsSold)} sub={money(m.revenueTotal)} />
-        <Stat label="Dergi ortalaması" value={m.reviewScore.toFixed(1)} sub="/ 10" />
-        <Stat label="Güvenilirlik (alıcı gözünde)" value={Math.round(scores.reliability)} sub="sınıf ort. 50" tone={scores.reliability < 40 ? 'bad' : undefined} />
+        <Stat label={t('Haftalık satış')} value={weeklySold(m).toFixed(1)} sub={t('talep {demand}', { demand: demand.toFixed(1) })} />
+        <Stat label={t('Stok')} value={num(m.inventory)} tone={m.inventory > demand * 12 && m.inventory > 10 ? 'warn' : undefined} />
+        <Stat label={t('Toplam satış')} value={num(m.unitsSold)} sub={money(m.revenueTotal)} />
+        <Stat label={t('Dergi ortalaması')} value={m.reviewScore.toFixed(1)} sub="/ 10" />
+        <Stat label={t('Güvenilirlik (alıcı gözünde)')} value={Math.round(scores.reliability)} sub={t('sınıf ort. 50')} tone={scores.reliability < 40 ? 'bad' : undefined} />
       </div>
 
       <div className="grid-2">
-        <Panel title="Satışlar">
+        <Panel title={t('Satışlar')}>
           <LineChart
             series={[
-              { id: 'sold', name: 'Satılan', color: 'var(--series-1)', points: history.map((h) => ({ x: h.week, y: h.sold })) },
-              { id: 'built', name: 'Üretilen', color: 'var(--series-2)', points: history.map((h) => ({ x: h.week, y: h.built })), dashed: true },
+              { id: 'sold', name: t('Satılan'), color: 'var(--series-1)', points: history.map((h) => ({ x: h.week, y: h.sold })) },
+              { id: 'built', name: t('Üretilen'), color: 'var(--series-2)', points: history.map((h) => ({ x: h.week, y: h.built })), dashed: true },
             ]}
             height={200}
             xFormat={(w) => formatShort(Math.round(w))}
             yFormat={(v) => v.toFixed(v < 10 ? 1 : 0)}
-            yLabel="Araç / hafta"
-            ariaLabel={`${m.name} haftalık satış ve üretim grafiği`}
+            yLabel={t('Araç / hafta')}
+            ariaLabel={t('{model} haftalık satış ve üretim grafiği', { model: m.name })}
           />
           {active && (
             <>
               <Toggle
                 checked={!!m.autoCapacity}
                 onChange={(v) => store.act((st) => A.setModelAutoCapacity(st, m.id, v))}
-                label="Talebi otomatik karşıla"
+                label={t('Talebi otomatik karşıla')}
                 sub={
                   <>
-                    Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan
-                    hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır.
+                    {t(
+                      'Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır.',
+                    )}
                     {(m.autoSpent ?? 0) !== 0 && (
                       <>
                         {' '}
-                        <b>Bu model için şimdiye kadar net {money(m.autoSpent ?? 0)} harcadı.</b> Harcamalar Finans’ta ayrı satırda görünür.
+                        {tx('<b>Bu model için şimdiye kadar net {spent} harcadı.</b> Harcamalar Finans’ta ayrı satırda görünür.', { spent: money(m.autoSpent ?? 0) })}
                       </>
                     )}
                     {m.autoCapacity && m.autoHold && (
                       <span className="tone-warn">
                         {' '}
-                        Alıcılar bekliyor ama büyütmüyor: {AUTO_HOLD_TEXT[m.autoHold]}.{m.autoHint && <b> Çıkış yolu: {m.autoHint}.</b>}
+                        {t('Alıcılar bekliyor ama büyütmüyor: {reason}.', { reason: t(AUTO_HOLD_TEXT[m.autoHold]) })}
+                        {m.autoHint && <b>{' '}{t('Çıkış yolu: {hint}.', { hint: m.autoHint })}</b>}
                       </span>
                     )}
                   </>
                 }
               />
               <Slider
-                label="Üretim hızı"
+                label={t('Üretim hızı')}
                 value={Math.round(m.productionRate * 100)}
                 min={0}
                 max={100}
                 step={5}
                 disabled={!!m.autoCapacity}
                 onChange={(v) => store.act((st) => A.setProductionRate(st, m.id, v / 100))}
-                format={(v) => `%${v} · ${((cap * v) / 100).toFixed(1)} araç/hafta`}
-                hint="Talep düşükse üretimi kıs: stok bekletmek para bağlar ve depolama masrafı çıkarır."
+                format={(v) => t('{rate} · {output} araç/hafta', { rate: pct(v / 100, 0), output: ((cap * v) / 100).toFixed(1) })}
+                hint={t('Talep düşükse üretimi kıs: stok bekletmek para bağlar ve depolama masrafı çıkarır.')}
               />
               <p className="small">
-                Hatlar: {lines.length ? lines.map((l) => l.name).join(', ') : <span className="tone-bad">hiçbir hatta üretilmiyor</span>}{' '}
+                {tx('Hatlar: {lines}', {
+                  lines: lines.length ? lines.map((l) => l.name).join(', ') : <span className="tone-bad">{t('hiçbir hatta üretilmiyor')}</span>,
+                })}{' '}
                 <Button small kind="ghost" onClick={() => store.go({ id: 'factory' })}>
-                  Fabrika
+                  {t('Fabrika')}
                 </Button>
               </p>
             </>
@@ -163,43 +169,56 @@ export function ModelView({ modelId }: { modelId: string }) {
         </Panel>
 
         {active ? (
-          <Panel title="Fiyat ve pazarlar">
+          <Panel title={t('Fiyat ve pazarlar')}>
             <div className="price-row">
-              <NumberInput label="Fabrika çıkış fiyatı" prefix="$" value={draftPrice} min={1} step={10} onChange={setDraftPrice} />
+              <NumberInput label={t('Fabrika çıkış fiyatı')} prefix="$" value={draftPrice} min={1} step={10} onChange={setDraftPrice} />
               <Button kind="primary" small onClick={() => store.act((st) => A.setModelPrice(st, m.id, draftPrice))}>
-                Uygula
+                {t('Uygula')}
               </Button>
             </div>
             <p className="muted small">
-              Şu anki fiyat {money(priceNow(m, s.week))} · sınıf fiyatı {money(referencePrice('usa', m.segment, yearFloat(s.week)))} · birim malzeme{' '}
-              {money(materialUnitCost(s, m))}
+              {t('Şu anki fiyat {price} · sınıf fiyatı {classPrice} · birim malzeme {material}', {
+                price: money(priceNow(m, s.week)),
+                classPrice: money(referencePrice('usa', m.segment, yearFloat(s.week))),
+                material: money(materialUnitCost(s, m)),
+              })}
             </p>
             {Math.abs(classGap(priceNow(m, s.week), m.segment, yearFloat(s.week))) > CLASS_GAP_WARN && (
               <p className="small tone-warn">
-                Fiyat sınıfın %{Math.round(Math.abs(classGap(priceNow(m, s.week), m.segment, yearFloat(s.week))) * 100)}{' '}
-                {classGap(priceNow(m, s.week), m.segment, yearFloat(s.week)) > 0 ? 'üstünde: alıcılar pahalı buluyor' : 'altında: araba başına kâr düşük kalıyor'}.
+                {classGap(priceNow(m, s.week), m.segment, yearFloat(s.week)) > 0
+                  ? t('Fiyat sınıfın {gap} üstünde: alıcılar pahalı buluyor.', { gap: pct(Math.abs(classGap(priceNow(m, s.week), m.segment, yearFloat(s.week))), 0) })
+                  : t('Fiyat sınıfın {gap} altında: araba başına kâr düşük kalıyor.', { gap: pct(Math.abs(classGap(priceNow(m, s.week), m.segment, yearFloat(s.week))), 0) })}
               </p>
             )}
             {(s.week - m.launchWeek) / 52 < 3 && m.priceCeiling !== undefined && draftPrice > m.priceCeiling * priceLevel(yearFloat(s.week)) * (1 + A.HIKE_TOLERANCE) && (
               <p className="small tone-warn">
-                Bu, lansmandan beri en yüksek fiyatına göre %{Math.round(A.HIKE_TOLERANCE * 100)}’den büyük bir zam (enflasyon hariç). Basın bunu fark eder: dergiler puanı yeniden
-                yazar, lansman heyecanı söner, itibar düşer.
+                {t(
+                  'Bu, lansmandan beri en yüksek fiyatına göre {limit}’den büyük bir zam (enflasyon hariç). Basın bunu fark eder: dergiler puanı yeniden yazar, lansman heyecanı söner, itibar düşer.',
+                  { limit: pct(A.HIKE_TOLERANCE, 0) },
+                )}
               </p>
             )}
             <Toggle
               checked={m.indexPrice}
               onChange={(v) => store.act(() => void (m.indexPrice = v))}
-              label="Fiyatı sınıfa endeksle"
-              sub="Açıkken fiyat, sınıfın tipik fiyatıyla birlikte değişir: enflasyon, incelen kâr payları ve ucuzlayan seri üretim dahil."
+              label={t('Fiyatı sınıfa endeksle')}
+              sub={t('Açıkken fiyat, sınıfın tipik fiyatıyla birlikte değişir: enflasyon, incelen kâr payları ve ucuzlayan seri üretim dahil.')}
             />
             <p className="muted small">
-              Bu fiyatla talep ~{demandAtPrice(s, m, 'usa', draftPrice).toFixed(1)}/hafta ({N.openStates(s).length} eyalette satılıyor; yeni eyaletler için Harita).
+              {t('Bu fiyatla talep ~{demand}/hafta ({n} eyalette satılıyor; yeni eyaletler için Harita).', {
+                demand: demandAtPrice(s, m, 'usa', draftPrice).toFixed(1),
+                n: N.openStates(s).length,
+              })}
             </p>
           </Panel>
         ) : (
-          <Panel title="Model geçmişi">
+          <Panel title={t('Model geçmişi')}>
             <p>
-              {formatDate(m.launchWeek)} – {m.retiredWeek !== undefined ? formatDate(m.retiredWeek) : ''} arasında {num(m.unitsSold)} araç satıldı.
+              {t('{from} – {to} arasında {count} araç satıldı.', {
+                from: formatDate(m.launchWeek),
+                to: m.retiredWeek !== undefined ? formatDate(m.retiredWeek) : '',
+                count: num(m.unitsSold),
+              })}
             </p>
           </Panel>
         )}
@@ -208,13 +227,13 @@ export function ModelView({ modelId }: { modelId: string }) {
       {active && m.markets.length > 0 && <Competition modelId={m.id} market={market} setMarket={setMarket} />}
 
       <div className="grid-2">
-        <Panel title="Araç">
+        <Panel title={t('Araç')}>
           <CarSVG body={m.design.body} size={m.design.size} year={yearFloat(m.refreshWeek)} cylinders={m.design.engine.cylinders} styling={m.design.styling} />
           <StatsPanel s={s} design={m.design} segment={m.segment} yf={yf} bonus={m.bonus} scores={scores} compact />
-          <p className="muted small">Puanlar bugünün sınıf ortalamasına göre. Model yaşlandıkça rakipler gelişir ve puanlar düşer.</p>
+          <p className="muted small">{t('Puanlar bugünün sınıf ortalamasına göre. Model yaşlandıkça rakipler gelişir ve puanlar düşer.')}</p>
         </Panel>
         <div>
-          <Panel title="Dergiler">
+          <Panel title={t('Dergiler')}>
             {m.reviews.length ? (
               <div className="reviews reviews-compact">
                 {m.reviews.map((r) => (
@@ -228,34 +247,38 @@ export function ModelView({ modelId }: { modelId: string }) {
                 ))}
               </div>
             ) : (
-              <Empty>Değerlendirme yok.</Empty>
+              <Empty>{t('Değerlendirme yok.')}</Empty>
             )}
           </Panel>
           {m.status === 'active' && m.unitsSold > 0 && (
-            <Panel title="Müşteri mektupları">
+            <Panel title={t('Müşteri mektupları')}>
               <OwnerLetters s={s} m={m} />
             </Panel>
           )}
-          <Panel title="Sahadaki kalite">
+          <Panel title={t('Sahadaki kalite')}>
             <div className="quote">
               <div>
-                <span>Test süresi</span>
-                <b>{m.testWeeks} hafta</b>
+                <span>{t('Test süresi')}</span>
+                <b>{t('{n} hafta', { n: m.testWeeks })}</b>
               </div>
               <div>
-                <span>Sahadaki arızalar</span>
+                <span>{t('Sahadaki arızalar')}</span>
                 <b>{num(m.fieldFailures)}</b>
               </div>
               <div>
-                <span>Garanti masrafı</span>
+                <span>{t('Garanti masrafı')}</span>
                 <b>{money(m.warrantyCost)}</b>
               </div>
               <div>
                 <span>
-                  Güvenilirlik: alıcı gözünde / gerçekte
+                  {t('Güvenilirlik: alıcı gözünde / gerçekte')}
                   <Info>
-                    <p>İkisi de aynı ölçekte: 50 sınıfın ortalaması.</p>
-                    <p>Alıcılar arabayı önce ününe göre tartar; sahada arıza gördükçe ya da yıllarca sorunsuz kullandıkça görüşleri mühendislerin ölçtüğü gerçek değere yaklaşır. Arızalar ve geri çağırmalar algıyı ayrıca düşürür.</p>
+                    <p>{t('İkisi de aynı ölçekte: 50 sınıfın ortalaması.')}</p>
+                    <p>
+                      {t(
+                        'Alıcılar arabayı önce ününe göre tartar; sahada arıza gördükçe ya da yıllarca sorunsuz kullandıkça görüşleri mühendislerin ölçtüğü gerçek değere yaklaşır. Arızalar ve geri çağırmalar algıyı ayrıca düşürür.',
+                      )}
+                    </p>
                   </Info>
                 </span>
                 <b>
@@ -269,8 +292,12 @@ export function ModelView({ modelId }: { modelId: string }) {
                   .filter((d) => d.surfaced)
                   .map((d) => (
                     <li key={d.id}>
-                      <Badge tone={d.fixed ? 'good' : d.ignored ? 'bad' : 'warn'}>{d.fixed ? 'Giderildi' : d.ignored ? 'Gizlendi' : 'Açık'}</Badge> {SEVERITY_NAMES[d.severity]}{' '}
-                      {AREA_NAMES[d.area].toLowerCase()} kusuru: {defectText(d).toLowerCase()}
+                      <Badge tone={d.fixed ? 'good' : d.ignored ? 'bad' : 'warn'}>{d.fixed ? t('Giderildi') : d.ignored ? t('Gizlendi') : t('Açık')}</Badge>{' '}
+                      {t('{severity} {area} kusuru: {defect}', {
+                        severity: t(SEVERITY_NAMES[d.severity]),
+                        area: t(AREA_NAMES[d.area]).toLowerCase(),
+                        defect: defectText(d).toLowerCase(),
+                      })}
                     </li>
                   ))}
               </ul>
@@ -291,57 +318,59 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
   const mine = rows.find((o) => o.id === m.id);
   return (
     <Panel
-      title={`Neden bu kadar satıyor? ${segmentDef(m.segment).name} pazarı`}
+      title={t('Neden bu kadar satıyor? {segment} pazarı', { segment: t(segmentDef(m.segment).name) })}
       actions={
         <div className="seg-toggle">
           {m.markets.map((mk) => (
             <button key={mk} type="button" className={`chip ${market === mk ? 'is-on' : ''}`} onClick={() => setMarket(mk)}>
-              {MARKETS.find((x) => x.id === mk)!.flag} {MARKETS.find((x) => x.id === mk)!.name}
+              {MARKETS.find((x) => x.id === mk)!.flag} {t(MARKETS.find((x) => x.id === mk)!.name)}
             </button>
           ))}
         </div>
       }
     >
       <p className="muted small">
-        Alıcılar her aracı çekiciliğine (tasarım puanları × segmentin gizli önceliklerine), fiyatına, markaya ve yaşına göre tartar: iki yıldan sonra her araç eskir. Bayi ağın ve bilinirliğin, aracını kaç
-        alıcının görebileceğini belirler. Segment toplamı: {sm.demand.toFixed(0)} araç/hafta.
+        {t(
+          'Alıcılar her aracı çekiciliğine (tasarım puanları × segmentin gizli önceliklerine), fiyatına, markaya ve yaşına göre tartar: iki yıldan sonra her araç eskir. Bayi ağın ve bilinirliğin, aracını kaç alıcının görebileceğini belirler. Segment toplamı: {demand} araç/hafta.',
+          { demand: sm.demand.toFixed(0) },
+        )}
       </p>
       {mine && (
         <div className="why">
           <div>
-            <span>Çekicilik</span>
+            <span>{t('Çekicilik')}</span>
             <ScoreBar value={mine.appeal} />
           </div>
           <div>
-            <span>Fiyat etkisi</span>
+            <span>{t('Fiyat etkisi')}</span>
             <b className={mine.priceTerm < 0 ? 'tone-bad' : 'tone-good'}>{mine.priceTerm.toFixed(1)}</b>
           </div>
           <div>
-            <span>Marka</span>
+            <span>{t('Marka')}</span>
             <b className={mine.brand < 0 ? 'tone-bad' : 'tone-good'}>{mine.brand.toFixed(1)}</b>
           </div>
           <div>
-            <span>Lansman heyecanı</span>
+            <span>{t('Lansman heyecanı')}</span>
             <b>+{mine.hype.toFixed(1)}</b>
           </div>
-          <div title="İki yıldan sonra her yıl alıcı gözünde eskir; makyaj ya da yeni kuşak tazeler.">
-            <span>Yaş</span>
+          <div title={t('İki yıldan sonra her yıl alıcı gözünde eskir; makyaj ya da yeni kuşak tazeler.')}>
+            <span>{t('Yaş')}</span>
             <b className={mine.age < 0 ? 'tone-bad' : ''}>{mine.age.toFixed(1)}</b>
           </div>
           {(mine.exclusive ?? 0) < 0 && (
-            <div title="Lüks ve spor arabayı alıcı farklı olmak için alır: sınıfın dörtte birinden fazlası aynı modeli sürünce çekiciliği azalır.">
-              <span>Herkeste var</span>
+            <div title={t('Lüks ve spor arabayı alıcı farklı olmak için alır: sınıfın dörtte birinden fazlası aynı modeli sürünce çekiciliği azalır.')}>
+              <span>{t('Herkeste var')}</span>
               <b className="tone-bad">{(mine.exclusive ?? 0).toFixed(1)}</b>
             </div>
           )}
           <div>
-            <span>Erişim</span>
+            <span>{t('Erişim')}</span>
             <b>{pct(mine.reach, 0)}</b>
           </div>
         </div>
       )}
       <Table
-        head={['Model', 'Üretici', 'Çekicilik', 'Alıcı fiyatı', 'Fiyat', 'Marka', 'Yaş', 'Erişim', 'Pay']}
+        head={[t('Model'), t('Üretici'), t('Çekicilik'), t('Alıcı fiyatı'), t('Fiyat'), t('Marka'), t('Yaş'), t('Erişim'), t('Pay')]}
         align={['l', 'l', 'r', 'r', 'r', 'r', 'r', 'r', 'r']}
         className="compact"
         rows={[
@@ -356,7 +385,7 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
             pct(o.reach, 0),
             pct(o.weight / sm.totalWeight),
           ]),
-          ['Küçük üreticiler', '—', '—', '—', '—', '—', '—', '—', pct(others)],
+          [t('Küçük üreticiler'), '—', '—', '—', '—', '—', '—', '—', pct(others)],
         ]}
       />
     </Panel>
@@ -370,7 +399,7 @@ function OwnerLetters({ s, m }: { s: ReturnType<typeof useGameState>; m: CarMode
     <div className="letters">
       {letters.map((l, i) => (
         <blockquote key={i} className={`letter letter-${l.tone}`}>
-          <div className="letter-stars" aria-label={`${l.stars} yıldız`}>
+          <div className="letter-stars" aria-label={t('{n} yıldız', { n: l.stars })}>
             {'★'.repeat(l.stars)}
             <span className="letter-stars-off">{'★'.repeat(5 - l.stars)}</span>
           </div>
@@ -380,7 +409,7 @@ function OwnerLetters({ s, m }: { s: ReturnType<typeof useGameState>; m: CarMode
           </footer>
         </blockquote>
       ))}
-      <p className="muted small">Mektuplar her ay yenilenir; alıcıların neyi fark ettiğini gösterir.</p>
+      <p className="muted small">{t('Mektuplar her ay yenilenir; alıcıların neyi fark ettiğini gösterir.')}</p>
     </div>
   );
 }

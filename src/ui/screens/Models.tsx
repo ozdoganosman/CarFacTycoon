@@ -4,6 +4,7 @@ import { store, useGameState } from '../store';
 import { money, num } from '../format';
 import { Badge, Empty, Panel, Table } from '../components/ui';
 import { weeklySold } from './HQ';
+import { t } from '../../i18n';
 
 export function Models() {
   const s = useGameState();
@@ -11,21 +12,21 @@ export function Models() {
   return (
     <div className="screen">
       <div className="screen-head">
-        <h1>Modeller</h1>
+        <h1>{t('Modeller')}</h1>
       </div>
       <Panel>
         {list.length ? (
           <Table
-            head={['Model', 'Segment', 'Çıkış', 'Durum', 'Haftalık', 'Toplam satış', 'Stok', 'Fiyat', 'Dergi']}
+            head={[t('Model'), t('Segment'), t('Çıkış'), t('Durum'), t('Haftalık'), t('Toplam satış'), t('Stok'), t('Fiyat'), t('Dergi')]}
             align={['l', 'l', 'l', 'l', 'r', 'r', 'r', 'r', 'r']}
             rows={list.map((m) => [
               <button key="n" type="button" className="link" onClick={() => store.go({ id: 'model', modelId: m.id })}>
                 {m.name}
-                {m.generation > 1 ? ` (${m.generation}. kuşak)` : ''}
+                {m.generation > 1 ? ` ${t('({gen}. kuşak)', { gen: m.generation })}` : ''}
               </button>,
-              `${segmentDef(m.segment).icon} ${segmentDef(m.segment).name}`,
+              `${segmentDef(m.segment).icon} ${t(segmentDef(m.segment).name)}`,
               formatDate(m.launchWeek),
-              m.status === 'active' ? <Badge key="b" tone="good">Satışta</Badge> : <Badge key="b">Üretimden kalktı</Badge>,
+              m.status === 'active' ? <Badge key="b" tone="good">{t('Satışta')}</Badge> : <Badge key="b">{t('Üretimden kalktı')}</Badge>,
               m.status === 'active' ? weeklySold(m).toFixed(1) : '—',
               num(m.unitsSold),
               num(m.inventory),
@@ -34,7 +35,7 @@ export function Models() {
             ])}
           />
         ) : (
-          <Empty>Henüz piyasaya çıkmış bir modelin yok. Projeler ekranından ilk aracını tasarla.</Empty>
+          <Empty>{t('Henüz piyasaya çıkmış bir modelin yok. Projeler ekranından ilk aracını tasarla.')}</Empty>
         )}
       </Panel>
     </div>

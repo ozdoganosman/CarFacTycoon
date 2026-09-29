@@ -4,10 +4,11 @@ import { credit, COST_KEYS } from '../../core/game';
 import { yearFloat } from '../../core/time';
 import { costIndex } from '../../data/economy';
 import { store, useGameState } from '../store';
-import { COST_NAMES, money, signedMoney } from '../format';
+import { COST_NAMES, money, pct, signedMoney } from '../format';
 import { TeamPanel } from '../components/TeamPanel';
 import { Button, NumberInput, Panel, Stat, Table } from '../components/ui';
 import { BarChart } from '../viz/LineChart';
+import { t } from '../../i18n';
 
 
 export function Finance() {
@@ -23,47 +24,47 @@ export function Finance() {
   return (
     <div className="screen">
       <div className="screen-head">
-        <h1>Finans</h1>
+        <h1>{t('Finans')}</h1>
       </div>
       <div className="stats-row">
-        <Stat label="Kasa" value={money(s.company.cash)} tone={s.company.cash < 0 ? 'bad' : undefined} />
-        <Stat label="Kredi borcu" value={money(s.company.loan)} sub={`faiz %${(c.rate * 100).toFixed(0)}/yıl`} />
-        <Stat label="Kredi limiti" value={money(Math.max(0, c.limit))} sub="varlık ve itibara bağlı" />
-        <Stat label="Son 52 hafta faaliyet kârı" value={signedMoney(operating)} tone={operating < 0 ? 'bad' : 'good'} />
+        <Stat label={t('Kasa')} value={money(s.company.cash)} tone={s.company.cash < 0 ? 'bad' : undefined} />
+        <Stat label={t('Kredi borcu')} value={money(s.company.loan)} sub={t('faiz {rate}/yıl', { rate: pct(c.rate, 0) })} />
+        <Stat label={t('Kredi limiti')} value={money(Math.max(0, c.limit))} sub={t('varlık ve itibara bağlı')} />
+        <Stat label={t('Son 52 hafta faaliyet kârı')} value={signedMoney(operating)} tone={operating < 0 ? 'bad' : 'good'} />
       </div>
       <div className="grid-2">
-        <Panel title="Banka">
+        <Panel title={t('Banka')}>
           <div className="price-row">
-            <NumberInput label="Tutar" prefix="$" value={loan} min={0} step={1000} onChange={setLoan} />
-            <Button kind="primary" onClick={() => store.try((st) => A.takeLoan(st, loan), 'Kredi alındı')}>
-              Kredi al
+            <NumberInput label={t('Tutar')} prefix="$" value={loan} min={0} step={1000} onChange={setLoan} />
+            <Button kind="primary" onClick={() => store.try((st) => A.takeLoan(st, loan), t('Kredi alındı'))}>
+              {t('Kredi al')}
             </Button>
-            <Button onClick={() => store.try((st) => A.repayLoan(st, loan), 'Borç ödendi')} disabled={s.company.loan <= 0}>
-              Borç öde
+            <Button onClick={() => store.try((st) => A.repayLoan(st, loan), t('Borç ödendi'))} disabled={s.company.loan <= 0}>
+              {t('Borç öde')}
             </Button>
           </div>
-          <p className="muted small">Kasa 12 hafta üst üste ekside kalırsa şirket iflas eder. Buhran yıllarında (1930-33) bankalar limiti yarıya indirir ve faizi artırır.</p>
+          <p className="muted small">{t('Kasa 12 hafta üst üste ekside kalırsa şirket iflas eder. Buhran yıllarında (1930-33) bankalar limiti yarıya indirir ve faizi artırır.')}</p>
         </Panel>
         <TeamPanel compact />
       </div>
-      <Panel title="Yıllık faaliyet kârı">
+      <Panel title={t('Yıllık faaliyet kârı')}>
         <BarChart
           bars={s.years.slice(-30).map((y) => ({ label: String(y.year), value: y.profit }))}
           yFormat={(v) => money(v)}
-          ariaLabel="Yıllara göre faaliyet kârı"
+          ariaLabel={t('Yıllara göre faaliyet kârı')}
         />
       </Panel>
-      <Panel title="Son 52 hafta gelir-gider">
+      <Panel title={t('Son 52 hafta gelir-gider')}>
         <Table
-          head={['Kalem', 'Tutar', 'Ciroya oranı']}
+          head={[t('Kalem'), t('Tutar'), t('Ciroya oranı')]}
           align={['l', 'r', 'r']}
           rows={[
-            ['Ciro', money(revenue), ''],
-            ...COST_KEYS.map((k) => [COST_NAMES[k], money(-sums[k]), revenue > 0 ? `%${((sums[k] / revenue) * 100).toFixed(1)}` : '—']),
+            [t('Ciro'), money(revenue), ''],
+            ...COST_KEYS.map((k) => [t(COST_NAMES[k]), money(-sums[k]), revenue > 0 ? pct(sums[k] / revenue, 1) : '—']),
             ...(auto !== 0
-              ? [[<span key="a" className="muted">  └ bunun “talebi otomatik karşıla” payı (satılan makineler düşülmüş)</span>, money(-auto), revenue > 0 ? `%${((auto / revenue) * 100).toFixed(1)}` : '—']]
+              ? [[<span key="a" className="muted">  └ {t('bunun “talebi otomatik karşıla” payı (satılan makineler düşülmüş)')}</span>, money(-auto), revenue > 0 ? pct(auto / revenue, 1) : '—']]
               : []),
-            [<b key="p">Faaliyet kârı (yatırım hariç)</b>, <b key="v">{money(operating)}</b>, revenue > 0 ? `%${((operating / revenue) * 100).toFixed(1)}` : '—'],
+            [<b key="p">{t('Faaliyet kârı (yatırım hariç)')}</b>, <b key="v">{money(operating)}</b>, revenue > 0 ? pct(operating / revenue, 1) : '—'],
           ]}
         />
       </Panel>

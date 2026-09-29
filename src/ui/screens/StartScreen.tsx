@@ -6,6 +6,7 @@ import { store } from '../store';
 import { Button, Choice } from '../components/ui';
 import { CarSVG } from '../viz/CarSVG';
 import { LanguagePicker } from '../components/LanguagePicker';
+import { t } from '../../i18n';
 
 export function StartScreen() {
   const [name, setName] = useState('Öncü Motor');
@@ -32,7 +33,7 @@ export function StartScreen() {
         <div className="start-hero">
           <CarSVG body="phaeton" size={0.3} year={1905} cylinders={4} styling={0.5} className="start-car" />
           <h1>CarFacTycoon</h1>
-          <p className="start-tag">1900. Küçük bir atölye. Amacın dünya çapında bir otomobil markası kurmak.</p>
+          <p className="start-tag">{t('1900, Amerika. Küçük bir atölye. Amacın ülkenin büyük otomobil markalarından biri olmak.')}</p>
         </div>
         <form
           className="start-form"
@@ -42,13 +43,13 @@ export function StartScreen() {
           }}
         >
           <label className="field">
-            <span>Şirketinin adı</span>
+            <span>{t('Şirketinin adı')}</span>
             <input value={name} maxLength={28} onChange={(e) => setName(e.target.value)} />
           </label>
           <div className="field">
-            <span>Atölyeni hangi şehirde kuruyorsun?</span>
+            <span>{t('Atölyeni hangi şehirde kuruyorsun?')}</span>
             <p className="muted small">
-              Arabaların önce yalnızca bu eyalette satılır; komşu eyaletlere bayi bularak büyürsün. Eyalet dışına giden her araba için demiryolu nakliyesi ödersin.
+              {t('Arabaların önce yalnızca bu eyalette satılır; komşu eyaletlere bayi bularak büyürsün. Eyalet dışına giden her araba için demiryolu nakliyesi ödersin.')}
             </p>
             <Choice
               value={city}
@@ -56,23 +57,23 @@ export function StartScreen() {
               options={CITIES.map((c) => ({
                 value: c.id,
                 label: `${c.name}, ${c.state}`,
-                sub: `${c.blurb} ${c.pros.map((p) => `✓ ${p}`).join(' · ')} · ${c.cons.map((x) => `✗ ${x}`).join(' · ')}`,
+                sub: `${t(c.blurb)} ${c.pros.map((p) => `✓ ${t(p)}`).join(' · ')} · ${c.cons.map((x) => `✗ ${t(x)}`).join(' · ')}`,
               }))}
             />
           </div>
           <div className="field">
-            <span>Başlangıç</span>
-            <Choice value={difficulty} onChange={setDifficulty} options={DIFFICULTIES.map((d) => ({ value: d.id, label: d.name, sub: d.desc }))} />
+            <span>{t('Başlangıç')}</span>
+            <Choice value={difficulty} onChange={setDifficulty} options={DIFFICULTIES.map((d) => ({ value: d.id, label: t(d.name), sub: t(d.desc) }))} />
           </div>
           <div className="start-actions">
             <Button kind="primary" type="submit">
-              Yeni oyun
+              {t('Yeni oyun')}
             </Button>
             {canContinue && (
-              <Button onClick={() => store.loadSaved() || setErr('Kayıt okunamadı.')}>Kaldığın yerden devam et</Button>
+              <Button onClick={() => store.loadSaved() || setErr(t('Kayıt okunamadı.'))}>{t('Kaldığın yerden devam et')}</Button>
             )}
             <Button kind="ghost" onClick={() => fileRef.current?.click()}>
-              Kayıt dosyası yükle
+              {t('Kayıt dosyası yükle')}
             </Button>
             <input
               ref={fileRef}
@@ -85,8 +86,9 @@ export function StartScreen() {
           {err && <p className="tone-bad">{err}</p>}
         </form>
         <p className="start-foot">
-          Bu sürüm 1900-1960 dönemini kapsar. Sonraki dönemler (petrol krizi, emisyon kuralları, elektrikli araçlar) ve 1961 “Devrim” ile başlayan
-          Türkiye senaryosu genişleme olarak gelecek.
+          {t(
+            'Bu sürüm 1900-1960 dönemini kapsar. Sonraki dönemler (petrol krizi, emisyon kuralları, elektrikli araçlar) ve 1961 “Devrim” ile başlayan Türkiye senaryosu genişleme olarak gelecek.',
+          )}
         </p>
       </div>
     </div>
