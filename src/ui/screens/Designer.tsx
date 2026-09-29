@@ -338,7 +338,8 @@ function EngineTab({
   const cylOpts = CYLINDER_OPTIONS;
   const kl = knockLimit(e.bore, yf);
   const gate = useTechGate();
-  const eu = yf >= 1910 && yf <= 1947;
+  // The European horsepower tax only mattered to cars sold in Europe (not played for now).
+  const eu = false;
   const diesel = isDiesel(e);
   const [soundOn, setSoundOn] = useState(false);
   const year = Math.floor(yf);

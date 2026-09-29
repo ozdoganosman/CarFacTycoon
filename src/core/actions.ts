@@ -1,3 +1,5 @@
+import { absorbDealers, homeState } from './network';
+import { stateDef } from '../data/states';
 import { costIndex, lineBuildWeeks, newLineCost, priceLevel, shopCost, slotCost, toolingMultiple, MAX_SLOTS } from '../data/economy';
 import { eventDef } from '../data/events';
 import { MARKETS, marketScale, MAX_DEALER_LEVEL } from '../data/markets';
@@ -463,7 +465,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
   const p = project(s, pid);
   if (p.phase !== 'ready') return { ok: false, error: 'Üretim hattı henüz hazır değil.' };
   if (!p.lineId || !s.lines.some((l) => l.id === p.lineId)) return { ok: false, error: 'Bu arabanın hattı yok: önce bir hat seç ya da kur.' };
-  const markets = o.markets.filter((m) => s.markets[m].unlocked);
+  const markets: MarketId[] = ['usa']; // the American market only (for now)
   if (!markets.length) return { ok: false, error: 'En az bir pazar seç.' };
   if (o.price <= 0) return { ok: false, error: 'Geçerli bir fiyat gir.' };
   const yf = yearFloat(s.week);
@@ -628,12 +630,11 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
 
   // Progressive unlocks.
   if (s.company.modelsLaunched === 1) {
-    for (const mk of MARKETS) s.markets[mk.id].unlocked = true;
     s.modals.push({
       kind: 'unlock',
       title: 'Yeni imkânlar açıldı',
       body:
-        `İhracat: Artık ${MARKETS.filter((x) => x.id !== s.company.hq).map((x) => x.name).join(', ')} pazarında da satış yapabilirsin. Gümrük vergisi ve nakliye masrafı var; önce bayi ağı kur.\n\n` +
+        `Bayi ağı: Arabaların şimdilik yalnızca ${stateDef(homeState(s)).name} eyaletinde satılıyor. Pazarlar ekranındaki haritadan komşu eyaletlerde bayi arayabilirsin; eyalet dışına giden her araba için demiryolu nakliyesi ödersin, yoldaki arabaların için de servis gerekir.\n\n` +
         'Yap ya da satın al: Bir sonraki projende motor, şanzıman ve elektrik parçalarını kimden alacağını sen seçeceksin.',
     });
   }
@@ -699,7 +700,7 @@ export function setModelPrice(s: GameState, id: string, price: number) {
 }
 
 export function setModelMarkets(s: GameState, id: string, markets: MarketId[]) {
-  model(s, id).markets = markets.filter((m) => s.markets[m].unlocked);
+  model(s, id).markets = markets.filter((m) => s.markets[m].unlocked && m === 'usa');
   decide(s, 'markets:' + id, `${model(s, id).name}: pazarlar ${model(s, id).markets.join('+')}`);
 }
 
@@ -828,15 +829,12 @@ export function acquireRival(s: GameState, id: string): ActionResult {
   for (const rm of s.rivalModels) if (rm.companyId === id) rm.active = false;
   s.company.engineers += t.engineers;
   shareEngineers(s);
-  const mk = s.markets[t.home];
-  const opened = !mk.unlocked;
-  mk.unlocked = true;
-  mk.dealerLevel = Math.min(10, Math.max(1, mk.dealerLevel + 1));
-  mk.awareness = clamp(mk.awareness + 0.05, 0, 1);
+  // Its dealers carry our cars now: showrooms where the buyers are, new states included.
+  const gained = absorbDealers(s, Math.max(1, Math.min(12, Math.round(1 + t.units / 2500))), t.name);
   s.company.reputation = clamp(s.company.reputation + 1, 0, 100);
   log(
     s,
-    `${s.company.name}, ${t.name} şirketini ${money(t.price)} karşılığında satın aldı: ${t.engineers} mühendis katıldı, bayileri artık senin arabalarını satıyor${opened ? ' ve yeni bir pazar açıldı' : ''}.`,
+    `${s.company.name}, ${t.name} şirketini ${money(t.price)} karşılığında satın aldı: ${t.engineers} mühendis katıldı; bayileri artık senin arabalarını satıyor (${gained.map((id) => stateDef(id).name).join(', ')}).`,
     'good',
   );
   decide(s, 'acquire:' + id, `${t.name} satın alındı (${money(t.price)}, ${t.units} araç/yıl)`);
@@ -917,6 +915,7 @@ export function buildShop(s: GameState, comp: ComponentKey): ActionResult {
 // ---------------- Markets ----------------
 
 export function upgradeDealers(s: GameState, market: MarketId): ActionResult {
+  if (market === 'usa') return fail('Bayiler eyalet eyalet açılır: haritadan bir eyalet seçip bayi ara.');
   const ms = s.markets[market];
   if (!ms.unlocked) return fail('Bu pazar henüz açılmadı.');
   if (ms.dealerLevel >= MAX_DEALER_LEVEL) return fail('Bayi ağı en üst seviyede.');

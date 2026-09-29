@@ -587,7 +587,7 @@ export function YearReportBody({ s, year }: { s: GameState; year: number }) {
         <span>Faaliyet kârı</span>
         <b className={y.profit < 0 ? 'tone-bad' : 'tone-good'}>{money(y.profit)}</b>
       </div>
-      {MARKETS.map((mk) => (
+      {MARKETS.filter((mk) => mk.id === 'usa').map((mk) => (
         <div key={mk.id}>
           <span>
             {mk.flag} {mk.name} payı

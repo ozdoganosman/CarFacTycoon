@@ -1,4 +1,6 @@
+import type { CityId } from '../data/cities';
 import type { DifficultyId } from '../data/difficulty';
+import type { StateId } from '../data/states';
 // Shared types for the CarFacTycoon simulation core.
 // Everything stored in GameState must stay JSON-serializable (save games).
 import type { ToolingTier } from '../data/tooling';
@@ -381,6 +383,43 @@ export interface MarketState {
   adBudget: number; // $ per week (in current money)
 }
 
+/** The company in one state: its dealers and service, and its cars on the road there. */
+export interface StateNet {
+  /** Franchised dealers (in the home state the factory's own showroom sells too). */
+  dealers: number;
+  /** Company service shops. */
+  service: number;
+  /** How well known the make is here, 0-1. */
+  awareness: number;
+  /** Our cars on the road here, and their average age in years. */
+  parc: number;
+  parcAge: number;
+  /** Our cars scrapped here, all time. */
+  scrapped: number;
+  /** Sold here: all time, this year, last year. */
+  sold: number;
+  soldYear: number;
+  soldLastYear: number;
+  /** Freight paid on cars sent here this year. */
+  freightYear?: number;
+  /** When the first dealer opened (week). */
+  openedWeek?: number;
+  /** A dealer search under way: it ends that week, with this chance of finding one. */
+  search?: { until: number; chance: number };
+  /** Searches that found nobody (each makes the next one easier). */
+  tries?: number;
+  /** The first dealer's name, for the map. */
+  firstDealer?: string;
+}
+
+export interface NetworkState {
+  states: Partial<Record<StateId, StateNet>>;
+  /** The year the "this year" counters belong to. */
+  year: number;
+  /** Open a service shop by itself where cars wait too long for repairs. */
+  autoService?: boolean;
+}
+
 export interface RivalCompany {
   id: string;
   name: string;
@@ -450,6 +489,8 @@ export interface FinanceWeek {
   labor: number;
   salaries: number;
   dealers: number;
+  /** Railway freight on cars sent out of the home state (missing in old saves). */
+  freight?: number;
   marketing: number;
   rnd: number;
   warranty: number;
@@ -473,6 +514,8 @@ export interface YearSummary {
 export interface Company {
   name: string;
   hq: MarketId;
+  /** The town the factory stands in (older saves: Detroit). */
+  city?: CityId;
   cash: number;
   loan: number;
   reputation: number; // 0..100
@@ -529,6 +572,8 @@ export interface GameState {
   racing?: { level: number; fame: number; wins?: number; winYears?: number[]; paused?: boolean; dry?: number; last?: { year: number; race: string; result: 'win' | 'podium' | 'none'; model: string } };
   /** Rival companies the player has bought. */
   acquired?: string[];
+  /** Dealers, service and cars on the road, state by state (older saves get one on load). */
+  network?: NetworkState;
   /** modeChosen: the player picked the engine designer mode themselves (older saves defaulted to the simple one). */
   settings: { engineerMode: boolean; autoPauseCards: boolean; modeChosen?: boolean; difficulty?: DifficultyId };
   gameOver?: { reason: 'bankrupt' | 'end'; week: number };

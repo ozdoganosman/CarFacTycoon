@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import { accelMetric, appeal, eraReference, scoreStats } from '../../core/scoring';
-import { applyWorkshopPenalty, consumerPrice, ownershipTax, referencePrice, workshopPenalty } from '../../core/market';
+import { applyWorkshopPenalty, referencePrice, workshopPenalty } from '../../core/market';
 import { costIndex, labourShare } from '../../data/economy';
 import { ATTRS, ATTR_NAMES, importanceLabel, segmentDef } from '../../data/segments';
-import { activeTax } from '../../data/markets';
 import { computeCarStats } from '../../core/vehicle';
 import { estimateRange, factRange, isRough, rawRange } from '../../core/estimate';
 import type { AttrKey, CarDesign, CarStats, DevBonus, Estimate, GameState, Scores, SegmentId } from '../../core/types';
@@ -93,7 +92,6 @@ export function StatsPanel(props: {
   const ref = referencePrice(hq, segment, yf);
   // Price is decided at launch; while designing, the class's typical price is the yardstick.
   const target = ref;
-  const eu = activeTax('europe', yf);
   const est = props.estimate;
   const measurable = (k: AttrKey) => k === 'accel' || k === 'topSpeed' || k === 'economy';
   return (
@@ -172,21 +170,6 @@ export function StatsPanel(props: {
             <span>Üretim zorluğu</span>
             <b>{est ? span(factRange(est, 'complexity', st.complexity), (v) => v.toFixed(2)) : st.complexity.toFixed(2)}</b>
           </div>
-          {eu && (
-            <div title={eu.label}>
-              <span>Avrupa vergisi</span>
-              <b>
-                {eu.kind === 'racHp' ? `${st.engine.taxHp.toFixed(1)} vergi bg · ` : ''}
-                {money(ownershipTax('europe', st, yf))}
-              </b>
-            </div>
-          )}
-          {hq !== 'europe' && s.markets.europe.unlocked && (
-            <div>
-              <span>Avrupa’da alıcıya fiyat</span>
-              <b>{money(consumerPrice(target, 'europe', true, st, yf).total)}</b>
-            </div>
-          )}
         </div>
       )}
       {!props.compact && <CostBreakdown design={design} st={st} ci={ci} yf={yf} rough={!!est} segment={segment} hq={hq} />}

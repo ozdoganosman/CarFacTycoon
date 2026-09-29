@@ -42,6 +42,7 @@ export function financeNow(state: GameState): FinanceWeek {
       labor: 0,
       salaries: 0,
       dealers: 0,
+      freight: 0,
       marketing: 0,
       rnd: 0,
       warranty: 0,

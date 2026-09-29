@@ -3,11 +3,12 @@ import * as A from '../../core/actions';
 import { AUTO_HOLD_TEXT } from '../../core/autocap';
 import { materialUnitCost } from '../../core/game';
 import { lineReport } from '../../core/factory';
-import { consumerPrice, demandAtPrice, modelScores, priceNow, segmentMarket } from '../../core/market';
+import { demandAtPrice, modelScores, priceNow, segmentMarket } from '../../core/market';
 import { scoreStats } from '../../core/scoring';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { formatDate, formatShort, yearFloat } from '../../core/time';
 import { MARKETS } from '../../data/markets';
+import * as N from '../../core/network';
 import { RIVALS } from '../../data/rivals';
 import { segmentDef } from '../../data/segments';
 import { priceLevel } from '../../data/economy';
@@ -184,22 +185,9 @@ export function ModelView({ modelId }: { modelId: string }) {
               label="Fiyatı enflasyona endeksle"
               sub="Açıkken fiyat genel fiyat seviyesiyle birlikte güncellenir."
             />
-            {MARKETS.map((mk) => {
-              const open = s.markets[mk.id].unlocked;
-              const on = m.markets.includes(mk.id);
-              const cp = consumerPrice(draftPrice, mk.id, mk.id !== s.company.hq, m.stats, yf);
-              const d = open ? demandAtPrice(s, m, mk.id, draftPrice) : 0;
-              return (
-                <Toggle
-                  key={mk.id}
-                  checked={on}
-                  disabled={!open}
-                  onChange={(v) => store.act((st) => A.setModelMarkets(st, m.id, v ? [...m.markets, mk.id] : m.markets.filter((x) => x !== mk.id)))}
-                  label={`${mk.flag} ${mk.name}`}
-                  sub={open ? `Alıcıya ${money(cp.total)} · bu fiyatla talep ~${d.toFixed(1)}/hafta` : 'Henüz açılmadı'}
-                />
-              );
-            })}
+            <p className="muted small">
+              Bu fiyatla talep ~{demandAtPrice(s, m, 'usa', draftPrice).toFixed(1)}/hafta ({N.openStates(s).length} eyalette satılıyor; yeni eyaletler için Harita).
+            </p>
           </Panel>
         ) : (
           <Panel title="Model geçmişi">

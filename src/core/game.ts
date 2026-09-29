@@ -10,6 +10,9 @@ import { buildLaunchReport, customerFeedback } from './feedback';
 import { ensureEstimate, narrowForTest } from './estimate';
 import { MILITARY_COMPLEXITY, emptyLine, lineOffline, lineReport, lineUpkeep, militaryMargin, stationPrice } from './factory';
 import { MARKET_IDS, SEGMENT_IDS, modelScores, priceNow, segmentMarket } from './market';
+import { network, networkWeek, networkWeekly, noteStateSales, recordStateSales, serviceSatisfaction, totalParc } from './network';
+import { cityDef, type CityId } from '../data/cities';
+import type { StateId } from '../data/states';
 import { makeRng, rand, stateRng } from './rng';
 import { updateRivals, initRivals } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
@@ -33,7 +36,7 @@ import { devRate } from './development';
 import type { CarModel, ComponentKey, GameState, MarketId, Project, SegmentId, YearSummary } from './types';
 import { computeCarStats } from './vehicle';
 
-export const COST_KEYS = ['materials', 'labor', 'salaries', 'dealers', 'marketing', 'rnd', 'warranty', 'interest', 'other', 'tax', 'investment'] as const;
+export const COST_KEYS = ['materials', 'labor', 'salaries', 'dealers', 'freight', 'marketing', 'rnd', 'warranty', 'interest', 'other', 'tax', 'investment'] as const;
 import { clamp, earn, financeNow, log, money, pushModal, spend } from './util';
 
 export const SAVE_VERSION = 1;
@@ -41,7 +44,10 @@ export const END_YEAR = 1961;
 
 export interface NewGameOptions {
   companyName: string;
-  hq: MarketId;
+  /** Only the American market is played for now; the option stays for old callers. */
+  hq?: MarketId;
+  /** The town the factory stands in (Detroit if not given). */
+  city?: CityId;
   seed?: number;
   difficulty?: DifficultyId;
 }
@@ -51,8 +57,8 @@ export function newGame(opts: NewGameOptions): GameState {
   const diff = difficultyDef(opts.difficulty);
   const markets = {} as GameState['markets'];
   for (const m of MARKETS) {
-    // A local agent sells your first cars at home (dealer level 1).
-    markets[m.id] = { unlocked: m.id === opts.hq, dealerLevel: m.id === opts.hq ? 1 : 0, awareness: m.id === opts.hq ? 0.15 : 0, adBudget: 0 };
+    // The American market only: the factory sells in its own state first (see network.ts).
+    markets[m.id] = { unlocked: m.id === 'usa', dealerLevel: 0, awareness: m.id === 'usa' ? 0.15 : 0, adBudget: 0 };
   }
   const knowledge = {} as GameState['knowledge'];
   for (const s of SEGMENTS) knowledge[s.id] = {};
@@ -66,7 +72,8 @@ export function newGame(opts: NewGameOptions): GameState {
     endWeek: weekFor(END_YEAR, 0),
     company: {
       name: opts.companyName || 'Yeni Motor',
-      hq: opts.hq,
+      hq: 'usa',
+      city: cityDef(opts.city).id,
       cash: diff.cash,
       loan: 0,
       reputation: diff.reputation,
@@ -104,6 +111,8 @@ export function newGame(opts: NewGameOptions): GameState {
   };
   updateRivals(state, makeRng(seed ^ 0x5eed), true);
   log(state, `${state.company.name} kuruldu. Bol şans!`, 'good');
+  // The factory's own state is the whole market at first.
+  network(state);
   return state;
 }
 
@@ -225,7 +234,9 @@ export function materialUnitCost(s: GameState, model: Pick<CarModel, 'stats' | '
   // Volume makes cars cheaper (jigs, purchasing, practice): a model built by the tens of thousands costs about 12% less.
   const learning = Math.max(0.88, Math.pow(1 + (model.unitsBuilt + (model.experience ?? 0)) / 4000, -0.05));
   const war = s.flags.materialsUntil && yf < s.flags.materialsUntil && yf >= 1914.6 ? 1.25 : 1;
-  return cost * costIndex(yf) * learning * war;
+  // Parts makers next door, or everything by train from the East.
+  const local = cityDef(s.company.city).parts;
+  return cost * costIndex(yf) * learning * war * local;
 }
 
 export function companyAssets(s: GameState): number {
@@ -295,7 +306,9 @@ export function credit(s: GameState) {
   return { ...c, limit: c.limit * difficultyDef(s.settings.difficulty).credit };
 }
 
+/** Weekly cost of the dealer network (the American one is state by state: network.ts). */
 export function dealerUpkeep(s: GameState, market: MarketId): number {
+  if (market === 'usa') return networkWeekly(s);
   const lvl = s.markets[market].dealerLevel;
   if (lvl <= 0) return 0;
   const yf = yearFloat(s.week);
@@ -343,6 +356,7 @@ export function tick(s: GameState): void {
   autoProductionRates(s);
   produce(s);
   sell(s);
+  networkWeek(s);
   launchReports(s);
   field(s);
   fixedCosts(s);
@@ -634,6 +648,8 @@ function sell(s: GameState) {
   const yf = yearFloat(s.week);
   const year = yearOf(s.week);
   const demand = new Map<string, Record<MarketId, number>>();
+  /** Our buyers state by state (American market). */
+  const where = new Map<string, Partial<Record<StateId, number>>>();
   const soldThisWeek = {} as Record<MarketId, number>;
   for (const market of MARKET_IDS) {
     soldThisWeek[market] = 0;
@@ -643,12 +659,14 @@ function sell(s: GameState) {
       const key = `${year}:${market}:${seg}`;
       s.segmentSales[key] = (s.segmentSales[key] ?? 0) + sm.demand;
       for (const o of sm.offers) {
-        const units = (sm.demand * o.weight) / sm.totalWeight;
         if (o.kind === 'player') {
+          const units = sm.player.units[o.id] ?? 0;
           const d = demand.get(o.id) ?? ({} as Record<MarketId, number>);
           d[market] = (d[market] ?? 0) + units;
           demand.set(o.id, d);
+          if (market === 'usa') where.set(o.id, sm.player.byState[o.id] ?? {});
         } else {
+          const units = (sm.demand * o.weight) / sm.totalWeight;
           const rm = s.rivalModels.find((r) => r.id === o.id)!;
           rm.unitsSold += units;
           const c = s.rivals.find((r) => r.id === rm.companyId)!;
@@ -673,12 +691,18 @@ function sell(s: GameState) {
       const revenue = units * price;
       earn(s, revenue);
       h.revenue += revenue;
-      if (s.markets[m].dealerLevel > 0) {
-        const commission = revenue * DEALER_COMMISSION;
-        spend(s, commission, 'dealers');
-        h.cost += commission;
-      }
-      if (m !== s.company.hq) {
+      // The dealer's cut (the factory showroom's staff cost the same).
+      const commission = revenue * DEALER_COMMISSION;
+      spend(s, commission, 'dealers');
+      h.cost += commission;
+      if (m === 'usa') {
+        // Cars go by rail to the states that bought them; freight to all but the home state.
+        for (const [id, u] of Object.entries(where.get(model.id) ?? {}) as [StateId, number][]) {
+          const sent = u * ratio;
+          h.cost += recordStateSales(s, id, sent, yf);
+          noteStateSales(s, id, sent);
+        }
+      } else if (m !== s.company.hq) {
         const ship = units * (MARKETS.find((x) => x.id === m)!.shipping * costIndex(yf));
         spend(s, ship, 'other');
         h.cost += ship;
@@ -697,6 +721,8 @@ function sell(s: GameState) {
     spend(s, holding, 'other');
   }
   for (const m of MARKET_IDS) {
+    // The American market's awareness is the states' (network.ts).
+    if (m === 'usa') continue;
     const ms = s.markets[m];
     ms.awareness = clamp(ms.awareness * 0.996 + 0.0025 * Math.log1p(soldThisWeek[m]), 0, 1);
   }
@@ -712,6 +738,7 @@ function launchReports(s: GameState) {
 function field(s: GameState) {
   const yf = yearFloat(s.week);
   const ci = costIndex(yf);
+  const serviceStrain = 1.4 - 0.4 * serviceSatisfaction(s, yf);
   for (const model of s.models) {
     const fieldUnits = modelFieldUnits(model, 156);
     if (fieldUnits <= 0) continue;
@@ -720,7 +747,8 @@ function field(s: GameState) {
     const ref = eraReference(yf, model.segment).reliability;
     const actualScore = 50 + 50 * Math.tanh((0.85 * (actual - ref)) / 14);
     const rate = failureRate(actualScore, model.defects, model.suppliers, s.company.skill);
-    const warranty = recent * rate * 45 * ci;
+    // Where no workshop is near, a warranty repair means a mechanic on the train.
+    const warranty = recent * rate * 45 * ci * serviceStrain;
     model.fieldFailures += fieldUnits * rate;
     model.warrantyCost += warranty;
     spend(s, warranty, 'warranty');
@@ -768,7 +796,8 @@ function drift(s: GameState) {
   const yf = yearFloat(s.week);
   for (const m of MARKET_IDS) {
     const ms = s.markets[m];
-    if (ms.adBudget > 0) {
+    // American advertising works state by state (network.ts).
+    if (m !== 'usa' && ms.adBudget > 0) {
       const eff = 0.004 * Math.sqrt(ms.adBudget / (50 * marketScale(m, yf) * costIndex(yf)));
       ms.awareness = clamp(ms.awareness + eff, 0, 1);
     }
@@ -780,7 +809,9 @@ function drift(s: GameState) {
     const rel =
       active.reduce((a, m) => a + (modelScores(s, m).scores.reliability - 50), 0) / active.length;
     const sold = s.models.reduce((a, m) => a + m.unitsSold, 0);
-    const target = clamp(22 + review * 4 + rel * 0.35 + Math.min(15, Math.log1p(sold) * 1.3), 0, 100);
+    // Owners who wait weeks for a repair talk (once there are cars enough to matter).
+    const service = totalParc(s) > 200 ? (serviceSatisfaction(s, yearFloat(s.week)) - 0.8) * 20 : 0;
+    const target = clamp(22 + review * 4 + rel * 0.35 + Math.min(15, Math.log1p(sold) * 1.3) + Math.min(0, service), 0, 100);
     s.company.reputation += (target - s.company.reputation) * 0.01;
   }
 }

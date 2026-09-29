@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { deserialize, hasLocalSave } from '../../core/save';
-import type { MarketId } from '../../core/types';
+import { CITIES, type CityId } from '../../data/cities';
 import { DIFFICULTIES, type DifficultyId } from '../../data/difficulty';
 import { store } from '../store';
 import { Button, Choice } from '../components/ui';
@@ -8,7 +8,7 @@ import { CarSVG } from '../viz/CarSVG';
 
 export function StartScreen() {
   const [name, setName] = useState('Öncü Motor');
-  const [hq, setHq] = useState<MarketId>('usa');
+  const [city, setCity] = useState<CityId>('detroit');
   const [difficulty, setDifficulty] = useState<DifficultyId>('normal');
   const [err, setErr] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
@@ -34,7 +34,7 @@ export function StartScreen() {
           className="start-form"
           onSubmit={(e) => {
             e.preventDefault();
-            store.start({ companyName: name, hq, difficulty });
+            store.start({ companyName: name, city, difficulty });
           }}
         >
           <label className="field">
@@ -42,14 +42,18 @@ export function StartScreen() {
             <input value={name} maxLength={28} onChange={(e) => setName(e.target.value)} />
           </label>
           <div className="field">
-            <span>Atölyeni nerede kuruyorsun?</span>
+            <span>Atölyeni hangi şehirde kuruyorsun?</span>
+            <p className="muted small">
+              Arabaların önce yalnızca bu eyalette satılır; komşu eyaletlere bayi bularak büyürsün. Eyalet dışına giden her araba için demiryolu nakliyesi ödersin.
+            </p>
             <Choice
-              value={hq}
-              onChange={setHq}
-              options={[
-                { value: 'usa', label: '🇺🇸 Detroit, ABD', sub: 'Büyüyen dev pazar, ucuz benzin. Büyük motor, hız ve konfor satar.' },
-                { value: 'europe', label: '🇪🇺 Coventry, Avrupa', sub: 'Pahalı benzin ve silindir çapı vergisi. Küçük, verimli araçlar satar.' },
-              ]}
+              value={city}
+              onChange={setCity}
+              options={CITIES.map((c) => ({
+                value: c.id,
+                label: `${c.name}, ${c.state}`,
+                sub: `${c.blurb} ${c.pros.map((p) => `✓ ${p}`).join(' · ')} · ${c.cons.map((x) => `✗ ${x}`).join(' · ')}`,
+              }))}
             />
           </div>
           <div className="field">

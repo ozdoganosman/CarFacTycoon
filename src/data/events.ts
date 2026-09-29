@@ -1,3 +1,5 @@
+import { cityDef } from './cities';
+import { stateDef } from './states';
 import { log } from '../core/util';
 import type { GameState } from '../core/types';
 
@@ -45,9 +47,10 @@ export const EVENTS: GameEventDef[] = [
     title: 'Atölyen açıldı',
     icon: '🔧',
     body: (s) =>
-      `1900 yılı. ${s.company.hq === 'usa' ? 'Detroit’te' : 'Coventry’de'} küçük bir atölyen, ${s.company.engineers} mühendisin ve biraz paran var. ` +
-      'Amacın 1960’a kadar dünya çapında bir otomobil markası kurmak.\n\n' +
+      `1900 yılı. ${cityDef(s.company.city).name}’da küçük bir atölyen, ${s.company.engineers} mühendisin ve biraz paran var. ` +
+      'Amacın 1960’a kadar Amerika’nın büyük otomobil markalarından biri olmak.\n\n' +
       'İlk adım: Projeler ekranında yeni bir araç projesi başlat. Segmentini seç, aracı modüllerden tasarla, geliştir, test et, üret ve sat.\n\n' +
+      `Arabaların önce yalnızca ${stateDef(cityDef(s.company.city).state).name} eyaletinde satılır. Harita ekranından komşu eyaletlerde bayi arayarak büyürsün; eyalet dışına giden her araba için nakliye ödersin.\n\n` +
       'İpucu: Hangi alıcının neye önem verdiği gizli. Satış raporları ve dergi yorumları zamanla bunu sana öğretecek.',
   },
   {

@@ -66,7 +66,8 @@ export function engineNotes(e: EngineDesign, year: number, segment: SegmentId): 
   const x = computeEngine(e, year);
   const pros: string[] = [];
   const cons: string[] = [];
-  const europeTax = year >= 1910 && year <= 1947;
+  // Only the American market is played: the European horsepower tax does not apply.
+  const europeTax = false;
 
   const hp = x.powerHp / t.hp;
   if (hp >= 1.15) pros.push(`Tipik motordan ${pct(hp)} güçlü: hızlanma ve son hız artar.`);

@@ -95,7 +95,7 @@ export function Company() {
         <Panel title="Rakip satın al">
           <p className="muted small">
             Senden küçük üreticiler satılık. Satın aldığında modelleri piyasadan çekilir (müşterileri yeni bir marka arar), mühendisleri sana katılır, bayileri senin
-            arabalarını satar; başka bir kıtadaysa o pazar açılır.
+            arabalarını satar: en kalabalık eyaletlerde, henüz satış yapmadıkların dahil, yeni bayilerin olur.
           </p>
           {targets.length ? (
             <Table

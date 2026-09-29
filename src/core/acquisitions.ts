@@ -30,7 +30,8 @@ export function acquisitionTargets(s: GameState): AcquisitionTarget[] {
   const mine = playerUnits(s);
   const out: AcquisitionTarget[] = [];
   for (const def of RIVALS) {
-    if (!isRivalActive(def, yf) || s.acquired?.includes(def.id)) continue;
+    // Only American makers: the company plays the American market.
+    if (def.home !== 'usa' || !isRivalActive(def, yf) || s.acquired?.includes(def.id)) continue;
     const company = s.rivals.find((c) => c.id === def.id);
     const units = company?.yearSold[year] ?? 0;
     if (units <= 0 || units >= mine) continue;

@@ -14,9 +14,11 @@ import { stationDef } from '../data/stations';
 import { toolingDef } from '../data/tooling';
 import { SEGMENTS, segmentDef } from '../data/segments';
 import { interp } from '../data/tech';
+import { nationalReach, playerStateDemand } from './network';
 import { appeal, eraMods, eraReference, scoreStats } from './scoring';
 import { INDUSTRY_RESIDUAL_DEFECTS } from './testing';
 import { yearFloat } from './time';
+import type { StateId } from '../data/states';
 import type { AttrKey, CarModel, CarStats, GameState, MarketId, RivalModel, Scores, SegmentId } from './types';
 
 export const TAU = 7;
@@ -95,7 +97,9 @@ export function steepPriceRatio(segment: SegmentId, market: MarketId, yf: number
 
 export const brandTerm = (reputation: number, segment: SegmentId) => (reputation - 50) * 0.12 * segmentDef(segment).brandSens;
 
+/** Share of the country's buyers our showrooms reach (the dealer network, state by state). */
 export function playerReach(state: GameState, market: MarketId): number {
+  if (market === 'usa') return nationalReach(state, yearFloat(state.week));
   const m = state.markets[market];
   return dealerCoverage(m.dealerLevel, market === state.company.hq) * (0.35 + 0.65 * m.awareness);
 }
@@ -286,14 +290,25 @@ export interface SegmentMarket {
   offers: Offer[];
   othersWeight: number;
   totalWeight: number;
+  /** Our models' weekly buyers, in all and state by state (only where we have showrooms). */
+  player: { units: Record<string, number>; byState: Record<string, Partial<Record<StateId, number>>> };
 }
 
+/**
+ * A class's buyers and how they split. Rivals and the small makers sell everywhere; our
+ * cars only in the states with our showrooms, so our buyers are worked out state by state.
+ * Our offers then carry the national weight that gives the same share, so ranks and
+ * shares read the same everywhere else.
+ */
 export function segmentMarket(state: GameState, market: MarketId, segment: SegmentId): SegmentMarket {
   const yf = yearFloat(state.week);
   const offers: Offer[] = [];
+  const mine: Offer[] = [];
   for (const m of state.models) {
     if (m.status === 'active' && m.segment === segment && m.markets.includes(market) && state.markets[market].unlocked) {
-      offers.push(playerOffer(state, m, market));
+      const o = playerOffer(state, m, market);
+      offers.push(o);
+      mine.push(o);
     }
   }
   for (const rm of state.rivalModels) {
@@ -302,22 +317,43 @@ export function segmentMarket(state: GameState, market: MarketId, segment: Segme
   // Where few named rivals compete, the many small makers fill the gap.
   const rivalCount = offers.filter((o) => o.kind === 'rival').length;
   const othersWeight = othersMass(yf) * (1 + 0.35 * Math.max(0, 3 - rivalCount)) * Math.exp(OTHERS_UTILITY / TAU);
-  const totalWeight = offers.reduce((s, o) => s + o.weight, 0) + othersWeight;
-  return { demand: weeklySegmentDemand(market, segment, yf), offers, othersWeight, totalWeight };
+  const rivalsWeight = offers.reduce((s, o) => s + (o.kind === 'rival' ? o.weight : 0), 0);
+  const demand = weeklySegmentDemand(market, segment, yf);
+  const player: SegmentMarket['player'] = { units: {}, byState: {} };
+  if (!mine.length || demand <= 0) return { demand, offers, othersWeight, totalWeight: rivalsWeight + othersWeight, player };
+  const split = playerStateDemand(
+    state,
+    mine.map((o) => ({ id: o.id, utility: o.utility })),
+    demand,
+    rivalsWeight + othersWeight,
+    segment,
+    yf,
+  );
+  const ours = Object.values(split.units).reduce((a, u) => a + u, 0);
+  const totalWeight = (rivalsWeight + othersWeight) / Math.max(1e-6, 1 - ours / demand);
+  for (const o of mine) o.weight = (split.units[o.id] / demand) * totalWeight;
+  return { demand, offers, othersWeight, totalWeight, player: split };
 }
 
 /** Preview: expected weekly demand for a hypothetical price (used by the launch & pricing UI). */
 export function demandAtPrice(state: GameState, model: CarModel, market: MarketId, basePrice: number): number {
-  const sm = segmentMarket(state, market, model.segment);
   const original = model.price;
   const originalWeek = model.priceWeek;
   model.price = basePrice;
   model.priceWeek = state.week;
-  const o = playerOffer(state, model, market);
-  model.price = original;
-  model.priceWeek = originalWeek;
-  const others = sm.totalWeight - (sm.offers.find((x) => x.id === model.id)?.weight ?? 0);
-  return (sm.demand * o.weight) / (others + o.weight);
+  // A car not yet on sale (a project's preview) is counted as if it were.
+  const status = model.status;
+  const listed = state.models.includes(model);
+  if (!listed) state.models.push(model);
+  model.status = 'active';
+  try {
+    return segmentMarket(state, market, model.segment).player.units[model.id] ?? 0;
+  } finally {
+    model.price = original;
+    model.priceWeek = originalWeek;
+    model.status = status;
+    if (!listed) state.models.splice(state.models.indexOf(model), 1);
+  }
 }
 
 export const SEGMENT_IDS: SegmentId[] = SEGMENTS.map((s) => s.id);

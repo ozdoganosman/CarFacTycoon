@@ -1,3 +1,6 @@
+import * as N from '../../core/network';
+import { stateDef } from '../../data/states';
+import { cityDef } from '../../data/cities';
 import { engineersBusy, idleEngineers, idleReason } from '../../core/game';
 import { engineerSalary } from '../../data/economy';
 import { racingOutlook, racingPaused } from '../../core/racing';
@@ -48,6 +51,22 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
     if (lines.length && demand > cap * 1.25 && m.inventory < cap) out.push({ text: `${m.name} için talep üretimi aşıyor. Darboğazı çöz ya da hat ekle.`, go: () => store.go({ id: 'factory' }) });
     if (m.inventory > Math.max(8, demand * 12)) out.push({ text: `${m.name} stokları birikiyor. Fiyatı ya da üretim hızını düşür.`, go: () => store.go({ id: 'model', modelId: m.id }) });
     if ((s.week - m.refreshWeek) / 52 > 3) out.push({ text: `${m.name} ${Math.floor((s.week - m.refreshWeek) / 52)} yaşında ve her yıl eskiyor; makyaj ya da yeni kuşak düşün.`, go: () => store.go({ id: 'model', modelId: m.id }) });
+  }
+  // The network: grow while it is small, look after the cars on the road, keep its cost in check.
+  if (s.models.some((m) => m.status === 'active')) {
+    const yf = yearFloat(s.week);
+    const toMap = () => store.go({ id: 'markets' });
+    const open = N.openStates(s).length;
+    if (N.activeSearches(s) === 0 && open < 48 && N.frontier(s).some((id) => N.canSearch(s, id).ok))
+      out.push({
+        text: open === 1 ? 'Arabaların yalnızca fabrikanın eyaletinde satılıyor. Haritadan komşu bir eyalette bayi ara.' : `Şu an hiçbir eyalette bayi aranmıyor (${open} eyalette satış var). Haritadan yeni bir eyalete açıl.`,
+        go: toMap,
+      });
+    const poor = N.underServed(s, yf, 0.7).slice(0, 3);
+    if (poor.length) out.push({ text: `Servis yetmiyor: ${poor.map((id) => stateDef(id).name).join(', ')}. Sahipler bekliyor, arabalar erken hurdaya çıkıyor.`, go: toMap });
+    const revenue = s.finance.slice(-13).reduce((a, f) => a + f.revenue, 0) / 13;
+    if (revenue > 0 && N.networkWeekly(s, yf) > revenue * 0.12)
+      out.push({ text: `Bayi ve servis ağının gideri satış gelirinin %${Math.round((N.networkWeekly(s, yf) / revenue) * 100)}’i: az satan bayileri kapatmayı düşün.`, go: toMap });
   }
   // Research standing idle while rivals already build with technology the company has not learned.
   const r = s.research;
@@ -148,7 +167,7 @@ export function HQ() {
     <div className="screen">
       <div className="screen-head">
         <h1>Merkez</h1>
-        <p className="muted">{formatDate(s.week)} · {s.company.hq === 'usa' ? 'Detroit' : 'Coventry'}</p>
+        <p className="muted">{formatDate(s.week)} · {cityDef(s.company.city).name}</p>
       </div>
       <div className="stats-row">
         <Stat label="Kasa" value={money(s.company.cash)} tone={s.company.cash < 0 ? 'bad' : undefined} sub={s.company.loan > 0 ? `Kredi: ${money(s.company.loan)}` : undefined} />

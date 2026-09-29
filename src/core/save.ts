@@ -1,4 +1,5 @@
 import { SAVE_VERSION } from './game';
+import { ensureNetwork } from './network';
 import { ensureRivals } from './rivals';
 import { ensureResearch } from './research';
 import { yearFloat } from './time';
@@ -35,6 +36,8 @@ function migrate(s: GameState) {
   ensureResearch(s, yearFloat(s.week));
   // The full engine designer became the default; saves that never chose a mode get it too.
   if (!s.settings.modeChosen) s.settings.engineerMode = true;
+  // The American market only, state by state (older saves had national dealer levels).
+  ensureNetwork(s);
 }
 
 /** Browser storage can be unavailable (private mode, blocked site data); never let that break the game. */

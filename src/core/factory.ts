@@ -1,3 +1,4 @@
+import { cityDef } from '../data/cities';
 import { MAX_SLOTS, capexScale, costIndex, newLineCost, realWage, slotCost, toolingMultiple } from '../data/economy';
 import { STAGES, STATIONS, stationDef, type StationDef } from '../data/stations';
 import { CHASSIS, byId } from '../data/tech';
@@ -42,7 +43,7 @@ export function lineUpkeep(state: GameState, line: ProductionLine, utilisation: 
     (s, st) => s + line.stations[st.id].reduce((a, id) => a + stationDef(id).upkeep, 0) * shiftCost(line, st.id),
     0,
   );
-  const wage = state.company.highWages ? 1.4 : 1;
+  const wage = (state.company.highWages ? 1.4 : 1) * cityDef(state.company.city).wages;
   const lay = state.flags.layoffs ? 0.75 : 1;
   const yf = yearFloat(state.week);
   return base * costIndex(yf) * realWage(yf) * (0.4 + 0.6 * Math.min(1, Math.max(0, utilisation))) * wage * lay;

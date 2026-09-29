@@ -2,11 +2,12 @@ import { useState } from 'react';
 import * as A from '../../core/actions';
 import { credit, dealerUpkeep, gates, materialUnitCost, protoUnitCost } from '../../core/game';
 import { lineReport, lineUpkeep, reservedLines, suggestedLine, turnkeyLineCost, workshopLineCost } from '../../core/factory';
-import { MARKET_IDS, consumerPrice, demandAtPrice, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
+import { MARKET_IDS, demandAtPrice, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
 import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, defectRange, defectText, expectedRemaining, riskLabel, testTuning, testWeekCost, type Tuning } from '../../core/testing';
 import { yearFloat } from '../../core/time';
 import { DEALER_COMMISSION, costIndex, engineerSalary, lineBuildWeeks, overhead, shopCost } from '../../data/economy';
 import { MARKETS } from '../../data/markets';
+import * as N from '../../core/network';
 import { ATTRS, ATTR_NAMES, segmentDef } from '../../data/segments';
 import { STAGES } from '../../data/stations';
 import { TOOLING, toolingDef } from '../../data/tooling';
@@ -108,7 +109,8 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
     const pm = A.previewModel(s, p, pr, markets);
     return markets.reduce((a, mk) => a + demandAtPrice(s, pm, mk, pr), 0);
   };
-  const net = s.markets[s.company.hq].dealerLevel > 0 ? 1 - DEALER_COMMISSION : 1;
+  // What a car brings once the dealer's cut and the average freight are paid.
+  const net = 1 - DEALER_COMMISSION - N.avgFreightPerCar(s, yf) / Math.max(1, price);
   const rivalPrices = segmentMarket(s, s.company.hq, p.segment)
     .offers.filter((o) => o.kind === 'rival')
     .map((o) => o.price)
@@ -696,7 +698,7 @@ function Launch({ p }: { p: Project }) {
   const st = useCarStats(p.design, yf, p.bonus);
   const unlocked = MARKETS.filter((m) => s.markets[m.id].unlocked).map((m) => m.id);
   const [price, setPrice] = useState(() => Math.round(p.kind === 'facelift' ? p.targetPrice : referencePrice(s.company.hq, p.segment, yf)));
-  const [markets, setMarkets] = useState<MarketId[]>(unlocked);
+  const [markets] = useState<MarketId[]>(unlocked);
   // A show can cost a young firm half its till: the player turns it on, never by default.
   const [autoShow, setAutoShow] = useState(false);
   const preview = A.previewModel(s, p, price, markets);
@@ -705,7 +707,7 @@ function Launch({ p }: { p: Project }) {
   const unit = materialUnitCost(s, preview);
   const labour = line && cap > 0 ? lineUpkeep(s, line, 1) / cap : 0;
   const segmentWeekly = markets.reduce((a, m) => a + weeklySegmentDemand(m, p.segment, yf), 0);
-  const net = price * (s.markets[s.company.hq].dealerLevel > 0 ? 1 - DEALER_COMMISSION : 1);
+  const net = price * (1 - DEALER_COMMISSION) - N.avgFreightPerCar(s, yf);
   const margin = net - unit - labour;
   // A week at the middle demand estimate: what the car brings in against what the firm costs to run.
   const demand = markets.reduce((a, mk) => a + demandAtPrice(s, preview, mk, price), 0);
@@ -726,25 +728,10 @@ function Launch({ p }: { p: Project }) {
         <p className="muted small">
           Sınıfın tipik fiyatı: {money(referencePrice(s.company.hq, p.segment, yf))}. Fiyat enflasyona göre otomatik güncellenir; istersen Modeller ekranından değiştirirsin.
         </p>
-        {MARKETS.map((mk) => {
-          const open = s.markets[mk.id].unlocked;
-          const cp = consumerPrice(price, mk.id, mk.id !== s.company.hq, st, yf);
-          const segSize = weeklySegmentDemand(mk.id, p.segment, yf);
-          return (
-            <Toggle
-              key={mk.id}
-              checked={markets.includes(mk.id)}
-              disabled={!open}
-              onChange={(v) => setMarkets(v ? [...markets, mk.id] : markets.filter((x) => x !== mk.id))}
-              label={`${mk.flag} ${mk.name}`}
-              sub={
-                open
-                  ? `Alıcıya fiyat ${money(cp.total)}${cp.tariff ? ` (gümrük ${money(cp.tariff)})` : ''}${cp.tax ? ` (vergi ${money(cp.tax)})` : ''} · segment ${num(segSize * 52)} araç/yıl · tipik fiyat ${money(referencePrice(mk.id, p.segment, yf))}`
-                  : 'İlk modelinden sonra açılır'
-              }
-            />
-          );
-        })}
+        <p className="muted small">
+          Satış yapılan {N.openStates(s).length} eyalette sunulur · segment {num(weeklySegmentDemand('usa', p.segment, yf) * 52)} araç/yıl (bütün ülke) · araç başına ortalama nakliye{' '}
+          {money(N.avgFreightPerCar(s, yf))}.
+        </p>
         <Toggle
           checked={autoShow}
           onChange={setAutoShow}

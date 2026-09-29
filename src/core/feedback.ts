@@ -1,3 +1,5 @@
+import { openStates, underServed } from './network';
+import { stateDef } from '../data/states';
 import { ATTRS, ATTR_NAMES, segmentDef } from '../data/segments';
 import { PRICE_REMARK, modelScores, playerOffer, rivalScores, segmentMarket } from './market';
 import { lineReport } from './factory';
@@ -195,8 +197,10 @@ export function buildLaunchReport(state: GameState, model: CarModel): LaunchRepo
   if (price === 'high') advice.push('Alıcılar aracı pahalı buluyor.');
   if (price === 'low' && demand > capacity) advice.push('Fiyatın rakiplerin çok altında: daha pahalıya da satabilirsin.');
   if (complaints.length) advice.push(`Bir sonraki makyajda ya da yeni kuşakta ${complaints.map((k) => ATTR_NAMES[k].toLowerCase()).join(' ve ')} konusuna eğil.`);
-  const reach = state.markets[market].dealerLevel;
-  if (reach <= 1) advice.push('Bayi ağın küçük: alıcıların çoğu aracını hiç görmüyor. Pazarlar ekranından bayi ağını büyüt.');
+  const open = openStates(state).length;
+  if (open < 6) advice.push(`Arabaların yalnızca ${open} eyalette satılıyor: alıcıların çoğu onu hiç görmüyor. Harita ekranından komşu eyaletlerde bayi ara.`);
+  const poor = underServed(state).slice(0, 3);
+  if (poor.length) advice.push(`Servis yetersiz: ${poor.map((id) => stateDef(id).name).join(', ')} eyaletlerinde sahipler tamir için bekliyor. Haritadan servis aç.`);
   return {
     weeks: since.length,
     sold,

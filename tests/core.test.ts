@@ -33,6 +33,7 @@ import { CYLINDER_OPTIONS } from '../src/data/tech';
 import type { FocusKey } from '../src/core/types';
 import { store } from '../src/ui/store';
 import { runBot } from '../scripts/bot';
+import { openStates, serviceSatisfaction } from '../src/core/network';
 
 const modelT: CarDesign = {
   chassis: 'ladder',
@@ -198,9 +199,9 @@ describe('game', () => {
   });
 
   it('market shares add up to 100%', () => {
-    const s = newGame({ companyName: 'Test', hq: 'europe', seed: 2 });
+    const s = newGame({ companyName: 'Test', seed: 2 });
     for (let i = 0; i < 52 * 15; i++) tick(s);
-    const sm = segmentMarket(s, 'europe', 'family');
+    const sm = segmentMarket(s, 'usa', 'family');
     const total = sm.offers.reduce((a, o) => a + o.weight, 0) + sm.othersWeight;
     expect(total).toBeCloseTo(sm.totalWeight, 6);
   });
@@ -223,7 +224,11 @@ describe('game', () => {
     for (let i = 0; i < 52; i++) tick(s);
     expect(s.models[0].unitsSold).toBeGreaterThan(0);
     expect(s.company.modelsLaunched).toBe(1);
-    expect(s.markets.europe.unlocked).toBe(true);
+    // The American market only, and only the home state until a dealer opens elsewhere.
+    expect(s.markets.europe.unlocked).toBe(false);
+    const net = s.network!.states;
+    expect(Object.keys(net).filter((id) => (net[id as keyof typeof net]?.sold ?? 0) > 0)).toEqual(['MI']);
+    expect(net.MI!.parc).toBeGreaterThan(s.models[0].unitsSold * 0.95);
   });
 
   it('is deterministic for a seed and survives a save round-trip', () => {
@@ -240,10 +245,13 @@ describe('game', () => {
   });
 
   it('a scripted player can play the whole campaign without going bankrupt', () => {
-    const s = newGame({ companyName: 'Bot', hq: 'europe', seed: 2 });
-    runBot(s, 52 * 61, { segments: ['city', 'family'] });
+    const s = newGame({ companyName: 'Bot', seed: 1 });
+    runBot(s, 52 * 61, { segments: ['family'] });
     expect(s.gameOver?.reason).toBe('end');
     expect(s.company.cash).toBeGreaterThan(0);
+    // It grew state by state across the country, and kept its cars serviced.
+    expect(openStates(s).length).toBeGreaterThan(30);
+    expect(serviceSatisfaction(s, yearFloatOf(s.week))).toBeGreaterThan(0.6);
   }, 60_000);
 });
 

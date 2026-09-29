@@ -23,6 +23,10 @@ Kısayollar: **boşluk** duraklat/devam, **1-2-3** hız. Karar isteyen olaylar z
 
 claude.ai içinde oyuncu izin verirse oyun kendi kaydını sayfanın veritabanındaki `playtests/g<seed>` belgesine kendiliğinden yazar (üç oyun ayında bir, en fazla dakikada bir; hata olunca hemen). Menüdeki **Claude’a gönder** düğmesi notlu ayrı bir kopya ekler. Kayıtta oyuncunun önemli kararlarının zaman çizelgesi (`decisions`) ve yakalanan hatalar (`errors`) da vardır. `node scripts/playtest.mjs <klasör> <id>` indirilen parçaları yeniden kayda çevirir.
 
+### Eyaletler, bayiler ve servis
+
+Oyun yalnızca Amerikan pazarında oynanır. Başlarken fabrikanın şehri seçilir (Detroit, Cleveland, Chicago, Hartford, New York, St. Louis, Los Angeles; her birinin parça, işçilik ve nakliye farkı var) ve arabalar önce yalnızca o eyalette satılır. **Harita** ekranından komşu eyaletlerde bayi aranır (birkaç hafta sürer, bulunamayabilir; itibar ve yakındaki arabalar şansı artırır), satın alınan rakiplerin bayileri de ağa katılır. Eyalet dışına giden her araba için demiryolu nakliyesi ödenir. Satılan her araba o eyalette yolda kalır, yaşlanır, hurdaya çıkar; bakımı için bayi atölyeleri ve servis atölyeleri gerekir. Servis yetmezse o eyalette satış düşer, arabalar erken ölür, garanti pahalanır ve itibar erir. Ağın genel gideri boyutundan hızlı büyür (bölge müdürlükleri, parça depoları): geç oyundaki paranın büyük bölümü artık ağı ve servisi ayakta tutmaya gider. İlk yıllarda alıcılar fabrikaya yakın markayı tercih eder; bu tercih ulusal markalar yayıldıkça zayıflar. Eyalet verileri 1900-1960 nüfus sayımlarından (`src/data/states.ts`), harita US Census sınırlarından üretilir (`scripts/build-usmap.mjs` → `src/data/usmap.ts`).
+
 ### Herkese açık link ve oyuncu verisi
 
 `.github/workflows/pages.yml` tek dosyalık sürümü GitHub Pages'e yayınlar (`https://<kullanıcı>.github.io/CarFacTycoon/`). Bir kez **Settings → Pages → Source: GitHub Actions** seçilir; o zamana kadar iş akışı yalnızca derler ve bir not bırakır. Aynı `dist-single/index.html` itch.io'ya da (zip içinde) yüklenebilir.
@@ -64,7 +68,7 @@ Oyun her tasarımdan 0-100 (erken dönemde 0-50), son hız, tüketim, konfor, yo
 
 | Tasarım belgesindeki endişe | Bu sürümdeki çözüm |
 |---|---|
-| Kapsam çok büyük | Yalnız 1900-1960, yalnız ABD ve Avrupa. Fabrika serbest harita değil: pres, gövde, boya ve montajdan oluşan dört istasyonlu hatlar; darboğaz kırmızı yanar. |
+| Kapsam çok büyük | Yalnız 1900-1960, şimdilik yalnız ABD pazarı (Avrupa kodda duruyor, oynanmıyor). Fabrika serbest harita değil: pres, gövde, boya ve montajdan oluşan dört istasyonlu hatlar; darboğaz kırmızı yanar. |
 | Motor fiziği istismar edilmemeli | Devir sınırı hem piston hızına hem dönemin malzemesine bağlıdır: 1900’de olgun sınırın yarısı, 1960’ta tamamı. Çok kısa stroklu bir motor erken yıllarda hızlı değil yalnızca küçük olur. |
 | Motor simülatörü yeni oyuncu için ağır | **Mühendis modu** varsayılan olarak açık: silindir düzeni, çap, strok, sıkıştırma, supap, yakıt sistemi ve kompresörün her birinin altında artırınca ve azaltınca ne olduğu yazar. Güç ve tork eğrilerinin altında motorun sınıfın tipik motoruna göre artıları ve eksileri listelenir. Karışık gelirse Ayarlar’dan basit moda (hazır motorlar ve tek bir “karakter” kaydırıcısı) geçilir. |
 | Gizli ağırlıklar rastgele hissettirebilir | Aylık müşteri yorumları (“Pikap alıcıları güvenilirlikten şikâyetçi”), dergi alıntıları, doldurulan segment bilgisi tablosu, ücretli pazar araştırması ve model ekranında “Neden bu kadar satıyor?” dökümü (çekicilik, fiyat, marka, lansman heyecanı, yaş, erişim, rakipler). |
@@ -73,11 +77,10 @@ Oyun her tasarımdan 0-100 (erken dönemde 0-50), son hız, tüketim, konfor, yo
 | İyi bir araba her fiyata satmamalı | Alıcı daha iyi arabayı fark eder ama sınıf ortalamasının üstünde her ek çekicilik puanı daha az sayar (75 → 69, 90 → 73). Lüks ve spor alıcıları fiyata eskisinden daha duyarlı: sınıfın çok üstünde fiyat, en iyi arabada bile payı hızla eritir. Lüks ve spor araba farklı olmak için alınır: sınıfın dörtte birinden fazlası aynı modeli sürünce çekiciliği azalır (“Herkeste var”). |
 | Seri üretim para kazandırmalı | Hacim arabayı ucuzlatır: kalıplar, alımlar ve alışkanlık sayesinde yüz binlerce üretilen bir modelin malzemesi beşte bir ucuzlar; yeni kuşak öncekinin tecrübesinin bir kısmını devralır. Ucuz sınıflarda asıl kâr satış arttıkça gelir, pahalı sınıflarda araba başına. |
 | Rakipler gerekli | Rakipler önde başlar: köklü firmaların büyük mühendislik kadroları arabalarına daha çok emek koyar, önde gelenler yeni teknolojiyi bir iki yıl erken kullanır, 1900’de satan firmaların bayileri zaten vardır. İyi bir ilk araba sınıfın ortalarına, sıradan bir ilk araba sonlarına yerleşir; tanınmayan bir markanın lansmanı da daha az ses getirir. 17 büyük ve yaklaşık 220 küçük kurgusal üretici; 1930’a kadar her açık sınıfta 10-15, sonra 6-10 isimli araç. Küçükler kurulur, kapanır, yerlerine yenileri gelir. Yeni bir firmanın ilk arabaları işçilik yüzünden daha az güvenilir, konforlu ve prestijlidir. 1900’den itibaren her pazarda her segmentte isimli rakip var (testle korunur). Bir segmentte payın büyürse rakipler yeni modellerini erken ve daha iyi çıkarır. Araçları oyuncunun kullandığı hesaplayıcıyla bir yapay tasarımcı üretir. |
-| Sistemler kademeli açılmalı | İhracat ve yap-ya-da-al ikinci modelle, platform ve motor paylaşımı üçüncü modelle açılır. |
+| Sistemler kademeli açılmalı | Satış önce yalnızca fabrikanın eyaletinde; bayi ağı eyalet eyalet büyür. Yap-ya-da-al ikinci modelle, platform ve motor paylaşımı üçüncü modelle açılır. |
 
 ### Tarihten mekaniğe
 
-- **İngiliz vergi beygiri (1910-1947):** Avrupa’da araç vergisi yalnızca silindir çapına ve silindir sayısına bakar. Uzun stroklu motor vergide avantajlıdır.
 - **Hareketli montaj hattı (1913), günde 5 dolar (1914), Duco boya (1924):** Fabrikadaki darboğaz yer değiştirir. Beş dolar işçiliği %40 artırır ama işçi kaçmadığı için verim %30 yükselir.
 - **Büyük Savaş (1914-1918):** Çelik pahalanır (malzeme +%25); bütün üreticilerin fiyatları da yükselir, bu yüzden savaş fiyatına uymak zam sayılmaz.
 - **Büyük Buhran (1929):** Lüks talep çöker, bankalar krediyi kısar, “işçi çıkar ya da çıkarma” kararı gelir.
@@ -92,7 +95,8 @@ src/core/   simülasyon (arayüzden bağımsız, saf TypeScript)
   vehicle.ts     araç: kütle, aerodinamik, vites oranları, 0-50/0-100 simülasyonu, son hız, tüketim
   scoring.ts     dönem/sınıf referansına göre puanlar, segment ağırlıkları
   ai.ts          rakiplerin ve referans aracın yapay tasarımcısı, hazır motorlar
-  market.ts      logit talep modeli, fiyat, gümrük, vergi, bayi erişimi
+  market.ts      logit talep modeli, fiyat; oyuncunun alıcıları eyalet eyalet (network.ts)
+  network.ts     eyaletler: bayi arama, kapsama, nakliye, yoldaki araçlar, servis, hurda, ağ gideri
   testing.ts     gizli kusurlar, testler, sahada arıza, tedarikçi kalitesi
   research.ts    Ar-Ge: önkoşullar, maliyet, süre, birikimler
   news.ts        gazete ön sayfaları; letters.ts müşteri mektupları
