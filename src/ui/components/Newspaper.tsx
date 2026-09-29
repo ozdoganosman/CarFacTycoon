@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { formatDate, yearOf } from '../../core/time';
 import type { CarModel, GameState, NewsArt, NewsIssue } from '../../core/types';
+import { msg, t } from '../../i18n';
 import { store, useGameState } from '../store';
 import { money } from '../format';
 import { CarSVG } from '../viz/CarSVG';
@@ -18,9 +19,9 @@ type Era = 'early' | 'mid' | 'late';
 const eraOf = (year: number): Era => (year < 1920 ? 'early' : year < 1940 ? 'mid' : 'late');
 
 const MAST: Record<Era, { name: string; tagline: string; price: string }> = {
-  early: { name: 'Otomobil Gazetesi', tagline: 'Motorlu Araçlar, Yollar ve Sanayi Üzerine Haftalık Havadis', price: 'Fiyatı 5 kuruş' },
-  mid: { name: 'Motor ve Yol', tagline: 'Otomobilciliğin ve Seyahatin Sesi', price: 'Her yerde 10 kuruş' },
-  late: { name: 'Otomobil Dünyası', tagline: 'Sanayi · Ticaret · Yol · Spor', price: '25 kuruş' },
+  early: { name: msg('Otomobil Gazetesi'), tagline: msg('Motorlu Araçlar, Yollar ve Sanayi Üzerine Haftalık Havadis'), price: msg('Fiyatı 5 kuruş') },
+  mid: { name: msg('Motor ve Yol'), tagline: msg('Otomobilciliğin ve Seyahatin Sesi'), price: msg('Her yerde 10 kuruş') },
+  late: { name: msg('Otomobil Dünyası'), tagline: msg('Sanayi · Ticaret · Yol · Spor'), price: msg('25 kuruş') },
 };
 
 /** The newest paper waits in a corner; the clock keeps running. */
@@ -34,10 +35,10 @@ export function NewsCard() {
     if (!issue) return;
     setCompact(false);
     const fold = setTimeout(() => setCompact(true), 8000);
-    const t = setTimeout(() => store.act((st) => void (st.modals = st.modals.filter((m) => m.kind !== 'news'))), 60000);
+    const gone = setTimeout(() => store.act((st) => void (st.modals = st.modals.filter((m) => m.kind !== 'news'))), 60000);
     return () => {
       clearTimeout(fold);
-      clearTimeout(t);
+      clearTimeout(gone);
     };
   }, [issue?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!issue) return null;
@@ -51,9 +52,9 @@ export function NewsCard() {
     return (
       <aside className={`news-card is-compact ${issue.kind === 'boom' ? 'is-boom' : ''}`}>
         <button type="button" className="news-card-tab" onClick={read} title={issue.lead.headline}>
-          📰 <span className={`mast-${era}`}>{MAST[era].name}</span>
+          📰 <span className={`mast-${era}`}>{t(MAST[era].name)}</span>
         </button>
-        <button type="button" className="year-card-x" aria-label="Kapat" onClick={dismiss}>
+        <button type="button" className="year-card-x" aria-label={t('Kapat')} onClick={dismiss}>
           ×
         </button>
       </aside>
@@ -61,14 +62,14 @@ export function NewsCard() {
   return (
     <aside className={`news-card ${issue.kind === 'boom' ? 'is-boom' : ''}`} aria-live="polite">
       <div className="news-card-head">
-        <span className={`news-card-mast mast-${era}`}>{MAST[era].name}</span>
-        <button type="button" className="year-card-x" aria-label="Kapat" onClick={dismiss}>
+        <span className={`news-card-mast mast-${era}`}>{t(MAST[era].name)}</span>
+        <button type="button" className="year-card-x" aria-label={t('Kapat')} onClick={dismiss}>
           ×
         </button>
       </div>
       <b className="news-card-headline">{issue.lead.headline}</b>
       <Button kind={issue.kind === 'boom' ? 'primary' : 'ghost'} onClick={read}>
-        📰 Gazeteyi oku (oyun durur)
+        📰 {t('Gazeteyi oku (oyun durur)')}
       </Button>
     </aside>
   );
@@ -88,7 +89,7 @@ export function NewspaperHost() {
   return (
     <div className="paper-backdrop" onClick={(e) => e.target === e.currentTarget && store.closeNews()}>
       <div className="paper-wrap" role="dialog" aria-modal="true" aria-label={issue.lead.headline}>
-        <button type="button" className="paper-close" onClick={() => store.closeNews()} aria-label="Gazeteyi kapat">
+        <button type="button" className="paper-close" onClick={() => store.closeNews()} aria-label={t('Gazeteyi kapat')}>
           ×
         </button>
         <Newspaper s={s} issue={issue} />
@@ -108,17 +109,15 @@ export function Newspaper({ s, issue }: { s: GameState; issue: NewsIssue }) {
     <article className={`paper paper-${era}`}>
       <header className="paper-mast">
         <div className="paper-ears">
-          <span className="paper-ear">{issue.kind === 'boom' ? 'ÖZEL BASKI' : 'Hava: açık, yollar kuru'}</span>
-          <h1 className="paper-name">{mast.name}</h1>
-          <span className="paper-ear">Son telgraflar içeride</span>
+          <span className="paper-ear">{issue.kind === 'boom' ? t('ÖZEL BASKI') : t('Hava: açık, yollar kuru')}</span>
+          <h1 className="paper-name">{t(mast.name)}</h1>
+          <span className="paper-ear">{t('Son telgraflar içeride')}</span>
         </div>
-        <div className="paper-tagline">{mast.tagline}</div>
+        <div className="paper-tagline">{t(mast.tagline)}</div>
         <div className="paper-dateline">
-          <span>
-            Cilt {year - 1899} · Sayı {1000 + issue.week}
-          </span>
+          <span>{t('Cilt {vol} · Sayı {no}', { vol: year - 1899, no: 1000 + issue.week })}</span>
           <span>{formatDate(issue.week)}</span>
-          <span>{mast.price}</span>
+          <span>{t(mast.price)}</span>
         </div>
       </header>
       <div className="paper-body">
@@ -158,7 +157,7 @@ export function Newspaper({ s, issue }: { s: GameState; issue: NewsIssue }) {
           ))}
           {issue.world && (
             <section className="paper-box">
-              <h4>Dünyadan</h4>
+              <h4>{t('Dünyadan')}</h4>
               <h3>{issue.world.headline}</h3>
               <p>{issue.world.body}</p>
             </section>
@@ -169,7 +168,7 @@ export function Newspaper({ s, issue }: { s: GameState; issue: NewsIssue }) {
         <div className="paper-bottom">
           {issue.ad && adModel && (
             <div className="paper-ad">
-              <div className="paper-ad-flag">YENİ!</div>
+              <div className="paper-ad-flag">{t('YENİ!')}</div>
               <div className="paper-ad-maker">{s.company.name}</div>
               <div className="paper-ad-model">{adModel.name}</div>
               <div className="halftone paper-ad-car">
@@ -181,13 +180,13 @@ export function Newspaper({ s, issue }: { s: GameState; issue: NewsIssue }) {
                   <li key={l}>{l}</li>
                 ))}
               </ul>
-              <div className="paper-ad-price">Fiyatı yalnızca {money(issue.ad.price)}</div>
-              <div className="paper-ad-foot">En yakın bayimizde sizi bekliyor</div>
+              <div className="paper-ad-price">{t('Fiyatı yalnızca {price}', { price: money(issue.ad.price) })}</div>
+              <div className="paper-ad-foot">{t('En yakın bayimizde sizi bekliyor')}</div>
             </div>
           )}
           {!!issue.letters?.length && (
             <section className="paper-letters">
-              <h4>Okur mektupları</h4>
+              <h4>{t('Okur mektupları')}</h4>
               {issue.letters.map((l, i) => (
                 <blockquote key={i}>
                   <p>“{l.text}”</p>
@@ -208,7 +207,7 @@ export function Newspaper({ s, issue }: { s: GameState; issue: NewsIssue }) {
 export function NewsArchive() {
   const s = useGameState();
   const list = [...(s.news ?? [])].reverse().slice(0, 12);
-  if (!list.length) return <p className="muted small">Henüz gazetede çıkan bir haber yok.</p>;
+  if (!list.length) return <p className="muted small">{t('Henüz gazetede çıkan bir haber yok.')}</p>;
   return (
     <ul className="archive">
       {list.map((n) => (
@@ -234,7 +233,7 @@ function Art({ art, model, year }: { art: NewsArt; model?: CarModel; year: numbe
 function Engraving({ scene }: { scene: string; year: number }) {
   const stroke = { stroke: 'currentColor', strokeWidth: 2 } as const;
   return (
-    <svg viewBox="0 0 320 170" className="engraving" role="img" aria-label={scene}>
+    <svg viewBox="0 0 320 170" className="engraving" role="img" aria-label={t(scene)}>
       <defs>
         <pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
           <line x1="0" y1="0" x2="0" y2="5" stroke="currentColor" strokeWidth="1.2" />

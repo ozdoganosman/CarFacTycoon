@@ -1,6 +1,7 @@
 import { serialize } from '../core/save';
 import { formatDate } from '../core/time';
 import type { GameState } from '../core/types';
+import { t } from '../i18n';
 import { resetAnalytics, startAnalytics, stopAnalytics } from './analytics';
 import { COLLECTOR_URL, forgetPlayer, newPlayerId, playerId, postPlaytest } from './collector';
 
@@ -104,11 +105,11 @@ async function write(ref: DocRef, data: Record<string, unknown>) {
 
 export function sendErrorText(e: unknown): string {
   const code = (e as { code?: string })?.code;
-  if (code === 'quota_exceeded') return 'Gönderim kutusu doldu. Claude’a söyle, eskilerini temizlesin.';
-  if (code === 'not_granted' || code === 'revoked' || code === 'invalid_argument') return 'Bu sayfada Claude’a gönderme izni yok.';
-  if (code === 'resource_exhausted') return 'Çok sık gönderildi, biraz sonra yeniden denenecek.';
-  if (code === 'too_big') return 'Oyun kaydı gönderilemeyecek kadar büyük.';
-  return 'Gönderilemedi, biraz sonra yeniden denenecek.';
+  if (code === 'quota_exceeded') return t('Gönderim kutusu doldu. Claude’a söyle, eskilerini temizlesin.');
+  if (code === 'not_granted' || code === 'revoked' || code === 'invalid_argument') return t('Bu sayfada Claude’a gönderme izni yok.');
+  if (code === 'resource_exhausted') return t('Çok sık gönderildi, biraz sonra yeniden denenecek.');
+  if (code === 'too_big') return t('Oyun kaydı gönderilemeyecek kadar büyük.');
+  return t('Gönderilemedi, biraz sonra yeniden denenecek.');
 }
 
 /** Where playtests go: Claude (claude.ai page) or the developer's collector (public build). */

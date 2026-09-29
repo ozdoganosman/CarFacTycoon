@@ -1,4 +1,6 @@
 import { isBlockingModal } from '../../core/util';
+import { t } from '../../i18n';
+import { tx } from '../i18n';
 import { store, useGameState } from '../store';
 import { Button } from './ui';
 
@@ -12,11 +14,9 @@ export function PauseBanner() {
   if (!waiting) return null;
   return (
     <div className="pause-banner" role="status">
-      <span>
-        <b>Oyun duraklatıldı.</b> Zaman akmadan mühendisler çalışmaz, testler ilerlemez, fabrika üretmez.
-      </span>
+      <span>{tx('<b>Oyun duraklatıldı.</b> Zaman akmadan mühendisler çalışmaz, testler ilerlemez, fabrika üretmez.')}</span>
       <Button kind="primary" small onClick={() => store.setSpeed(store.lastSpeed)}>
-        ▶ Devam et (boşluk)
+        ▶ {t('Devam et (boşluk)')}
       </Button>
     </div>
   );

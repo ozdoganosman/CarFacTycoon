@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from 'react';
 import { recordError } from '../../core/util';
+import { t } from '../../i18n';
 import { store } from '../store';
 
 /** A screen that fails to draw should not blank the whole game: record it and offer a way back. */
@@ -19,8 +20,8 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: 
     if (!this.state.failed) return this.props.children;
     return (
       <div className="crash">
-        <h2>Bu ekranda bir hata oluştu</h2>
-        <p>Oyunun kaydı yerinde. Hata kaydedildi ve Claude’a gönderilecek.</p>
+        <h2>{t('Bu ekranda bir hata oluştu')}</h2>
+        <p>{t('Oyunun kaydı yerinde. Hata kaydedildi ve Claude’a gönderilecek.')}</p>
         <button
           type="button"
           className="btn btn-primary"
@@ -29,7 +30,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: 
             this.setState({ failed: false });
           }}
         >
-          Merkeze dön
+          {t('Merkeze dön')}
         </button>
       </div>
     );

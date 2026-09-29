@@ -1,17 +1,18 @@
+import { msg, t } from '../../i18n';
 import { store, useGameState, type Screen } from '../store';
 import { SendToClaude } from './SendToClaude';
 
 const ITEMS: { id: Screen['id']; label: string; icon: string }[] = [
-  { id: 'hq', label: 'Merkez', icon: '🏢' },
-  { id: 'projects', label: 'Projeler', icon: '📐' },
-  { id: 'research', label: 'Ar-Ge', icon: '🔬' },
-  { id: 'models', label: 'Modeller', icon: '🚗' },
-  { id: 'factory', label: 'Fabrika', icon: '🏭' },
-  { id: 'markets', label: 'Harita', icon: '🗺️' },
-  { id: 'finance', label: 'Finans', icon: '💰' },
-  { id: 'company', label: 'Şirket', icon: '🏁' },
-  { id: 'cards', label: 'Bilgi kartları', icon: '💡' },
-  { id: 'settings', label: 'Ayarlar', icon: '⚙️' },
+  { id: 'hq', label: msg('Merkez'), icon: '🏢' },
+  { id: 'projects', label: msg('Projeler'), icon: '📐' },
+  { id: 'research', label: msg('Ar-Ge'), icon: '🔬' },
+  { id: 'models', label: msg('Modeller'), icon: '🚗' },
+  { id: 'factory', label: msg('Fabrika'), icon: '🏭' },
+  { id: 'markets', label: msg('Harita'), icon: '🗺️' },
+  { id: 'finance', label: msg('Finans'), icon: '💰' },
+  { id: 'company', label: msg('Şirket'), icon: '🏁' },
+  { id: 'cards', label: msg('Bilgi kartları'), icon: '💡' },
+  { id: 'settings', label: msg('Ayarlar'), icon: '⚙️' },
 ];
 
 export function Nav() {
@@ -22,7 +23,7 @@ export function Nav() {
     projects: s.projects.filter((p) => p.phase === 'ready' || p.phase === 'design').length,
   };
   return (
-    <nav className="nav" aria-label="Ana menü">
+    <nav className="nav" aria-label={t('Ana menü')}>
       {ITEMS.map((it) => (
         <button
           key={it.id}
@@ -34,7 +35,7 @@ export function Nav() {
           <span className="nav-icon" aria-hidden>
             {it.icon}
           </span>
-          <span className="nav-label">{it.label}</span>
+          <span className="nav-label">{t(it.label)}</span>
           {!!badges[it.id] && <span className="nav-badge">{badges[it.id]}</span>}
         </button>
       ))}

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { t } from '../../i18n';
 import { store } from '../store';
 import { Button } from './ui';
 
@@ -18,7 +19,7 @@ export function ConfirmHost() {
         </div>
         <div className="modal-actions">
           <Button kind="ghost" onClick={() => q.resolve(false)}>
-            Vazgeç
+            {t('Vazgeç')}
           </Button>
           <Button kind={q.danger ? 'danger' : 'primary'} onClick={() => q.resolve(true)}>
             {q.confirm}

@@ -4,9 +4,12 @@ import { engineersBusy, idleEngineers } from '../../core/game';
 import { labSlots, labSpeed } from '../../core/research';
 import { yearFloat } from '../../core/time';
 import { costIndex, engineerSalary } from '../../data/economy';
+import { isTurkish, t } from '../../i18n';
+import { fmtNumber } from '../../i18n/format';
 import { money } from '../format';
 import { store, useGameState } from '../store';
 import { Button, Panel } from './ui';
+import { tx } from '../i18n';
 
 /**
  * The engineering team, where the player looks for it: how many, what they cost, how much sooner the
@@ -23,27 +26,39 @@ export function TeamPanel({ compact }: { compact?: boolean }) {
   const now = project ? devWeeksLeft(s, project) : 0;
   const with5 = project ? devWeeksLeft(s, project, 5) : 0;
   const with10 = project ? devWeeksLeft(s, project, 10) : 0;
-  const hire = (k: number) => store.try((st) => A.hireEngineers(st, k), `${k} mühendis işe alındı`);
+  const hire = (k: number) => store.try((st) => A.hireEngineers(st, k), t('{n} mühendis işe alındı', { n: k }));
   return (
-    <Panel title="Mühendislik ekibi" className="team-panel">
+    <Panel title={t('Mühendislik ekibi')} className="team-panel">
       <p className="team-head">
-        <b className="team-count">{n}</b> mühendis · {engineersBusy(s)} projede{idle > 0 ? <span className="tone-bad"> · {idle} boşta</span> : ''} · beceri{' '}
-        <b>{Math.round(s.company.skill)}</b>
+        {tx('<count>{n}</count> mühendis', { n }, { count: (c, k) => <b key={k} className="team-count">{c}</b> })} · {t('{n} projede', { n: engineersBusy(s) })}
+        {idle > 0 ? <span className="tone-bad"> · {t('{n} boşta', { n: idle })}</span> : ''} · {tx('beceri <b>{skill}</b>', { skill: Math.round(s.company.skill) })}
         <span className="muted small">
           {' '}
-          · maaşlar haftada {money(n * salary)} (yılda {money(n * salary * 52)})
+          · {t('maaşlar haftada {week} (yılda {year})', { week: money(n * salary), year: money(n * salary * 52) })}
         </span>
       </p>
       {project && now > 0 ? (
         <p className="small">
-          <b>{project.name}</b> geliştirmesi şimdiki ekiple ~<b>{now} hafta</b>; +5 mühendisle ~<b>{with5}</b>, +10 ile ~<b>{with10}</b> hafta.
+          {tx('<b>{name}</b> geliştirmesi şimdiki ekiple ~<b>{n} hafta</b>; +5 mühendisle ~<b>{with5}</b>, +10 ile ~<b>{with10}</b> hafta.', {
+            name: project.name,
+            n: now,
+            with5,
+            with10,
+          })}
         </p>
       ) : (
-        !compact && <p className="small muted">Geliştirmede proje yok. Mühendisler Ar-Ge’de çalışır: araştırma hızı ×{labSpeed(s).toFixed(1)}, {labSlots(s)} araştırma yeri (Ar-Ge ekranından ayrıca Ar-Ge uzmanı alınabilir).</p>
+        !compact && (
+          <p className="small muted">
+            {t('Geliştirmede proje yok. Mühendisler Ar-Ge’de çalışır: araştırma hızı ×{speed}, {n} araştırma yeri (Ar-Ge ekranından ayrıca Ar-Ge uzmanı alınabilir).', {
+              speed: isTurkish() ? labSpeed(s).toFixed(1) : fmtNumber(labSpeed(s), 1),
+              n: labSlots(s),
+            })}
+          </p>
+        )
       )}
       <div className="team-actions">
         <Button kind="primary" disabled={s.company.cash < hireCost} onClick={() => hire(1)}>
-          +1 mühendis al
+          {t('+1 mühendis al')}
         </Button>
         <Button disabled={s.company.cash < 5 * hireCost} onClick={() => hire(5)}>
           +5
@@ -51,17 +66,18 @@ export function TeamPanel({ compact }: { compact?: boolean }) {
         <Button disabled={s.company.cash < 10 * hireCost} onClick={() => hire(10)}>
           +10
         </Button>
-        <Button kind="ghost" disabled={n <= 1} onClick={() => store.try((st) => A.fireEngineers(st, 1), 'Bir mühendis ayrıldı')}>
-          −1 çıkar
+        <Button kind="ghost" disabled={n <= 1} onClick={() => store.try((st) => A.fireEngineers(st, 1), t('Bir mühendis ayrıldı'))}>
+          {t('−1 çıkar')}
         </Button>
         <span className="muted small">
-          işe alma kişi başı {money(hireCost)}, maaş haftada {money(salary)}
+          {t('işe alma kişi başı {hire}, maaş haftada {salary}', { hire: money(hireCost), salary: money(salary) })}
         </span>
       </div>
       {!compact && (
         <p className="muted small">
-          Daha çok mühendis arabayı daha çabuk bitirir ama orantılı değil: bir arabada bir düzineden fazlası birbirini bekler (iki mühendis iki, yirmi mühendis sekiz kişilik iş
-          çıkarır). Her 15 mühendis bir araştırma yeri daha açar. Çok hızlı büyümek ortalama tecrübeyi (beceriyi) biraz düşürür; beceri her lansmanla artar.
+          {t(
+            'Daha çok mühendis arabayı daha çabuk bitirir ama orantılı değil: bir arabada bir düzineden fazlası birbirini bekler (iki mühendis iki, yirmi mühendis sekiz kişilik iş çıkarır). Her 15 mühendis bir araştırma yeri daha açar. Çok hızlı büyümek ortalama tecrübeyi (beceriyi) biraz düşürür; beceri her lansmanla artar.',
+          )}
         </p>
       )}
     </Panel>

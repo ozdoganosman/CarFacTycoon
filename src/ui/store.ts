@@ -4,6 +4,7 @@ import { loadLocal, saveLocal } from '../core/save';
 import { syncTick } from './claudeLink';
 import { observeGame, trackScreen } from './analytics';
 import { isBlockingModal, recordError } from '../core/util';
+import { t } from '../i18n';
 import type { ModalItem } from '../core/types';
 
 /** After these the player has work to do, so the clock stays stopped once they are closed. */
@@ -142,7 +143,7 @@ class GameStore {
   try(fn: (s: GameState) => { ok: boolean; error?: string } | undefined, success?: string): boolean {
     const r = this.act(fn);
     if (r && !r.ok) {
-      this.showToast(r.error ?? 'Olmadı.', 'bad');
+      this.showToast(r.error ?? t('Olmadı.'), 'bad');
       return false;
     }
     if (success) this.showToast(success, 'good');
@@ -230,7 +231,7 @@ class GameStore {
     }
     this.resumeSpeed = null;
     this.run(0);
-    this.showToast('Oyunda bir hata oluştu ve oyun durdu. Hata kaydedildi; Claude’a gönderilecek.', 'bad');
+    this.showToast(t('Oyunda bir hata oluştu ve oyun durdu. Hata kaydedildi; Claude’a gönderilecek.'), 'bad');
   }
 
   togglePause() {

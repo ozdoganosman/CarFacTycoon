@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { AdClock } from './adPolicy';
 import { store } from './store';
 
@@ -118,7 +119,7 @@ export function fakeBackend(): AdBackend {
     new Promise<boolean>((resolve) => {
       const el = document.createElement('div');
       el.className = 'fake-ad';
-      el.textContent = kind === 'interstitial' ? 'Test reklamı (geçiş)' : 'Test reklamı (ödüllü)';
+      el.textContent = kind === 'interstitial' ? t('Test reklamı (geçiş)') : t('Test reklamı (ödüllü)');
       document.body.appendChild(el);
       setTimeout(() => {
         el.remove();

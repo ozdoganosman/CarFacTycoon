@@ -24,11 +24,17 @@ import {
 import { formatDate, yearFloat, yearOf } from '../../core/time';
 import type { GameState, RivalMove } from '../../core/types';
 import { segmentDef } from '../../data/segments';
+import { isTurkish, t } from '../../i18n';
+import { fmtNumber } from '../../i18n/format';
 import { store } from '../store';
-import { money } from '../format';
+import { money, pct } from '../format';
 import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table } from './ui';
+import { tx } from '../i18n';
 
-const signedPct = (v: number) => `${v >= 0 ? '+' : '−'}%${Math.abs(Math.round(v * 1000) / 10)}`;
+const signedPct = (v: number) => {
+  const tenths = Math.abs(Math.round(v * 1000));
+  return `${v >= 0 ? '+' : '−'}${pct(tenths / 1000, tenths % 10 ? 1 : 0)}`;
+};
 
 /** Selling shares, the board's targets and its patience. */
 export function SharesPanel({ s }: { s: GameState }) {
@@ -42,24 +48,30 @@ export function SharesPanel({ s }: { s: GameState }) {
       <Panel
         title={
           <>
-            Borsa ve yönetim kurulu
+            {t('Borsa ve yönetim kurulu')}
             <Info>
-              <p>Şirketin bir kısmını borsada satarak sermaye toplarsın; kontrol hep sende kalır (en fazla %{Math.round(MAX_FLOAT * 100)} satılabilir).</p>
+              <p>{t('Şirketin bir kısmını borsada satarak sermaye toplarsın; kontrol hep sende kalır (en fazla {share} satılabilir).', { share: pct(MAX_FLOAT, 0) })}</p>
               <p>
-                Karşılığında her yıl yönetim kuruluna hesap verirsin. Ciro pazardan hızlı büyümeli (çok iyi bir yıldan sonra beklenti yükselir); hissedarlar kârın yarısını
-                ve her yıl biraz daha fazla temettü ister. Temettü oranı %20 başlar: yükseltmek senin işin ve kasadan gerçek para çıkarır.
+                {t(
+                  'Karşılığında her yıl yönetim kuruluna hesap verirsin. Ciro pazardan hızlı büyümeli (çok iyi bir yıldan sonra beklenti yükselir); hissedarlar kârın yarısını ve her yıl biraz daha fazla temettü ister. Temettü oranı %20 başlar: yükseltmek senin işin ve kasadan gerçek para çıkarır.',
+                )}
               </p>
               <p>
-                Kurulun hafızası kısadır: iyi yılların kredisi her yıl yarıya iner. Güven {WARNING_AT}’ın altına inerse kurul yarışı, rakip satın almayı ve yeni hat
-                kurmayı veto eder; {ULTIMATUM_AT}’in altında son uyarı gelir, sonra da tutmazsa görevden alınırsın ve oyun biter.
+                {t(
+                  'Kurulun hafızası kısadır: iyi yılların kredisi her yıl yarıya iner. Güven {warn}’ın altına inerse kurul yarışı, rakip satın almayı ve yeni hat kurmayı veto eder; {last}’in altında son uyarı gelir, sonra da tutmazsa görevden alınırsın ve oyun biter.',
+                  { warn: WARNING_AT, last: ULTIMATUM_AT },
+                )}
               </p>
-              <p>Oyun sonu puanında şirket değerinin yalnızca senin payın sayılır. Borsanın havası fiyatı belirler: 1928’de satmak, 1932’de geri almak ucuzdur.</p>
+              <p>{t('Oyun sonu puanında şirket değerinin yalnızca senin payın sayılır. Borsanın havası fiyatı belirler: 1928’de satmak, 1932’de geri almak ucuzdur.')}</p>
             </Info>
           </>
         }
       >
         <p className="muted small">
-          Sermaye için hisse sat: kasaya büyük para girer, ama her yıl büyüme ve temettü hedefleri gelir. Borsa şu an <b>{moodName(mood)}</b> (×{mood.toFixed(2)}).
+          {tx('Sermaye için hisse sat: kasaya büyük para girer, ama her yıl büyüme ve temettü hedefleri gelir. Borsa şu an <b>{mood}</b> (×{x}).', {
+            mood: moodName(mood),
+            x: isTurkish() ? mood.toFixed(2) : fmtNumber(mood, 2),
+          })}
         </p>
         {!can.ok ? (
           <p className="note">{can.why}</p>
@@ -69,7 +81,7 @@ export function SharesPanel({ s }: { s: GameState }) {
               compact
               value={float}
               onChange={setFloat}
-              options={FLOAT_STEPS.map((p) => ({ value: p, label: `%${Math.round(p * 100)}`, sub: money(issueProceeds(s, p)) }))}
+              options={FLOAT_STEPS.map((p) => ({ value: p, label: pct(p, 0), sub: money(issueProceeds(s, p)) }))}
             />
             <p>
               <Button
@@ -77,14 +89,17 @@ export function SharesPanel({ s }: { s: GameState }) {
                 onClick={() =>
                   store
                     .ask({
-                      title: 'Halka arz edilsin mi?',
-                      body: `Şirketin %${Math.round(float * 100)}’i satılır, kasaya ${money(issueProceeds(s, float))} girer (bankacıların payı düşülmüş). Bundan sonra her yıl yönetim kuruluna hesap verirsin. Hisseleri sonradan geri alabilirsin ama primli.`,
-                      confirm: 'Halka arz et',
+                      title: t('Halka arz edilsin mi?'),
+                      body: t(
+                        'Şirketin {share}’i satılır, kasaya {cash} girer (bankacıların payı düşülmüş). Bundan sonra her yıl yönetim kuruluna hesap verirsin. Hisseleri sonradan geri alabilirsin ama primli.',
+                        { share: pct(float, 0), cash: money(issueProceeds(s, float)) },
+                      ),
+                      confirm: t('Halka arz et'),
                     })
-                    .then((yes) => yes && store.try((st) => goPublic(st, float), 'Şirket borsada'))
+                    .then((yes) => yes && store.try((st) => goPublic(st, float), t('Şirket borsada')))
                 }
               >
-                Halka arz et
+                {t('Halka arz et')}
               </Button>
             </p>
           </>
@@ -100,58 +115,74 @@ export function SharesPanel({ s }: { s: GameState }) {
   const free = freeFloat(s);
   const backAll = buybackCost(s, free);
   return (
-    <Panel title="Borsa ve yönetim kurulu">
+    <Panel title={t('Borsa ve yönetim kurulu')}>
       <div className="stats-row">
-        <Stat label="Dışarıdaki pay" value={`%${Math.round(sh.float * 100)}`} sub={`senin payın %${Math.round((1 - sh.float) * 100)}`} />
-        <Stat label="Piyasa değeri" value={money(cap)} sub={`borsa ${moodName(mood)}`} />
-        <Stat label="Ödenen temettü" value={money(sh.dividends)} />
+        <Stat label={t('Dışarıdaki pay')} value={pct(sh.float, 0)} sub={t('senin payın {share}', { share: pct(1 - sh.float, 0) })} />
+        <Stat label={t('Piyasa değeri')} value={money(cap)} sub={t('borsa {mood}', { mood: moodName(mood) })} />
+        <Stat label={t('Ödenen temettü')} value={money(sh.dividends)} />
       </div>
       <p className="small">
-        Yönetim kurulunun güveni <b className={`tone-${tone}`}>{Math.round(sh.confidence)}/100</b>
-        {sh.ultimatum && <b className="tone-bad"> · son uyarı: bu yıl hedefler tutmazsa görevden alınırsın</b>}
+        {tx('Yönetim kurulunun güveni <tone>{v}/100</tone>', { v: Math.round(sh.confidence) }, { tone: (c, k) => <b key={k} className={`tone-${tone}`}>{c}</b> })}
+        {sh.ultimatum && <b className="tone-bad"> · {t('son uyarı: bu yıl hedefler tutmazsa görevden alınırsın')}</b>}
       </p>
       <Progress value={sh.confidence} max={100} tone={tone} />
       {out.judged ? (
         <ul className="small">
           <li className={out.projected >= out.needed ? 'tone-good' : 'tone-bad'}>
-            Ciro hedefi {signedPct(sh.target.growth)}: yıl sonunda en az <b>{money(out.needed)}</b> (geçen yıl {money(out.prev)}). Bu hızla yıl sonu tahmini{' '}
-            <b>{money(out.projected)}</b>.
+            {tx('Ciro hedefi {growth}: yıl sonunda en az <b>{needed}</b> (geçen yıl {prev}). Bu hızla yıl sonu tahmini <b>{projected}</b>.', {
+              growth: signedPct(sh.target.growth),
+              needed: money(out.needed),
+              prev: money(out.prev),
+              projected: money(out.projected),
+            })}
           </li>
           <li className={out.dividend >= sh.target.dividend * 0.98 ? 'tone-good' : 'tone-bad'}>
-            Temettü hedefi <b>{money(sh.target.dividend)}</b>. Bu oranla tahmini temettü <b>{money(out.dividend)}</b> (yıllık kâr tahmini {money(out.profit)}).
+            {tx('Temettü hedefi <b>{target}</b>. Bu oranla tahmini temettü <b>{dividend}</b> (yıllık kâr tahmini {profit}).', {
+              target: money(sh.target.dividend),
+              dividend: money(out.dividend),
+              profit: money(out.profit),
+            })}
           </li>
         </ul>
       ) : (
-        <p className="small muted">Yönetim kurulu seni ilk kez {sh.target.year} sonunda değerlendirecek.</p>
+        <p className="small muted">{t('Yönetim kurulu seni ilk kez {year} sonunda değerlendirecek.', { year: sh.target.year })}</p>
       )}
       {veto && <p className="note tone-bad">{veto}</p>}
       <p className="small">
-        Temettü oranı (kârın dış hissedarlara düşen payından ne kadarı dağıtılır). Kurul kârın yarısını ve geçen yıldan biraz fazlasını bekliyor
-        {sh.seat ? '; rakip yönetimde olduğu için daha da fazlasını' : ''}:
+        {sh.seat
+          ? t(
+              'Temettü oranı (kârın dış hissedarlara düşen payından ne kadarı dağıtılır). Kurul kârın yarısını ve geçen yıldan biraz fazlasını bekliyor; rakip yönetimde olduğu için daha da fazlasını:',
+            )
+          : t('Temettü oranı (kârın dış hissedarlara düşen payından ne kadarı dağıtılır). Kurul kârın yarısını ve geçen yıldan biraz fazlasını bekliyor:')}
       </p>
       <Choice
         compact
         value={sh.payout}
         onChange={(v) => store.act((st) => setPayout(st, v))}
-        options={PAYOUT_STEPS.map((p) => ({ value: p, label: `%${Math.round(p * 100)}` }))}
+        options={PAYOUT_STEPS.map((p) => ({ value: p, label: pct(p, 0) }))}
       />
       {sh.raider && (
         <p className="note">
-          {rivalDef(sh.raider.company).name} şirketin %{Math.round(sh.raider.stake * 100)}’ini elinde tutuyor
-          {sh.seat ? ' ve yönetim kurulunda oturuyor: hedefler daha sıkı.' : '.'}
+          {sh.seat
+            ? t('{name} şirketin {share}’ini elinde tutuyor ve yönetim kurulunda oturuyor: hedefler daha sıkı.', {
+                name: rivalDef(sh.raider.company).name,
+                share: pct(sh.raider.stake, 0),
+              })
+            : t('{name} şirketin {share}’ini elinde tutuyor.', { name: rivalDef(sh.raider.company).name, share: pct(sh.raider.stake, 0) })}
         </p>
       )}
       <p className="small muted">
-        Geri alım piyasa fiyatının %10 fazlasına olur ve hisselerin satıldığı fiyatın (yılda %6 faiziyle) altına inmez
-        {sh.ultimatum ? '; son uyarı altındayken bunun da %50 fazlası' : ''}.
+        {sh.ultimatum
+          ? t('Geri alım piyasa fiyatının %10 fazlasına olur ve hisselerin satıldığı fiyatın (yılda %6 faiziyle) altına inmez; son uyarı altındayken bunun da %50 fazlası.')
+          : t('Geri alım piyasa fiyatının %10 fazlasına olur ve hisselerin satıldığı fiyatın (yılda %6 faiziyle) altına inmez.')}
       </p>
       <div className="row board-actions">
         <Button
           small
           disabled={free <= 0.001 || s.company.cash < buybackCost(s, Math.min(step, free))}
-          onClick={() => store.try((st) => buyBack(st, step), 'Hisseler geri alındı')}
+          onClick={() => store.try((st) => buyBack(st, step), t('Hisseler geri alındı'))}
         >
-          %{Math.round(Math.min(step, free) * 100)} geri al ({money(buybackCost(s, Math.min(step, free)))})
+          {t('{share} geri al ({cash})', { share: pct(Math.min(step, free), 0), cash: money(buybackCost(s, Math.min(step, free))) })}
         </Button>
         <Button
           small
@@ -159,23 +190,28 @@ export function SharesPanel({ s }: { s: GameState }) {
           onClick={() =>
             store
               .ask({
-                title: 'Bütün hisseler geri alınsın mı?',
-                body: `Piyasadaki %${Math.round(free * 100)} ${money(backAll)} karşılığında geri alınır.${sh.raider ? ' Rakibin bloğu satılık değil.' : ' Yönetim kurulu dağılır, şirket yeniden tamamen senin olur.'}`,
-                confirm: `${money(backAll)} öde`,
+                title: t('Bütün hisseler geri alınsın mı?'),
+                body: sh.raider
+                  ? t('Piyasadaki {share} {cash} karşılığında geri alınır. Rakibin bloğu satılık değil.', { share: pct(free, 0), cash: money(backAll) })
+                  : t('Piyasadaki {share} {cash} karşılığında geri alınır. Yönetim kurulu dağılır, şirket yeniden tamamen senin olur.', {
+                      share: pct(free, 0),
+                      cash: money(backAll),
+                    }),
+                confirm: t('{cash} öde', { cash: money(backAll) }),
                 danger: true,
               })
-              .then((yes) => yes && store.try((st) => buyBack(st, 1), 'Hisseler geri alındı'))
+              .then((yes) => yes && store.try((st) => buyBack(st, 1), t('Hisseler geri alındı')))
           }
         >
-          Hepsini geri al ({money(backAll)})
+          {t('Hepsini geri al ({cash})', { cash: money(backAll) })}
         </Button>
-        <Button small disabled={sh.float + step > MAX_FLOAT + 1e-6} onClick={() => store.try((st) => issueShares(st, step), 'Yeni hisse satıldı')}>
-          %5 yeni hisse sat (+{money(issueProceeds(s, step))})
+        <Button small disabled={sh.float + step > MAX_FLOAT + 1e-6} onClick={() => store.try((st) => issueShares(st, step), t('Yeni hisse satıldı'))}>
+          {t('%5 yeni hisse sat (+{cash})', { cash: money(issueProceeds(s, step)) })}
         </Button>
       </div>
       {sh.history.length > 0 && (
         <Table
-          head={['Yıl', 'Ciro', 'Temettü', 'Güven']}
+          head={[t('Yıl'), t('Ciro'), t('Temettü'), t('Güven')]}
           align={['l', 'r', 'r', 'r']}
           rows={[...sh.history]
             .reverse()
@@ -200,20 +236,22 @@ export function SharesPanel({ s }: { s: GameState }) {
 
 function moveText(m: RivalMove): string {
   const name = rivalDef(m.company).name;
-  const seg = m.segment ? segmentDef(m.segment).name.toLowerCase() : '';
+  const seg = m.segment ? t(segmentDef(m.segment).name).toLowerCase() : '';
   switch (m.kind) {
     case 'priceWar':
-      return `${name}, ${seg} sınıfında fiyatlarını %15 indirdi.`;
+      return t('{name}, {seg} sınıfında fiyatlarını %15 indirdi.', { name, seg });
     case 'techLeap':
       return m.first
-        ? `${name}, ${seg} sınıfının ilk ${FIRSTS[m.first].name} arabasını çıkardı: ${m.model ?? ''}.`
-        : `${name}, ${seg} sınıfına ${m.model ?? 'yeni bir model'} ile saldırdı.`;
+        ? t('{name}, {seg} sınıfının ilk {tech} arabasını çıkardı: {model}.', { name, seg, tech: t(FIRSTS[m.first].name), model: m.model ?? '' })
+        : m.model
+          ? t('{name}, {seg} sınıfına {model} ile saldırdı.', { name, seg, model: m.model })
+          : t('{name}, {seg} sınıfına yeni bir model ile saldırdı.', { name, seg });
     case 'merger':
-      return `${name}, ${m.partner ? rivalDef(m.partner).name : 'bir rakibi'} şirketini yuttu.`;
+      return m.partner ? t('{name}, {partner} şirketini yuttu.', { name, partner: rivalDef(m.partner).name }) : t('{name}, bir rakibi şirketini yuttu.', { name });
     case 'bid':
-      return `${name} şirketimizden hisse almak istedi.`;
+      return t('{name} şirketimizden hisse almak istedi.', { name });
     case 'raid':
-      return `${name} borsadan hissemizi topladı.`;
+      return t('{name} borsadan hissemizi topladı.', { name });
   }
 }
 
@@ -230,43 +268,45 @@ export function RivalMovesPanel({ s }: { s: GameState }) {
     <Panel
       title={
         <>
-          Rakip hamleleri
+          {t('Rakip hamleleri')}
           <Info>
-            <p>Büyük üreticiler küçük bir yeni markayı umursamaz. Ama bir sınıfta onlardan fazla alıcı çekmeye ya da ülkede en çok satan olmaya başladığında karşılık verirler.</p>
-            <p>Fiyat savaşı, sana karşı yapılmış yeni bir model, iki rakibin birleşmesi ve şirketinden hisse almaya kalkmak. En fazla yılda bir hamle gelir.</p>
+            <p>{t('Büyük üreticiler küçük bir yeni markayı umursamaz. Ama bir sınıfta onlardan fazla alıcı çekmeye ya da ülkede en çok satan olmaya başladığında karşılık verirler.')}</p>
+            <p>{t('Fiyat savaşı, sana karşı yapılmış yeni bir model, iki rakibin birleşmesi ve şirketinden hisse almaya kalkmak. En fazla yılda bir hamle gelir.')}</p>
           </Info>
         </>
       }
     >
       <p className="small">
-        Ulusal sıran geçen yıl: <b>{rank < 99 ? `${rank}.` : '—'}</b>
+        {rank < 99 ? tx('Ulusal sıran geçen yıl: <b>{rank}.</b>', { rank }) : tx('Ulusal sıran geçen yıl: <b>—</b>')}
         {led.length > 0 ? (
           <>
             {' '}
-            · Önde olduğun sınıflar: <b>{led.map((x) => segmentDef(x).name.toLowerCase()).join(', ')}</b>. Rakipler bunu fark etti.
+            · {tx('Önde olduğun sınıflar: <b>{segs}</b>. Rakipler bunu fark etti.', { segs: led.map((x) => t(segmentDef(x).name).toLowerCase()).join(', ') })}
           </>
         ) : wars.length || (moves[0] && s.week - moves[0].week < 52) ? (
-          <span className="muted"> · Şu an hiçbir sınıfta önde değilsin, ama rakiplerin son hamleleri sürüyor.</span>
+          <span className="muted"> · {t('Şu an hiçbir sınıfta önde değilsin, ama rakiplerin son hamleleri sürüyor.')}</span>
         ) : (
-          <span className="muted"> · Hiçbir sınıfta önde değilsin: büyük üreticiler seni henüz ciddiye almıyor.</span>
+          <span className="muted"> · {t('Hiçbir sınıfta önde değilsin: büyük üreticiler seni henüz ciddiye almıyor.')}</span>
         )}
       </p>
       {wars.length > 0 && (
         <p className="note small">
-          Süren fiyat savaşı: {[...new Set(wars.map((w) => `${rivalDef(w.companyId).name} (${segmentDef(w.segment).name.toLowerCase()})`))].join(', ')}, bitişi{' '}
-          {formatDate(Math.max(...wars.map((w) => w.priceCut!.until)))}.
+          {t('Süren fiyat savaşı: {wars}, bitişi {date}.', {
+            wars: [...new Set(wars.map((w) => `${rivalDef(w.companyId).name} (${t(segmentDef(w.segment).name).toLowerCase()})`))].join(', '),
+            date: formatDate(Math.max(...wars.map((w) => w.priceCut!.until))),
+          })}
         </p>
       )}
       {moves.length ? (
         <ul className="small moves-list">
           {moves.map((m, i) => (
             <li key={i}>
-              <span className="muted">{formatDate(m.week)}</span> · <b>{MOVE_NAMES[m.kind]}</b>: {moveText(m)}
+              <span className="muted">{formatDate(m.week)}</span> · <b>{t(MOVE_NAMES[m.kind])}</b>: {moveText(m)}
             </li>
           ))}
         </ul>
       ) : (
-        <Empty>Henüz bir karşılık gelmedi.</Empty>
+        <Empty>{t('Henüz bir karşılık gelmedi.')}</Empty>
       )}
     </Panel>
   );

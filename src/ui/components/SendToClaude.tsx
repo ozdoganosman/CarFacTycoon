@@ -1,18 +1,20 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { serialize } from '../../core/save';
+import { msg, t } from '../../i18n';
 import { allowSharing, disableSharing, forgetMe, onSyncStatus, playtestSink, sendErrorText, sendPlaytest, syncNow, syncStatus, type SinkKind, type SyncStatus } from '../claudeLink';
 import { store, useGameState } from '../store';
 import { useBackClose } from '../back';
 import { Button } from './ui';
+import { tx } from '../i18n';
 
 type Phase = 'idle' | 'sending' | 'sent' | 'error';
 
 export const useSyncStatus = (): SyncStatus => useSyncExternalStore(onSyncStatus, syncStatus);
 
-function ago(t?: number): string {
-  if (!t) return '';
-  const m = Math.round((Date.now() - t) / 60000);
-  return m < 1 ? 'az önce' : `${m} dk önce`;
+function ago(at?: number): string {
+  if (!at) return '';
+  const m = Math.round((Date.now() - at) / 60000);
+  return m < 1 ? t('az önce') : t('{n} dk önce', { n: m });
 }
 
 /** Which way this copy sends playtests (null: nowhere, or not known yet). */
@@ -32,32 +34,32 @@ function statusText(st: SyncStatus, kind: SinkKind | null | undefined): string {
   if (kind === 'developer') {
     switch (st.mode) {
       case 'on':
-        return st.lastSent ? `Oyunun geliştiriciyle paylaşılıyor · son gönderim ${ago(st.lastSent)}` : 'Oyunun geliştiriciyle paylaşılıyor';
+        return st.lastSent ? t('Oyunun geliştiriciyle paylaşılıyor · son gönderim {ago}', { ago: ago(st.lastSent) }) : t('Oyunun geliştiriciyle paylaşılıyor');
       case 'sending':
-        return 'Gönderiliyor…';
+        return t('Gönderiliyor…');
       case 'error':
-        return st.message ?? 'Gönderilemedi, yeniden denenecek.';
+        return st.message ?? t('Gönderilemedi, yeniden denenecek.');
       case 'ask':
-        return 'Otomatik paylaşım kapalı: izin verirsen oyunun arada bir geliştiriciye gider.';
+        return t('Otomatik paylaşım kapalı: izin verirsen oyunun arada bir geliştiriciye gider.');
       default:
-        return 'Otomatik paylaşım kapalı.';
+        return t('Otomatik paylaşım kapalı.');
     }
   }
   switch (st.mode) {
     case 'on':
-      return st.lastSent ? `Claude oyununu görüyor · son gönderim ${ago(st.lastSent)}` : 'Claude oyununu görüyor';
+      return st.lastSent ? t('Claude oyununu görüyor · son gönderim {ago}', { ago: ago(st.lastSent) }) : t('Claude oyununu görüyor');
     case 'sending':
-      return 'Claude’a gönderiliyor…';
+      return t('Claude’a gönderiliyor…');
     case 'error':
-      return st.message ?? 'Gönderilemedi, yeniden denenecek.';
+      return st.message ?? t('Gönderilemedi, yeniden denenecek.');
     case 'ask':
-      return 'Claude oyununu henüz göremiyor: izin gerekiyor.';
+      return t('Claude oyununu henüz göremiyor: izin gerekiyor.');
     case 'denied':
-      return 'İzin verilmedi. Sayfanın İzinler menüsünden açabilirsin.';
+      return t('İzin verilmedi. Sayfanın İzinler menüsünden açabilirsin.');
     case 'disabled':
-      return 'Otomatik paylaşım kapalı.';
+      return t('Otomatik paylaşım kapalı.');
     default:
-      return 'Bu sürüm Claude’a doğrudan gönderemiyor.';
+      return t('Bu sürüm Claude’a doğrudan gönderemiyor.');
   }
 }
 
@@ -65,8 +67,9 @@ function statusText(st: SyncStatus, kind: SinkKind | null | undefined): string {
 export const PRIVACY_URL = 'https://ozdoganosman.github.io/CarFacTycoon/privacy.html';
 
 /** What is and is not collected, said before the player decides. */
-const PRIVACY =
-  'Adın ya da e-postan sorulmaz; bu tarayıcıya rastgele bir oyuncu numarası verilir. Şirkete verdiğin ad ve yazdığın notlar oyunla birlikte gider. Veriler AB’deki sunucularda (Supabase, PostHog) durur, reklam için kullanılmaz, kimseyle paylaşılmaz. İstediğin an menüdeki Geri bildirim’den kapatabilirsin.';
+const PRIVACY = msg(
+  'Adın ya da e-postan sorulmaz; bu tarayıcıya rastgele bir oyuncu numarası verilir. Şirkete verdiğin ad ve yazdığın notlar oyunla birlikte gider. Veriler AB’deki sunucularda (Supabase, PostHog) durur, reklam için kullanılmaz, kimseyle paylaşılmaz. İstediğin an menüdeki Geri bildirim’den kapatabilirsin.',
+);
 
 /** A slim bar asking once whether the game may be shared (with Claude, or with the developer). */
 export function ShareBar() {
@@ -79,18 +82,20 @@ export function ShareBar() {
     return (
       <div className="claude-share" role="note">
         <span>
-          <b>Oyununu geliştiriciyle paylaşır mısın?</b> Oyunu düzeltmek ve dengelemek için oyunun (tasarımların, kararların, satışların, karşılaştığın hatalar) arada bir
-          kendiliğinden gönderilir; hangi ekranlarda ne yaptığın ve oyun ekranının kaydı da tutulur. <span className="muted">{PRIVACY}</span>{' '}
+          {tx(
+            '<b>Oyununu geliştiriciyle paylaşır mısın?</b> Oyunu düzeltmek ve dengelemek için oyunun (tasarımların, kararların, satışların, karşılaştığın hatalar) arada bir kendiliğinden gönderilir; hangi ekranlarda ne yaptığın ve oyun ekranının kaydı da tutulur.',
+          )}{' '}
+          <span className="muted">{t(PRIVACY)}</span>{' '}
           <a href={PRIVACY_URL} target="_blank" rel="noopener noreferrer">
-            Gizlilik politikası
+            {t('Gizlilik politikası')}
           </a>
         </span>
         <span className="claude-share-btns">
           <Button kind="ghost" onClick={disableSharing}>
-            Hayır, teşekkürler
+            {t('Hayır, teşekkürler')}
           </Button>
           <Button kind="primary" onClick={() => void allowSharing(s)}>
-            Paylaş
+            {t('Paylaş')}
           </Button>
         </span>
       </div>
@@ -98,15 +103,16 @@ export function ShareBar() {
   return (
     <div className="claude-share" role="note">
       <span>
-        <b>Claude oyununu görebilsin mi?</b> İzin verirsen oyunun (tasarımlar, kararlar, satışlar, hatalar) Claude’un inceleyebileceği bir kutuya kendiliğinden
-        kaydedilir.
+        {tx(
+          '<b>Claude oyununu görebilsin mi?</b> İzin verirsen oyunun (tasarımlar, kararlar, satışlar, hatalar) Claude’un inceleyebileceği bir kutuya kendiliğinden kaydedilir.',
+        )}
       </span>
       <span className="claude-share-btns">
         <Button kind="ghost" onClick={() => setHidden(true)}>
-          Şimdi değil
+          {t('Şimdi değil')}
         </Button>
         <Button kind="primary" onClick={() => void allowSharing(s)}>
-          İzin ver
+          {t('İzin ver')}
         </Button>
       </span>
     </div>
@@ -134,17 +140,19 @@ export function SendToClaude() {
 
   const forget = async () => {
     const ok = await store.ask({
-      title: 'Gönderdiğin veriler silinsin mi?',
-      body: 'Geliştiriciye giden oyun kayıtların ve notların hemen silinir, paylaşım kapanır. Oynanış istatistiklerin de silinmek üzere işaretlenir. Bu tarayıcı bundan sonra yeni bir oyuncu numarası kullanır.',
-      confirm: 'Verilerimi sil',
+      title: t('Gönderdiğin veriler silinsin mi?'),
+      body: t(
+        'Geliştiriciye giden oyun kayıtların ve notların hemen silinir, paylaşım kapanır. Oynanış istatistiklerin de silinmek üzere işaretlenir. Bu tarayıcı bundan sonra yeni bir oyuncu numarası kullanır.',
+      ),
+      confirm: t('Verilerimi sil'),
       danger: true,
     });
     if (!ok) return;
     try {
       const { deleted } = await forgetMe();
-      setForgot(`Silindi: ${deleted} oyun kaydı. Paylaşım kapalı; istersen yeniden açabilirsin.`);
+      setForgot(t('Silindi: {n} oyun kaydı. Paylaşım kapalı; istersen yeniden açabilirsin.', { n: deleted }));
     } catch {
-      setForgot('Silinemedi: bağlantını kontrol edip yeniden dene.');
+      setForgot(t('Silinemedi: bağlantını kontrol edip yeniden dene.'));
     }
   };
   useBackClose(open, close);
@@ -172,9 +180,9 @@ export function SendToClaude() {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(serialize(s));
-      store.showToast('Kayıt kodu kopyalandı: sohbete yapıştırabilirsin', 'good');
+      store.showToast(t('Kayıt kodu kopyalandı: sohbete yapıştırabilirsin'), 'good');
     } catch {
-      store.showToast('Kopyalanamadı. Ayarlar ekranındaki kutudan elle kopyala.', 'info');
+      store.showToast(t('Kopyalanamadı. Ayarlar ekranındaki kutudan elle kopyala.'), 'info');
     }
   };
 
@@ -186,7 +194,7 @@ export function SendToClaude() {
         <span className="nav-icon" aria-hidden>
           📨
         </span>
-        <span className="nav-label">{dev ? 'Geri bildirim' : 'Claude’a gönder'}</span>
+        <span className="nav-label">{dev ? t('Geri bildirim') : t('Claude’a gönder')}</span>
         {dot !== 'off' && <span className={`sync-dot sync-${dot}`} aria-label={statusText(st, kind)} />}
       </button>
       {open && (
@@ -196,55 +204,55 @@ export function SendToClaude() {
               <span className="modal-icon" aria-hidden>
                 📨
               </span>
-              {dev ? 'Oyununu geliştiriciye gönder' : 'Oyununu Claude’a gönder'}
+              {dev ? t('Oyununu geliştiriciye gönder') : t('Oyununu Claude’a gönder')}
             </h2>
             <div className="modal-body">
               {hasDb !== false && <p className={`sync-line sync-line-${dot}`}>{statusText(st, kind)}</p>}
               {phase === 'sent' ? (
                 dev ? (
-                  <p>
-                    <b>Gönderildi, teşekkürler!</b> Oyunun ve notun geliştiriciye ulaştı.
-                  </p>
+                  <p>{tx('<b>Gönderildi, teşekkürler!</b> Oyunun ve notun geliştiriciye ulaştı.')}</p>
                 ) : (
                   <p>
-                    <b>Gönderildi.</b> Sohbette Claude’a “gönderdim” demen yeterli: oyununu açıp tasarımlarına, fiyatlarına, fabrikana, kararlarına ve hatalara bakacak.
+                    {tx(
+                      '<b>Gönderildi.</b> Sohbette Claude’a “gönderdim” demen yeterli: oyununu açıp tasarımlarına, fiyatlarına, fabrikana, kararlarına ve hatalara bakacak.',
+                    )}
                   </p>
                 )
               ) : hasDb === false ? (
-                <p>Bu sürüm Claude’a doğrudan gönderemiyor. Kayıt kodunu kopyalayıp sohbete yapıştırabilirsin (uzun bir metin olacak).</p>
+                <p>{t('Bu sürüm Claude’a doğrudan gönderemiyor. Kayıt kodunu kopyalayıp sohbete yapıştırabilirsin (uzun bir metin olacak).')}</p>
               ) : (
                 <>
                   {dev ? (
                     <p>
-                      Şu anki oyunun ve notun geliştiriciye gönderilir; oyunu düzeltmek ve dengelemek için okunur. Oyun kaldığı yerden sürer.{' '}
-                      <span className="muted small">{PRIVACY}</span>
+                      {t('Şu anki oyunun ve notun geliştiriciye gönderilir; oyunu düzeltmek ve dengelemek için okunur. Oyun kaldığı yerden sürer.')}{' '}
+                      <span className="muted small">{t(PRIVACY)}</span>
                     </p>
                   ) : (
-                    <p>Şu anki oyunun ve notun Claude’un okuyabileceği bir kutuya kaydedilir. Oyun kaldığı yerden sürer.</p>
+                    <p>{t('Şu anki oyunun ve notun Claude’un okuyabileceği bir kutuya kaydedilir. Oyun kaldığı yerden sürer.')}</p>
                   )}
                   <label className="send-note">
-                    <span>{dev ? 'Geliştiriciye notun (isteğe bağlı)' : 'Claude’a notun (isteğe bağlı)'}</span>
-                    <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={4} placeholder="Neyi sıkıcı, zor ya da garip buldun? Nerede hata gördün?" />
+                    <span>{dev ? t('Geliştiriciye notun (isteğe bağlı)') : t('Claude’a notun (isteğe bağlı)')}</span>
+                    <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={4} placeholder={t('Neyi sıkıcı, zor ya da garip buldun? Nerede hata gördün?')} />
                   </label>
                   {phase === 'error' && <p className="tone-bad">{error}</p>}
                   {(st.mode === 'on' || st.mode === 'sending' || st.mode === 'error') && (
                     <button type="button" className="link-btn small" onClick={disableSharing}>
-                      Otomatik paylaşımı kapat
+                      {t('Otomatik paylaşımı kapat')}
                     </button>
                   )}
                   {(st.mode === 'disabled' || (dev && st.mode === 'ask')) && (
                     <button type="button" className="link-btn small" onClick={() => void allowSharing(s)}>
-                      Otomatik paylaşımı aç
+                      {t('Otomatik paylaşımı aç')}
                     </button>
                   )}
                   {dev && (
                     <p className="send-privacy small">
                       <a href={PRIVACY_URL} target="_blank" rel="noopener noreferrer">
-                        Gizlilik politikası
+                        {t('Gizlilik politikası')}
                       </a>
                       {' · '}
                       <button type="button" className="link-btn small" onClick={() => void forget()}>
-                        Gönderdiğim verileri sil
+                        {t('Gönderdiğim verileri sil')}
                       </button>
                     </p>
                   )}
@@ -254,16 +262,16 @@ export function SendToClaude() {
             </div>
             <div className="modal-actions">
               <Button kind="ghost" onClick={close}>
-                {phase === 'sent' ? 'Kapat' : 'Vazgeç'}
+                {phase === 'sent' ? t('Kapat') : t('Vazgeç')}
               </Button>
               {phase !== 'sent' &&
                 (hasDb === false ? (
                   <Button kind="primary" onClick={copy}>
-                    Kayıt kodunu kopyala
+                    {t('Kayıt kodunu kopyala')}
                   </Button>
                 ) : (
                   <Button kind="primary" disabled={phase === 'sending' || hasDb === null} onClick={send}>
-                    {phase === 'sending' ? 'Gönderiliyor…' : 'Gönder'}
+                    {phase === 'sending' ? t('Gönderiliyor…') : t('Gönder')}
                   </Button>
                 ))}
             </div>

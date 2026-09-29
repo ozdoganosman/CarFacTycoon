@@ -1,6 +1,6 @@
 import { money, num } from '../core/util';
 import { pctWith } from '../core/turkish';
-import { isTurkish, langDef, t } from '../i18n';
+import { isTurkish, langDef, msg, t } from '../i18n';
 import { fmtNumber, fmtPercent } from '../i18n/format';
 import type { FinanceWeek, GameState } from '../core/types';
 
@@ -47,17 +47,17 @@ export function inYear(year: number): string {
 
 /** Names of the cost lines in the books. */
 export const COST_NAMES: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue' | 'auto'>, string> = {
-  materials: 'Malzeme ve parça',
-  labor: 'Hat işçiliği',
-  salaries: 'Mühendis maaşları',
-  dealers: 'Bayi ve servis ağı',
-  freight: 'Nakliye (eyalet dışı)',
-  marketing: 'Reklam ve fuar',
-  rnd: 'Prototip, test ve Ar-Ge',
-  warranty: 'Garanti ve geri çağırma',
-  interest: 'Kredi faizi',
-  other: 'Genel gider ve depo',
-  tax: 'Kurumlar vergisi',
-  investment: 'Yatırım (hat, kalıp, bayi)',
-  dividend: 'Temettü ve hisse geri alımı',
+  materials: msg('Malzeme ve parça'),
+  labor: msg('Hat işçiliği'),
+  salaries: msg('Mühendis maaşları'),
+  dealers: msg('Bayi ve servis ağı'),
+  freight: msg('Nakliye (eyalet dışı)'),
+  marketing: msg('Reklam ve fuar'),
+  rnd: msg('Prototip, test ve Ar-Ge'),
+  warranty: msg('Garanti ve geri çağırma'),
+  interest: msg('Kredi faizi'),
+  other: msg('Genel gider ve depo'),
+  tax: msg('Kurumlar vergisi'),
+  investment: msg('Yatırım (hat, kalıp, bayi)'),
+  dividend: msg('Temettü ve hisse geri alımı'),
 };

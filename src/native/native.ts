@@ -1,6 +1,7 @@
 import { App } from '@capacitor/app';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { t } from '../i18n';
 import { closeTopmost } from '../ui/back';
 import { store } from '../ui/store';
 
@@ -31,7 +32,11 @@ export async function handleBack() {
   if (back) return store.go(back);
   if (asking) return;
   asking = true;
-  const quit = await store.ask({ title: 'Oyundan çıkılsın mı?', body: 'Oyunun kaydedildi; açtığında kaldığın yerden sürer.', confirm: 'Çık' });
+  const quit = await store.ask({
+    title: t('Oyundan çıkılsın mı?'),
+    body: t('Oyunun kaydedildi; açtığında kaldığın yerden sürer.'),
+    confirm: t('Çık'),
+  });
   asking = false;
   if (quit) {
     store.save();

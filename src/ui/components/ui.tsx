@@ -1,6 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useBackClose } from '../back';
+import { t } from '../../i18n';
 
 export function Panel(props: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; tight?: boolean }) {
   return (
@@ -147,7 +148,7 @@ export function ScoreBar(props: { value: number; compare?: number; label?: React
   const v = Math.max(0, Math.min(100, props.value));
   const tone = v >= 60 ? 'good' : v <= 40 ? 'bad' : 'mid';
   return (
-    <div className="scorebar" title={`${Math.round(v)} / 100 (50 = sınıf ortalaması)`}>
+    <div className="scorebar" title={t('{v} / 100 (50 = sınıf ortalaması)', { v: Math.round(v) })}>
       <div className={`scorebar-fill sb-${tone}`} style={{ width: `${v}%` }} />
       {props.compare !== undefined && <div className="scorebar-compare" style={{ left: `${Math.max(0, Math.min(100, props.compare))}%` }} />}
       <div className="scorebar-mid" />
@@ -222,7 +223,7 @@ export function RangeBar(props: { lo: number; hi: number; rough?: boolean }) {
   const mid = (lo + hi) / 2;
   const tone = mid >= 60 ? 'good' : mid <= 40 ? 'bad' : 'mid';
   return (
-    <div className="scorebar rangebar" title={`Tahmin: ${Math.round(lo)}–${Math.round(hi)} (50 = sınıf ortalaması)`}>
+    <div className="scorebar rangebar" title={t('Tahmin: {lo}–{hi} (50 = sınıf ortalaması)', { lo: Math.round(lo), hi: Math.round(hi) })}>
       <div className={`rangebar-band sb-${tone} ${props.rough ? 'is-rough' : ''}`} style={{ left: `${lo}%`, width: `${Math.max(2, hi - lo)}%` }} />
       <div className="scorebar-mid" />
     </div>
@@ -233,7 +234,7 @@ export function RangeBar(props: { lo: number; hi: number; rough?: boolean }) {
  * A small (i) button whose details show in a bubble on hover, focus or tap.
  * The bubble lives on <body> so panels never clip it, and it stays on screen.
  */
-export function Info({ children, label = 'Ayrıntı' }: { children: ReactNode; label?: string }) {
+export function Info({ children, label = t('Ayrıntı') }: { children: ReactNode; label?: string }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ left: number; top: number; width: number } | null>(null);
   const btn = useRef<HTMLButtonElement>(null);

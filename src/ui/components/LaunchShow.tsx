@@ -8,6 +8,8 @@ import { MARKETS } from '../../data/markets';
 import { RIVALS } from '../../data/rivals';
 import { ATTRS, ATTR_NAMES, segmentDef } from '../../data/segments';
 import type { AttrKey, CarStats, GameState, LaunchReport, MarketId } from '../../core/types';
+import { isTurkish, t } from '../../i18n';
+import { fmtNumber } from '../../i18n/format';
 import { ads } from '../ads';
 import { store } from '../store';
 import { kmh, litres, money, num, pct, secs } from '../format';
@@ -16,18 +18,21 @@ import { CarSVG } from '../viz/CarSVG';
 
 type Stage = 'reveal' | 'reviews' | 'rivals';
 
+/** One decimal, as the game always showed it in Turkish ("7.5"). */
+const dec1 = (v: number) => (isTurkish() ? v.toFixed(1) : fmtNumber(v, 1));
+
 function verdict(avg: number): { label: string; tone: 'good' | 'warn' | 'bad' } {
-  if (avg >= 8) return { label: 'Övgü yağmuru', tone: 'good' };
-  if (avg >= 6.5) return { label: 'Olumlu karşılandı', tone: 'good' };
-  if (avg >= 5) return { label: 'Karışık tepkiler', tone: 'warn' };
-  return { label: 'Hayal kırıklığı', tone: 'bad' };
+  if (avg >= 8) return { label: t('Övgü yağmuru'), tone: 'good' };
+  if (avg >= 6.5) return { label: t('Olumlu karşılandı'), tone: 'good' };
+  if (avg >= 5) return { label: t('Karışık tepkiler'), tone: 'warn' };
+  return { label: t('Hayal kırıklığı'), tone: 'bad' };
 }
 
 function crowd(avg: number, hype: number): string {
-  if (avg >= 7.5) return 'Kalabalık standın önünden ayrılmıyor; gazeteciler not almaya yetişemiyor.';
-  if (avg >= 6) return hype > 5 ? 'Ziyaretçiler aracın etrafını sarıyor.' : 'Ziyaretçiler ilgiyle inceliyor.';
-  if (avg >= 4.5) return 'Birkaç meraklı durup bakıyor, sonra yoluna devam ediyor.';
-  return 'Gazeteciler hızla bir sonraki standa geçiyor.';
+  if (avg >= 7.5) return t('Kalabalık standın önünden ayrılmıyor; gazeteciler not almaya yetişemiyor.');
+  if (avg >= 6) return hype > 5 ? t('Ziyaretçiler aracın etrafını sarıyor.') : t('Ziyaretçiler ilgiyle inceliyor.');
+  if (avg >= 4.5) return t('Birkaç meraklı durup bakıyor, sonra yoluna devam ediyor.');
+  return t('Gazeteciler hızla bir sonraki standa geçiyor.');
 }
 
 export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; modelId: string; venue: string; facelift?: boolean }) {
@@ -38,13 +43,13 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
   const [market, setMarket] = useState<MarketId>(m ? mainMarket(s, m) : s.company.hq);
 
   useEffect(() => {
-    const t = setTimeout(() => setShowCrowd(true), 1400);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setShowCrowd(true), 1400);
+    return () => clearTimeout(timer);
   }, []);
   useEffect(() => {
     if (stage !== 'reviews' || !m || shown >= m.reviews.length) return;
-    const t = setTimeout(() => setShown((n) => n + 1), shown === 0 ? 400 : 1100);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setShown((n) => n + 1), shown === 0 ? 400 : 1100);
+    return () => clearTimeout(timer);
   }, [stage, shown, m]);
 
   if (!m) return null;
@@ -57,8 +62,7 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
       <div className="modal modal-wide launch" role="dialog" aria-modal="true" aria-labelledby="launch-title">
         <div className="launch-venue">{venue}</div>
         <h2 id="launch-title">
-          {m.name}
-          {facelift ? ' (makyajlı)' : ''} <span className="muted small">· {segmentDef(m.segment).name}</span>
+          {facelift ? t('{name} (makyajlı)', { name: m.name }) : m.name} <span className="muted small">· {t(segmentDef(m.segment).name)}</span>
         </h2>
 
         {stage === 'reveal' && (
@@ -72,7 +76,7 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
             <p className={`launch-crowd ${showCrowd ? 'is-in' : ''}`}>{crowd(m.reviewScore, m.hype)}</p>
             <div className="modal-actions">
               <Button kind="primary" onClick={() => setStage('reviews')}>
-                Dergiler ne diyor? →
+                {t('Dergiler ne diyor?')} →
               </Button>
             </div>
           </>
@@ -85,28 +89,28 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
                 <article key={r.magazine} className={`review review-reveal ${i < shown ? 'is-in' : ''}`} aria-hidden={i >= shown}>
                   <header>
                     <span className="review-mag">{r.magazine}</span>
-                    <span className={`review-score ${r.score >= 7 ? 'tone-good' : r.score < 5 ? 'tone-bad' : ''}`}>{i < shown ? r.score.toFixed(1) : '?'}</span>
+                    <span className={`review-score ${r.score >= 7 ? 'tone-good' : r.score < 5 ? 'tone-bad' : ''}`}>{i < shown ? dec1(r.score) : '?'}</span>
                   </header>
                   <p>“{r.quote}”</p>
                 </article>
               ))}
             </div>
             <div className={`launch-verdict tone-${v.tone} ${allShown ? 'is-in' : ''}`}>
-              <span className="launch-avg">{m.reviewScore.toFixed(1)}</span>
+              <span className="launch-avg">{dec1(m.reviewScore)}</span>
               <span>
                 <b>{v.label}</b>
                 <br />
-                <span className="muted small">Dergi ortalaması / 10</span>
+                <span className="muted small">{t('Dergi ortalaması / 10')}</span>
               </span>
             </div>
             <div className="modal-actions">
               {!allShown && (
                 <Button kind="ghost" onClick={() => setShown(m.reviews.length)}>
-                  Hepsini göster
+                  {t('Hepsini göster')}
                 </Button>
               )}
               <Button kind="primary" disabled={!allShown} onClick={() => setStage('rivals')}>
-                Rakiplerle karşılaştır →
+                {t('Rakiplerle karşılaştır')} →
               </Button>
             </div>
           </>
@@ -118,7 +122,7 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
               <div className="seg-toggle">
                 {m.markets.map((mk) => (
                   <button key={mk} type="button" className={`chip ${market === mk ? 'is-on' : ''}`} onClick={() => setMarket(mk)}>
-                    {MARKETS.find((x) => x.id === mk)!.flag} {MARKETS.find((x) => x.id === mk)!.name}
+                    {MARKETS.find((x) => x.id === mk)!.flag} {t(MARKETS.find((x) => x.id === mk)!.name)}
                   </button>
                 ))}
               </div>
@@ -132,10 +136,10 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
                   store.go({ id: 'model', modelId: m.id });
                 }}
               >
-                Modele git
+                {t('Modele git')}
               </Button>
               <Button kind="primary" onClick={close}>
-                Satışlar başlasın
+                {t('Satışlar başlasın')}
               </Button>
             </div>
           </>
@@ -147,7 +151,7 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
 
 function specCells(st: CarStats, yf: number, seg: Parameters<typeof eraReference>[1]) {
   const a = accelMetric(st, eraReference(yf, seg));
-  return { power: `${st.engine.powerHp.toFixed(0)} bg`, top: kmh(st.topSpeed), accel: secs(a.value), accelLabel: a.label, fuel: litres(st.fuel) };
+  return { power: t('{v} bg', { v: st.engine.powerHp.toFixed(0) }), top: kmh(st.topSpeed), accel: secs(a.value), accelLabel: a.label, fuel: litres(st.fuel) };
 }
 
 /** Our car next to every rival in the segment, as buyers see them today. */
@@ -172,35 +176,33 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
     <div className="rivals">
       <div className="rival-head">
         <div>
-          <span className="muted small">Segmentteki sıran</span>
+          <span className="muted small">{t('Segmentteki sıran')}</span>
           <b className="rival-rank">
-            {rank ? `${rank}.` : '—'} <span className="muted small">/ {rows.length}</span>
+            {rank ? t('{rank}.', { rank }) : '—'} <span className="muted small">/ {rows.length}</span>
           </b>
-          {named === 0 && <span className="muted small">Henüz büyük rakip yok</span>}
+          {named === 0 && <span className="muted small">{t('Henüz büyük rakip yok')}</span>}
         </div>
         <div>
-          <span className="muted small">Tahmini pay</span>
+          <span className="muted small">{t('Tahmini pay')}</span>
           <b>{mine ? pct(mine.weight / sm.totalWeight) : '—'}</b>
         </div>
         <div>
-          <span className="muted small">
-            Segment büyüklüğü ({MARKETS.find((x) => x.id === market)!.name})
-          </span>
-          <b>{num(sm.demand * 52)} araç/yıl</b>
+          <span className="muted small">{t('Segment büyüklüğü ({market})', { market: t(MARKETS.find((x) => x.id === market)!.name) })}</span>
+          <b>{t('{count} araç/yıl', { count: num(sm.demand * 52) })}</b>
         </div>
       </div>
       <div className="table-wrap">
         <table className="table compact rival-table">
           <thead>
             <tr>
-              <th>Model</th>
-              <th>Çekicilik</th>
-              <th className="al-r">Pay</th>
-              <th className="al-r">Alıcı fiyatı</th>
-              <th className="al-r">Güç</th>
-              <th className="al-r">Son hız</th>
+              <th>{t('Model')}</th>
+              <th>{t('Çekicilik')}</th>
+              <th className="al-r">{t('Pay')}</th>
+              <th className="al-r">{t('Alıcı fiyatı')}</th>
+              <th className="al-r">{t('Güç')}</th>
+              <th className="al-r">{t('Son hız')}</th>
               <th className="al-r">{accelLabel}</th>
-              <th className="al-r">Tüketim</th>
+              <th className="al-r">{t('Tüketim')}</th>
             </tr>
           </thead>
           <tbody>
@@ -229,9 +231,9 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
             })}
             <tr className="rival-others">
               <td>
-                <b>Küçük üreticiler</b>
+                <b>{t('Küçük üreticiler')}</b>
                 <br />
-                <span className="muted small">Onlarca atölye · tipik araç</span>
+                <span className="muted small">{t('Onlarca atölye · tipik araç')}</span>
               </td>
               <td className="rival-appeal">
                 <ScoreBar value={50} />
@@ -239,7 +241,7 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
               </td>
               <td className="al-r">{pct(sm.othersWeight / sm.totalWeight)}</td>
               <td className="al-r">~{money(referencePrice(market, m.segment, yf))}</td>
-              <td className="al-r">{ref.powerHp.toFixed(0)} bg</td>
+              <td className="al-r">{t('{v} bg', { v: ref.powerHp.toFixed(0) })}</td>
               <td className="al-r">{kmh(ref.topSpeed)}</td>
               <td className="al-r">{secs(ref.accel100 ?? ref.accel50)}</td>
               <td className="al-r">{litres(ref.fuel)}</td>
@@ -249,37 +251,38 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
       </div>
       <div className="rival-verdict">
         <div>
-          <h4>{rivals.length ? 'Rakiplerden iyi olduğun yerler' : 'Sınıf ortalamasından iyi olduğun yerler'}</h4>
+          <h4>{rivals.length ? t('Rakiplerden iyi olduğun yerler') : t('Sınıf ortalamasından iyi olduğun yerler')}</h4>
           {strong.length ? (
             <ul>
               {strong.map((x) => (
                 <li key={x.k} className="tone-good">
-                  {ATTR_NAMES[x.k]} (+{Math.round(x.d)})
+                  {t(ATTR_NAMES[x.k])} (+{Math.round(x.d)})
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="muted small">Belirgin bir üstünlük yok.</p>
+            <p className="muted small">{t('Belirgin bir üstünlük yok.')}</p>
           )}
         </div>
         <div>
-          <h4>{rivals.length ? 'Geride kaldığın yerler' : 'Ortalamanın gerisinde kaldığın yerler'}</h4>
+          <h4>{rivals.length ? t('Geride kaldığın yerler') : t('Ortalamanın gerisinde kaldığın yerler')}</h4>
           {weak.length ? (
             <ul>
               {weak.map((x) => (
                 <li key={x.k} className="tone-bad">
-                  {ATTR_NAMES[x.k]} ({Math.round(x.d)})
+                  {t(ATTR_NAMES[x.k])} ({Math.round(x.d)})
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="muted small">Belirgin bir zaafın yok.</p>
+            <p className="muted small">{t('Belirgin bir zaafın yok.')}</p>
           )}
         </div>
       </div>
       <p className="muted small rival-note">
-        Çekicilik, alıcıların bu segmentte neye ne kadar önem verdiğine göre hesaplanır; pay ise fiyat, marka ve bayi erişimiyle birlikte belirlenir. Pay, üretebildiğin
-        kadar satışa dönüşür.
+        {t(
+          'Çekicilik, alıcıların bu segmentte neye ne kadar önem verdiğine göre hesaplanır; pay ise fiyat, marka ve bayi erişimiyle birlikte belirlenir. Pay, üretebildiğin kadar satışa dönüşür.',
+        )}
       </p>
     </div>
   );
@@ -295,84 +298,84 @@ export function LaunchReportView({ s, modelId, report: r }: { s: GameState; mode
   };
   const headline =
     r.capacity < 0.05
-      ? 'Üretim durmuş'
+      ? t('Üretim durmuş')
       : r.rank === 1
-        ? 'Segmentinin lideri!'
+        ? t('Segmentinin lideri!')
         : r.rank <= 3 && r.rank > 0
-          ? 'Güçlü bir başlangıç'
+          ? t('Güçlü bir başlangıç')
           : r.demand > r.capacity * 1.3
-            ? 'Bayilerde kuyruk var'
-            : 'Zorlu bir başlangıç';
+            ? t('Bayilerde kuyruk var')
+            : t('Zorlu bir başlangıç');
   return (
     <div className="modal-backdrop">
       <div className="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="report-title">
-        <div className="launch-venue">İlk ay raporu</div>
+        <div className="launch-venue">{t('İlk ay raporu')}</div>
         <h2 id="report-title">
           {m.name}: {headline}
         </h2>
         <div className="report-grid">
           <div>
-            <span>İlk {r.weeks} haftada satış</span>
-            <b>{num(r.sold)} araç</b>
+            <span>{t('İlk {n} haftada satış', { n: r.weeks })}</span>
+            <b>{t('{count} araç', { count: num(r.sold) })}</b>
           </div>
           <div>
-            <span>Haftalık talep</span>
-            <b>{r.demand.toFixed(1)}</b>
+            <span>{t('Haftalık talep')}</span>
+            <b>{dec1(r.demand)}</b>
           </div>
           <div>
-            <span>Haftalık üretim</span>
-            <b>{r.capacity.toFixed(1)}</b>
+            <span>{t('Haftalık üretim')}</span>
+            <b>{dec1(r.capacity)}</b>
           </div>
           <div>
             <span>
-              {MARKETS.find((x) => x.id === r.market)!.flag} Segmentteki sıra
+              {MARKETS.find((x) => x.id === r.market)!.flag} {t('Segmentteki sıra')}
             </span>
             <b>
-              {r.rank > 0 ? `${r.rank}. / ${r.offers}` : '—'}
+              {r.rank > 0 ? `${t('{rank}.', { rank: r.rank })} / ${r.offers}` : '—'}
             </b>
           </div>
           <div>
-            <span>Segment payı</span>
+            <span>{t('Segment payı')}</span>
             <b>{pct(r.share)}</b>
           </div>
           <div>
-            <span>Fiyat algısı</span>
-            <b className={r.price === 'high' ? 'tone-bad' : r.price === 'low' ? 'tone-good' : ''}>{r.price === 'high' ? 'Pahalı' : r.price === 'low' ? 'Çok uygun' : 'Makul'}</b>
+            <span>{t('Fiyat algısı')}</span>
+            <b className={r.price === 'high' ? 'tone-bad' : r.price === 'low' ? 'tone-good' : ''}>{r.price === 'high' ? t('Pahalı') : r.price === 'low' ? t('Çok uygun') : t('Makul')}</b>
           </div>
         </div>
         <div className="rival-verdict">
           <div>
-            <h4>{segmentDef(m.segment).buyers} neyi sevdi?</h4>
+            <h4>{t('{buyers} neyi sevdi?', { buyers: t(segmentDef(m.segment).buyers) })}</h4>
             {r.praise.length ? (
               <ul>
                 {r.praise.map((k) => (
                   <li key={k} className="tone-good">
-                    {ATTR_NAMES[k]}
+                    {t(ATTR_NAMES[k])}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="muted small">Kimseyi heyecanlandıran bir yanı olmadı.</p>
+              <p className="muted small">{t('Kimseyi heyecanlandıran bir yanı olmadı.')}</p>
             )}
           </div>
           <div>
-            <h4>Neden şikâyet etti?</h4>
+            <h4>{t('Neden şikâyet etti?')}</h4>
             {r.complaints.length ? (
               <ul>
                 {r.complaints.map((k) => (
                   <li key={k} className="tone-bad">
-                    {ATTR_NAMES[k]}
+                    {t(ATTR_NAMES[k])}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="muted small">Ciddi bir şikâyet yok.</p>
+              <p className="muted small">{t('Ciddi bir şikâyet yok.')}</p>
             )}
           </div>
         </div>
         {r.advice.length > 0 && (
           <>
-            <h4>Satış müdürünün notları</h4>
+            <h4>{t('Satış müdürünün notları')}</h4>
             <ul className="advice">
               {r.advice.map((a) => (
                 <li key={a}>{a}</li>
@@ -380,7 +383,7 @@ export function LaunchReportView({ s, modelId, report: r }: { s: GameState; mode
             </ul>
           </>
         )}
-        <p className="muted small">Bu yorumlar segment bilgisi tablona işlendi.</p>
+        <p className="muted small">{t('Bu yorumlar segment bilgisi tablona işlendi.')}</p>
         <div className="modal-actions">
           <Button
             kind="ghost"
@@ -389,10 +392,10 @@ export function LaunchReportView({ s, modelId, report: r }: { s: GameState; mode
               store.go({ id: 'model', modelId: m.id });
             }}
           >
-            Modele git
+            {t('Modele git')}
           </Button>
           <Button kind="primary" onClick={close}>
-            Tamam
+            {t('Tamam')}
           </Button>
         </div>
       </div>
