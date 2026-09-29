@@ -14,6 +14,7 @@ import { KNOWHOW } from '../data/knowhow';
 import { segmentDef } from '../data/segments';
 import { aiBonus } from './development';
 import { boreStrokeFor, knockLimit } from './engine';
+import { t } from '../i18n';
 import type { Rng } from './rng';
 import type {
   BodyId,
@@ -215,7 +216,9 @@ export function aiDesign(segment: SegmentId, year: number, o: AiOptions, rng: Rn
 
 export interface EnginePreset {
   id: string;
+  /** In the player's language. */
   name: string;
+  /** In the player's language. */
   desc: string;
   design: EngineDesign;
 }
@@ -232,15 +235,15 @@ export function enginePresets(year: number): EnginePreset[] {
     const design = aiEngine(cc, seg, year, { style, skill: 50, market }, constant);
     presets.push({ id, name, desc, design });
   };
-  mk('eco', 'Ekonomik', 'Küçük hacim, az yakıt, ucuz; gücü sınırlı.', eco, 'city', 'mass', 'europe');
-  mk('mid', 'Dengeli', 'Orta hacim: güç, tüketim ve maliyet arasında denge.', mid, 'family', 'mass', 'europe');
-  mk('big', 'Güçlü', 'Büyük hacim, bol tork. Ağır gövdeleri rahat çeker ama çok yakar.', big, 'family', 'mass', 'usa');
-  mk('lux', 'Prestij', 'Çok silindirli, ipek gibi çalışan büyük motor. Pahalı.', lux, 'luxury', 'premium', 'usa');
-  if (year >= 1912) mk('race', 'Yarış', 'Üstten kamlı, yüksek devirli motor. Güçlü ama hassas.', interp([[1912, 3.0], [1960, 2.5]], year) * 1000, 'sport', 'sport', 'europe');
+  mk('eco', t('Ekonomik'), t('Küçük hacim, az yakıt, ucuz; gücü sınırlı.'), eco, 'city', 'mass', 'europe');
+  mk('mid', t('Dengeli'), t('Orta hacim: güç, tüketim ve maliyet arasında denge.'), mid, 'family', 'mass', 'europe');
+  mk('big', t('Güçlü'), t('Büyük hacim, bol tork. Ağır gövdeleri rahat çeker ama çok yakar.'), big, 'family', 'mass', 'usa');
+  mk('lux', t('Prestij'), t('Çok silindirli, ipek gibi çalışan büyük motor. Pahalı.'), lux, 'luxury', 'premium', 'usa');
+  if (year >= 1912) mk('race', t('Yarış'), t('Üstten kamlı, yüksek devirli motor. Güçlü ama hassas.'), interp([[1912, 3.0], [1960, 2.5]], year) * 1000, 'sport', 'sport', 'europe');
   if (year >= 1936) {
     const base = aiEngine(interp([[1936, 2.4], [1960, 1.9]], year) * 1000, 'family', year, { style: 'utility', skill: 50, market: 'europe' }, constant);
     const shaped = withStrokeRatio({ ...base, fuel: 'diesel', compression: 17 }, 1.25, year);
-    presets.push({ id: 'diesel', name: 'Dizel', desc: 'Mazotla çalışır: çok az yakar, dayanıklıdır; ağır, gürültülü ve yavaştır.', design: shaped });
+    presets.push({ id: 'diesel', name: t('Dizel'), desc: t('Mazotla çalışır: çok az yakar, dayanıklıdır; ağır, gürültülü ve yavaştır.'), design: shaped });
   }
   return presets;
 }

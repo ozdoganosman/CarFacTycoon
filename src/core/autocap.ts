@@ -8,6 +8,8 @@ import { HIKE_TOLERANCE } from './actions';
 import { yearFloat } from './time';
 import type { CarModel, GameState, ProductionLine, StageId } from './types';
 import { earn, financeNow, log, money, spend } from './util';
+import { msg, t } from '../i18n';
+import { fmtPercent } from '../i18n/format';
 
 // "Talebi otomatik karşıla": for models that opt in, the factory grows while
 // buyers wait and shrinks when they stop coming. Each month it buys the
@@ -107,7 +109,7 @@ function wayOut(
     if (black.length) {
       const best = black.reduce((a, b) => (payback(b, margin) < payback(a, margin) ? b : a));
       const months = Math.max(1, Math.round(payback(best, margin) * 12));
-      hints.push(`siyah boyalı bir hat ~${months} ayda kendini öder (araba yalnız siyah olur, prestij −5); Fabrika’daki planlayıcıdan kurulabilir`);
+      hints.push(t('siyah boyalı bir hat ~{n} ayda kendini öder (araba yalnız siyah olur, prestij −5); Fabrika’daki planlayıcıdan kurulabilir', { n: months }));
     }
   }
   if (all.length && d > cap * 1.3) {
@@ -117,22 +119,36 @@ function wayOut(
     const rise = price / priceNow(m, s.week) - 1;
     if (rise > 0 && rise < 0.6) {
       const young = (s.week - m.launchWeek) / 52 < 3 && rise > HIKE_TOLERANCE;
+      const p = { times: (d / Math.max(0.1, cap)).toFixed(0), rise: fmtPercent(Math.ceil(rise * 100) / 100, 0) };
       hints.push(
-        `alıcılar üretimin ${(d / Math.max(0.1, cap)).toFixed(0)} katını istiyor: fiyatı ~%${Math.ceil(rise * 100)} artırırsan sıradaki büyütme kendini öder${young ? ' (lansmandan sonraki üç yılda büyük zam dergileri kızdırır; makyajla birlikte yapmak daha güvenli)' : ''}`,
+        young
+          ? t('alıcılar üretimin {times} katını istiyor: fiyatı ~{rise} artırırsan sıradaki büyütme kendini öder (lansmandan sonraki üç yılda büyük zam dergileri kızdırır; makyajla birlikte yapmak daha güvenli)', p)
+          : t('alıcılar üretimin {times} katını istiyor: fiyatı ~{rise} artırırsan sıradaki büyütme kendini öder', p),
       );
     }
   }
-  return hints.length ? hints.join('; ya da ') : undefined;
+  if (hints.length === 2) return t('{a}; ya da {b}', { a: hints[0], b: hints[1] });
+  return hints[0];
 }
 
-/** Why automatic capacity stopped growing, in words. */
+/** Why automatic capacity stopped growing, in words (marked with msg(): show with t()). */
 export const AUTO_HOLD_TEXT: Record<NonNullable<CarModel['autoHold']>, string> = {
-  war: 'savaş sürerken fabrika büyütülmüyor',
-  margin: 'yeni bir hatta bile araç başına kâr %8’in altında kalıyor: büyümek zararı büyütür, önce fiyatı ya da maliyeti düzelt',
-  cash: 'kasa yetmiyor',
-  payback: 'sıradaki büyütme bu fiyatla iki yılda kendini ödemiyor',
-  successor: 'yeni kuşağı yolda: eskiyen arabaya fabrika kurulmuyor',
-  full: 'hatlar dolu ve talep açığı yeni bir hat için küçük',
+  war: msg('savaş sürerken fabrika büyütülmüyor'),
+  margin: msg('yeni bir hatta bile araç başına kâr %8’in altında kalıyor: büyümek zararı büyütür, önce fiyatı ya da maliyeti düzelt'),
+  cash: msg('kasa yetmiyor'),
+  payback: msg('sıradaki büyütme bu fiyatla iki yılda kendini ödemiyor'),
+  successor: msg('yeni kuşağı yolda: eskiyen arabaya fabrika kurulmuyor'),
+  full: msg('hatlar dolu ve talep açığı yeni bir hat için küçük'),
+};
+
+/** What the automation bought, by the kind of purchase (the keys are also the `counts` keys). */
+const PURCHASE_TEXT: Record<string, string> = {
+  'siyah boya fırını': msg('{n} siyah boya fırını'),
+  istasyon: msg('{n} istasyon'),
+  'makine yenileme': msg('{n} makine yenileme'),
+  genişletme: msg('{n} genişletme'),
+  'hat yenileme': msg('{n} hat yenileme'),
+  'yeni hat': msg('{n} yeni hat'),
 };
 
 interface Option {
@@ -306,7 +322,20 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
         if (m.autoHold === 'cash') {
           const best = paying.reduce((a, b) => (b.cost < a.cost ? b : a));
           const years = best.cost / Math.max(1, useful(best) * marginOf(best) * 52);
-          m.autoHint = `sıradaki büyütme ~${money(best.cost)} tutuyor ve ~${years < 1 ? `${Math.max(1, Math.round(years * 12))} ayda` : `${years.toFixed(1)} yılda`} kendini öder; kasada ayrılabilen ${money(Math.max(0, budget))} (birkaç haftalık gider ve vergi yedekte). Banka kredisi alırsan ya da kasa birikince otomatik kapasite büyütür`;
+          const cost = money(best.cost);
+          const spare = money(Math.max(0, budget));
+          m.autoHint =
+            years < 1
+              ? t('sıradaki büyütme ~{cost} tutuyor ve ~{n} ayda kendini öder; kasada ayrılabilen {spare} (birkaç haftalık gider ve vergi yedekte). Banka kredisi alırsan ya da kasa birikince otomatik kapasite büyütür', {
+                  cost,
+                  n: Math.max(1, Math.round(years * 12)),
+                  spare,
+                })
+              : t('sıradaki büyütme ~{cost} tutuyor ve ~{years} yılda kendini öder; kasada ayrılabilen {spare} (birkaç haftalık gider ve vergi yedekte). Banka kredisi alırsan ya da kasa birikince otomatik kapasite büyütür', {
+                  cost,
+                  years: years.toFixed(1),
+                  spare,
+                });
         }
         break;
       }
@@ -326,9 +355,9 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
     }
     if (spent > 0) {
       const what = Object.entries(done)
-        .map(([k, n]) => `${n} ${k}`)
+        .map(([k, n]) => t(PURCHASE_TEXT[k], { n }))
         .join(', ');
-      log(s, `Otomatik kapasite: ${m.name} için ${what} (${money(spent)}). Kapasite ${cap.toFixed(1)} araç/hf, talep ${d.toFixed(1)}.`, 'info');
+      log(s, t('Otomatik kapasite: {name} için {what} ({cost}). Kapasite {cap} araç/hf, talep {demand}.', { name: m.name, what, cost: money(spent), cap: cap.toFixed(1), demand: d.toFixed(1) }), 'info');
     }
     // Shrink: after half a year with far more capacity than buyers, sell the smallest lines
     // (at most a quarter of them a month) down to 40% above demand. A slump that passes (a
@@ -347,7 +376,7 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
         const f = financeNow(s);
         f.auto = (f.auto ?? 0) - refund;
         m.autoSpent = (m.autoSpent ?? 0) - refund;
-        log(s, `Otomatik kapasite: ${m.name} için talep düştü; ${lines[0].name} hattındaki fazla makineler satıldı (${money(refund)}).`, 'warn');
+        log(s, t('Otomatik kapasite: {name} için talep düştü; {line} hattındaki fazla makineler satıldı ({refund}).', { name: m.name, line: lines[0].name, refund: money(refund) }), 'warn');
       }
       m.lowDemandMonths = 0;
     }
@@ -369,7 +398,7 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
         const f = financeNow(s);
         f.auto = (f.auto ?? 0) - refund;
         m.autoSpent = (m.autoSpent ?? 0) - refund;
-        log(s, `Otomatik kapasite: ${m.name} için talep düştü; ${sold} hat kapatıldı, makineler satıldı (${money(refund)}).`, 'warn');
+        log(s, t('Otomatik kapasite: {name} için talep düştü; {n} hat kapatıldı, makineler satıldı ({refund}).', { name: m.name, n: sold, refund: money(refund) }), 'warn');
       }
       m.lowDemandMonths = 0;
     }

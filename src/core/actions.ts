@@ -47,6 +47,8 @@ import type {
 } from './types';
 import { NO_BONUS, computeCarStats } from './vehicle';
 import { clamp, decide, earn, log, money, newId, shiftModal, spend } from './util';
+import { t } from '../i18n';
+import { fmtPercent } from '../i18n/format';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 const ok: ActionResult = { ok: true };
@@ -69,7 +71,7 @@ function model(s: GameState, id: string): CarModel {
 export function hireEngineers(s: GameState, n: number): ActionResult {
   const yf = yearFloat(s.week);
   const cost = n * 40 * costIndex(yf);
-  if (s.company.cash < cost) return fail('Yeterli para yok.');
+  if (s.company.cash < cost) return fail(t('Yeterli para yok.'));
   spend(s, cost, 'other');
   s.company.engineers += n;
   // The newcomers join the projects under way at once.
@@ -83,7 +85,7 @@ export function hireEngineers(s: GameState, n: number): ActionResult {
 /** Research staff: they only learn new technology, and faster than design engineers. */
 export function hireResearchers(s: GameState, n: number): ActionResult {
   const cost = n * researcherHireCost(yearFloat(s.week));
-  if (s.company.cash < cost) return fail('Yeterli para yok.');
+  if (s.company.cash < cost) return fail(t('Yeterli para yok.'));
   spend(s, cost, 'other');
   s.company.researchers = (s.company.researchers ?? 0) + n;
   decide(s, 'researchers', `${n} Ar-Ge uzmanı işe alındı (toplam ${s.company.researchers})`);
@@ -92,7 +94,7 @@ export function hireResearchers(s: GameState, n: number): ActionResult {
 
 export function fireResearchers(s: GameState, n: number): ActionResult {
   const have = s.company.researchers ?? 0;
-  if (have < n) return fail('Bu kadar Ar-Ge uzmanı yok.');
+  if (have < n) return fail(t('Bu kadar Ar-Ge uzmanı yok.'));
   s.company.researchers = have - n;
   s.company.reputation = clamp(s.company.reputation - 0.1 * n, 0, 100);
   decide(s, 'researchers', `${n} Ar-Ge uzmanı çıkarıldı (toplam ${s.company.researchers})`);
@@ -100,7 +102,7 @@ export function fireResearchers(s: GameState, n: number): ActionResult {
 }
 
 export function fireEngineers(s: GameState, n: number): ActionResult {
-  if (s.company.engineers - n < 1) return fail('En az bir mühendis kalmalı.');
+  if (s.company.engineers - n < 1) return fail(t('En az bir mühendis kalmalı.'));
   s.company.engineers -= n;
   shareEngineers(s);
   s.company.reputation = clamp(s.company.reputation - 0.2 * n, 0, 100);
@@ -148,7 +150,7 @@ export function defaultDesign(s: GameState, segment: SegmentId, replacesModelId?
 }
 
 export function startProject(s: GameState, o: StartProjectOptions): { ok: true; id: string } | { ok: false; error: string } {
-  if (!availableSegments(s).includes(o.segment)) return { ok: false, error: 'Bu segment henüz açılmadı.' };
+  if (!availableSegments(s).includes(o.segment)) return { ok: false, error: t('Bu segment henüz açılmadı.') };
   const design = defaultDesign(s, o.segment, o.replacesModelId);
   const plat = o.platformId ? s.platforms.find((p) => p.id === o.platformId) : undefined;
   if (plat) {
@@ -163,7 +165,7 @@ export function startProject(s: GameState, o: StartProjectOptions): { ok: true; 
   const free = s.company.engineers - engineersBusy(s);
   const p: Project = {
     id,
-    name: o.name.trim() || `Proje ${id.slice(1)}`,
+    name: o.name.trim() || t('Proje {no}', { no: id.slice(1) }),
     segment: o.segment,
     targetPrice: o.targetPrice,
     kind: 'new',
@@ -191,12 +193,12 @@ export function startProject(s: GameState, o: StartProjectOptions): { ok: true; 
 /** Facelift: short project on an existing model (styling, trim, equipment, tuning). */
 export function startFacelift(s: GameState, modelId: string): { ok: true; id: string } | { ok: false; error: string } {
   const m = model(s, modelId);
-  if (s.projects.some((p) => p.replacesModelId === modelId && p.kind === 'facelift')) return { ok: false, error: 'Bu model için zaten bir makyaj projesi var.' };
+  if (s.projects.some((p) => p.replacesModelId === modelId && p.kind === 'facelift')) return { ok: false, error: t('Bu model için zaten bir makyaj projesi var.') };
   const id = newId(s, 'p');
   const free = s.company.engineers - engineersBusy(s);
   s.projects.push({
     id,
-    name: `${m.name} (makyaj)`,
+    name: t('{name} (makyaj)', { name: m.name }),
     segment: m.segment,
     targetPrice: m.price,
     kind: 'facelift',
@@ -232,9 +234,9 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
  */
 export function setProjectPlatform(s: GameState, pid: string, platformId: string | undefined): ActionResult {
   const p = project(s, pid);
-  if (p.phase !== 'design' || p.kind === 'facelift') return fail('Platform yalnızca tasarım aşamasında seçilir.');
+  if (p.phase !== 'design' || p.kind === 'facelift') return fail(t('Platform yalnızca tasarım aşamasında seçilir.'));
   const plat = platformId ? s.platforms.find((x) => x.id === platformId) : undefined;
-  if (platformId && !plat) return fail('Platform bulunamadı.');
+  if (platformId && !plat) return fail(t('Platform bulunamadı.'));
   p.platformId = plat?.id;
   if (plat) p.design = { ...p.design, chassis: plat.chassis, size: plat.size, suspension: plat.suspension };
   decide(s, 'platform:' + pid, `${p.name}: ${plat ? `${plat.name} kullanılıyor` : 'yeni platform'}`);
@@ -243,7 +245,7 @@ export function setProjectPlatform(s: GameState, pid: string, platformId: string
 
 export function updateDesign(s: GameState, pid: string, design: CarDesign): ActionResult {
   const p = project(s, pid);
-  if (p.phase !== 'design') return fail('Tasarım geliştirme başladıktan sonra değiştirilemez.');
+  if (p.phase !== 'design') return fail(t('Tasarım geliştirme başladıktan sonra değiştirilemez.'));
   p.design = { ...design, knowhow: knownKnowhow(s) };
   return ok;
 }
@@ -306,27 +308,27 @@ export function setFocus(s: GameState, pid: string, focus: Record<FocusKey, numb
 }
 
 /** Shared engineers can be a fraction of a person per project. */
-const fmtEngineers = (n: number) => String(Math.round(n * 10) / 10);
+const fmtEngineers = (n: number) => Math.round(n * 10) / 10;
 
 export function beginDevelopment(s: GameState, pid: string): ActionResult {
   const p = project(s, pid);
-  if (p.phase !== 'design') return fail('Proje zaten geliştirmede.');
+  if (p.phase !== 'design') return fail(t('Proje zaten geliştirmede.'));
   const missing = unknownTech(s, p.design);
-  if (missing.length) return fail(`Önce Ar-Ge’de araştırılmalı: ${missing.join(', ')}.`);
+  if (missing.length) return fail(t('Önce Ar-Ge’de araştırılmalı: {names}.', { names: missing.join(', ') }));
   // Everything the engineers know goes into the car.
   p.design = { ...p.design, knowhow: knownKnowhow(s) };
   p.dev.required = requiredWork(s, p);
   p.phase = 'development';
   shareEngineers(s);
-  log(s, `${p.name}: geliştirme başladı (${fmtEngineers(p.engineers)} mühendis).`);
+  log(s, t('{name}: geliştirme başladı ({n} mühendis).', { name: p.name, n: fmtEngineers(p.engineers) }));
   decide(s, 'dev:' + pid, `${p.name}: geliştirme başladı, ${fmtEngineers(p.engineers)} mühendis · ${designSummary(p.design)}`);
   return ok;
 }
 
 export function finishDevelopment(s: GameState, pid: string): ActionResult {
   const p = project(s, pid);
-  if (p.phase !== 'development') return fail('Proje geliştirmede değil.');
-  if (p.dev.done < p.dev.required) return fail('Geliştirme henüz tamamlanmadı.');
+  if (p.phase !== 'development') return fail(t('Proje geliştirmede değil.'));
+  if (p.dev.done < p.dev.required) return fail(t('Geliştirme henüz tamamlanmadı.'));
   const yf = yearFloat(s.week);
   p.bonus = bonusFromPoints(p.dev.points, p.dev.required, p.dev.done, s.company.skill);
   p.devBonus = p.bonus;
@@ -345,15 +347,15 @@ export function finishDevelopment(s: GameState, pid: string): ActionResult {
   p.phase = 'testing';
   // Tests unavailable in this era cannot be planned.
   for (const t of TESTS) if (t.year > yf) p.tests[t.id].planned = 0;
-  log(s, `${p.name}: prototipler hazır (${money(protoCost)}). Test programı başladı.`);
+  log(s, t('{name}: prototipler hazır ({cost}). Test programı başladı.', { name: p.name, cost: money(protoCost) }));
   decide(s, 'dev:' + pid, `${p.name}: teste geçildi (geliştirme %${Math.round((100 * p.dev.done) / p.dev.required)}, beklenen gizli kusur ${lambda.toFixed(1)})`);
   return ok;
 }
 
 export function setTestPlan(s: GameState, pid: string, test: TestId, weeks: number): ActionResult {
   const p = project(s, pid);
-  const def = TESTS.find((t) => t.id === test)!;
-  if (def.year > yearFloat(s.week)) return fail(`${def.name} henüz yapılamıyor.`);
+  const def = TESTS.find((x) => x.id === test)!;
+  if (def.year > yearFloat(s.week)) return fail(t('{test} henüz yapılamıyor.', { test: t(def.name) }));
   p.tests[test].planned = Math.max(p.tests[test].done, Math.round(weeks));
   decide(s, 'tests:' + pid, `${p.name}: test planı ${TESTS.map((t) => `${t.id} ${p.tests[t.id].planned}hf`).join(', ')}`);
   return ok;
@@ -361,7 +363,7 @@ export function setTestPlan(s: GameState, pid: string, test: TestId, weeks: numb
 
 export function finishTesting(s: GameState, pid: string): ActionResult {
   const p = project(s, pid);
-  if (p.phase !== 'testing') return fail('Proje testte değil.');
+  if (p.phase !== 'testing') return fail(t('Proje testte değil.'));
   for (const t of TESTS) p.tests[t.id].planned = p.tests[t.id].done;
   p.phase = 'production';
   if (!gates(s).suppliers) p.suppliers = { engine: 'quality', gearbox: 'quality', electrics: 'quality' };
@@ -378,8 +380,8 @@ export function finishTesting(s: GameState, pid: string): ActionResult {
 
 export function setSupplier(s: GameState, pid: string, comp: ComponentKey, choice: SupplierChoice): ActionResult {
   const p = project(s, pid);
-  if (!gates(s).suppliers) return fail('Yap ya da satın al kararı ikinci modelinle açılır.');
-  if (choice === 'inhouse' && !s.company.shops[comp]) return fail('Önce bu parça için atölye kurmalısın.');
+  if (!gates(s).suppliers) return fail(t('Yap ya da satın al kararı ikinci modelinle açılır.'));
+  if (choice === 'inhouse' && !s.company.shops[comp]) return fail(t('Önce bu parça için atölye kurmalısın.'));
   p.suppliers[comp] = choice;
   decide(s, `supplier:${pid}:${comp}`, `${p.name}: ${comp} tedarikçisi ${choice}`);
   return ok;
@@ -421,24 +423,24 @@ export const VENDOR_CREDIT = 0.15;
  */
 export function startTooling(s: GameState, pid: string, lineId: string, tier: ToolingTier = 'standard', o: { vendorCredit?: boolean } = {}): ActionResult {
   const p = project(s, pid);
-  if (p.phase !== 'production') return fail('Proje üretim hazırlığında değil.');
-  if (p.productionReadyWeek !== undefined) return fail('Kalıp hazırlığı zaten başladı.');
-  if (!s.lines.some((l) => l.id === lineId)) return fail('Hat bulunamadı.');
-  if (reservedLines(s, pid).has(lineId)) return fail('Bu hat başka bir projeye ayrıldı: başka bir hat seç ya da yeni hat kur.');
+  if (p.phase !== 'production') return fail(t('Proje üretim hazırlığında değil.'));
+  if (p.productionReadyWeek !== undefined) return fail(t('Kalıp hazırlığı zaten başladı.'));
+  if (!s.lines.some((l) => l.id === lineId)) return fail(t('Hat bulunamadı.'));
+  if (reservedLines(s, pid).has(lineId)) return fail(t('Bu hat başka bir projeye ayrıldı: başka bir hat seç ya da yeni hat kur.'));
   const q = toolingQuote(s, p, lineId, tier);
   if (o.vendorCredit) {
-    if (s.company.reputation < 5) return fail('Kalıpçılar bu itibarla vadeli iş kabul etmiyor.');
+    if (s.company.reputation < 5) return fail(t('Kalıpçılar bu itibarla vadeli iş kabul etmiyor.'));
     const owed = q.cost * (1 + VENDOR_CREDIT);
     s.company.loan += owed;
     s.company.cash += q.cost;
-    log(s, `${p.name}: kalıpçı vadeli sipariş kabul etti; ${money(owed)} borca eklendi.`, 'warn');
-  } else if (s.company.cash < q.cost) return fail(`Kalıplar için ${money(q.cost)} gerekiyor.`);
+    log(s, t('{name}: kalıpçı vadeli sipariş kabul etti; {owed} borca eklendi.', { name: p.name, owed: money(owed) }), 'warn');
+  } else if (s.company.cash < q.cost) return fail(t('Kalıplar için {cost} gerekiyor.', { cost: money(q.cost) }));
   spend(s, q.cost, 'investment');
   p.lineId = lineId;
   p.tooling = tier;
   p.toolingCost = q.cost;
   p.productionReadyWeek = s.week + Math.max(q.weeks, q.leadWeeks);
-  log(s, `${p.name}: kalıplar sipariş edildi (${money(q.cost)}); ${Math.max(q.weeks, q.leadWeeks)} hafta sonra üretime hazır.`);
+  log(s, t('{name}: kalıplar sipariş edildi ({cost}); {n} hafta sonra üretime hazır.', { name: p.name, cost: money(q.cost), n: Math.max(q.weeks, q.leadWeeks) }));
   decide(s, 'tooling:' + pid, `${p.name}: ${toolingDef(tier).name.toLowerCase()} ${money(q.cost)}, ${Math.max(q.weeks, q.leadWeeks)} hafta`);
   return ok;
 }
@@ -464,17 +466,20 @@ export function autoShowCost(s: GameState, markets: MarketId[]): number {
 
 export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: true; modelId: string } | { ok: false; error: string } {
   const p = project(s, pid);
-  if (p.phase !== 'ready') return { ok: false, error: 'Üretim hattı henüz hazır değil.' };
-  if (!p.lineId || !s.lines.some((l) => l.id === p.lineId)) return { ok: false, error: 'Bu arabanın hattı yok: önce bir hat seç ya da kur.' };
+  if (p.phase !== 'ready') return { ok: false, error: t('Üretim hattı henüz hazır değil.') };
+  if (!p.lineId || !s.lines.some((l) => l.id === p.lineId)) return { ok: false, error: t('Bu arabanın hattı yok: önce bir hat seç ya da kur.') };
   const markets: MarketId[] = ['usa']; // the American market only (for now)
-  if (!markets.length) return { ok: false, error: 'En az bir pazar seç.' };
-  if (o.price <= 0) return { ok: false, error: 'Geçerli bir fiyat gir.' };
+  if (!markets.length) return { ok: false, error: t('En az bir pazar seç.') };
+  if (o.price <= 0) return { ok: false, error: t('Geçerli bir fiyat gir.') };
   const yf = yearFloat(s.week);
   const bonus = p.bonus ?? NO_BONUS;
   const stats = computeCarStats(p.design, yf, bonus);
   const venue = o.autoShow
-    ? `${Math.floor(yf)} ${MARKETS.find((x) => x.id === (markets.includes(s.company.hq) ? s.company.hq : markets[0]))!.name} Otomobil Fuarı`
-    : 'Fabrika avlusunda basın günü';
+    ? t('{year} {market} Otomobil Fuarı', {
+        year: Math.floor(yf),
+        market: t(MARKETS.find((x) => x.id === (markets.includes(s.company.hq) ? s.company.hq : markets[0]))!.name),
+      })
+    : t('Fabrika avlusunda basın günü');
   if (o.autoShow) {
     const cost = autoShowCost(s, markets);
     spend(s, cost, 'marketing');
@@ -505,7 +510,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
     s.company.skill = clamp(s.company.skill + (100 - s.company.skill) * 0.02, 0, 100);
     m.launchReportWeek = s.week + 4;
     s.modals.push({ kind: 'launch', modelId: m.id, venue, facelift: true });
-    log(s, `${m.name} makyajlı haliyle satışta.`, 'good');
+    log(s, t('{name} makyajlı haliyle satışta.', { name: m.name }), 'good');
     decide(s, 'launch:' + m.id, `${m.name} lansmanı${p.kind === 'facelift' ? ' (makyaj)' : ''}: fiyat ${money(o.price)} (sınıf ${money(referencePrice(s.company.hq, m.segment, yf))}), ${markets.join('+')}, fuar ${o.autoShow ? 'var' : 'yok'}, dergi ${m.reviewScore.toFixed(1)}`);
     return { ok: true, modelId: m.id };
   }
@@ -519,7 +524,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
     platformId = newId(s, 'pl');
     s.platforms.push({
       id: platformId,
-      name: `${p.name} platformu`,
+      name: t('{name} platformu', { name: p.name }),
       chassis: p.design.chassis,
       size: p.design.size,
       suspension: p.design.suspension,
@@ -591,7 +596,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
           l.retoolUntilWeek = s.week + 2;
         }
       }
-      retire(s, old, 'Yeni kuşağa yer açtı');
+      retire(s, old, 'successor');
     }
   }
   // Take over the production line.
@@ -599,7 +604,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
     const line = s.lines.find((l) => l.id === p.lineId);
     if (line) {
       const other = s.models.find((x) => x.id === line.modelId && x.status === 'active');
-      if (other && other.id !== p.replacesModelId) log(s, `${other.name}, ${line.name} hattını yeni ${m.name} modeline bıraktı.`, 'warn');
+      if (other && other.id !== p.replacesModelId) log(s, t('{old}, {line} hattını yeni {name} modeline bıraktı.', { old: other.name, line: line.name, name: m.name }), 'warn');
       line.modelId = id;
       line.military = false;
       // Launch stock: two weeks of output.
@@ -626,43 +631,53 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
   s.company.reputation = clamp(s.company.reputation + (m.reviewScore - 5.5) * 1.5, 0, 100);
   m.launchReportWeek = s.week + 4;
   s.modals.push({ kind: 'launch', modelId: m.id, venue });
-  log(s, `${m.name} piyasaya çıktı! Dergilerin ortalaması: ${m.reviewScore.toFixed(1)}/10.`, 'good');
+  log(s, t('{name} piyasaya çıktı! Dergilerin ortalaması: {score}/10.', { name: m.name, score: m.reviewScore.toFixed(1) }), 'good');
   decide(s, 'launch:' + m.id, `${m.name} lansmanı${p.kind === 'facelift' ? ' (makyaj)' : ''}: fiyat ${money(o.price)} (sınıf ${money(referencePrice(s.company.hq, m.segment, yf))}), ${markets.join('+')}, fuar ${o.autoShow ? 'var' : 'yok'}, dergi ${m.reviewScore.toFixed(1)}`);
 
   // Progressive unlocks.
   if (s.company.modelsLaunched === 1) {
     s.modals.push({
       kind: 'unlock',
-      title: 'Yeni imkânlar açıldı',
+      title: t('Yeni imkânlar açıldı'),
       body:
-        `Bayi ağı: Arabaların şimdilik yalnızca ${stateDef(homeState(s)).name} eyaletinde satılıyor. Pazarlar ekranındaki haritadan komşu eyaletlerde bayi arayabilirsin; eyalet dışına giden her araba için demiryolu nakliyesi ödersin, yoldaki arabaların için de servis gerekir.\n\n` +
-        'Yap ya da satın al: Bir sonraki projende motor, şanzıman ve elektrik parçalarını kimden alacağını sen seçeceksin.',
+        t('Bayi ağı: Arabaların şimdilik yalnızca {state} eyaletinde satılıyor. Pazarlar ekranındaki haritadan komşu eyaletlerde bayi arayabilirsin; eyalet dışına giden her araba için demiryolu nakliyesi ödersin, yoldaki arabaların için de servis gerekir.', {
+          state: stateDef(homeState(s)).name,
+        }) +
+        '\n\n' +
+        t('Yap ya da satın al: Bir sonraki projende motor, şanzıman ve elektrik parçalarını kimden alacağını sen seçeceksin.'),
     });
   }
   if (s.company.modelsLaunched === 2) {
     s.modals.push({
       kind: 'unlock',
-      title: 'Platform paylaşımı açıldı',
+      title: t('Platform paylaşımı açıldı'),
       body:
-        'Yeni projelerde mevcut bir platformu (şasi + boyut + süspansiyon) ve motoru yeniden kullanabilirsin. Geliştirme işi, kalıp maliyeti ve hata riski düşer.\n\n' +
-        'Ama abartma: aynı platformda üçten fazla model olursa dergiler “hepsi aynı araba” diye eleştirir ve prestij düşer.',
+        t('Yeni projelerde mevcut bir platformu (şasi + boyut + süspansiyon) ve motoru yeniden kullanabilirsin. Geliştirme işi, kalıp maliyeti ve hata riski düşer.') +
+        '\n\n' +
+        t('Ama abartma: aynı platformda üçten fazla model olursa dergiler “hepsi aynı araba” diye eleştirir ve prestij düşer.'),
     });
   }
   return { ok: true, modelId: id };
 }
 
-function retire(s: GameState, m: CarModel, reason: string) {
+/** `successor`: a new generation took its place; `withdrawn`: the player took it off sale. */
+function retire(s: GameState, m: CarModel, reason: 'successor' | 'withdrawn') {
   m.status = 'retired';
   m.retiredWeek = s.week;
   if (m.inventory > 0) {
     // Dealers clear leftover stock at a discount.
     const value = m.inventory * m.price * 0.6;
     earn(s, value);
-    log(s, `${m.name} stoğu (${Math.round(m.inventory)} araç) indirimle satıldı: ${money(value)}.`);
+    log(s, t('{name} stoğu ({n} araç) indirimle satıldı: {value}.', { name: m.name, n: Math.round(m.inventory), value: money(value) }));
     m.inventory = 0;
   }
   for (const l of s.lines) if (l.modelId === m.id) l.modelId = undefined;
-  log(s, `${m.name} üretimden kalktı. ${reason}.`);
+  log(
+    s,
+    reason === 'successor'
+      ? t('{name} üretimden kalktı. Yeni kuşağa yer açtı.', { name: m.name })
+      : t('{name} üretimden kalktı. Satıştan çekildi.', { name: m.name }),
+  );
 }
 
 // ---------------- Models on sale ----------------
@@ -694,7 +709,12 @@ export function setModelPrice(s: GameState, id: string, price: number) {
     m.hype = 0;
     log(
       s,
-      `Basın ${m.name} modeline gelen %${Math.round((real / ceiling - 1) * 100)} zammı eleştirdi: dergi ortalaması ${old.toFixed(1)} → ${m.reviewScore.toFixed(1)}. Lansman heyecanı söndü.`,
+      t('Basın {name} modeline gelen {rise} zammı eleştirdi: dergi ortalaması {old} → {now}. Lansman heyecanı söndü.', {
+        name: m.name,
+        rise: fmtPercent(real / ceiling - 1, 0),
+        old: old.toFixed(1),
+        now: m.reviewScore.toFixed(1),
+      }),
       'warn',
     );
   }
@@ -711,14 +731,14 @@ export function setProductionRate(s: GameState, id: string, rate: number) {
 }
 
 export function retireModel(s: GameState, id: string) {
-  retire(s, model(s, id), 'Satıştan çekildi');
+  retire(s, model(s, id), 'withdrawn');
   decide(s, 'retire:' + id, `${model(s, id).name} satıştan çekildi`);
 }
 
 /** Put a model on a line (or clear the line with modelId undefined). A line holds one model; a model may use many lines. */
 export function assignLine(s: GameState, lineId: string, modelId: string | undefined): ActionResult {
   const line = s.lines.find((l) => l.id === lineId);
-  if (!line) return fail('Hat bulunamadı.');
+  if (!line) return fail(t('Hat bulunamadı.'));
   if (line.modelId === modelId) return ok;
   if (!modelId) {
     line.modelId = undefined;
@@ -727,7 +747,7 @@ export function assignLine(s: GameState, lineId: string, modelId: string | undef
   const m = model(s, modelId);
   const yf = yearFloat(s.week);
   const cost = retoolCost(s, m);
-  if (s.company.cash < cost) return fail(`Hat değişimi için ${money(cost)} gerekiyor.`);
+  if (s.company.cash < cost) return fail(t('Hat değişimi için {cost} gerekiyor.', { cost: money(cost) }));
   spend(s, cost, 'investment');
   line.modelId = m.id;
   line.retoolUntilWeek = s.week + 3;
@@ -743,8 +763,8 @@ export { retoolCost };
 export function setProjectLine(s: GameState, pid: string, lineId: string): ActionResult {
   const p = project(s, pid);
   const line = s.lines.find((l) => l.id === lineId);
-  if (!line) return fail('Hat bulunamadı.');
-  if (reservedLines(s, pid).has(lineId)) return fail('Bu hat başka bir projeye ayrıldı.');
+  if (!line) return fail(t('Hat bulunamadı.'));
+  if (reservedLines(s, pid).has(lineId)) return fail(t('Bu hat başka bir projeye ayrıldı.'));
   p.lineId = lineId;
   decide(s, 'projectLine:' + pid, `${p.name}: hattı ${line.name}`);
   return ok;
@@ -756,7 +776,7 @@ export function buyLine(s: GameState): ActionResult {
   const veto = boardVeto(s);
   if (veto) return fail(veto);
   const cost = newLineCost(yearFloat(s.week));
-  if (s.company.cash < cost) return fail(`Yeni hat için ${money(cost)} gerekiyor.`);
+  if (s.company.cash < cost) return fail(t('Yeni hat için {cost} gerekiyor.', { cost: money(cost) }));
   spend(s, cost, 'investment');
   const line = emptyLine(`L${s.nextId++}`, nextLineName(s));
   line.buildUntilWeek = s.week + lineBuildWeeks(yearFloat(s.week));
@@ -767,9 +787,9 @@ export function buyLine(s: GameState): ActionResult {
 
 export function expandLine(s: GameState, lineId: string): ActionResult {
   const line = s.lines.find((l) => l.id === lineId)!;
-  if (line.slots >= MAX_SLOTS) return fail('Hat en büyük boyutta.');
+  if (line.slots >= MAX_SLOTS) return fail(t('Hat en büyük boyutta.'));
   const cost = slotCost(yearFloat(s.week), line.slots);
-  if (s.company.cash < cost) return fail(`Genişletme için ${money(cost)} gerekiyor.`);
+  if (s.company.cash < cost) return fail(t('Genişletme için {cost} gerekiyor.', { cost: money(cost) }));
   spend(s, cost, 'investment');
   line.slots += 1;
   decide(s, 'expand:' + lineId, `${line.name} genişletildi: ${line.slots} yer`);
@@ -779,11 +799,11 @@ export function expandLine(s: GameState, lineId: string): ActionResult {
 export function buyStation(s: GameState, lineId: string, stage: StageId, stationId: string): ActionResult {
   const line = s.lines.find((l) => l.id === lineId)!;
   const def = stationDef(stationId);
-  if (def.stage !== stage) return fail('Bu istasyon bu bölüme konamaz.');
-  if (def.year > yearFloat(s.week)) return fail('Bu teknoloji henüz yok.');
-  if (line.stations[stage].length >= line.slots) return fail('Bölümde boş yer yok. Hattı genişlet ya da bir istasyon sat.');
+  if (def.stage !== stage) return fail(t('Bu istasyon bu bölüme konamaz.'));
+  if (def.year > yearFloat(s.week)) return fail(t('Bu teknoloji henüz yok.'));
+  if (line.stations[stage].length >= line.slots) return fail(t('Bölümde boş yer yok. Hattı genişlet ya da bir istasyon sat.'));
   const cost = stationPrice(stationId, s.week);
-  if (s.company.cash < cost) return fail(`${def.name} için ${money(cost)} gerekiyor.`);
+  if (s.company.cash < cost) return fail(t('{name} için {cost} gerekiyor.', { name: t(def.name), cost: money(cost) }));
   spend(s, cost, 'investment');
   line.stations[stage].push(stationId);
   decide(s, `station:${lineId}:${stage}`, `${line.name} ${stage}: ${line.stations[stage].length} istasyon (son: ${def.name})`);
@@ -793,7 +813,7 @@ export function buyStation(s: GameState, lineId: string, stage: StageId, station
 export function sellStation(s: GameState, lineId: string, stage: StageId, index: number): ActionResult {
   const line = s.lines.find((l) => l.id === lineId)!;
   const id = line.stations[stage][index];
-  if (!id) return fail('İstasyon yok.');
+  if (!id) return fail(t('İstasyon yok.'));
   line.stations[stage].splice(index, 1);
   earn(s, stationResale(id, s.week));
   decide(s, `station:${lineId}:${stage}`, `${line.name} ${stage}: bir ${stationDef(id).name} satıldı`);
@@ -805,10 +825,10 @@ export function buildTurnkeyLines(s: GameState, count: number, modelId: string |
   const m = modelId ? model(s, modelId) : undefined;
   const each = turnkeyLineCost(s.week, allowBlack, slots) + (m ? retoolCost(s, m) : 0);
   const total = each * count;
-  if (count < 1) return fail('En az bir hat seç.');
+  if (count < 1) return fail(t('En az bir hat seç.'));
   const veto = boardVeto(s);
   if (veto) return fail(veto);
-  if (s.company.cash < total) return fail(`${count} hat için ${money(total)} gerekiyor.`);
+  if (s.company.cash < total) return fail(t('{n} hat için {cost} gerekiyor.', { n: count, cost: money(total) }));
   const plan = planBalancedLine(yearFloat(s.week), allowBlack, slots);
   for (let i = 0; i < count; i++) {
     spend(s, each, 'investment');
@@ -820,31 +840,37 @@ export function buildTurnkeyLines(s: GameState, count: number, modelId: string |
     s.lines.push(line);
   }
   decide(s, 'turnkey', `${count} anahtar teslim hat${m ? ` (${m.name})` : ''}, ${money(total)}${allowBlack ? ', siyah boya' : ''}; toplam ${s.lines.length} hat`);
-  log(s, `${count} yeni hat inşa ediliyor (${money(total)}); ${lineBuildWeeks(yearFloat(s.week))} hafta sonra üretime başlar.`, 'info');
+  log(s, t('{n} yeni hat inşa ediliyor ({cost}); {weeks} hafta sonra üretime başlar.', { n: count, cost: money(total), weeks: lineBuildWeeks(yearFloat(s.week)) }), 'info');
   return ok;
 }
 
 /** Buy a smaller rival: its engineers join, its dealers sell your cars, its models are withdrawn. */
 export function acquireRival(s: GameState, id: string): ActionResult {
-  const t = acquisitionTargets(s).find((x) => x.id === id);
-  if (!t) return fail('Bu şirket satılık değil.');
+  const target = acquisitionTargets(s).find((x) => x.id === id);
+  if (!target) return fail(t('Bu şirket satılık değil.'));
   const veto = boardVeto(s);
   if (veto) return fail(veto);
-  if (s.company.cash < t.price) return fail(`${t.name} için ${money(t.price)} gerekiyor.`);
-  spend(s, t.price, 'investment');
+  if (s.company.cash < target.price) return fail(t('{name} için {cost} gerekiyor.', { name: target.name, cost: money(target.price) }));
+  spend(s, target.price, 'investment');
   (s.acquired ??= []).push(id);
   for (const rm of s.rivalModels) if (rm.companyId === id) rm.active = false;
-  s.company.engineers += t.engineers;
+  s.company.engineers += target.engineers;
   shareEngineers(s);
   // Its dealers carry our cars now: showrooms where the buyers are, new states included.
-  const gained = absorbDealers(s, Math.max(1, Math.min(12, Math.round(1 + t.units / 2500))), t.name);
+  const gained = absorbDealers(s, Math.max(1, Math.min(12, Math.round(1 + target.units / 2500))), target.name);
   s.company.reputation = clamp(s.company.reputation + 1, 0, 100);
   log(
     s,
-    `${s.company.name}, ${t.name} şirketini ${money(t.price)} karşılığında satın aldı: ${t.engineers} mühendis katıldı; bayileri artık senin arabalarını satıyor (${gained.map((id) => stateDef(id).name).join(', ')}).`,
+    t('{company}, {name} şirketini {price} karşılığında satın aldı: {n} mühendis katıldı; bayileri artık senin arabalarını satıyor ({states}).', {
+      company: s.company.name,
+      name: target.name,
+      price: money(target.price),
+      n: target.engineers,
+      states: gained.map((id) => stateDef(id).name).join(', '),
+    }),
     'good',
   );
-  decide(s, 'acquire:' + id, `${t.name} satın alındı (${money(t.price)}, ${t.units} araç/yıl)`);
+  decide(s, 'acquire:' + id, `${target.name} satın alındı (${money(target.price)}, ${target.units} araç/yıl)`);
   return ok;
 }
 
@@ -852,9 +878,9 @@ export function acquireRival(s: GameState, id: string): ActionResult {
 export function buildWorkshopLine(s: GameState, modelId: string | undefined): ActionResult {
   const m = modelId ? model(s, modelId) : undefined;
   const cost = workshopLineCost(s.week) + (m ? retoolCost(s, m) : 0);
-  if (s.company.cash < cost) return fail(`Atölye hattı için ${money(cost)} gerekiyor.`);
+  if (s.company.cash < cost) return fail(t('Atölye hattı için {cost} gerekiyor.', { cost: money(cost) }));
   spend(s, cost, 'investment');
-  const line = emptyLine(`L${s.nextId++}`, nextLineName(s, 'Atölye'));
+  const line = emptyLine(`L${s.nextId++}`, nextLineName(s, t('Atölye')));
   const plan = workshopPlan(yearFloat(s.week));
   for (const st of STAGES) line.stations[st.id] = [...plan[st.id]];
   // A rented shed with benches is ready sooner than a factory hall.
@@ -868,10 +894,10 @@ export function buildWorkshopLine(s: GameState, modelId: string | undefined): Ac
 /** Rebuild a line with today's best stations, balanced; reusable stations stay, the rest are sold. */
 export function modernizeLine(s: GameState, lineId: string, allowBlack: boolean): ActionResult {
   const line = s.lines.find((l) => l.id === lineId);
-  if (!line) return fail('Hat bulunamadı.');
+  if (!line) return fail(t('Hat bulunamadı.'));
   const q = modernizeQuote(line, s.week, allowBlack);
-  if (q.after <= q.before * 1.02) return fail('Bu hat zaten güncel.');
-  if (s.company.cash < q.cost) return fail(`Yenileme için ${money(q.cost)} gerekiyor.`);
+  if (q.after <= q.before * 1.02) return fail(t('Bu hat zaten güncel.'));
+  if (s.company.cash < q.cost) return fail(t('Yenileme için {cost} gerekiyor.', { cost: money(q.cost) }));
   spend(s, q.buy + q.expand, 'investment');
   earn(s, q.resale);
   line.slots = MAX_SLOTS;
@@ -885,7 +911,7 @@ export function modernizeLine(s: GameState, lineId: string, allowBlack: boolean)
 /** A night shift on every section of a line at once. */
 export function setLineNightShift(s: GameState, lineId: string, on: boolean): ActionResult {
   const line = s.lines.find((l) => l.id === lineId);
-  if (!line) return fail('Hat bulunamadı.');
+  if (!line) return fail(t('Hat bulunamadı.'));
   line.nightShift = Object.fromEntries(STAGES.map((st) => [st.id, on]));
   decide(s, `night:${lineId}`, `${line.name}: gece vardiyası tüm hatta ${on ? 'açık' : 'kapalı'}`);
   return ok;
@@ -893,7 +919,7 @@ export function setLineNightShift(s: GameState, lineId: string, on: boolean): Ac
 
 export function setNightShift(s: GameState, lineId: string, stage: StageId, on: boolean): ActionResult {
   const line = s.lines.find((l) => l.id === lineId);
-  if (!line) return fail('Hat bulunamadı.');
+  if (!line) return fail(t('Hat bulunamadı.'));
   line.nightShift = { ...line.nightShift, [stage]: on };
   decide(s, `night:${lineId}:${stage}`, `${line.name} ${stage}: gece vardiyası ${on ? 'açık' : 'kapalı'}`);
   return ok;
@@ -913,15 +939,15 @@ export function setModelAutoCapacity(s: GameState, id: string, on: boolean) {
 }
 
 export function setLineMilitary(s: GameState, lineId: string, military: boolean): ActionResult {
-  if (military && !((s.flags.militaryUntil ?? 0) > yearFloat(s.week))) return fail('Aktif bir askeri sözleşme yok.');
+  if (military && !((s.flags.militaryUntil ?? 0) > yearFloat(s.week))) return fail(t('Aktif bir askeri sözleşme yok.'));
   s.lines.find((l) => l.id === lineId)!.military = military;
   return ok;
 }
 
 export function buildShop(s: GameState, comp: ComponentKey): ActionResult {
-  if (s.company.shops[comp]) return fail('Atölye zaten var.');
+  if (s.company.shops[comp]) return fail(t('Atölye zaten var.'));
   const cost = shopCost(yearFloat(s.week));
-  if (s.company.cash < cost) return fail(`Atölye için ${money(cost)} gerekiyor.`);
+  if (s.company.cash < cost) return fail(t('Atölye için {cost} gerekiyor.', { cost: money(cost) }));
   spend(s, cost, 'investment');
   s.company.shops[comp] = true;
   decide(s, 'shop:' + comp, `${comp} atölyesi kuruldu (${money(cost)})`);
@@ -931,12 +957,12 @@ export function buildShop(s: GameState, comp: ComponentKey): ActionResult {
 // ---------------- Markets ----------------
 
 export function upgradeDealers(s: GameState, market: MarketId): ActionResult {
-  if (market === 'usa') return fail('Bayiler eyalet eyalet açılır: haritadan bir eyalet seçip bayi ara.');
+  if (market === 'usa') return fail(t('Bayiler eyalet eyalet açılır: haritadan bir eyalet seçip bayi ara.'));
   const ms = s.markets[market];
-  if (!ms.unlocked) return fail('Bu pazar henüz açılmadı.');
-  if (ms.dealerLevel >= MAX_DEALER_LEVEL) return fail('Bayi ağı en üst seviyede.');
+  if (!ms.unlocked) return fail(t('Bu pazar henüz açılmadı.'));
+  if (ms.dealerLevel >= MAX_DEALER_LEVEL) return fail(t('Bayi ağı en üst seviyede.'));
   const cost = dealerUpgradeCost(s, market);
-  if (s.company.cash < cost) return fail(`Bayi ağını büyütmek için ${money(cost)} gerekiyor.`);
+  if (s.company.cash < cost) return fail(t('Bayi ağını büyütmek için {cost} gerekiyor.', { cost: money(cost) }));
   spend(s, cost, 'investment');
   ms.dealerLevel += 1;
   ms.awareness = clamp(ms.awareness + 0.03, 0, 1);
@@ -955,11 +981,11 @@ export function marketResearchCost(s: GameState): number {
 
 export function marketResearch(s: GameState, segment: SegmentId): ActionResult {
   const cost = marketResearchCost(s);
-  if (s.company.cash < cost) return fail(`Araştırma için ${money(cost)} gerekiyor.`);
+  if (s.company.cash < cost) return fail(t('Araştırma için {cost} gerekiyor.', { cost: money(cost) }));
   spend(s, cost, 'marketing');
   const k = s.knowledge[segment];
   for (const key of Object.keys(segmentDef(segment).weights) as (keyof typeof k)[]) k[key] = 2;
-  log(s, `${segmentDef(segment).name} pazar araştırması tamamlandı.`, 'good');
+  log(s, t('{segment} pazar araştırması tamamlandı.', { segment: t(segmentDef(segment).name) }), 'good');
   decide(s, 'research', `Pazar araştırması (${money(cost)})`);
   return ok;
 }
@@ -969,7 +995,7 @@ export function marketResearch(s: GameState, segment: SegmentId): ActionResult {
 export function takeLoan(s: GameState, amount: number): ActionResult {
   const c = credit(s);
   const room = c.limit - s.company.loan;
-  if (amount > room) return fail(`Banka en fazla ${money(Math.max(0, room))} daha verir.`);
+  if (amount > room) return fail(t('Banka en fazla {amount} daha verir.', { amount: money(Math.max(0, room)) }));
   s.company.loan += amount;
   s.company.cash += amount;
   decide(s, 'loan', `Kredi: ${money(amount)}, toplam borç ${money(s.company.loan)}`);
@@ -979,7 +1005,7 @@ export function takeLoan(s: GameState, amount: number): ActionResult {
 /** Borrow enough to close the gap (and carry two months of losses), if the bank allows it. */
 export function borrowToCover(s: GameState): ActionResult {
   const amount = rescueLoan(s);
-  if (amount <= 0) return fail('Banka daha fazla kredi vermiyor.');
+  if (amount <= 0) return fail(t('Banka daha fazla kredi vermiyor.'));
   return takeLoan(s, amount);
 }
 
@@ -1027,14 +1053,14 @@ export function recallDecision(s: GameState, modelId: string, defectId: string, 
       d.fixed = true;
       s.company.reputation = clamp(s.company.reputation - (d.severity === 'critical' ? 3 : 1), 0, 100);
       m.perceivedReliability -= d.severity === 'critical' ? 3 : 1;
-      log(s, `${m.name} geri çağrıldı: ${Math.round(m.unitsSold)} araç, ${money(cost)}.`, 'warn');
+      log(s, t('{name} geri çağrıldı: {n} araç, {cost}.', { name: m.name, n: Math.round(m.unitsSold), cost: money(cost) }), 'warn');
     } else {
       d.ignored = true;
       if (d.severity !== 'critical') {
         m.perceivedReliability -= 4;
         s.company.reputation = clamp(s.company.reputation - 1, 0, 100);
       }
-      log(s, `${m.name}: kusur için bir şey yapılmadı.`, 'warn');
+      log(s, t('{name}: kusur için bir şey yapılmadı.', { name: m.name }), 'warn');
     }
   }
   decide(s, 'recall:' + defectId, `${m.name}: kusur için ${decision === 'recall' ? 'geri çağırma' : 'hiçbir şey yapmama'}`);
@@ -1046,18 +1072,18 @@ export function recallDecision(s: GameState, modelId: string, defectId: string, 
 export function startResearch(s: GameState, id: string): ActionResult {
   const yf = yearFloat(s.week);
   const def = researchDef(id);
-  if (!def) return fail('Bu teknolojinin araştırılması gerekmiyor.');
+  if (!def) return fail(t('Bu teknolojinin araştırılması gerekmiyor.'));
   ensureResearch(s, yf);
   const r = s.research!;
-  if (r.known.includes(id)) return fail(`${def.name} zaten biliniyor.`);
-  if (def.year > yf) return fail(`${def.name} henüz ortaya çıkmadı (${def.year}).`);
-  if (r.active.some((a) => a.id === id)) return fail(`${def.name} zaten araştırılıyor.`);
+  if (r.known.includes(id)) return fail(t('{name} zaten biliniyor.', { name: t(def.name) }));
+  if (def.year > yf) return fail(t('{name} henüz ortaya çıkmadı ({year}).', { name: t(def.name), year: def.year }));
+  if (r.active.some((a) => a.id === id)) return fail(t('{name} zaten araştırılıyor.', { name: t(def.name) }));
   const missing = missingRequirements(s, id);
-  if (missing.length) return fail(`Önce şunlar bilinmeli: ${missing.map((m) => m.name).join(', ')}.`);
+  if (missing.length) return fail(t('Önce şunlar bilinmeli: {names}.', { names: missing.map((m) => t(m.name)).join(', ') }));
   if (r.active.length >= labSlots(s))
-    return fail('Mühendislerin aynı anda bu kadar konu araştırabiliyor. Daha çok mühendisle daha çok konu yürütülür.');
+    return fail(t('Mühendislerin aynı anda bu kadar konu araştırabiliyor. Daha çok mühendisle daha çok konu yürütülür.'));
   const cost = researchCost(def, yf, s);
-  if (s.company.cash < cost) return fail(`${def.name} araştırması için ${money(cost)} gerekiyor.`);
+  if (s.company.cash < cost) return fail(t('{name} araştırması için {cost} gerekiyor.', { name: t(def.name), cost: money(cost) }));
   beginResearch(s, def, yf);
   r.queue = (r.queue ?? []).filter((x) => x !== id);
   return ok;
@@ -1070,14 +1096,14 @@ export function startResearch(s: GameState, id: string): ActionResult {
 export function queueResearch(s: GameState, id: string): ActionResult {
   const yf = yearFloat(s.week);
   const def = researchDef(id);
-  if (!def) return fail('Bu teknolojinin araştırılması gerekmiyor.');
+  if (!def) return fail(t('Bu teknolojinin araştırılması gerekmiyor.'));
   ensureResearch(s, yf);
   const r = s.research!;
-  if (r.known.includes(id)) return fail(`${def.name} zaten biliniyor.`);
-  if (def.year > yf) return fail(`${def.name} henüz ortaya çıkmadı (${def.year}).`);
-  if (r.active.some((a) => a.id === id)) return fail(`${def.name} zaten araştırılıyor.`);
+  if (r.known.includes(id)) return fail(t('{name} zaten biliniyor.', { name: t(def.name) }));
+  if (def.year > yf) return fail(t('{name} henüz ortaya çıkmadı ({year}).', { name: t(def.name), year: def.year }));
+  if (r.active.some((a) => a.id === id)) return fail(t('{name} zaten araştırılıyor.', { name: t(def.name) }));
   const q = (r.queue ??= []);
-  if (q.includes(id)) return fail(`${def.name} zaten sırada.`);
+  if (q.includes(id)) return fail(t('{name} zaten sırada.', { name: t(def.name) }));
   // Prerequisites first, deepest first.
   const add = (x: string) => {
     const d = researchDef(x);
@@ -1114,7 +1140,8 @@ export function moveResearch(s: GameState, id: string, dir: -1 | 1): ActionResul
   const j = i + dir;
   if (i < 0 || j < 0 || j >= q.length) return ok;
   const [a, b] = dir < 0 ? [q[j], q[i]] : [q[i], q[j]];
-  if ((researchDef(b)?.requires ?? []).includes(a)) return fail(`${researchDef(b)?.name} için önce ${researchDef(a)?.name} gerekir.`);
+  if ((researchDef(b)?.requires ?? []).includes(a))
+    return fail(t('{name} için önce {req} gerekir.', { name: t(researchDef(b)?.name ?? ''), req: t(researchDef(a)?.name ?? '') }));
   [q[i], q[j]] = [q[j], q[i]];
   return ok;
 }

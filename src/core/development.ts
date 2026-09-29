@@ -1,28 +1,31 @@
 import { withTuning } from './testing';
 import type { DevBonus, FocusKey } from './types';
+import { msg } from '../i18n';
 
 export const FOCUS_KEYS: FocusKey[] = ['performance', 'efficiency', 'comfort', 'handling', 'safety', 'practicality', 'cost', 'quality'];
 
+/** Marked with msg(): show with t(). */
 export const FOCUS_NAMES: Record<FocusKey, string> = {
-  performance: 'Performans',
-  efficiency: 'Verim',
-  comfort: 'Konfor',
-  handling: 'Yol tutuş',
-  safety: 'Güvenlik',
-  practicality: 'Pratiklik',
-  cost: 'Maliyet',
-  quality: 'Kalite',
+  performance: msg('Performans'),
+  efficiency: msg('Verim'),
+  comfort: msg('Konfor'),
+  handling: msg('Yol tutuş'),
+  safety: msg('Güvenlik'),
+  practicality: msg('Pratiklik'),
+  cost: msg('Maliyet'),
+  quality: msg('Kalite'),
 };
 
+/** Marked with msg(): show with t(). */
 export const FOCUS_HINTS: Record<FocusKey, string> = {
-  performance: 'Motor gücü ↑, ağırlık ↓',
-  efficiency: 'Yakıt tüketimi ↓',
-  comfort: 'Konfor ↑',
-  handling: 'Yol tutuş ↑ (şasi ve süspansiyon ayarı)',
-  safety: 'Güvenlik ↑',
-  practicality: 'Pratiklik ↑ (iç düzen, bagaj, bakım kolaylığı)',
-  cost: 'Birim maliyet ↓',
-  quality: 'Güvenilirlik ↑, gizli kusur ↓',
+  performance: msg('Motor gücü ↑, ağırlık ↓'),
+  efficiency: msg('Yakıt tüketimi ↓'),
+  comfort: msg('Konfor ↑'),
+  handling: msg('Yol tutuş ↑ (şasi ve süspansiyon ayarı)'),
+  safety: msg('Güvenlik ↑'),
+  practicality: msg('Pratiklik ↑ (iç düzen, bagaj, bakım kolaylığı)'),
+  cost: msg('Birim maliyet ↓'),
+  quality: msg('Güvenilirlik ↑, gizli kusur ↓'),
 };
 
 const b = (r: number) => 1 - Math.exp(-2.2 * Math.max(0, r));
@@ -75,15 +78,15 @@ export function evenFocus(): Record<FocusKey, number> {
   return { performance: e, efficiency: e, comfort: e, handling: e, safety: e, practicality: e, cost: e, quality: e };
 }
 
-/** Ready-made ways to spend the engineers' time, chosen when a project starts (and changeable later). */
+/** Ready-made ways to spend the engineers' time, chosen when a project starts (and changeable later). Name and desc marked with msg(): show with t(). */
 export const FOCUS_PRESETS: { id: string; name: string; desc: string; focus: Partial<Record<FocusKey, number>> }[] = [
-  { id: 'even', name: 'Dengeli', desc: 'Her alana eşit emek.', focus: {} },
-  { id: 'people', name: 'Halk arabası', desc: 'Ucuz, dayanıklı, az yakan: çok satacak bir araba.', focus: { cost: 0.35, quality: 0.25, efficiency: 0.2, practicality: 0.1, comfort: 0.05, safety: 0.05 } },
-  { id: 'family', name: 'Aile arabası', desc: 'Geniş, konforlu, güvenli.', focus: { practicality: 0.25, comfort: 0.2, safety: 0.2, quality: 0.15, efficiency: 0.1, cost: 0.1 } },
-  { id: 'fast', name: 'Hız ve güç', desc: 'Güçlü motor, hafif gövde, iyi yol tutuş.', focus: { performance: 0.45, handling: 0.25, quality: 0.1, safety: 0.1, efficiency: 0.05, comfort: 0.05 } },
-  { id: 'driver', name: 'Sürücü arabası', desc: 'Virajda keyif: yol tutuş ve performans.', focus: { handling: 0.4, performance: 0.3, safety: 0.1, quality: 0.1, comfort: 0.1 } },
-  { id: 'luxury', name: 'Konfor ve prestij', desc: 'Sessiz, rahat, kusursuz işçilik.', focus: { comfort: 0.35, quality: 0.25, safety: 0.15, performance: 0.1, handling: 0.05, practicality: 0.1 } },
-  { id: 'work', name: 'İş aracı', desc: 'Yük taşır, bozulmaz, ucuza çalışır.', focus: { practicality: 0.3, quality: 0.3, cost: 0.25, efficiency: 0.15 } },
+  { id: 'even', name: msg('Dengeli'), desc: msg('Her alana eşit emek.'), focus: {} },
+  { id: 'people', name: msg('Halk arabası'), desc: msg('Ucuz, dayanıklı, az yakan: çok satacak bir araba.'), focus: { cost: 0.35, quality: 0.25, efficiency: 0.2, practicality: 0.1, comfort: 0.05, safety: 0.05 } },
+  { id: 'family', name: msg('Aile arabası'), desc: msg('Geniş, konforlu, güvenli.'), focus: { practicality: 0.25, comfort: 0.2, safety: 0.2, quality: 0.15, efficiency: 0.1, cost: 0.1 } },
+  { id: 'fast', name: msg('Hız ve güç'), desc: msg('Güçlü motor, hafif gövde, iyi yol tutuş.'), focus: { performance: 0.45, handling: 0.25, quality: 0.1, safety: 0.1, efficiency: 0.05, comfort: 0.05 } },
+  { id: 'driver', name: msg('Sürücü arabası'), desc: msg('Virajda keyif: yol tutuş ve performans.'), focus: { handling: 0.4, performance: 0.3, safety: 0.1, quality: 0.1, comfort: 0.1 } },
+  { id: 'luxury', name: msg('Konfor ve prestij'), desc: msg('Sessiz, rahat, kusursuz işçilik.'), focus: { comfort: 0.35, quality: 0.25, safety: 0.15, performance: 0.1, handling: 0.05, practicality: 0.1 } },
+  { id: 'work', name: msg('İş aracı'), desc: msg('Yük taşır, bozulmaz, ucuza çalışır.'), focus: { practicality: 0.3, quality: 0.3, cost: 0.25, efficiency: 0.15 } },
 ];
 
 export function presetFocus(id: string): Record<FocusKey, number> {

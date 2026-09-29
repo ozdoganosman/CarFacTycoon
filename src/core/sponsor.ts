@@ -2,6 +2,7 @@ import { costIndex } from '../data/economy';
 import { yearFloat } from './time';
 import type { GameState } from './types';
 import { decide, log, money } from './util';
+import { t } from '../i18n';
 
 // Money for an advertisement the player chooses to watch (Android app only). In the game a sponsor
 // pays for a mention: it is not turnover (no tax, no board target, no dealer's cut), only cash.
@@ -50,7 +51,7 @@ export function paySponsor(s: GameState, year?: number): number {
   sp.total += amount;
   sp.count++;
   s.company.cash += amount;
-  log(s, `Sponsor desteği: kasaya ${money(amount)} girdi.`, 'good');
+  log(s, t('Sponsor desteği: kasaya {amount} girdi.', { amount: money(amount) }), 'good');
   decide(s, 'sponsor', `Reklam izlendi${year === undefined ? '' : ` (${year} yıl sonu)`}: +${money(amount)}`);
   return amount;
 }

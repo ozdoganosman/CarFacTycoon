@@ -8,6 +8,7 @@ import { rand } from './rng';
 import { yearFloat, yearOf } from './time';
 import type { GameState, NetworkState, SegmentId, StateNet } from './types';
 import { clamp, decide, log, money, spend } from './util';
+import { t } from '../i18n';
 
 // The company across the country, state by state. Cars are only sold where the make has
 // a dealer; the network grows into neighbouring states, one dealer search at a time.
@@ -281,9 +282,9 @@ export const activeSearches = (s: GameState) => Object.values(network(s).states)
 
 export function canSearch(s: GameState, id: StateId): { ok: true } | { ok: false; why: string } {
   const n = peek(s, id);
-  if (n?.search) return { ok: false, why: 'Burada zaten bayi aranıyor.' };
-  if (!isOpen(s, id) && !frontier(s).includes(id)) return { ok: false, why: 'Önce komşu bir eyalette satış yapmalısın: ağ eyalet eyalet büyür.' };
-  if (activeSearches(s) >= maxSearches(s)) return { ok: false, why: `Aynı anda en çok ${maxSearches(s)} eyalette bayi aranabilir.` };
+  if (n?.search) return { ok: false, why: t('Burada zaten bayi aranıyor.') };
+  if (!isOpen(s, id) && !frontier(s).includes(id)) return { ok: false, why: t('Önce komşu bir eyalette satış yapmalısın: ağ eyalet eyalet büyür.') };
+  if (activeSearches(s) >= maxSearches(s)) return { ok: false, why: t('Aynı anda en çok {n} eyalette bayi aranabilir.', { n: maxSearches(s) }) };
   return { ok: true };
 }
 
@@ -317,7 +318,7 @@ export function startDealerSearch(s: GameState, id: StateId): { ok: true } | { o
   if (!c.ok) return { ok: false, error: c.why };
   const yf = yearFloat(s.week);
   const cost = searchCost(s, id, yf);
-  if (s.company.cash < cost) return { ok: false, error: `Bayi aramak ${money(cost)} tutar.` };
+  if (s.company.cash < cost) return { ok: false, error: t('Bayi aramak {cost} tutar.', { cost: money(cost) }) };
   spend(s, cost, 'dealers');
   const n = stateNet(s, id);
   n.search = { until: s.week + searchWeeks(s, id), chance: searchChance(s, id) };
@@ -336,7 +337,7 @@ function dealerName(s: GameState): string {
 
 export function closeDealer(s: GameState, id: StateId): { ok: true } | { ok: false; error: string } {
   const n = peek(s, id);
-  if (!n || n.dealers <= 0) return { ok: false, error: 'Burada kapatılacak bayi yok.' };
+  if (!n || n.dealers <= 0) return { ok: false, error: t('Burada kapatılacak bayi yok.') };
   n.dealers -= 1;
   // A closed showroom is noticed.
   n.awareness *= 0.9;
@@ -345,9 +346,9 @@ export function closeDealer(s: GameState, id: StateId): { ok: true } | { ok: fal
 }
 
 export function openServiceShop(s: GameState, id: StateId): { ok: true } | { ok: false; error: string } {
-  if (!isOpen(s, id)) return { ok: false, error: 'Servis ancak bayisi olan bir eyalette açılabilir.' };
+  if (!isOpen(s, id)) return { ok: false, error: t('Servis ancak bayisi olan bir eyalette açılabilir.') };
   const cost = serviceShopCost(yearFloat(s.week));
-  if (s.company.cash < cost) return { ok: false, error: `Servis atölyesi ${money(cost)} tutar.` };
+  if (s.company.cash < cost) return { ok: false, error: t('Servis atölyesi {cost} tutar.', { cost: money(cost) }) };
   spend(s, cost, 'investment');
   const n = stateNet(s, id);
   n.service += 1;
@@ -357,7 +358,7 @@ export function openServiceShop(s: GameState, id: StateId): { ok: true } | { ok:
 
 export function closeServiceShop(s: GameState, id: StateId): { ok: true } | { ok: false; error: string } {
   const n = peek(s, id);
-  if (!n || n.service <= 0) return { ok: false, error: 'Burada kapatılacak servis yok.' };
+  if (!n || n.service <= 0) return { ok: false, error: t('Burada kapatılacak servis yok.') };
   n.service -= 1;
   decide(s, `service:${id}`, `${stateDef(id).name}: servis atölyesi kapatıldı (${n.service} kaldı)`);
   return { ok: true };
@@ -408,11 +409,11 @@ export function networkWeek(s: GameState) {
           n.openedWeek = s.week;
           n.firstDealer = dealerName(s);
           n.awareness = Math.max(n.awareness, 0.04 + 0.3 * (s.markets.usa?.awareness ?? 0));
-          log(s, `${stateDef(id).name}’da ilk bayin açıldı: ${n.firstDealer}. Arabaların artık orada da satılıyor.`, 'good');
-        } else log(s, `${stateDef(id).name}’da yeni bir bayi sözleşme imzaladı (${n.dealers} bayi).`, 'good');
+          log(s, t('{state}’da ilk bayin açıldı: {dealer}. Arabaların artık orada da satılıyor.', { state: stateDef(id).name, dealer: n.firstDealer }), 'good');
+        } else log(s, t('{state}’da yeni bir bayi sözleşme imzaladı ({n} bayi).', { state: stateDef(id).name, n: n.dealers }), 'good');
       } else {
         n.tries = (n.tries ?? 0) + 1;
-        log(s, `${stateDef(id).name}’da bayi bulunamadı: kimse markanı satmaya yanaşmadı. Yeniden denersen tanıdıkların artar; itibarın yükseldikçe de kolaylaşır.`, 'bad');
+        log(s, t('{state}’da bayi bulunamadı: kimse markanı satmaya yanaşmadı. Yeniden denersen tanıdıkların artar; itibarın yükseldikçe de kolaylaşır.', { state: stateDef(id).name }), 'bad');
       }
     }
     // Cars on the road age, and the old ones go to the scrapyard (sooner where repairs wait).
@@ -467,7 +468,7 @@ export function absorbDealers(s: GameState, count: number, company: string): Sta
     const n = stateNet(s, id);
     if (!isOpen(s, id)) {
       n.openedWeek = s.week;
-      n.firstDealer = `${company} (eski bayi)`;
+      n.firstDealer = t('{company} (eski bayi)', { company });
       n.awareness = Math.max(n.awareness, 0.1);
     }
     n.dealers += 1;

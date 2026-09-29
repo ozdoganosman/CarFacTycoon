@@ -6,6 +6,7 @@ import type { Rng } from './rng';
 import { yearFloat, yearOf } from './time';
 import { computeCarStats } from './vehicle';
 import type { CarDesign, GameState, MarketId, RivalCompany, RivalModel, SegmentId } from './types';
+import { t } from '../i18n';
 
 const STYLE_MARKUP = { mass: 1, utility: 1, premium: 1.22, sport: 1.18 } as const;
 
@@ -172,7 +173,7 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
     if (!active) {
       if (def.closes && yf >= def.closes && ownModels.length && !state.acquired?.includes(def.id)) {
         ownModels.forEach((m) => (m.active = false));
-        news.push({ text: `${def.name} kapılarını kapattı. Pazarında boşluk oluştu.`, tone: 'warn' });
+        news.push({ text: t('{company} kapılarını kapattı. Pazarında boşluk oluştu.', { company: def.name }), tone: 'warn' });
       }
       continue;
     }
@@ -185,7 +186,7 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
         state.flags[key] = week;
         ownModels.filter((m) => m.segment === sp.seg).forEach((m) => (m.active = false));
         const rm = launchRivalModel(state, def, sp.seg, week, rng, { name: sp.name, priceMult: sp.priceMult });
-        news.push({ text: `${def.name} ${rm.name} modelini tanıttı. ${sp.note}`, tone: 'warn' });
+        news.push({ text: t('{company} {model} modelini tanıttı. {note}', { company: def.name, model: rm.name, note: t(sp.note) }), tone: 'warn' });
       }
     }
 
@@ -205,8 +206,9 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
           const launchWeek = initial ? Math.max(0, week - Math.floor(rng() * 52 * 3)) : week;
           const rm = launchRivalModel(state, def, entry.seg, week, rng);
           rm.launchWeek = launchWeek;
-          if (!initial && def.founded < yf - 0.2) news.push({ text: `${def.name} yeni ${segmentDef(entry.seg).name.toLowerCase()} modelini çıkardı: ${rm.name}.`, tone: 'info' });
-          else if (!initial) news.push({ text: `${def.name} kuruldu. İlk modeli: ${rm.name}.`, tone: 'info' });
+          if (!initial && def.founded < yf - 0.2)
+            news.push({ text: t('{company} yeni {segment} modelini çıkardı: {model}.', { company: def.name, segment: t(segmentDef(entry.seg).name).toLowerCase(), model: rm.name }), tone: 'info' });
+          else if (!initial) news.push({ text: t('{company} kuruldu. İlk modeli: {model}.', { company: def.name, model: rm.name }), tone: 'info' });
         }
         continue;
       }
@@ -219,8 +221,11 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
         current.forEach((m) => (m.active = false));
         const rm = launchRivalModel(state, def, entry.seg, week, rng, undefined, Math.round(pressure * 16));
         if (pressure > 0.2 && age < cycleYears(yf))
-          news.push({ text: `${def.name}, ${segmentDef(entry.seg).name.toLowerCase()} pazarında kaybettiği alıcılar için ${rm.name} modelini erkenden çıkardı.`, tone: 'warn' });
-        else news.push({ text: `${def.name}, ${newest.name} modelinin yerine ${rm.name} modelini getirdi.`, tone: 'info' });
+          news.push({
+            text: t('{company}, {segment} pazarında kaybettiği alıcılar için {model} modelini erkenden çıkardı.', { company: def.name, segment: t(segmentDef(entry.seg).name).toLowerCase(), model: rm.name }),
+            tone: 'warn',
+          });
+        else news.push({ text: t('{company}, {old} modelinin yerine {model} modelini getirdi.', { company: def.name, old: newest.name, model: rm.name }), tone: 'info' });
       }
     }
 

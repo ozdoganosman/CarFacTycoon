@@ -17,7 +17,7 @@ import { makeRng, rand, stateRng } from './rng';
 import { updateRivals, initRivals } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
 import { eraReference } from './scoring';
-import { allTech } from './techtree';
+import { allTech, techName } from './techtree';
 import { knownKnowhow, labSpeed, noteResearch, pumpResearchQueue, researchDef, researcherSalary, startingKnowledge } from './research';
 import { checkBoom, publish, techIssue } from './news';
 import { racingWeek } from './racing';
@@ -40,6 +40,8 @@ import { computeCarStats } from './vehicle';
 
 export const COST_KEYS = ['materials', 'labor', 'salaries', 'dealers', 'freight', 'marketing', 'rnd', 'warranty', 'interest', 'other', 'tax', 'investment'] as const;
 import { clamp, earn, financeNow, log, money, pushModal, spend } from './util';
+import { msg, t } from '../i18n';
+import { fmtPercent } from '../i18n/format';
 
 export const SAVE_VERSION = 1;
 export const END_YEAR = 1961;
@@ -64,7 +66,7 @@ export function newGame(opts: NewGameOptions): GameState {
   }
   const knowledge = {} as GameState['knowledge'];
   for (const s of SEGMENTS) knowledge[s.id] = {};
-  const line = emptyLine('L1', 'Atölye');
+  const line = emptyLine('L1', t('Atölye'));
   line.stations = { press: ['press_hand'], body: ['body_coach'], paint: ['paint_brush'], assembly: ['asm_static'] };
   const state: GameState = {
     version: SAVE_VERSION,
@@ -112,7 +114,7 @@ export function newGame(opts: NewGameOptions): GameState {
     errors: [],
   };
   updateRivals(state, makeRng(seed ^ 0x5eed), true);
-  log(state, `${state.company.name} kuruldu. Bol şans!`, 'good');
+  log(state, t('{name} kuruldu. Bol şans!', { name: state.company.name }), 'good');
   // The factory's own state is the whole market at first.
   network(state);
   return state;
@@ -135,9 +137,9 @@ export function idleEngineers(s: GameState): number {
 /** Why engineers are idle, in words (the idle count is idleEngineers). */
 export function idleReason(s: GameState): string {
   if (s.projects.some((p) => p.phase === 'production' || p.phase === 'ready'))
-    return 'proje üretim hazırlığında ya da lansman bekliyor; o aşamada mühendis çalışmaz, geliştirme ya da araştırma da yok';
-  if (s.projects.some((p) => p.phase === 'design')) return 'proje tasarım masasında, geliştirme henüz başlamadı; araştırma da yok';
-  return 'ne geliştirmede bir proje var ne de araştırma';
+    return t('proje üretim hazırlığında ya da lansman bekliyor; o aşamada mühendis çalışmaz, geliştirme ya da araştırma da yok');
+  if (s.projects.some((p) => p.phase === 'design')) return t('proje tasarım masasında, geliştirme henüz başlamadı; araştırma da yok');
+  return t('ne geliştirmede bir proje var ne de araştırma');
 }
 
 export interface ModelMargin {
@@ -265,17 +267,17 @@ export interface FinalScore {
   max: number;
   parts: { label: string; value: string; points: number; max: number }[];
   rank: number;
-  /** Where the total stands on the scale. */
+  /** Where the total stands on the scale: a SCORE_TIERS name, marked with msg() (show it with t()). */
   tier: string;
 }
 
-/** Score tiers from the top down; a good campaign reaches "Büyük üretici", a great one "Sanayi devi". */
+/** Score tiers from the top down; a good campaign reaches "Büyük üretici", a great one "Sanayi devi". Names marked with msg(): show them with t(). */
 export const SCORE_TIERS: { min: number; name: string }[] = [
-  { min: 1400, name: 'Efsane' },
-  { min: 1150, name: 'Sanayi devi' },
-  { min: 900, name: 'Büyük üretici' },
-  { min: 650, name: 'Saygın marka' },
-  { min: 0, name: 'Butik atölye' },
+  { min: 1400, name: msg('Efsane') },
+  { min: 1150, name: msg('Sanayi devi') },
+  { min: 900, name: msg('Büyük üretici') },
+  { min: 650, name: msg('Saygın marka') },
+  { min: 0, name: msg('Butik atölye') },
 ];
 
 /** The end-of-campaign score: sales rank, company value, reputation, best magazine verdict, racing wins. */
@@ -293,12 +295,12 @@ export function finalScore(s: GameState): FinalScore {
   const wins = winYears.filter((y) => y > year - 20).length;
   const parts = [
     // 1st → 400, 2nd → 325, 5th → 225, 10th → 150, 20th → 75, 40th → 0
-    { label: 'Tüm zamanların satış sırası', value: `${rank}.`, points: Math.max(0, Math.round(400 * (1 - Math.log(rank) / Math.log(40)))), max: 400 },
+    { label: t('Tüm zamanların satış sırası'), value: t('{rank}.', { rank }), points: Math.max(0, Math.round(400 * (1 - Math.log(rank) / Math.log(40)))), max: 400 },
     // $1 mn → 300, $1 mr → 450, $10 mr and more → 500
-    { label: s.shares ? `Şirket değeri (senin payın %${Math.round(founderShare(s) * 100)})` : 'Şirket değeri', value: money(value), points: Math.min(500, Math.max(0, Math.round(50 * Math.log10(Math.max(1, value))))), max: 500 },
-    { label: 'İtibar', value: `${Math.round(s.company.reputation)}/100`, points: Math.round(3 * s.company.reputation), max: 300 },
-    { label: recent.length ? 'Son on yılın dergi puanı (ortalama)' : 'Son arabanın dergi puanı (eski)', value: `${review.toFixed(1)}/10`, points: Math.round(30 * review), max: 300 },
-    { label: 'Son yirmi yılın yarış zaferleri', value: String(wins), points: Math.min(200, 25 * wins), max: 200 },
+    { label: s.shares ? t('Şirket değeri (senin payın {share})', { share: fmtPercent(founderShare(s), 0) }) : t('Şirket değeri'), value: money(value), points: Math.min(500, Math.max(0, Math.round(50 * Math.log10(Math.max(1, value))))), max: 500 },
+    { label: t('İtibar'), value: `${Math.round(s.company.reputation)}/100`, points: Math.round(3 * s.company.reputation), max: 300 },
+    { label: recent.length ? t('Son on yılın dergi puanı (ortalama)') : t('Son arabanın dergi puanı (eski)'), value: `${review.toFixed(1)}/10`, points: Math.round(30 * review), max: 300 },
+    { label: t('Son yirmi yılın yarış zaferleri'), value: String(wins), points: Math.min(200, 25 * wins), max: 200 },
   ];
   const total = parts.reduce((a, p) => a + p.points, 0);
   return { total, max: parts.reduce((a, p) => a + p.max, 0), parts, rank, tier: SCORE_TIERS.find((t) => total >= t.min)!.name };
@@ -392,8 +394,8 @@ function announceTech(s: GameState, year: number) {
   for (const t of fresh) s.unlockedTech.push(t.id);
   const toLearn = fresh.filter((t) => researchDef(t.id));
   const free = fresh.filter((t) => !researchDef(t.id));
-  if (free.length) log(s, `Yeni teknolojiler: ${free.map((t) => t.name).join(', ')}`, 'good', 'tech');
-  if (toLearn.length) log(s, `Yeni teknolojiler ortaya çıktı, Ar-Ge’de araştırılabilir: ${toLearn.map((t) => t.name).join(', ')}`, 'good', 'tech');
+  if (free.length) log(s, t('Yeni teknolojiler: {names}', { names: free.map(techName).join(', ') }), 'good', 'tech');
+  if (toLearn.length) log(s, t('Yeni teknolojiler ortaya çıktı, Ar-Ge’de araştırılabilir: {names}', { names: toLearn.map(techName).join(', ') }), 'good', 'tech');
   const issue = techIssue(
     s,
     toLearn.map((t) => researchDef(t.id)!),
@@ -522,7 +524,14 @@ function payCorporateTax(s: GameState, year: number, taxable: number) {
   s.company.taxOwed = tax;
   s.company.taxInstalments = 4;
   payTaxInstalment(s);
-  log(s, `${year} kurumlar vergisi: ${money(tax)} (vergilenen kârın ${pctWith(rate, 'poss', Number.isInteger(Math.round(rate * 1000) / 10) ? 0 : 1)}), dört taksitte ödenecek.${carry > 0 ? ' Önceki yılların zararı düşüldü.' : ''}`, 'info');
+  const bill = { year, tax: money(tax), rate: pctWith(rate, 'poss', Number.isInteger(Math.round(rate * 1000) / 10) ? 0 : 1) };
+  log(
+    s,
+    carry > 0
+      ? t('{year} kurumlar vergisi: {tax} (vergilenen kârın {rate}), dört taksitte ödenecek. Önceki yılların zararı düşüldü.', bill)
+      : t('{year} kurumlar vergisi: {tax} (vergilenen kârın {rate}), dört taksitte ödenecek.', bill),
+    'info',
+  );
 }
 
 /** A quarter of the year's tax bill (called at the new year and every thirteen weeks). */
@@ -554,8 +563,8 @@ function advanceResearch(s: GameState) {
     log(
       s,
       def?.passive
-        ? `Ar-Ge tamamlandı: ${def.name} bundan sonraki bütün tasarımlara kendiliğinden girer.`
-        : `Ar-Ge tamamlandı: ${def?.name ?? a.id} artık tasarımlarda kullanılabilir.`,
+        ? t('Ar-Ge tamamlandı: {name} bundan sonraki bütün tasarımlara kendiliğinden girer.', { name: t(def.name) })
+        : t('Ar-Ge tamamlandı: {name} artık tasarımlarda kullanılabilir.', { name: def ? t(def.name) : a.id }),
       'good',
       'tech',
     );
@@ -578,7 +587,7 @@ function advanceProjects(s: GameState) {
       p.dev.done += add;
       for (const k of Object.keys(p.dev.points) as (keyof typeof p.dev.points)[]) p.dev.points[k] += add * p.dev.focus[k];
       if (before < p.dev.required && p.dev.done >= p.dev.required) {
-        log(s, `${p.name}: geliştirme tamamlandı. İstersen biraz daha cilala ya da teste geç.`, 'good');
+        log(s, t('{name}: geliştirme tamamlandı. İstersen biraz daha cilala ya da teste geç.', { name: p.name }), 'good');
         pushModal(s, { kind: 'phase', projectId: p.id, phase: 'development' });
       }
     } else if (p.phase === 'testing') {
@@ -607,12 +616,12 @@ function advanceProjects(s: GameState) {
       }
       const allDone = TESTS.every((t) => p.tests[t.id].done >= p.tests[t.id].planned);
       if (running && allDone) {
-        log(s, `${p.name}: test programı bitti.`, 'good');
+        log(s, t('{name}: test programı bitti.', { name: p.name }), 'good');
         pushModal(s, { kind: 'phase', projectId: p.id, phase: 'testing' });
       }
     } else if (p.phase === 'production' && p.productionReadyWeek !== undefined && s.week >= p.productionReadyWeek) {
       p.phase = 'ready';
-      log(s, `${p.name}: üretim hattı hazır. Lansman zamanı!`, 'good');
+      log(s, t('{name}: üretim hattı hazır. Lansman zamanı!', { name: p.name }), 'good');
       pushModal(s, { kind: 'phase', projectId: p.id, phase: 'production' });
     }
   }
@@ -785,7 +794,7 @@ function field(s: GameState) {
         spend(s, legal, 'warranty');
         s.company.reputation = Math.max(0, s.company.reputation - 15);
         model.perceivedReliability -= 10;
-        log(s, `SKANDAL: ${model.name}’deki bilinen kusuru gizlediğin ortaya çıktı. Davalar ve zorunlu geri çağırma: ${money(legal)}. İtibar −15.`, 'bad');
+        log(s, t('SKANDAL: {name}’deki bilinen kusuru gizlediğin ortaya çıktı. Davalar ve zorunlu geri çağırma: {cost}. İtibar −15.', { name: model.name, cost: money(legal) }), 'bad');
       }
     }
   }
@@ -849,11 +858,11 @@ function checkSolvency(s: GameState) {
   s.company.negativeWeeks += 1;
   // Both warnings stop the clock: at 3x speed twelve weeks pass in seconds.
   if (s.company.negativeWeeks === 1) {
-    log(s, 'Kasa eksiye düştü! 12 hafta içinde toparlanmazsan şirket iflas eder. Banka kredisi alabilir, masrafları kısabilirsin.', 'bad');
+    log(s, t('Kasa eksiye düştü! 12 hafta içinde toparlanmazsan şirket iflas eder. Banka kredisi alabilir, masrafları kısabilirsin.'), 'bad');
     pushModal(s, { kind: 'insolvency', stage: 'first' });
   }
   if (s.company.negativeWeeks === 8) {
-    log(s, `Son uyarı: ${cashReport(s).weeksLeft} hafta içinde kasa artıya geçmezse iflas!`, 'bad');
+    log(s, t('Son uyarı: {n} hafta içinde kasa artıya geçmezse iflas!', { n: cashReport(s).weeksLeft }), 'bad');
     pushModal(s, { kind: 'insolvency', stage: 'last' });
   }
   if (s.company.negativeWeeks > 12) {

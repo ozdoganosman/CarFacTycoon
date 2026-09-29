@@ -4,6 +4,7 @@ import { ASPIRATIONS, CHASSIS, CYLINDER_OPTIONS, FEATURES, FUEL_SYSTEMS, GEARBOX
 import { DIESEL_YEAR, boreStrokeFor, displacementCc } from './engine';
 import type { CarDesign, GameState } from './types';
 import { decide, log, money, pushModal, spend } from './util';
+import { lang, msg, t } from '../i18n';
 
 // Research: a technology that has appeared in the world still has to be
 // learned before a company can build it. Being first is expensive and slow
@@ -12,9 +13,12 @@ import { decide, log, money, pushModal, spend } from './util';
 
 export interface ResearchDef {
   id: string;
+  /** Marked with msg(): show it with t(). */
   name: string;
+  /** Kept in Turkish (a key; compared); marked with msg(): show it with t(). */
   category: 'Motor' | 'Şanzıman' | 'Şasi ve süspansiyon' | 'Güvenlik' | 'Donanım';
   year: number;
+  /** Marked with msg(): show it with t(). */
   desc: string;
   /** Mature price in 1900 dollars, before researchScale. */
   cost: number;
@@ -24,7 +28,7 @@ export interface ResearchDef {
   requires: string[];
   /** Know-how goes into every new design by itself; the rest are options in the designer. */
   passive: boolean;
-  /** What it does to a car, in a few words. */
+  /** What it does to a car, in a few words (already in the player's language). */
   effects?: string;
 }
 
@@ -91,30 +95,32 @@ const COST: Record<string, [number, number]> = {
 };
 
 let cache: ResearchDef[] | null = null;
+/** The language the cached effects are written in. */
+let cacheLang = '';
 
 /** Everything that has to be researched before it can go into a design. */
 export function researchDefs(): ResearchDef[] {
-  if (cache) return cache;
+  if (cache && cacheLang === lang()) return cache;
   const out: ResearchDef[] = [];
   const add = (id: string, name: string, category: ResearchDef['category'], year: number, desc: string, extra: Partial<ResearchDef> = {}) => {
     const c = COST[id];
     if (c && year > 1900)
       out.push({ id, name, category, year, desc, cost: c[0], weeks: c[1], passive: false, ...extra, requires: [...(REQUIRES[id] ?? []), ...(extra.requires ?? [])] });
   };
-  CYLINDER_OPTIONS.forEach((x) => add(`cyl:${x.cylinders}${x.layout}`, x.label, 'Motor', x.year, x.desc));
-  VALVETRAINS.forEach((x) => add(`vt:${x.id}`, x.name, 'Motor', x.year, x.desc));
-  FUEL_SYSTEMS.forEach((x) => add(`fuel:${x.id}`, x.name, 'Motor', x.year, x.desc));
-  add('fuel:diesel', 'Dizel motor', 'Motor', DIESEL_YEAR, 'Yakıtı sıkıştırmanın ısısı tutuşturur: çok az yakar, uzun ömürlüdür; ağır, gürültülü ve pahalıdır.');
-  ASPIRATIONS.forEach((x) => add(`asp:${x.id}`, x.name, 'Motor', x.year, x.desc));
-  GEARBOX_TYPES.forEach((x) => add(`gb:${x.id}`, x.name, 'Şanzıman', x.year, x.desc));
-  add('gears:4', '4 ileri vites', 'Şanzıman', 1925, 'Vitesler birbirine yaklaşır; motor güçlü olduğu devirde kalır.');
-  add('gears:5', '5 ileri vites', 'Şanzıman', 1955, 'Uzun bir son vitesle yolda az yakar, kısa ilk vitesle çevik kalkar.');
-  CHASSIS.forEach((x) => add(`chassis:${x.id}`, x.name, 'Şasi ve süspansiyon', x.year, x.desc));
-  SUSPENSIONS.forEach((x) => add(`susp:${x.id}`, x.name, 'Şasi ve süspansiyon', x.year, x.desc));
+  CYLINDER_OPTIONS.forEach((x) => add(`cyl:${x.cylinders}${x.layout}`, x.label, msg('Motor'), x.year, x.desc));
+  VALVETRAINS.forEach((x) => add(`vt:${x.id}`, x.name, msg('Motor'), x.year, x.desc));
+  FUEL_SYSTEMS.forEach((x) => add(`fuel:${x.id}`, x.name, msg('Motor'), x.year, x.desc));
+  add('fuel:diesel', msg('Dizel motor'), msg('Motor'), DIESEL_YEAR, msg('Yakıtı sıkıştırmanın ısısı tutuşturur: çok az yakar, uzun ömürlüdür; ağır, gürültülü ve pahalıdır.'));
+  ASPIRATIONS.forEach((x) => add(`asp:${x.id}`, x.name, msg('Motor'), x.year, x.desc));
+  GEARBOX_TYPES.forEach((x) => add(`gb:${x.id}`, x.name, msg('Şanzıman'), x.year, x.desc));
+  add('gears:4', msg('4 ileri vites'), msg('Şanzıman'), 1925, msg('Vitesler birbirine yaklaşır; motor güçlü olduğu devirde kalır.'));
+  add('gears:5', msg('5 ileri vites'), msg('Şanzıman'), 1955, msg('Uzun bir son vitesle yolda az yakar, kısa ilk vitesle çevik kalkar.'));
+  CHASSIS.forEach((x) => add(`chassis:${x.id}`, x.name, msg('Şasi ve süspansiyon'), x.year, x.desc));
+  SUSPENSIONS.forEach((x) => add(`susp:${x.id}`, x.name, msg('Şasi ve süspansiyon'), x.year, x.desc));
   FEATURES.forEach((x) =>
-    add(`feat:${x.id}`, x.name, x.group === 'safety' ? 'Güvenlik' : 'Donanım', x.year, x.desc, {
+    add(`feat:${x.id}`, x.name, x.group === 'safety' ? msg('Güvenlik') : msg('Donanım'), x.year, x.desc, {
       requires: (x.requires ?? []).map((r) => `feat:${r}`),
-      effects: [effectsText({ comfort: x.comfort, handling: x.handling, safety: x.safety, reliability: x.reliability, practicality: x.practicality, prestige: x.prestige }), `araç başına ~$${x.cost}`]
+      effects: [effectsText({ comfort: x.comfort, handling: x.handling, safety: x.safety, reliability: x.reliability, practicality: x.practicality, prestige: x.prestige }), t('araç başına ~{cost}', { cost: `$${x.cost}` })]
         .filter(Boolean)
         .join(', '),
     }),
@@ -123,6 +129,7 @@ export function researchDefs(): ResearchDef[] {
     out.push({ id: k.id, name: k.name, category: k.area, year: k.year, desc: k.desc, cost: k.cost, weeks: k.weeks, requires: k.requires ?? [], passive: true, effects: effectsText(k.effects) });
   }
   cache = out;
+  cacheLang = lang();
   return out;
 }
 
@@ -218,7 +225,7 @@ export function beginResearch(s: GameState, def: ResearchDef, yf: number): { cos
   spend(s, cost, 'rnd');
   const weeks = researchWeeks(def, yf, s.company.engineers, s.company.researchers ?? 0);
   s.research!.active.push({ id: def.id, weeksLeft: weeks, weeks, speed: labSpeed(s) });
-  log(s, `Ar-Ge: ${def.name} araştırması başladı (${money(cost)}, ${weeks} hafta).`, 'info', 'tech');
+  log(s, t('Ar-Ge: {name} araştırması başladı ({cost}, {n} hafta).', { name: t(def.name), cost: money(cost), n: weeks }), 'info', 'tech');
   decide(s, 'research:' + def.id, `Ar-Ge: ${def.name} (${def.year}) ${money(cost)}, ${weeks} hafta`);
   return { cost, weeks };
 }
@@ -296,11 +303,14 @@ export function designTech(d: CarDesign): string[] {
   return out;
 }
 
-/** Names of the technologies in a design the company has not researched yet. */
+/** Names of the technologies in a design the company has not researched yet (in the player's language). */
 export function unknownTech(s: GameState, d: CarDesign): string[] {
   return designTech(d)
     .filter((id) => !isKnown(s, id))
-    .map((id) => researchDef(id)?.name ?? id);
+    .map((id) => {
+      const def = researchDef(id);
+      return def ? t(def.name) : id;
+    });
 }
 
 /** Most forward gears the company can build this year. */

@@ -4,6 +4,7 @@ import { ensureRivals } from './rivals';
 import { ensureResearch } from './research';
 import { yearFloat } from './time';
 import type { GameState } from './types';
+import { t } from '../i18n';
 
 const KEY = 'carfactycoon.save.v1';
 
@@ -13,8 +14,8 @@ export function serialize(state: GameState): string {
 
 export function deserialize(json: string): GameState {
   const s = JSON.parse(json) as GameState;
-  if (!s || typeof s !== 'object' || typeof s.week !== 'number' || !s.company) throw new Error('Geçersiz kayıt dosyası');
-  if (s.version !== SAVE_VERSION) throw new Error('Bu kayıt oyunun farklı bir sürümüne ait');
+  if (!s || typeof s !== 'object' || typeof s.week !== 'number' || !s.company) throw new Error(t('Geçersiz kayıt dosyası'));
+  if (s.version !== SAVE_VERSION) throw new Error(t('Bu kayıt oyunun farklı bir sürümüne ait'));
   migrate(s);
   return s;
 }
