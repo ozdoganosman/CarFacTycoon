@@ -105,6 +105,16 @@ export function template(src: string, params?: Params): string {
 /** Marks a literal for translation where it is written (a table); show it later with t(value). */
 export const msg = <T extends string>(src: T): T => src;
 
+/**
+ * A name set inside a sentence in lower case ("aile arabası", "family car"). German keeps the
+ * capital its nouns always have; Turkish lower-cases exactly as the game always did.
+ */
+export function lower(s: string): string {
+  if (current.id === 'de' || current.id === 'qps') return s;
+  if (current.id === 'tr') return s.toLowerCase();
+  return s.toLocaleLowerCase(current.locale);
+}
+
 /** A list read naturally in the language: "a, b ve c" / "a, b and c". */
 export function list(items: string[]): string {
   if (items.length < 2) return items.join('');

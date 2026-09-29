@@ -21,7 +21,7 @@ import { StatsPanel } from '../components/StatsPanel';
 import { CarSVG } from '../viz/CarSVG';
 import { LineChart } from '../viz/LineChart';
 import { weeklySold } from './HQ';
-import { t } from '../../i18n';
+import { lower, t } from '../../i18n';
 import { tx } from '../i18n';
 
 export function ModelView({ modelId }: { modelId: string }) {
@@ -295,8 +295,8 @@ export function ModelView({ modelId }: { modelId: string }) {
                       <Badge tone={d.fixed ? 'good' : d.ignored ? 'bad' : 'warn'}>{d.fixed ? t('Giderildi') : d.ignored ? t('Gizlendi') : t('Açık')}</Badge>{' '}
                       {t('{severity} {area} kusuru: {defect}', {
                         severity: t(SEVERITY_NAMES[d.severity]),
-                        area: t(AREA_NAMES[d.area]).toLowerCase(),
-                        defect: defectText(d).toLowerCase(),
+                        area: lower(t(AREA_NAMES[d.area])),
+                        defect: lower(defectText(d)),
                       })}
                     </li>
                   ))}

@@ -6,7 +6,8 @@ import { FIRSTS, acceptBid, canDilute, greenmailCost, lastMove, matchPriceWar, r
 import { dilute, grantSeat, greenmail, marketCap } from '../core/shares';
 import { rivalDef } from '../core/rivals';
 import type { GameState } from '../core/types';
-import { msg, t } from '../i18n';
+import { isTurkish, lower, msg, t } from '../i18n';
+import { fmtPercent } from '../i18n/format';
 
 // Historical events. Market sizes already follow history (see markets.ts);
 // events explain what is happening and offer the player decisions.
@@ -307,9 +308,9 @@ const moveName = (s: GameState) => {
 };
 const moveClass = (s: GameState) => {
   const seg = lastMove(s)?.segment;
-  return seg ? t(segmentDef(seg).name).toLowerCase() : '';
+  return seg ? lower(t(segmentDef(seg).name)) : '';
 };
-const pctTxt = (v: number) => `${v >= 0 ? '+' : '−'}%${Math.abs(Math.round(v * 1000) / 10)}`;
+const pctTxt = (v: number) => `${v >= 0 ? '+' : '−'}${isTurkish() ? `%${Math.abs(Math.round(v * 1000) / 10)}` : fmtPercent(Math.abs(Math.round(v * 1000) / 1000), Math.abs(v * 1000) % 10 ? 1 : 0)}`;
 const targetsText = (s: GameState) => {
   const target = s.shares?.target;
   return target

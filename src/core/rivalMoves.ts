@@ -9,7 +9,7 @@ import { GREENMAIL_PREMIUM, MAX_FLOAT, marketCap } from './shares';
 import { yearFloat, yearOf } from './time';
 import type { CarDesign, GameState, RivalMove, RivalMoveKind, RivalMovesState, SegmentId } from './types';
 import { log, money, pushModal } from './util';
-import { msg, t } from '../i18n';
+import { lower, msg, t } from '../i18n';
 import { fmtPercent } from '../i18n/format';
 
 // The big makers leave a small newcomer alone. Once the player gets ahead of them
@@ -114,7 +114,7 @@ export function startPriceWar(s: GameState, company: string, seg: SegmentId) {
     s,
     t('{company}, {segment} sınıfında fiyatlarını {pct} indirdi: fiyat savaşı başladı.', {
       company: rivalDef(company).name,
-      segment: t(segmentDef(seg).name).toLowerCase(),
+      segment: lower(t(segmentDef(seg).name)),
       pct: fmtPercent(1 - PRICE_WAR_CUT, 0),
     }),
     'warn',
@@ -147,7 +147,7 @@ export function techLeap(s: GameState, seg: SegmentId, rng: Rng): boolean {
   s.rivalModels.filter((m) => m.companyId === def.id && m.segment === seg && m.active).forEach((m) => (m.active = false));
   const rm = launchRivalModel(s, def, seg, s.week, rng, undefined, TECH_LEAP_BONUS, first ? FIRSTS[first].apply : undefined);
   record(s, { kind: 'techLeap', company: def.id, segment: seg, model: rm.name, first });
-  const segment = t(segmentDef(seg).name).toLowerCase();
+  const segment = lower(t(segmentDef(seg).name));
   log(
     s,
     first

@@ -6,11 +6,11 @@ import { MARKETS } from '../../data/markets';
 import { segmentDef } from '../../data/segments';
 import { SCORE_TIERS, cashReport, companyValue, finalScore, idleEngineers, idleReason, modelMargins, rescueLoan, type CashReport } from '../../core/game';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
-import { allTech } from '../../core/techtree';
+import { allTech, techName } from '../../core/techtree';
 import { yearOf as yearOfWeek } from '../../core/time';
 import { isBlockingModal } from '../../core/util';
 import type { GameState, ModalItem } from '../../core/types';
-import { isTurkish, t } from '../../i18n';
+import { isTurkish, lower, t } from '../../i18n';
 import { fmtNumber } from '../../i18n/format';
 import { store, useGameState } from '../store';
 import { useBackClose } from '../back';
@@ -159,9 +159,9 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
           <p>
             {tx('Sahadaki {name} araçlarında <b>{area}</b> kaynaklı {severity} bir kusur ortaya çıktı: <b>{defect}</b>. Yola çıkmış {count} araç etkileniyor.', {
               name: model.name,
-              area: t(AREA_NAMES[d.area]).toLowerCase(),
-              severity: t(SEVERITY_NAMES[d.severity]).toLowerCase(),
-              defect: defectText(d).toLowerCase(),
+              area: lower(t(AREA_NAMES[d.area])),
+              severity: lower(t(SEVERITY_NAMES[d.severity])),
+              defect: lower(defectText(d)),
               count: num(model.unitsSold),
             })}
           </p>
@@ -305,7 +305,7 @@ function CashFacts({ r, s }: { r: CashReport; s: GameState }) {
               costs: r.costs.slice(0, 3).map((c, i) => (
                 <span key={c.key}>
                   {i > 0 && ', '}
-                  {t(COST_NAMES[c.key]).toLowerCase()} <b>{money(c.amount)}</b>
+                  {lower(t(COST_NAMES[c.key]))} <b>{money(c.amount)}</b>
                   {r.revenue > 0 && <span className="muted"> ({pct(c.amount / r.revenue, 0)})</span>}
                 </span>
               )),
@@ -774,7 +774,7 @@ export function YearReportBody({ s, year }: { s: GameState; year: number }) {
     {fresh.length > 0 && (
       <>
         <h4>{t('{year} yılında gelen yenilikler', { year: year + 1 })}</h4>
-        <p className="muted">{fresh.map((tech) => t(tech.name)).join(', ')}</p>
+        <p className="muted">{fresh.map((tech) => techName(tech)).join(', ')}</p>
       </>
     )}
     </>

@@ -6,7 +6,7 @@ import type { Rng } from './rng';
 import { yearFloat, yearOf } from './time';
 import { computeCarStats } from './vehicle';
 import type { CarDesign, GameState, MarketId, RivalCompany, RivalModel, SegmentId } from './types';
-import { t } from '../i18n';
+import { lower, t } from '../i18n';
 
 const STYLE_MARKUP = { mass: 1, utility: 1, premium: 1.22, sport: 1.18 } as const;
 
@@ -207,7 +207,7 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
           const rm = launchRivalModel(state, def, entry.seg, week, rng);
           rm.launchWeek = launchWeek;
           if (!initial && def.founded < yf - 0.2)
-            news.push({ text: t('{company} yeni {segment} modelini çıkardı: {model}.', { company: def.name, segment: t(segmentDef(entry.seg).name).toLowerCase(), model: rm.name }), tone: 'info' });
+            news.push({ text: t('{company} yeni {segment} modelini çıkardı: {model}.', { company: def.name, segment: lower(t(segmentDef(entry.seg).name)), model: rm.name }), tone: 'info' });
           else if (!initial) news.push({ text: t('{company} kuruldu. İlk modeli: {model}.', { company: def.name, model: rm.name }), tone: 'info' });
         }
         continue;
@@ -222,7 +222,7 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
         const rm = launchRivalModel(state, def, entry.seg, week, rng, undefined, Math.round(pressure * 16));
         if (pressure > 0.2 && age < cycleYears(yf))
           news.push({
-            text: t('{company}, {segment} pazarında kaybettiği alıcılar için {model} modelini erkenden çıkardı.', { company: def.name, segment: t(segmentDef(entry.seg).name).toLowerCase(), model: rm.name }),
+            text: t('{company}, {segment} pazarında kaybettiği alıcılar için {model} modelini erkenden çıkardı.', { company: def.name, segment: lower(t(segmentDef(entry.seg).name)), model: rm.name }),
             tone: 'warn',
           });
         else news.push({ text: t('{company}, {old} modelinin yerine {model} modelini getirdi.', { company: def.name, old: newest.name, model: rm.name }), tone: 'info' });

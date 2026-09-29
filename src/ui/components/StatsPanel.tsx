@@ -6,7 +6,7 @@ import { ATTRS, ATTR_NAMES, importanceLabel, segmentDef } from '../../data/segme
 import { computeCarStats } from '../../core/vehicle';
 import { estimateRange, factRange, isRough, rawRange } from '../../core/estimate';
 import type { AttrKey, CarDesign, CarStats, DevBonus, Estimate, GameState, Scores, SegmentId } from '../../core/types';
-import { isTurkish, t } from '../../i18n';
+import { isTurkish, lower, t } from '../../i18n';
 import { fmtNumber } from '../../i18n/format';
 import { kmh, litres, money, secs } from '../format';
 import { tx } from '../i18n';
@@ -63,7 +63,7 @@ export function Importance({ s, segment, attr }: { s: GameState; segment: Segmen
   const k = s.knowledge[segment][attr] ?? 0;
   if (k === 0) return <span className="imp imp-unknown" title={t('Bu alıcıların buna ne kadar önem verdiğini henüz bilmiyorsun')}>?</span>;
   const { label, level } = importanceLabel(segmentDef(segment).weights[attr]);
-  if (k === 1) return <span className="imp imp-hint" title={t('İpucu: {level} olabilir (daha fazla geri bildirim gerek)', { level: t(label).toLowerCase() })}>{'●'.repeat(Math.max(1, level))}?</span>;
+  if (k === 1) return <span className="imp imp-hint" title={t('İpucu: {level} olabilir (daha fazla geri bildirim gerek)', { level: lower(t(label)) })}>{'●'.repeat(Math.max(1, level))}?</span>;
   return (
     <span className="imp" title={t('Önem: {level}', { level: t(label) })}>
       {'●'.repeat(level)}
@@ -107,7 +107,7 @@ export function StatsPanel(props: {
             <b className="sp-estimate-title">{t('Mühendis tahmini')}</b>
             <div className="muted small">
               {t('Alıcıların {segment} için ne diyeceği lansmanda belli olur. Aralıklar sınıf ortalamasına (çizgi) göre; testler aralıkları daraltır.', {
-                segment: t(segmentDef(segment).name).toLowerCase(),
+                segment: lower(t(segmentDef(segment).name)),
               })}
             </div>
             {(est.experience ?? 1) > 1.5 && (
@@ -206,12 +206,12 @@ function ClassGaps({ est, scores }: { est: Estimate; scores: Record<AttrKey, num
     <div className="class-gaps small">
       {behind.length > 0 && (
         <div className="tone-warn">
-          {tx('Mühendislere göre sınıf ortalamasının gerisinde kalabilir: <b>{attrs}</b>.', { attrs: behind.map((k) => t(ATTR_NAMES[k]).toLowerCase()).join(', ') })}
+          {tx('Mühendislere göre sınıf ortalamasının gerisinde kalabilir: <b>{attrs}</b>.', { attrs: behind.map((k) => lower(t(ATTR_NAMES[k]))).join(', ') })}
         </div>
       )}
       {ahead.length > 0 && (
         <div className="tone-good">
-          {tx('Mühendislere göre sınıf ortalamasının önünde: <b>{attrs}</b>.', { attrs: ahead.map((k) => t(ATTR_NAMES[k]).toLowerCase()).join(', ') })}
+          {tx('Mühendislere göre sınıf ortalamasının önünde: <b>{attrs}</b>.', { attrs: ahead.map((k) => lower(t(ATTR_NAMES[k]))).join(', ') })}
         </div>
       )}
     </div>

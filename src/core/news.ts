@@ -10,7 +10,7 @@ import type { AttrKey, CarModel, GameState, MarketId, NewsIssue, NewsStoryData }
 import { money, pushModal } from './util';
 import { pctWith } from './turkish';
 import { fmtNumber, fmtPercent } from '../i18n/format';
-import { isTurkish, msg, t } from '../i18n';
+import { isTurkish, lower, msg, t } from '../i18n';
 
 // Front pages: the day new technology appears in the world, and the day one of
 // the player's cars takes off. Issues are kept for the archive and shown as a
@@ -106,8 +106,8 @@ export function techIssue(s: GameState, fresh: ResearchDef[], year: number): New
       caption: t('{tech}. Ar-Ge bölümünüz bu yenilik üzerinde çalışabilir.', { tech }),
       paragraphs: [
         lead.passive
-          ? t('Mühendislerin görüşüne göre {tech} bir kez öğrenildiğinde bütün yeni otomobillere uygulanabilecek.', { tech: tech.toLowerCase() })
-          : t('Uzmanlar {tech} için ilk yıllarda yüksek maliyet ve çıraklık sancıları bekliyor; yaygınlaştıkça ucuzlayacağı tahmin ediliyor.', { tech: tech.toLowerCase() }),
+          ? t('Mühendislerin görüşüne göre {tech} bir kez öğrenildiğinde bütün yeni otomobillere uygulanabilecek.', { tech: lower(tech) })
+          : t('Uzmanlar {tech} için ilk yıllarda yüksek maliyet ve çıraklık sancıları bekliyor; yaygınlaştıkça ucuzlayacağı tahmin ediliyor.', { tech: lower(tech) }),
         lead.effects ? t('Beklenen etkisi: {effects}.', { effects: lead.effects }) : '',
       ].filter(Boolean),
     },
@@ -157,7 +157,7 @@ export function boomIssue(s: GameState, m: CarModel, reason: { kind: 'units'; un
   const seg = segmentDef(m.segment);
   const st = standing(s, m);
   const marketName = t(MARKETS.find((x) => x.id === st.market)?.name ?? st.market);
-  const segment = t(seg.name).toLowerCase();
+  const segment = lower(t(seg.name));
   const company = s.company.name;
   const model = m.name;
   const { scores } = modelScores(s, m);
@@ -185,7 +185,7 @@ export function boomIssue(s: GameState, m: CarModel, reason: { kind: 'units'; un
       { company, model, market: marketName, segment, n: st.of, rank: st.rank, share: pctWith(st.share, 'possAcc', 1), sold: fmt(m.unitsSold) },
     ),
     t('Bayiler müşterilerin en çok {attrs} konusundaki üstünlüğünü övdüğünü anlatıyor. Otomobil dergilerinin ortalama notu {score}.', {
-      attrs: best.map((k) => t(ATTR_NAMES[k]).toLowerCase()).join(', '),
+      attrs: best.map((k) => lower(t(ATTR_NAMES[k]))).join(', '),
       score: dec(m.reviewScore),
     }),
     cap > 0

@@ -24,7 +24,7 @@ import {
 import { formatDate, yearFloat, yearOf } from '../../core/time';
 import type { GameState, RivalMove } from '../../core/types';
 import { segmentDef } from '../../data/segments';
-import { isTurkish, t } from '../../i18n';
+import { isTurkish, lower, t } from '../../i18n';
 import { fmtNumber } from '../../i18n/format';
 import { store } from '../store';
 import { money, pct } from '../format';
@@ -236,7 +236,7 @@ export function SharesPanel({ s }: { s: GameState }) {
 
 function moveText(m: RivalMove): string {
   const name = rivalDef(m.company).name;
-  const seg = m.segment ? t(segmentDef(m.segment).name).toLowerCase() : '';
+  const seg = m.segment ? lower(t(segmentDef(m.segment).name)) : '';
   switch (m.kind) {
     case 'priceWar':
       return t('{name}, {seg} sınıfında fiyatlarını %15 indirdi.', { name, seg });
@@ -281,7 +281,7 @@ export function RivalMovesPanel({ s }: { s: GameState }) {
         {led.length > 0 ? (
           <>
             {' '}
-            · {tx('Önde olduğun sınıflar: <b>{segs}</b>. Rakipler bunu fark etti.', { segs: led.map((x) => t(segmentDef(x).name).toLowerCase()).join(', ') })}
+            · {tx('Önde olduğun sınıflar: <b>{segs}</b>. Rakipler bunu fark etti.', { segs: led.map((x) => lower(t(segmentDef(x).name))).join(', ') })}
           </>
         ) : wars.length || (moves[0] && s.week - moves[0].week < 52) ? (
           <span className="muted"> · {t('Şu an hiçbir sınıfta önde değilsin, ama rakiplerin son hamleleri sürüyor.')}</span>
@@ -292,7 +292,7 @@ export function RivalMovesPanel({ s }: { s: GameState }) {
       {wars.length > 0 && (
         <p className="note small">
           {t('Süren fiyat savaşı: {wars}, bitişi {date}.', {
-            wars: [...new Set(wars.map((w) => `${rivalDef(w.companyId).name} (${t(segmentDef(w.segment).name).toLowerCase()})`))].join(', '),
+            wars: [...new Set(wars.map((w) => `${rivalDef(w.companyId).name} (${lower(t(segmentDef(w.segment).name))})`))].join(', '),
             date: formatDate(Math.max(...wars.map((w) => w.priceCut!.until))),
           })}
         </p>

@@ -15,7 +15,7 @@ import { Badge, Button, NumberInput, Panel, Table } from '../components/ui';
 import { Importance } from '../components/StatsPanel';
 import { LineChart } from '../viz/LineChart';
 import { UsMap, type MapMarker, type MapTone, type UsMapProps } from '../viz/UsMap';
-import { t, msg } from '../../i18n';
+import { lower, msg, t } from '../../i18n';
 
 export function Markets() {
   return (
@@ -394,7 +394,7 @@ function MarketPanel() {
         <p className="small">
           {t('Alıcıların zevki: {tastes}', {
             tastes: Object.entries(taste)
-              .map(([k, v]) => `${t(ATTR_NAMES[k as keyof typeof ATTR_NAMES]).toLowerCase()} ${v! > 1 ? '↑' : '↓'}`)
+              .map(([k, v]) => `${lower(t(ATTR_NAMES[k as keyof typeof ATTR_NAMES]))} ${v! > 1 ? '↑' : '↓'}`)
               .join(', '),
           })}
         </p>

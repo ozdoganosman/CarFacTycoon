@@ -6,7 +6,7 @@ import { PRICE_REMARK, modelScores, playerOffer } from './market';
 import { makeRng, pick, type Rng } from './rng';
 import { defectText } from './testing';
 import type { AttrKey, CarModel, GameState, MarketId, NewsLetter, SegmentId } from './types';
-import { msg, t } from '../i18n';
+import { lower, msg, t } from '../i18n';
 
 // Letters from owners: a name, a town, a trade and a few lines about the car.
 // What they write comes from the car itself (its strong and weak points
@@ -149,7 +149,7 @@ export function customerLetters(s: GameState, m: CarModel, count = 3, rng: Rng =
     }
     if (surfaced.length && rng() < 0.5) {
       const d = pick(rng, surfaced);
-      parts.push(t('Bir derdim var: {defect}. Bayi “biliyoruz” deyip geçiştirdi.', { defect: defectText(d).toLowerCase() }));
+      parts.push(t('Bir derdim var: {defect}. Bayi “biliyoruz” deyip geçiştirdi.', { defect: lower(defectText(d)) }));
       score -= 1;
     }
     if (offer.priceTerm > PRICE_REMARK && rng() < 0.6) {

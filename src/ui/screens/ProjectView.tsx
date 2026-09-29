@@ -12,7 +12,7 @@ import { ATTRS, ATTR_NAMES, segmentDef } from '../../data/segments';
 import { STAGES } from '../../data/stations';
 import { TOOLING, toolingDef } from '../../data/tooling';
 import type { ComponentKey, GameState, MarketId, Project, ProjectPhase, StageId, TestId, ToolingTier } from '../../core/types';
-import { isTurkish, msg, t } from '../../i18n';
+import { isTurkish, lower, msg, t } from '../../i18n';
 import { fmtNumber } from '../../i18n/format';
 import { store, useGameState } from '../store';
 import { money, num, pct as percent, pctOf, recentProfit } from '../format';
@@ -595,7 +595,7 @@ function Production({ p }: { p: Project }) {
           options={TOOLING.map((x) => {
             const q = quoteFor(x.id);
             const eff = Object.entries(x.scores)
-              .map(([k, v]) => `${t(ATTR_NAMES[k as keyof typeof ATTR_NAMES]).toLowerCase()} ${v > 0 ? '+' : '−'}${Math.abs(v)}`)
+              .map(([k, v]) => `${lower(t(ATTR_NAMES[k as keyof typeof ATTR_NAMES]))} ${v > 0 ? '+' : '−'}${Math.abs(v)}`)
               .join(', ');
             return {
               value: x.id,

@@ -2,7 +2,7 @@ import { labourShare } from '../../data/economy';
 import { BODIES, CHASSIS, FEATURES, GEARBOX_TYPES, SUSPENSIONS, VALVETRAINS, byId } from '../../data/tech';
 import type { CarDesign, CarStats, CostPart, MarketId, SegmentId } from '../../core/types';
 import { eraReference } from '../../core/scoring';
-import { isTurkish, msg, t } from '../../i18n';
+import { isTurkish, lower, msg, t } from '../../i18n';
 import { fmtNumber } from '../../i18n/format';
 import { money, pct as percent } from '../format';
 import { Info } from './ui';
@@ -29,8 +29,8 @@ const sizeText = (x: number) => (x < 0.34 ? t('küçük boy') : x < 0.67 ? t('or
 function drivers(design: CarDesign, st: CarStats): Record<CostPart, string> {
   const e = design.engine;
   const feats = design.features.map((f) => byId(FEATURES, f));
-  const elec = feats.filter((f) => f.electric).map((f) => t(f.name).toLowerCase());
-  const other = feats.filter((f) => !f.electric).map((f) => t(f.name).toLowerCase());
+  const elec = feats.filter((f) => f.electric).map((f) => lower(t(f.name)));
+  const other = feats.filter((f) => !f.electric).map((f) => lower(t(f.name)));
   const size = sizeText(design.size);
   const bodyDef = byId(BODIES, design.body);
   const body = design.features.includes('steelBody') ? t('{body}, çelik (+%20)', { body: t(bodyDef.name) }) : t(bodyDef.name);
@@ -43,7 +43,7 @@ function drivers(design: CarDesign, st: CarStats): Record<CostPart, string> {
     engine: st.engine.diesel
       ? t('{n} silindir, {litres} L, {valvetrain}, dizel: silindir sayısı ve hacim pahalıdır', engine)
       : t('{n} silindir, {litres} L, {valvetrain}: silindir sayısı ve hacim pahalıdır', engine),
-    gearbox: t('{n} vites, {type}: her vites bir dişli takımı daha', { n: design.gearbox.gears, type: t(byId(GEARBOX_TYPES, design.gearbox.type).name).toLowerCase() }),
+    gearbox: t('{n} vites, {type}: her vites bir dişli takımı daha', { n: design.gearbox.gears, type: lower(t(byId(GEARBOX_TYPES, design.gearbox.type).name)) }),
     chassis: `${t(byId(CHASSIS, design.chassis).name)}, ${size}`,
     body: bodyDef.closed ? t('{body}, {size}: kapalı gövde açığından pahalıdır', { body, size }) : `${body}, ${size}`,
     suspension: `${t(byId(SUSPENSIONS, design.suspension).name)}, ${size}`,
@@ -75,7 +75,7 @@ export function CostBreakdown({ design, st, ci, yf, rough, segment, hq }: { desi
         <b>{t('Maliyet dökümü')}</b>
         <span className="muted small">
           {' '}
-          {t('en büyük kalem: {part}', { part: top ? `${t(NAMES[top.k]).toLowerCase()} (${pct(top.v / total)})` : '—' })}
+          {t('en büyük kalem: {part}', { part: top ? `${lower(t(NAMES[top.k]))} (${pct(top.v / total)})` : '—' })}
         </span>
         <span className={`small cost-bd-class ${vsClass > 0.1 ? 'tone-bad' : vsClass < -0.05 ? 'tone-good' : 'muted'}`}>
           {' '}

@@ -7,7 +7,7 @@ import type { Rng } from './rng';
 import { segmentWeights } from './scoring';
 import { yearFloat } from './time';
 import type { AttrKey, CarModel, GameState, LaunchReport, MarketId, Review } from './types';
-import { isTurkish, list, locale, msg, t } from '../i18n';
+import { isTurkish, list, lower, msg, t } from '../i18n';
 
 // Reviews and customer feedback are the player's window into the hidden segment weights.
 
@@ -37,9 +37,9 @@ const NEGATIVE: Record<AttrKey, string[]> = {
 
 // Each magazine has its own readers and hobbyhorses, so they notice different things.
 const MAGAZINES = [
-  { name: 'Motor Postası', bias: { handling: 2, economy: 1.6, reliability: 1.3 } as Partial<Record<AttrKey, number>> },
-  { name: 'Yol & Hız', bias: { accel: 2.2, topSpeed: 2, prestige: 1.3 } as Partial<Record<AttrKey, number>> },
-  { name: 'Otomobil Gazetesi', bias: { comfort: 1.8, practicality: 1.8, safety: 1.5, reliability: 1.4 } as Partial<Record<AttrKey, number>> },
+  { name: msg('Motor Postası'), bias: { handling: 2, economy: 1.6, reliability: 1.3 } as Partial<Record<AttrKey, number>> },
+  { name: msg('Yol & Hız'), bias: { accel: 2.2, topSpeed: 2, prestige: 1.3 } as Partial<Record<AttrKey, number>> },
+  { name: msg('Otomobil Gazetesi'), bias: { comfort: 1.8, practicality: 1.8, safety: 1.5, reliability: 1.4 } as Partial<Record<AttrKey, number>> },
 ];
 
 export function mainMarket(state: GameState, model: CarModel): MarketId {
@@ -108,15 +108,15 @@ export function writeReviews(state: GameState, model: CarModel, rng: Rng): Revie
     }
     if (worst) {
       const neg = t(phrase(NEGATIVE[worst.k]));
-      const lower = isTurkish() ? 'tr' : locale();
-      parts.push(parts.length ? t('Ama {text}', { text: `${neg.charAt(0).toLocaleLowerCase(lower)}${neg.slice(1)}` }) : neg);
+      const first = isTurkish() ? neg.charAt(0).toLocaleLowerCase('tr') : lower(neg.charAt(0));
+      parts.push(parts.length ? t('Ama {text}', { text: `${first}${neg.slice(1)}` }) : neg);
       used.add(worst.k);
     }
     if (siblings > 3) parts.push(t('Kardeş modellerinden ayırt etmek zor: hepsi aynı araba!'));
     if (offer.priceTerm < -PRICE_REMARK) parts.push(t('Fiyatı fazla iddialı.'));
     else if (offer.priceTerm > PRICE_REMARK) parts.push(t('Bu paraya kaçırılmaz.'));
     if (!parts.length) parts.push(t('Sınıfının ortalamasında, sağlam ama sıradan bir araç.'));
-    reviews.push({ magazine: mag.name, score, quote: parts.join(' ') });
+    reviews.push({ magazine: t(mag.name), score, quote: parts.join(' ') });
     if (best) learn(state, model, best.k);
     if (worst) learn(state, model, worst.k);
     magIndex++;
@@ -152,7 +152,7 @@ export function customerFeedback(state: GameState, model: CarModel, rng: Rng): F
   }
   for (const k of chosen) {
     const d = scores[k] - 50;
-    const name = t(ATTR_NAMES[k]).toLowerCase();
+    const name = lower(t(ATTR_NAMES[k]));
     const about = { buyers, model: model.name, attr: name };
     if (d > 8) lines.push({ text: t('{buyers} {model} modelinin {attr} konusundan çok memnun.', about), tone: 'good' });
     else if (d < -8) lines.push({ text: t('{buyers} {model} modelinin {attr} konusundan şikâyetçi.', about), tone: 'bad' });
@@ -201,7 +201,7 @@ export function buildLaunchReport(state: GameState, model: CarModel): LaunchRepo
   if (price === 'high') advice.push(t('Alıcılar aracı pahalı buluyor.'));
   if (price === 'low' && demand > capacity) advice.push(t('Fiyatın rakiplerin çok altında: daha pahalıya da satabilirsin.'));
   if (complaints.length)
-    advice.push(t('Bir sonraki makyajda ya da yeni kuşakta {attrs} konusuna eğil.', { attrs: list(complaints.map((k) => t(ATTR_NAMES[k]).toLowerCase())) }));
+    advice.push(t('Bir sonraki makyajda ya da yeni kuşakta {attrs} konusuna eğil.', { attrs: list(complaints.map((k) => lower(t(ATTR_NAMES[k])))) }));
   const open = openStates(state).length;
   if (open < 6) advice.push(t('Arabaların yalnızca {n} eyalette satılıyor: alıcıların çoğu onu hiç görmüyor. Harita ekranından komşu eyaletlerde bayi ara.', { n: open }));
   const poor = underServed(state).slice(0, 3);
