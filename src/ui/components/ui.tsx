@@ -124,10 +124,13 @@ export function Toggle(props: { checked: boolean; onChange: (v: boolean) => void
 }
 
 export function Stat(props: { label: ReactNode; value: ReactNode; sub?: ReactNode; tone?: 'good' | 'bad' | 'warn' }) {
+  // Longer values ("$378,65 Mio.") get a smaller size so they fit the card instead of being cut off.
+  const len = typeof props.value === 'string' ? props.value.replace(/[\u2066-\u2069]/g, '').length : 0;
+  const fit = len > 12 ? 'is-longer' : len > 10 ? 'is-long' : '';
   return (
     <div className="stat">
       <div className="stat-label">{props.label}</div>
-      <div className={`stat-value ${props.tone ? `tone-${props.tone}` : ''}`}>{props.value}</div>
+      <div className={`stat-value ${fit} ${props.tone ? `tone-${props.tone}` : ''}`}>{props.value}</div>
       {props.sub && <div className="stat-sub">{props.sub}</div>}
     </div>
   );

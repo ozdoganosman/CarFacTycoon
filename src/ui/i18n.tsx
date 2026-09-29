@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { template, type Params } from '../i18n';
+import { endsSentence, lang, template, type Params } from '../i18n';
 
 // Rich text for the screens: a translated sentence with bold or coloured words and React values in it.
 //
@@ -52,8 +52,9 @@ export function tx(src: string, params: Record<string, ReactNode> = {}, tags: Re
   const stack: { tag: string; children: ReactNode[] }[] = [];
   let key = 0;
   const push = (node: ReactNode) => (stack.length ? stack[stack.length - 1].children : root).push(node);
-  for (const part of text.split(TOKEN)) {
-    if (!part) continue;
+  const parts = text.split(TOKEN);
+  parts.forEach((part, i) => {
+    if (!part) return;
     const open = /^<([a-zA-Z]+)\s*>$/.exec(part);
     const close = /^<\/([a-zA-Z]+)\s*>$/.exec(part);
     const single = /^<([a-zA-Z]+)\s*\/>$/.exec(part);
@@ -64,10 +65,12 @@ export function tx(src: string, params: Record<string, ReactNode> = {}, tags: Re
       const done = stack.pop()!;
       push(all[done.tag](done.children, key++));
     } else if (param && param[1] in params) {
-      const v = params[param[1]];
+      let v = params[param[1]];
+      // "$2,12 Mio." before the sentence's own period: one period.
+      if (typeof v === 'string' && lang() !== 'tr' && endsSentence(v, parts.slice(i + 1).join(''))) v = v.slice(0, -1);
       push(typeof v === 'object' && v !== null ? <Fragment key={key++}>{v}</Fragment> : v);
     } else push(part);
-  }
+  });
   // Unclosed tags: keep their text.
   while (stack.length) {
     const done = stack.pop()!;

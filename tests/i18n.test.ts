@@ -76,8 +76,10 @@ describe('the language helpers', () => {
     expect(pctWith(0.06, 'poss')).toBe('6%');
     expect(formatDate(0)).toBe('January 1900');
     expect(list(['a', 'b', 'c'])).toBe('a, b, and c');
-    setLanguage('de', null);
+    setLanguage('de', { [keyOf('Hedef {amount}.')]: 'Ziel {amount}.' });
     expect(fmtMoney(1_234_567)).toBe('$1,23 Mio.');
+    // The abbreviation's period and the sentence's own make one.
+    expect(t('Hedef {amount}.', { amount: fmtMoney(2_120_000) })).toBe('Ziel $2,12 Mio.');
     expect(formatDate(26 * 52 + 30)).toBe('Juli 1926');
     setLanguage('ar', { [k]: { zero: 'لا سيارات', one: 'سيارة واحدة', two: 'سيارتان', few: '{n} سيارات', many: '{n} سيارة', other: '{n} سيارة' } });
     expect(t('{n} araç', { n: 2 })).toBe('سيارتان');

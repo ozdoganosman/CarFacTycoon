@@ -621,6 +621,12 @@ fieldset {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.stat-value.is-long {
+  font-size: 1.1rem;
+}
+.stat-value.is-longer {
+  font-size: 0.95rem;
+}
 .stat-value.small {
   font-family: var(--font-ui);
   font-size: 0.85rem;

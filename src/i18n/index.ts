@@ -75,8 +75,16 @@ export function keyOf(src: string): string {
 
 function fill(text: string, params?: Params): string {
   if (!params) return text;
-  return text.replace(/\{(\w+)\}/g, (m, name: string) => (name in params ? String(params[name]) : m));
+  return text.replace(/\{(\w+)\}/g, (m, name: string, at: number) => {
+    if (!(name in params)) return m;
+    const v = String(params[name]);
+    // A value ending in an abbreviation's period ("$2,12 Mio.") before the sentence's own period: one period.
+    return current.id !== 'tr' && endsSentence(v, text.slice(at + m.length)) ? v.slice(0, -1) : v;
+  });
 }
+
+/** Whether a value ends in a period and the text after it (past closing tags) starts with one. */
+export const endsSentence = (value: string, after: string): boolean => value.endsWith('.') && /^(<\/[a-zA-Z]+\s*>)*\./.test(after);
 
 /** The translated form of a catalog entry (plural forms by the `n` parameter). */
 function pick(entry: string | Plural, params?: Params): string {
