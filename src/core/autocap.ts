@@ -9,7 +9,7 @@ import { yearFloat } from './time';
 import type { CarModel, GameState, ProductionLine, StageId } from './types';
 import { earn, financeNow, log, money, spend } from './util';
 import { msg, t } from '../i18n';
-import { fmtPercent } from '../i18n/format';
+import { dec, fmtPercent } from '../i18n/format';
 
 // "Talebi otomatik karşıla": for models that opt in, the factory grows while
 // buyers wait and shrinks when they stop coming. Each month it buys the
@@ -119,7 +119,7 @@ function wayOut(
     const rise = price / priceNow(m, s.week) - 1;
     if (rise > 0 && rise < 0.6) {
       const young = (s.week - m.launchWeek) / 52 < 3 && rise > HIKE_TOLERANCE;
-      const p = { times: (d / Math.max(0.1, cap)).toFixed(0), rise: fmtPercent(Math.ceil(rise * 100) / 100, 0) };
+      const p = { times: dec(d / Math.max(0.1, cap), 0), rise: fmtPercent(Math.ceil(rise * 100) / 100, 0) };
       hints.push(
         young
           ? t('alıcılar üretimin {times} katını istiyor: fiyatı ~{rise} artırırsan sıradaki büyütme kendini öder (lansmandan sonraki üç yılda büyük zam dergileri kızdırır; makyajla birlikte yapmak daha güvenli)', p)
@@ -333,7 +333,7 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
                 })
               : t('sıradaki büyütme ~{cost} tutuyor ve ~{years} yılda kendini öder; kasada ayrılabilen {spare} (birkaç haftalık gider ve vergi yedekte). Banka kredisi alırsan ya da kasa birikince otomatik kapasite büyütür', {
                   cost,
-                  years: years.toFixed(1),
+                  years: dec(years, 1),
                   spare,
                 });
         }
@@ -357,7 +357,7 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
       const what = Object.entries(done)
         .map(([k, n]) => t(PURCHASE_TEXT[k], { n }))
         .join(', ');
-      log(s, t('Otomatik kapasite: {name} için {what} ({cost}). Kapasite {cap} araç/hf, talep {demand}.', { name: m.name, what, cost: money(spent), cap: cap.toFixed(1), demand: d.toFixed(1) }), 'info');
+      log(s, t('Otomatik kapasite: {name} için {what} ({cost}). Kapasite {cap} araç/hf, talep {demand}.', { name: m.name, what, cost: money(spent), cap: dec(cap, 1), demand: dec(d, 1) }), 'info');
     }
     // Shrink: after half a year with far more capacity than buyers, sell the smallest lines
     // (at most a quarter of them a month) down to 40% above demand. A slump that passes (a

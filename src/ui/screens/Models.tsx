@@ -1,7 +1,7 @@
 import { formatDate } from '../../core/time';
 import { segmentDef } from '../../data/segments';
 import { store, useGameState } from '../store';
-import { money, num } from '../format';
+import { dec, money, num } from '../format';
 import { Badge, Empty, Panel, Table } from '../components/ui';
 import { weeklySold } from './HQ';
 import { t } from '../../i18n';
@@ -27,11 +27,11 @@ export function Models() {
               `${segmentDef(m.segment).icon} ${t(segmentDef(m.segment).name)}`,
               formatDate(m.launchWeek),
               m.status === 'active' ? <Badge key="b" tone="good">{t('Satışta')}</Badge> : <Badge key="b">{t('Üretimden kalktı')}</Badge>,
-              m.status === 'active' ? weeklySold(m).toFixed(1) : '—',
+              m.status === 'active' ? dec(weeklySold(m), 1) : '—',
               num(m.unitsSold),
               num(m.inventory),
               money(m.price),
-              m.reviewScore.toFixed(1),
+              dec(m.reviewScore, 1),
             ])}
           />
         ) : (

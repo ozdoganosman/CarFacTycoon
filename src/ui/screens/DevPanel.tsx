@@ -5,17 +5,13 @@ import { costIndex, engineerSalary } from '../../data/economy';
 import { yearFloat } from '../../core/time';
 import { unknownTech } from '../../core/research';
 import { budgetVerdict, launchBudget } from '../../core/budget';
-import { isTurkish, t } from '../../i18n';
-import { fmtNumber } from '../../i18n/format';
-import { money, pct } from '../format';
+import { t } from '../../i18n';
+import { dec, money, pct } from '../format';
 import { tx } from '../i18n';
 import { BudgetLine } from '../components/BudgetLine';
 import type { FocusKey, Project } from '../../core/types';
 import { store, useGameState } from '../store';
 import { Button, Progress, Slider } from '../components/ui';
-
-/** A decimal as the game always showed it in Turkish ("1.5"), in the player's own form elsewhere. */
-const fixed = (v: number, digits: number) => (isTurkish() ? v.toFixed(digits) : fmtNumber(v, digits));
 
 interface Bubble {
   id: number;
@@ -46,7 +42,7 @@ export function DevBar({ project: p }: { project: Project }) {
   const paused = store.speed === 0;
   const missing = developing ? [] : unknownTech(s, p.design);
   const team = others
-    ? t('{n} mühendis {projects} projeye bölünüyor (bu projede ~{share})', { n: s.company.engineers, projects: others + 1, share: fixed(eng, 1) })
+    ? t('{n} mühendis {projects} projeye bölünüyor (bu projede ~{share})', { n: s.company.engineers, projects: others + 1, share: dec(eng, 1) })
     : t('{n} mühendisin hepsi bu projede', { n: s.company.engineers });
 
   return (
@@ -66,7 +62,7 @@ export function DevBar({ project: p }: { project: Project }) {
         ) : done ? (
           <>
             {tx('<b>Geliştirme bitti.</b> Zaman akarsa araç cilalanmaya devam eder (güvenilirlik şu an +{v}, en fazla %160’a kadar).', {
-              v: fixed(Math.max(0, polish), 1),
+              v: dec(Math.max(0, polish), 1),
             })}
           </>
         ) : (
@@ -185,10 +181,10 @@ export function FocusPanel({ project: p }: { project: Project }) {
   const effect: Record<FocusKey, string> = {
     performance: t('Güç +{pct}', { pct: pct(bonus.powerMult - 1, 1) }),
     efficiency: t('Tüketim −{pct}', { pct: pct(1 - bonus.fuelMult, 1) }),
-    comfort: t('Konfor +{v}', { v: fixed(bonus.comfort, 1) }),
-    handling: t('Yol tutuş +{v}', { v: fixed(bonus.handling ?? 0, 1) }),
-    safety: t('Güvenlik +{v}', { v: fixed(bonus.safety, 1) }),
-    practicality: t('Pratiklik +{v}', { v: fixed(bonus.practicality ?? 0, 1) }),
+    comfort: t('Konfor +{v}', { v: dec(bonus.comfort, 1) }),
+    handling: t('Yol tutuş +{v}', { v: dec(bonus.handling ?? 0, 1) }),
+    safety: t('Güvenlik +{v}', { v: dec(bonus.safety, 1) }),
+    practicality: t('Pratiklik +{v}', { v: dec(bonus.practicality ?? 0, 1) }),
     cost: t('Maliyet −{pct}', { pct: pct(1 - bonus.costMult, 1) }),
     quality: t('Gizli kusur −{pct}', { pct: pct(1 - (bonus.defectMult ?? 1), 0) }),
   };

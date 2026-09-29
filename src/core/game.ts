@@ -41,7 +41,7 @@ import { computeCarStats } from './vehicle';
 export const COST_KEYS = ['materials', 'labor', 'salaries', 'dealers', 'freight', 'marketing', 'rnd', 'warranty', 'interest', 'other', 'tax', 'investment'] as const;
 import { clamp, earn, financeNow, log, money, pushModal, spend } from './util';
 import { msg, t } from '../i18n';
-import { fmtPercent } from '../i18n/format';
+import { dec, fmtPercent } from '../i18n/format';
 
 export const SAVE_VERSION = 1;
 export const END_YEAR = 1961;
@@ -299,7 +299,7 @@ export function finalScore(s: GameState): FinalScore {
     // $1 mn → 300, $1 mr → 450, $10 mr and more → 500
     { label: s.shares ? t('Şirket değeri (senin payın {share})', { share: fmtPercent(founderShare(s), 0) }) : t('Şirket değeri'), value: money(value), points: Math.min(500, Math.max(0, Math.round(50 * Math.log10(Math.max(1, value))))), max: 500 },
     { label: t('İtibar'), value: `${Math.round(s.company.reputation)}/100`, points: Math.round(3 * s.company.reputation), max: 300 },
-    { label: recent.length ? t('Son on yılın dergi puanı (ortalama)') : t('Son arabanın dergi puanı (eski)'), value: `${review.toFixed(1)}/10`, points: Math.round(30 * review), max: 300 },
+    { label: recent.length ? t('Son on yılın dergi puanı (ortalama)') : t('Son arabanın dergi puanı (eski)'), value: `${dec(review, 1)}/10`, points: Math.round(30 * review), max: 300 },
     { label: t('Son yirmi yılın yarış zaferleri'), value: String(wins), points: Math.min(200, 25 * wins), max: 200 },
   ];
   const total = parts.reduce((a, p) => a + p.points, 0);

@@ -10,7 +10,7 @@ import { ATTRS, ATTR_NAMES, MARKET_TASTE, SEGMENTS, segmentDef } from '../../dat
 import { REGION_NAMES, STATE_IDS, stateDef, statePop, stateWeights, type StateId } from '../../data/states';
 import type { GameState } from '../../core/types';
 import { store, useGameState } from '../store';
-import { money, num, pct } from '../format';
+import { dec, money, num, pct } from '../format';
 import { Badge, Button, NumberInput, Panel, Table } from '../components/ui';
 import { Importance } from '../components/StatsPanel';
 import { LineChart } from '../viz/LineChart';
@@ -218,7 +218,7 @@ function StateCard({ id }: { id: StateId }) {
       </div>
       <div className="kv">
         <span>{t('Nüfus')}</span>
-        <b>{t('{v} mn', { v: (statePop(id, yf) / 1000).toFixed(1) })}</b>
+        <b>{t('{v} mn', { v: dec(statePop(id, yf) / 1000, 1) })}</b>
         <span>{t('Ülkedeki araç talebinden payı')}</span>
         <b>{pct(stateWeights(yf)[id], 1)}</b>
         <span>{t('Satışın (geçen yıl · bu yıl)')}</span>
@@ -239,7 +239,7 @@ function StateCard({ id }: { id: StateId }) {
         <b>{N.freightPerCar(s, id, yf) > 0 ? money(N.freightPerCar(s, id, yf)) : t('Yok (fabrika burada)')}</b>
         <span>{t('Yoldaki araçların · ort. yaş')}</span>
         <b>
-          {num(n?.parc ?? 0)} · {t('{v} yıl', { v: (n?.parcAge ?? 0).toFixed(1) })}
+          {num(n?.parc ?? 0)} · {t('{v} yıl', { v: dec(n?.parcAge ?? 0, 1) })}
         </b>
         <span>{t('Hurdaya çıkan')}</span>
         <b>{num(n?.scrapped ?? 0)}</b>
@@ -405,7 +405,7 @@ function MarketPanel() {
             height={170}
             xFormat={(v) => `${Math.round(v)}`}
             yFormat={(v) =>
-              v >= 1e6 ? t('{v} mn', { v: (v / 1e6).toFixed(1) }) : v >= 1000 ? t('{v} bin', { v: Math.round(v / 1000) }) : `${Math.round(v)}`
+              v >= 1e6 ? t('{v} mn', { v: dec(v / 1e6, 1) }) : v >= 1000 ? t('{v} bin', { v: Math.round(v / 1000) }) : `${Math.round(v)}`
             }
             ariaLabel={t('Amerikan pazarının büyüklüğü')}
           />

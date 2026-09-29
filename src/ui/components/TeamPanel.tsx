@@ -4,9 +4,8 @@ import { engineersBusy, idleEngineers } from '../../core/game';
 import { labSlots, labSpeed } from '../../core/research';
 import { yearFloat } from '../../core/time';
 import { costIndex, engineerSalary } from '../../data/economy';
-import { isTurkish, t } from '../../i18n';
-import { fmtNumber } from '../../i18n/format';
-import { money } from '../format';
+import { t } from '../../i18n';
+import { dec, money } from '../format';
 import { store, useGameState } from '../store';
 import { Button, Panel } from './ui';
 import { tx } from '../i18n';
@@ -50,7 +49,7 @@ export function TeamPanel({ compact }: { compact?: boolean }) {
         !compact && (
           <p className="small muted">
             {t('Geliştirmede proje yok. Mühendisler Ar-Ge’de çalışır: araştırma hızı ×{speed}, {n} araştırma yeri (Ar-Ge ekranından ayrıca Ar-Ge uzmanı alınabilir).', {
-              speed: isTurkish() ? labSpeed(s).toFixed(1) : fmtNumber(labSpeed(s), 1),
+              speed: dec(labSpeed(s), 1),
               n: labSlots(s),
             })}
           </p>

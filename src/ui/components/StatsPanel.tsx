@@ -6,17 +6,14 @@ import { ATTRS, ATTR_NAMES, importanceLabel, segmentDef } from '../../data/segme
 import { computeCarStats } from '../../core/vehicle';
 import { estimateRange, factRange, isRough, rawRange } from '../../core/estimate';
 import type { AttrKey, CarDesign, CarStats, DevBonus, Estimate, GameState, Scores, SegmentId } from '../../core/types';
-import { isTurkish, lower, t } from '../../i18n';
-import { fmtNumber } from '../../i18n/format';
-import { kmh, litres, money, secs } from '../format';
+import { lower, t } from '../../i18n';
+import { dec, kmh, litres, money, secs } from '../format';
 import { tx } from '../i18n';
 import { CostBreakdown } from './CostBreakdown';
 import { Info, RangeBar, ScoreBar } from './ui';
 
 /** "lo–hi" for an engineers' range. */
 const span = ([lo, hi]: [number, number], f: (v: number) => string) => `${f(lo)}–${f(hi)}`;
-/** A decimal as the game always showed it in Turkish ("1.25"), in the player's own form elsewhere. */
-const fixed = (v: number, digits: number) => (isTurkish() ? v.toFixed(digits) : fmtNumber(v, digits));
 
 export function useCarStats(design: CarDesign, yf: number, bonus?: DevBonus): CarStats {
   const key = JSON.stringify(design) + Math.floor(yf) + JSON.stringify(bonus ?? null);
@@ -28,7 +25,7 @@ export function useCarStats(design: CarDesign, yf: number, bonus?: DevBonus): Ca
 function estimatedRaw(k: AttrKey, st: CarStats, yf: number, seg: SegmentId, est: Estimate): string {
   const range = (v: number, digits: number) => {
     const [lo, hi] = rawRange(est, k, v);
-    return `${fixed(lo, digits)}–${fixed(hi, digits)}`;
+    return `${dec(lo, digits)}–${dec(hi, digits)}`;
   };
   switch (k) {
     case 'accel': {
@@ -119,7 +116,7 @@ export function StatsPanel(props: {
         ) : (
           <div>
             <span className="muted small">{t('Çekicilik ({segment})', { segment: t(segmentDef(segment).name) })}</span>
-            <b className={`sp-appeal ${ap >= 55 ? 'tone-good' : ap < 45 ? 'tone-bad' : ''}`}>{ap.toFixed(0)}</b>
+            <b className={`sp-appeal ${ap >= 55 ? 'tone-good' : ap < 45 ? 'tone-bad' : ''}`}>{dec(ap, 0)}</b>
             <span className="muted small"> / {t('sınıf ort. 50')}</span>
             {props.note && <div className="muted small">{props.note}</div>}
           </div>
@@ -159,7 +156,7 @@ export function StatsPanel(props: {
           )}
           <div>
             <span>{t('Güç')}</span>
-            <b>{t('{v} bg', { v: est ? span(factRange(est, 'power', st.engine.powerHp), (v) => fixed(v, 0)) : fixed(st.engine.powerHp, 0) })}</b>
+            <b>{t('{v} bg', { v: est ? span(factRange(est, 'power', st.engine.powerHp), (v) => dec(v, 0)) : dec(st.engine.powerHp, 0) })}</b>
           </div>
           <div>
             <span>{t('Ağırlık')}</span>
@@ -179,7 +176,7 @@ export function StatsPanel(props: {
           </div>
           <div title={t('1 = sıradan araç. Yüksekse hat daha yavaş çalışır.')}>
             <span>{t('Üretim zorluğu')}</span>
-            <b>{est ? span(factRange(est, 'complexity', st.complexity), (v) => fixed(v, 2)) : fixed(st.complexity, 2)}</b>
+            <b>{est ? span(factRange(est, 'complexity', st.complexity), (v) => dec(v, 2)) : dec(st.complexity, 2)}</b>
           </div>
         </div>
       )}

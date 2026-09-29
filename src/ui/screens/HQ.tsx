@@ -13,7 +13,7 @@ import { segmentDef } from '../../data/segments';
 import type { CarModel, GameState, LogCategory } from '../../core/types';
 import { useState } from 'react';
 import { store, useGameState } from '../store';
-import { money, num, pct, recentProfit, signedMoney } from '../format';
+import { dec, money, num, pct, recentProfit, signedMoney } from '../format';
 import { Badge, Button, Empty, Panel, Progress, Stat, Table } from '../components/ui';
 import { LineChart } from '../viz/LineChart';
 import { NewsArchive } from '../components/Newspaper';
@@ -300,17 +300,17 @@ export function HQ() {
                   {m.name}
                 </button>,
                 t(segmentDef(m.segment).name),
-                weeklySold(m).toFixed(1),
+                dec(weeklySold(m), 1),
                 num(m.inventory),
                 money(m.price),
-                m.reviewScore.toFixed(1),
+                dec(m.reviewScore, 1),
               ])}
             />
             <LineChart
               series={series}
               height={180}
               xFormat={(w) => formatShort(Math.round(w))}
-              yFormat={(v) => v.toFixed(v < 10 ? 1 : 0)}
+              yFormat={(v) => dec(v, v < 10 ? 1 : 0)}
               yLabel={t('Haftalık satış (araç)')}
               ariaLabel={t('Modellerin haftalık satış grafiği')}
             />

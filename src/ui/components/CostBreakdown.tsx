@@ -2,9 +2,8 @@ import { labourShare } from '../../data/economy';
 import { BODIES, CHASSIS, FEATURES, GEARBOX_TYPES, SUSPENSIONS, VALVETRAINS, byId } from '../../data/tech';
 import type { CarDesign, CarStats, CostPart, MarketId, SegmentId } from '../../core/types';
 import { eraReference } from '../../core/scoring';
-import { isTurkish, lower, msg, t } from '../../i18n';
-import { fmtNumber } from '../../i18n/format';
-import { money, pct as percent } from '../format';
+import { lower, msg, t } from '../../i18n';
+import { dec, money, pct as percent } from '../format';
 import { Info } from './ui';
 
 const NAMES: Record<CostPart, string> = {
@@ -21,8 +20,6 @@ const NAMES: Record<CostPart, string> = {
 };
 
 const pct = (v: number) => percent(v, 0);
-/** A decimal as the game always showed it in Turkish ("1.25"), in the player's own form elsewhere. */
-const fixed = (v: number, digits: number) => (isTurkish() ? v.toFixed(digits) : fmtNumber(v, digits));
 const sizeText = (x: number) => (x < 0.34 ? t('küçük boy') : x < 0.67 ? t('orta boy') : t('büyük boy'));
 
 /** What drives each part, in the designer's own choices. */
@@ -36,7 +33,7 @@ function drivers(design: CarDesign, st: CarStats): Record<CostPart, string> {
   const body = design.features.includes('steelBody') ? t('{body}, çelik (+%20)', { body: t(bodyDef.name) }) : t(bodyDef.name);
   const engine = {
     n: e.cylinders,
-    litres: fixed(st.engine.displacementCc / 1000, 1),
+    litres: dec(st.engine.displacementCc / 1000, 1),
     valvetrain: t(byId(VALVETRAINS, e.valvetrain).name),
   };
   return {
@@ -112,7 +109,7 @@ export function CostBreakdown({ design, st, ci, yf, rough, segment, hq }: { desi
           <span className="cost-bd-name">
             <b>{t('İşçilik (tahmini)')}</b>
             <span className="muted small">
-              {t('üretim zorluğu {v}: karmaşık araba hattı yavaşlatır; modern istasyonlar araç başına işçiliği düşürür', { v: fixed(st.complexity, 2) })}
+              {t('üretim zorluğu {v}: karmaşık araba hattı yavaşlatır; modern istasyonlar araç başına işçiliği düşürür', { v: dec(st.complexity, 2) })}
             </span>
           </span>
           <span className="cost-bd-bar" aria-hidden>
@@ -127,9 +124,9 @@ export function CostBreakdown({ design, st, ci, yf, rough, segment, hq }: { desi
       {(Math.abs(focus - 1) > 0.005 || Math.abs(knowhow - 1) > 0.005) && (
         <p className="muted small cost-bd-mults">
           {t('Kalemlere dahil:')}
-          {Math.abs(focus - 1) > 0.005 && ` ${t('geliştirmede maliyet odağı ×{v}', { v: fixed(focus, 2) })}`}
+          {Math.abs(focus - 1) > 0.005 && ` ${t('geliştirmede maliyet odağı ×{v}', { v: dec(focus, 2) })}`}
           {Math.abs(focus - 1) > 0.005 && Math.abs(knowhow - 1) > 0.005 && ' ·'}
-          {Math.abs(knowhow - 1) > 0.005 && ` ${t('ustalık bilgisi ×{v}', { v: fixed(knowhow, 2) })}`}
+          {Math.abs(knowhow - 1) > 0.005 && ` ${t('ustalık bilgisi ×{v}', { v: dec(knowhow, 2) })}`}
         </p>
       )}
     </div>

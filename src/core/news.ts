@@ -9,8 +9,8 @@ import { yearFloat, yearOf } from './time';
 import type { AttrKey, CarModel, GameState, MarketId, NewsIssue, NewsStoryData } from './types';
 import { money, pushModal } from './util';
 import { pctWith } from './turkish';
-import { fmtNumber, fmtPercent } from '../i18n/format';
-import { isTurkish, lower, msg, t } from '../i18n';
+import { dec, fmtNumber, fmtPercent } from '../i18n/format';
+import { lower, msg, t } from '../i18n';
 
 // Front pages: the day new technology appears in the world, and the day one of
 // the player's cars takes off. Issues are kept for the archive and shown as a
@@ -28,8 +28,6 @@ export function publish(s: GameState, issue: NewsIssue) {
 }
 
 const fmt = (n: number) => fmtNumber(n);
-/** One decimal: as the game always wrote it in Turkish, in the language's own way otherwise. */
-const dec = (v: number) => (isTurkish() ? v.toFixed(1) : fmtNumber(v, 1));
 
 function worldFor(year: number): NewsStoryData | undefined {
   const w = WORLD_NEWS.find((x) => x.year === year);

@@ -3,8 +3,8 @@ import { referenceDesigns } from './ai';
 import { computeEngine, eraRpmCap } from './engine';
 import type { CarDesign, CarStats, DevBonus, EngineDesign, EngineStats, SegmentId } from './types';
 import { computeCarStats } from './vehicle';
-import { isTurkish, t } from '../i18n';
-import { fmtNumber, fmtPercent } from '../i18n/format';
+import { t } from '../i18n';
+import { dec, fmtPercent } from '../i18n/format';
 
 // Plain-language pros and cons of an engine, measured against the typical
 // engine of the same class in the same year (the yardstick the stats panel
@@ -60,8 +60,6 @@ function typical(year: number, segment: SegmentId): Typical {
 }
 
 const pct = (r: number) => fmtPercent(Math.abs(r - 1), 0);
-/** One decimal: as the game always wrote it in Turkish, in the language's own way otherwise. */
-const dec = (v: number) => (isTurkish() ? v.toFixed(1) : fmtNumber(v, 1));
 
 export function engineNotes(e: EngineDesign, year: number, segment: SegmentId): EngineNotes {
   const typ = typical(year, segment);

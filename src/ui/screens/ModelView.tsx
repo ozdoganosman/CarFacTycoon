@@ -15,7 +15,7 @@ import { priceLevel } from '../../data/economy';
 import type { CarModel, MarketId } from '../../core/types';
 import { store, useGameState } from '../store';
 import { customerLetters } from '../../core/letters';
-import { money, num, pct } from '../format';
+import { dec, money, num, pct } from '../format';
 import { Badge, Button, Empty, NumberInput, Panel, Slider, Stat, Table, Toggle, ScoreBar, Info } from '../components/ui';
 import { StatsPanel } from '../components/StatsPanel';
 import { CarSVG } from '../viz/CarSVG';
@@ -51,7 +51,7 @@ export function ModelView({ modelId }: { modelId: string }) {
           </h1>
           <p className="muted">
             {segmentDef(m.segment).icon} {t(segmentDef(m.segment).name)} · {t('çıkış {date}', { date: formatDate(m.launchWeek) })}
-            {m.faceliftCount ? ` · ${t('{n} makyaj', { n: m.faceliftCount })}` : ''} · {active ? t('{age} yaşında', { age: age.toFixed(1) }) : t('üretimden kalktı')}
+            {m.faceliftCount ? ` · ${t('{n} makyaj', { n: m.faceliftCount })}` : ''} · {active ? t('{age} yaşında', { age: dec(age, 1) }) : t('üretimden kalktı')}
           </p>
         </div>
         {active && (
@@ -98,10 +98,10 @@ export function ModelView({ modelId }: { modelId: string }) {
       </div>
 
       <div className="stats-row">
-        <Stat label={t('Haftalık satış')} value={weeklySold(m).toFixed(1)} sub={t('talep {demand}', { demand: demand.toFixed(1) })} />
+        <Stat label={t('Haftalık satış')} value={dec(weeklySold(m), 1)} sub={t('talep {demand}', { demand: dec(demand, 1) })} />
         <Stat label={t('Stok')} value={num(m.inventory)} tone={m.inventory > demand * 12 && m.inventory > 10 ? 'warn' : undefined} />
         <Stat label={t('Toplam satış')} value={num(m.unitsSold)} sub={money(m.revenueTotal)} />
-        <Stat label={t('Dergi ortalaması')} value={m.reviewScore.toFixed(1)} sub="/ 10" />
+        <Stat label={t('Dergi ortalaması')} value={dec(m.reviewScore, 1)} sub="/ 10" />
         <Stat label={t('Güvenilirlik (alıcı gözünde)')} value={Math.round(scores.reliability)} sub={t('sınıf ort. 50')} tone={scores.reliability < 40 ? 'bad' : undefined} />
       </div>
 
@@ -114,7 +114,7 @@ export function ModelView({ modelId }: { modelId: string }) {
             ]}
             height={200}
             xFormat={(w) => formatShort(Math.round(w))}
-            yFormat={(v) => v.toFixed(v < 10 ? 1 : 0)}
+            yFormat={(v) => dec(v, v < 10 ? 1 : 0)}
             yLabel={t('Araç / hafta')}
             ariaLabel={t('{model} haftalık satış ve üretim grafiği', { model: m.name })}
           />
@@ -153,7 +153,7 @@ export function ModelView({ modelId }: { modelId: string }) {
                 step={5}
                 disabled={!!m.autoCapacity}
                 onChange={(v) => store.act((st) => A.setProductionRate(st, m.id, v / 100))}
-                format={(v) => t('{rate} · {output} araç/hafta', { rate: pct(v / 100, 0), output: ((cap * v) / 100).toFixed(1) })}
+                format={(v) => t('{rate} · {output} araç/hafta', { rate: pct(v / 100, 0), output: dec((cap * v) / 100, 1) })}
                 hint={t('Talep düşükse üretimi kıs: stok bekletmek para bağlar ve depolama masrafı çıkarır.')}
               />
               <p className="small">
@@ -206,7 +206,7 @@ export function ModelView({ modelId }: { modelId: string }) {
             />
             <p className="muted small">
               {t('Bu fiyatla talep ~{demand}/hafta ({n} eyalette satılıyor; yeni eyaletler için Harita).', {
-                demand: demandAtPrice(s, m, 'usa', draftPrice).toFixed(1),
+                demand: dec(demandAtPrice(s, m, 'usa', draftPrice), 1),
                 n: N.openStates(s).length,
               })}
             </p>
@@ -240,7 +240,7 @@ export function ModelView({ modelId }: { modelId: string }) {
                   <article key={r.magazine} className="review">
                     <header>
                       <span className="review-mag">{r.magazine}</span>
-                      <span className="review-score">{r.score.toFixed(1)}</span>
+                      <span className="review-score">{dec(r.score, 1)}</span>
                     </header>
                     <p>“{r.quote}”</p>
                   </article>
@@ -332,7 +332,7 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
       <p className="muted small">
         {t(
           'Alıcılar her aracı çekiciliğine (tasarım puanları × segmentin gizli önceliklerine), fiyatına, markaya ve yaşına göre tartar: iki yıldan sonra her araç eskir. Bayi ağın ve bilinirliğin, aracını kaç alıcının görebileceğini belirler. Segment toplamı: {demand} araç/hafta.',
-          { demand: sm.demand.toFixed(0) },
+          { demand: dec(sm.demand, 0) },
         )}
       </p>
       {mine && (
@@ -343,24 +343,24 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
           </div>
           <div>
             <span>{t('Fiyat etkisi')}</span>
-            <b className={mine.priceTerm < 0 ? 'tone-bad' : 'tone-good'}>{mine.priceTerm.toFixed(1)}</b>
+            <b className={mine.priceTerm < 0 ? 'tone-bad' : 'tone-good'}>{dec(mine.priceTerm, 1)}</b>
           </div>
           <div>
             <span>{t('Marka')}</span>
-            <b className={mine.brand < 0 ? 'tone-bad' : 'tone-good'}>{mine.brand.toFixed(1)}</b>
+            <b className={mine.brand < 0 ? 'tone-bad' : 'tone-good'}>{dec(mine.brand, 1)}</b>
           </div>
           <div>
             <span>{t('Lansman heyecanı')}</span>
-            <b>+{mine.hype.toFixed(1)}</b>
+            <b>+{dec(mine.hype, 1)}</b>
           </div>
           <div title={t('İki yıldan sonra her yıl alıcı gözünde eskir; makyaj ya da yeni kuşak tazeler.')}>
             <span>{t('Yaş')}</span>
-            <b className={mine.age < 0 ? 'tone-bad' : ''}>{mine.age.toFixed(1)}</b>
+            <b className={mine.age < 0 ? 'tone-bad' : ''}>{dec(mine.age, 1)}</b>
           </div>
           {(mine.exclusive ?? 0) < 0 && (
             <div title={t('Lüks ve spor arabayı alıcı farklı olmak için alır: sınıfın dörtte birinden fazlası aynı modeli sürünce çekiciliği azalır.')}>
               <span>{t('Herkeste var')}</span>
-              <b className="tone-bad">{(mine.exclusive ?? 0).toFixed(1)}</b>
+              <b className="tone-bad">{dec(mine.exclusive ?? 0, 1)}</b>
             </div>
           )}
           <div>
@@ -377,11 +377,11 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
           ...rows.map((o) => [
             o.kind === 'player' ? <b key="n">{o.name}</b> : o.name,
             o.kind === 'player' ? s.company.name : RIVALS.find((r) => r.id === o.companyId)?.name ?? '',
-            o.appeal.toFixed(0),
+            dec(o.appeal, 0),
             money(o.price),
-            o.priceTerm.toFixed(1),
-            o.brand.toFixed(1),
-            o.age.toFixed(1),
+            dec(o.priceTerm, 1),
+            dec(o.brand, 1),
+            dec(o.age, 1),
             pct(o.reach, 0),
             pct(o.weight / sm.totalWeight),
           ]),

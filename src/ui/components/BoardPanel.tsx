@@ -24,10 +24,9 @@ import {
 import { formatDate, yearFloat, yearOf } from '../../core/time';
 import type { GameState, RivalMove } from '../../core/types';
 import { segmentDef } from '../../data/segments';
-import { isTurkish, lower, t } from '../../i18n';
-import { fmtNumber } from '../../i18n/format';
+import { lower, t } from '../../i18n';
 import { store } from '../store';
-import { money, pct } from '../format';
+import { dec, money, pct } from '../format';
 import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table } from './ui';
 import { tx } from '../i18n';
 
@@ -70,7 +69,7 @@ export function SharesPanel({ s }: { s: GameState }) {
         <p className="muted small">
           {tx('Sermaye için hisse sat: kasaya büyük para girer, ama her yıl büyüme ve temettü hedefleri gelir. Borsa şu an <b>{mood}</b> (×{x}).', {
             mood: moodName(mood),
-            x: isTurkish() ? mood.toFixed(2) : fmtNumber(mood, 2),
+            x: dec(mood, 2),
           })}
         </p>
         {!can.ok ? (

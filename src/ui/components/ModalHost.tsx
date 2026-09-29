@@ -10,11 +10,10 @@ import { allTech, techName } from '../../core/techtree';
 import { yearOf as yearOfWeek } from '../../core/time';
 import { isBlockingModal } from '../../core/util';
 import type { GameState, ModalItem } from '../../core/types';
-import { isTurkish, lower, t } from '../../i18n';
-import { fmtNumber } from '../../i18n/format';
+import { lower, t } from '../../i18n';
 import { store, useGameState } from '../store';
 import { useBackClose } from '../back';
-import { COST_NAMES, money, num, pct, signedMoney } from '../format';
+import { COST_NAMES, dec, money, num, pct, signedMoney } from '../format';
 import { Button } from './ui';
 import { CardAnimation } from './CardAnimation';
 import { LaunchReportView, LaunchShow } from './LaunchShow';
@@ -41,9 +40,6 @@ function Modal(props: { title: ReactNode; icon?: string; children: ReactNode; ac
 }
 
 const paragraphs = (text: string) => text.split('\n\n').map((p, i) => <p key={i}>{p}</p>);
-
-/** One decimal, as the game always showed it in Turkish ("7.5"). */
-const dec1 = (v: number) => (isTurkish() ? v.toFixed(1) : fmtNumber(v, 1));
 
 /** A bold value in a colour picked by the code: tx('… <tone>{x}</tone> …', { x }, toned('tone-bad')). */
 const toned = (className: string) => ({
@@ -192,7 +188,7 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
               <article key={r.magazine} className="review">
                 <header>
                   <span className="review-mag">{r.magazine}</span>
-                  <span className={`review-score ${r.score >= 7 ? 'tone-good' : r.score < 5 ? 'tone-bad' : ''}`}>{dec1(r.score)}</span>
+                  <span className={`review-score ${r.score >= 7 ? 'tone-good' : r.score < 5 ? 'tone-bad' : ''}`}>{dec(r.score)}</span>
                 </header>
                 <p>“{r.quote}”</p>
               </article>
@@ -200,7 +196,7 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
           </div>
           <p className="muted">
             {t('Ortalama {avg}/10. Dergiler genelde bu sınıfın alıcılarının önem verdiği özellikleri konuşur. {segment} bilgi tablon güncellendi.', {
-              avg: dec1(model.reviewScore),
+              avg: dec(model.reviewScore),
               segment: t(segmentDef(model.segment).name),
             })}
           </p>
@@ -324,7 +320,7 @@ function CashFacts({ r, s }: { r: CashReport; s: GameState }) {
                   net: money(x.net),
                   material: money(x.material),
                   labour: money(x.labour),
-                  built: dec1(x.built),
+                  built: dec(x.built),
                 })}
               </li>
             ) : (

@@ -48,7 +48,7 @@ import type {
 import { NO_BONUS, computeCarStats } from './vehicle';
 import { clamp, decide, earn, log, money, newId, shiftModal, spend } from './util';
 import { t } from '../i18n';
-import { fmtPercent } from '../i18n/format';
+import { dec, fmtPercent } from '../i18n/format';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 const ok: ActionResult = { ok: true };
@@ -540,7 +540,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
     const cc = displacementCc(p.design.engine);
     s.engines.push({
       id: engineId,
-      name: `${(cc / 1000).toFixed(1)} L ${p.design.engine.layout === 'v' ? 'V' : ''}${p.design.engine.cylinders} (${p.name})`,
+      name: `${dec(cc / 1000, 1)} L ${p.design.engine.layout === 'v' ? 'V' : ''}${p.design.engine.cylinders} (${p.name})`,
       design: { ...p.design.engine },
       createdWeek: s.week,
     });
@@ -631,7 +631,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
   s.company.reputation = clamp(s.company.reputation + (m.reviewScore - 5.5) * 1.5, 0, 100);
   m.launchReportWeek = s.week + 4;
   s.modals.push({ kind: 'launch', modelId: m.id, venue });
-  log(s, t('{name} piyasaya çıktı! Dergilerin ortalaması: {score}/10.', { name: m.name, score: m.reviewScore.toFixed(1) }), 'good');
+  log(s, t('{name} piyasaya çıktı! Dergilerin ortalaması: {score}/10.', { name: m.name, score: dec(m.reviewScore, 1) }), 'good');
   decide(s, 'launch:' + m.id, `${m.name} lansmanı${p.kind === 'facelift' ? ' (makyaj)' : ''}: fiyat ${money(o.price)} (sınıf ${money(referencePrice(s.company.hq, m.segment, yf))}), ${markets.join('+')}, fuar ${o.autoShow ? 'var' : 'yok'}, dergi ${m.reviewScore.toFixed(1)}`);
 
   // Progressive unlocks.
@@ -712,8 +712,8 @@ export function setModelPrice(s: GameState, id: string, price: number) {
       t('Basın {name} modeline gelen {rise} zammı eleştirdi: dergi ortalaması {old} → {now}. Lansman heyecanı söndü.', {
         name: m.name,
         rise: fmtPercent(real / ceiling - 1, 0),
-        old: old.toFixed(1),
-        now: m.reviewScore.toFixed(1),
+        old: dec(old, 1),
+        now: dec(m.reviewScore, 1),
       }),
       'warn',
     );

@@ -5,7 +5,7 @@ import { RACING_LEVELS, RACING_YEAR, racingBudget, racingOutlook, racingPaused, 
 import { yearFloat } from '../../core/time';
 import { MARKETS } from '../../data/markets';
 import { store, useGameState } from '../store';
-import { money, num, pct as fmtPct, pctOf } from '../format';
+import { dec, money, num, pct as fmtPct, pctOf } from '../format';
 import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table } from '../components/ui';
 import { t } from '../../i18n';
 import { tx } from '../i18n';
@@ -51,7 +51,7 @@ export function Company() {
           value={money(value)}
         />
         <Stat label={t('İtibar')} value={Math.round(s.company.reputation)} sub="/ 100" />
-        <Stat label={t('Yarış ünü')} value={r.fame.toFixed(1)} sub={t('bütün modellere prestij +{v}', { v: racingPrestige(s).toFixed(1) })} />
+        <Stat label={t('Yarış ünü')} value={dec(r.fame, 1)} sub={t('bütün modellere prestij +{v}', { v: dec(racingPrestige(s), 1) })} />
         <Stat label={t('Yarış zaferi')} value={r.wins ?? 0} />
       </div>
       <TeamPanel />
@@ -114,7 +114,7 @@ export function Company() {
               <Progress
                 value={Math.min(8, r.fame)}
                 max={8}
-                label={r.fame > 8 ? t('{v} / 8 (dolu)', { v: Math.min(8, r.fame).toFixed(1) }) : `${Math.min(8, r.fame).toFixed(1)} / 8`}
+                label={r.fame > 8 ? t('{v} / 8 (dolu)', { v: dec(Math.min(8, r.fame), 1) }) : `${dec(Math.min(8, r.fame), 1)} / 8`}
               />
               {r.last && (
                 <p className="small">

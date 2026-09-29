@@ -25,7 +25,7 @@ import type { CarDesign, EngineDesign, FeatureId, Project } from '../../core/typ
 import { isTurkish, msg, t, tc } from '../../i18n';
 import { fmtNumber } from '../../i18n/format';
 import { store, useGameState } from '../store';
-import { kmh, litres, money, secs } from '../format';
+import { dec, kmh, litres, money, secs } from '../format';
 import { inYear } from '../format';
 import { tx } from '../i18n';
 import { Button, Choice, Info, Slider, Toggle } from '../components/ui';
@@ -51,8 +51,6 @@ function torqueAt(curve: { rpm: number; torque: number }[], rpm: number): number
   return curve[curve.length - 1].torque;
 }
 
-/** A decimal as the game always showed it in Turkish ("2.35"), in the player's own form elsewhere. */
-const fixed = (v: number, digits: number) => (isTurkish() ? v.toFixed(digits) : fmtNumber(v, digits));
 /** Millimetres in half steps as the game always showed them in Turkish ("82.5"), in the player's own form elsewhere. */
 const mm = (v: number) => (isTurkish() ? String(v) : fmtNumber(v, Number.isInteger(v) ? 0 : 1));
 
@@ -424,7 +422,7 @@ function EngineTab({
                 }}
                 options={presets.map((p) => ({
                   value: p.id,
-                  label: `${t(p.name)} · ${t('{v} L', { v: fixed(displacementCc(p.design) / 1000, 1) })} ${p.design.layout === 'v' ? 'V' : ''}${p.design.cylinders}`,
+                  label: `${t(p.name)} · ${t('{v} L', { v: dec(displacementCc(p.design) / 1000, 1) })} ${p.design.layout === 'v' ? 'V' : ''}${p.design.cylinders}`,
                 }))}
               />
             </div>
@@ -449,7 +447,7 @@ function EngineTab({
               onChange={(v) => onChange(withStrokeRatio(e, v, yf))}
               left={t('Kısa strok')}
               right={t('Uzun strok')}
-              format={(v) => fixed(v, 2)}
+              format={(v) => dec(v, 2)}
             />
             <p className="muted small">{t('Her ayarı ayrı ayrı yapmak için Ayarlar’dan “Mühendis modu”nu aç.')}</p>
           </>
@@ -576,11 +574,11 @@ function EngineTab({
               max={diesel ? DIESEL_COMPRESSION[1] : Math.round(maxCompression(yf) * 10) / 10}
               step={0.1}
               onChange={(v) => onChange({ ...e, compression: v })}
-              format={(v) => `${fixed(v, 1)} : 1`}
+              format={(v) => `${dec(v, 1)} : 1`}
               hint={
                 diesel ? undefined : (
                   <>
-                    {tx('Vuruntu sınırı <b>{limit}</b>.', { limit: fixed(kl, 1) })}{' '}
+                    {tx('Vuruntu sınırı <b>{limit}</b>.', { limit: dec(kl, 1) })}{' '}
                     {e.compression > kl ? <span className="tone-bad">{t('Motor vuruntu yapıyor!')}</span> : t('Güvenli.')}
                   </>
                 )
@@ -686,15 +684,15 @@ function EngineTab({
       <div className="readouts">
         <div>
           <span>{t('Hacim')}</span>
-          <b>{t('{v} L', { v: fixed(es.displacementCc / 1000, 2) })}</b>
+          <b>{t('{v} L', { v: dec(es.displacementCc / 1000, 2) })}</b>
         </div>
         <div>
           <span>{t('Güç')}</span>
-          <b>{t('{hp} bg @ {rpm}', { hp: fixed(es.powerHp, 0), rpm: Math.round(es.peakPowerRpm) })}</b>
+          <b>{t('{hp} bg @ {rpm}', { hp: dec(es.powerHp, 0), rpm: Math.round(es.peakPowerRpm) })}</b>
         </div>
         <div>
           <span>{t('Tork')}</span>
-          <b>{t('{nm} Nm @ {rpm}', { nm: fixed(es.torqueNm, 0), rpm: Math.round(es.peakTorqueRpm) })}</b>
+          <b>{t('{nm} Nm @ {rpm}', { nm: dec(es.torqueNm, 0), rpm: Math.round(es.peakTorqueRpm) })}</b>
         </div>
         <div>
           <span>
@@ -717,7 +715,7 @@ function EngineTab({
               <p>{t('1910-1947 arası Avrupa’da araç vergisi buna göre alınır: düşük vergi beygiri alıcının cebinde kalan paradır.')}</p>
             </Info>
           </span>
-          <b>{fixed(es.taxHp, 1)}</b>
+          <b>{dec(es.taxHp, 1)}</b>
         </div>
         <div>
           <span>{t('Motor ağırlığı')}</span>
@@ -752,7 +750,7 @@ function EngineTab({
               series={[{ id: 'hp', name: t('Güç'), color: 'var(--series-2)', points: curve.map((p) => ({ x: p.rpm, y: p.hp })), area: true }]}
               height={130}
               xFormat={(v) => `${Math.round(v)}`}
-              yFormat={(v) => v.toFixed(0)}
+              yFormat={(v) => dec(v, 0)}
               xLabel={t('Devir (d/d)')}
               ariaLabel={t('Motor güç eğrisi')}
             />
@@ -761,7 +759,7 @@ function EngineTab({
               series={[{ id: 'tq', name: t('Tork'), color: 'var(--series-1)', points: curve.map((p) => ({ x: p.rpm, y: p.torque })), area: true }]}
               height={130}
               xFormat={(v) => `${Math.round(v)}`}
-              yFormat={(v) => v.toFixed(0)}
+              yFormat={(v) => dec(v, 0)}
               xLabel={t('Devir (d/d)')}
               ariaLabel={t('Motor tork eğrisi')}
             />

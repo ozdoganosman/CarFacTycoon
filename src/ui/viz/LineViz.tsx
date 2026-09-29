@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react';
 import { STAGES, stationDef } from '../../data/stations';
 import type { ProductionLine, StageId } from '../../core/types';
 import { readThemeColors } from '../theme';
-import { isTurkish, t } from '../../i18n';
-import { fmtNumber } from '../../i18n/format';
+import { t } from '../../i18n';
+import { dec } from '../format';
 
 // Animated production line. Each stage works at its own rate; bodies queue up in
 // front of the slowest station (the bottleneck) and the stations after it starve.
@@ -168,7 +168,7 @@ export function LineViz(props: {
         ctx.fillStyle = colors.muted;
         ctx.font = "11px ui-monospace, Menlo, 'Noto Sans Devanagari', 'Noto Sans Arabic', monospace";
         const rate = perStage[st.id];
-        ctx.fillText(t('{v}/hf', { v: isTurkish() ? rate.toFixed(1) : fmtNumber(rate, 1) }), x, conveyorY - 12);
+        ctx.fillText(t('{v}/hf', { v: dec(rate, 1) }), x, conveyorY - 12);
         // work light
         if (busy[i]) {
           ctx.fillStyle = colors.fire;

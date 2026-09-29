@@ -24,7 +24,7 @@ import { priceNow } from '../../core/market';
 import { STAGES, STATIONS, stationDef } from '../../data/stations';
 import type { CarModel, ComponentKey, GameState, ProductionLine, StageId } from '../../core/types';
 import { store, useGameState } from '../store';
-import { money, num, pct } from '../format';
+import { dec, money, num, pct } from '../format';
 import { Badge, Button, Panel, Toggle } from '../components/ui';
 import { LineViz } from '../viz/LineViz';
 import { t, msg } from '../../i18n';
@@ -141,7 +141,7 @@ function CapacityPlanner() {
                   <button type="button" onClick={() => setPick(x.id)}>
                     <b>{x.name}</b>
                     <span className="small">
-                      {t('talep ~{demand}/hf · üretim {output}/hf', { demand: d.toFixed(0), output: c.toFixed(1) })}
+                      {t('talep ~{demand}/hf · üretim {output}/hf', { demand: dec(d, 0), output: dec(c, 1) })}
                     </span>
                     {d > c * 1.1 && d - c >= 0.5 && <span className="small tone-bad">{t('~{n} araç/hf kaçıyor', { n: Math.round(d - c) })}</span>}
                     {x.autoCapacity && x.autoHold && d > c * 1.05 && (
@@ -166,7 +166,7 @@ function CapacityPlanner() {
               <p>
                 {tx(
                   '<b>Anahtar teslim hat:</b> bugünün en iyi makineleriyle ve dengeli kurulur (hiçbir bölüm darboğazın besleyebileceğinden fazla makine almaz). {model} için {size} yerli hat başına <b>+{output} araç/hf</b>, kalıp dahil <b>{cost}</b>. Binası ve makineleri <b>{n} haftada</b> kurulur.',
-                  { model: m.name, size, output: perLine(allowBlack).toFixed(1), cost: money(each), n: build },
+                  { model: m.name, size, output: dec(perLine(allowBlack), 1), cost: money(each), n: build },
                 )}{' '}
                 {payback < Infinity ? (
                   <>
@@ -178,7 +178,7 @@ function CapacityPlanner() {
                         )
                       : tx(
                           'Ürettiği her araç satılırsa araç başına ~{margin} kalır: hat kendini <pay>~{years} yılda</pay> öder.',
-                          { margin: money(margin), years: payback.toFixed(1) },
+                          { margin: money(margin), years: dec(payback, 1) },
                           { pay: (c, k) => <b key={k} className={payback > 3 ? 'tone-warn' : ''}>{c}</b> },
                         )}
                   </>
@@ -196,11 +196,11 @@ function CapacityPlanner() {
                     aria-checked={size === k}
                     className={`chip ${size === k ? 'is-on' : ''}`}
                     onClick={() => setSizePick(k)}
-                    title={t('{output} araç/hf · {cost}', { output: outputAt(allowBlack, k).toFixed(1), cost: money(turnkeyLineCost(s.week, allowBlack, k) + A.retoolCost(s, m)) })}
+                    title={t('{output} araç/hf · {cost}', { output: dec(outputAt(allowBlack, k), 1), cost: money(turnkeyLineCost(s.week, allowBlack, k) + A.retoolCost(s, m)) })}
                   >
                     {k === fits && sizePick === undefined
-                      ? t('{n} yer · {output}/hf (açığa göre)', { n: k, output: outputAt(allowBlack, k).toFixed(0) })
-                      : t('{n} yer · {output}/hf', { n: k, output: outputAt(allowBlack, k).toFixed(0) })}
+                      ? t('{n} yer · {output}/hf (açığa göre)', { n: k, output: dec(outputAt(allowBlack, k), 0) })
+                      : t('{n} yer · {output}/hf', { n: k, output: dec(outputAt(allowBlack, k), 0) })}
                   </button>
                 ))}
               </div>
@@ -208,7 +208,7 @@ function CapacityPlanner() {
                 <Toggle
                   checked={black}
                   onChange={setBlack}
-                  label={t('Siyah vernik fırını kullan: hat başına {normal} yerine {black} araç/hf', { normal: perLine(false).toFixed(1), black: perLine(true).toFixed(1) })}
+                  label={t('Siyah vernik fırını kullan: hat başına {normal} yerine {black} araç/hf', { normal: dec(perLine(false), 1), black: dec(perLine(true), 1) })}
                   sub={t('Çok daha hızlı kurur ama araç yalnızca siyah olur: prestij −5.')}
                 />
               )}
@@ -217,7 +217,7 @@ function CapacityPlanner() {
                   <span className="small">
                     {tx(
                       '<b>Küçük atölye hattı:</b> başlangıçtaki atölye gibi, el işçiliği makineleriyle. Yavaş ve araç başına işçiliği pahalı ama ucuz: +{output} araç/hf, kalıp dahil <b>{cost}</b>.',
-                      { output: shopCap.toFixed(1), cost: money(shopEach) },
+                      { output: dec(shopCap, 1), cost: money(shopEach) },
                     )}
                   </span>
                   <Button disabled={s.company.cash < shopEach} onClick={() => store.try((st) => A.buildWorkshopLine(st, m.id), t('Atölye hattı kuruldu: {model}', { model: m.name }))}>
@@ -236,7 +236,7 @@ function CapacityPlanner() {
                   </button>
                 </div>
                 <span className="muted small">
-                  {t('Toplam {cost} · +{output} araç/hf', { cost: money(each * count), output: (perLine(allowBlack) * count).toFixed(0) })}
+                  {t('Toplam {cost} · +{output} araç/hf', { cost: money(each * count), output: dec(perLine(allowBlack) * count, 0) })}
                   {demand > cap && ` · ${t('açığı kapatmak için ~{n} hat', { n: Math.ceil((demand - cap) / Math.max(0.1, perLine(allowBlack))) })}`}
                   {` · ${t('kasan {n} hatta yetiyor', { n: affordable })}`}
                 </span>
@@ -253,9 +253,9 @@ function CapacityPlanner() {
                           n: count,
                           cost: money(each * count),
                           weeks: build,
-                          output: (perLine(allowBlack) * count).toFixed(0),
-                          demand: demand.toFixed(0),
-                          cap: cap.toFixed(1),
+                          output: dec(perLine(allowBlack) * count, 0),
+                          demand: dec(demand, 0),
+                          cap: dec(cap, 1),
                         },
                       ),
                       confirm: t('{n} hat kur', { n: count }),
@@ -283,7 +283,7 @@ function CapacityPlanner() {
                       : t('Kasada {cash} var, eksik {short}. Hat ~{years} yılda kendini ödüyorsa eksiği kredi ile kapatmak mantıklı olabilir (faiz yılda {rate}).', {
                           cash: money(s.company.cash),
                           short: money(short),
-                          years: payback.toFixed(1),
+                          years: dec(payback, 1),
                           rate: pct(credit(s).rate, 0),
                         })}{' '}
                     <Button small onClick={() => store.try((st) => A.takeLoan(st, Math.ceil(short / 1000) * 1000), t('Kredi alındı'))}>
@@ -360,7 +360,7 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
           <span className="muted small">
             · {isMilitary ? t('askeri üretim') : model ? model.name : t('boş')}
             {building ? ` · ${t('inşaatta ({n} hf)', { n: line.buildUntilWeek! - s.week })}` : ''} ·{' '}
-            {t('{output} araç/hafta · işçilik {cost}/hafta', { output: r.throughput.toFixed(1), cost: money(upkeep) })}
+            {t('{output} araç/hafta · işçilik {cost}/hafta', { output: dec(r.throughput, 1), cost: money(upkeep) })}
             {running && <> · {t('darboğaz: {stage}', { stage: t(STAGES.find((x) => x.id === r.bottleneck)!.name) })}</>}
             {staffed > 0 && <> · {t('gece vardiyası: {state}', { state: night })}</>}
           </span>
@@ -426,7 +426,7 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
       <div className="row-between">
         <span className="muted small">
           {t('Bölüm başına yer: {slots}/{max}', { slots: line.slots, max: MAX_SLOTS })}
-          {model && !isMilitary && ` · ${t('{model} üretim zorluğu {value}', { model: model.name, value: model.stats.complexity.toFixed(2) })}`}
+          {model && !isMilitary && ` · ${t('{model} üretim zorluğu {value}', { model: model.name, value: dec(model.stats.complexity, 2) })}`}
         </span>
         <span className="line-btns">
           {line.slots < MAX_SLOTS && (
@@ -463,7 +463,7 @@ function StageColumn({ line, stage, bottleneck, capacity, wage }: { line: Produc
     <div className={`stage ${bottleneck ? 'is-bottleneck' : ''}`}>
       <div className="stage-head">
         <b>{t(def.name)}</b>
-        <span className={bottleneck ? 'tone-bad' : 'muted'}>{t('{v}/hf', { v: capacity.toFixed(1) })}</span>
+        <span className={bottleneck ? 'tone-bad' : 'muted'}>{t('{v}/hf', { v: dec(capacity, 1) })}</span>
       </div>
       {bottleneck && <Badge tone="bad">{t('Darboğaz')}</Badge>}
       <ul className="stations">

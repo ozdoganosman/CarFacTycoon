@@ -12,10 +12,9 @@ import { ATTRS, ATTR_NAMES, segmentDef } from '../../data/segments';
 import { STAGES } from '../../data/stations';
 import { TOOLING, toolingDef } from '../../data/tooling';
 import type { ComponentKey, GameState, MarketId, Project, ProjectPhase, StageId, TestId, ToolingTier } from '../../core/types';
-import { isTurkish, lower, msg, t } from '../../i18n';
-import { fmtNumber } from '../../i18n/format';
+import { lower, msg, t } from '../../i18n';
 import { store, useGameState } from '../store';
-import { money, num, pct as percent, pctOf, recentProfit } from '../format';
+import { dec, money, num, pct as percent, pctOf, recentProfit } from '../format';
 import { inYear } from '../format';
 import { tx } from '../i18n';
 import { pctWith } from '../../core/turkish';
@@ -34,9 +33,6 @@ const STEPS: { label: string; phases: ProjectPhase[] }[] = [
   { label: msg('Üretim hazırlığı'), phases: ['production'] },
   { label: msg('Lansman'), phases: ['ready'] },
 ];
-
-/** A decimal as the game always showed it in Turkish ("2.5"), in the player's own form elsewhere. */
-const fixed = (v: number, digits: number) => (isTurkish() ? v.toFixed(digits) : fmtNumber(v, digits));
 
 export function ProjectView({ projectId }: { projectId: string }) {
   const s = useGameState();
@@ -136,9 +132,9 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
   const verdict = noLine
     ? t('Hattın kapasitesi henüz belli değil: kâr, talebin tamamı üretilir diye hesaplandı.')
     : d > cap * 1.2
-      ? t('Orta tahmin hattın {x} katı: fiyatı biraz yükseltebilir ya da kapasite ekleyebilirsin.', { x: fixed(d / Math.max(0.1, cap), 1) })
+      ? t('Orta tahmin hattın {x} katı: fiyatı biraz yükseltebilir ya da kapasite ekleyebilirsin.', { x: dec(d / Math.max(0.1, cap), 1) })
       : d < cap * 0.8
-        ? t('Hat orta tahminin {x} katını üretebilir: fiyatı düşürmeyi ya da daha küçük bir hattı düşün.', { x: fixed(cap / Math.max(0.1, d), 1) })
+        ? t('Hat orta tahminin {x} katını üretebilir: fiyatı düşürmeyi ya da daha küçük bir hattı düşün.', { x: dec(cap / Math.max(0.1, d), 1) })
         : t('Orta tahmine göre talep ve kapasite dengeli.');
   const weeklyProfit = (pr: number) => (noLine ? demandAt(pr) : Math.min(demandAt(pr), cap)) * (pr * net - unit - labour);
   // The price that earns most per week with this line (demand beyond the line's output is not sold).
@@ -180,12 +176,12 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
       <p className="small">
         {segWeekly > 0
           ? tx('Bu fiyatta tahmini talep: <b>{lo}–{hi} araç/hafta</b> (sınıfın ~{share}) · hat {cap} araç/hafta.', {
-              lo: fixed(lo, 1),
-              hi: fixed(hi, 1),
+              lo: dec(lo, 1),
+              hi: dec(hi, 1),
               share: pctWith(d / segWeekly, 'poss'),
-              cap: fixed(cap, 1),
+              cap: dec(cap, 1),
             })
-          : tx('Bu fiyatta tahmini talep: <b>{lo}–{hi} araç/hafta</b> · hat {cap} araç/hafta.', { lo: fixed(lo, 1), hi: fixed(hi, 1), cap: fixed(cap, 1) })}{' '}
+          : tx('Bu fiyatta tahmini talep: <b>{lo}–{hi} araç/hafta</b> · hat {cap} araç/hafta.', { lo: dec(lo, 1), hi: dec(hi, 1), cap: dec(cap, 1) })}{' '}
         {verdict}
         {segWeekly > 0 &&
           d / segWeekly > 0.4 &&
@@ -195,7 +191,7 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
         <p className="note small">
           {tx(
             '<b>Hat küçük.</b> “En kârlı” fiyat bu hattın az üretmesinden yüksek çıkıyor. Sınıf fiyatında ({price}) talep ~{demand} araç/hf: ona yetecek bir hatla haftada ~{profit} brüt kâr kalır (bu hatla en iyisi {best}). Fabrika’dan hat kur ya da büyüt; “talebi otomatik karşıla” da kasa yettikçe büyütür.',
-            { price: money(refRound), demand: fixed(demandAtRef, 0), profit: money(bigLineProfit), best: money(bestProfit) },
+            { price: money(refRound), demand: dec(demandAtRef, 0), profit: money(bigLineProfit), best: money(bestProfit) },
           )}
         </p>
       )}
@@ -223,7 +219,7 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
                     {pr > ref * steep && ` · ${t('dergiler “iddialı” der')}`}
                   </span>
                 </td>
-                <td className="al-r">{fixed(dm, 1)}</td>
+                <td className="al-r">{dec(dm, 1)}</td>
                 <td className={`al-r ${profit < 0 ? 'tone-bad' : ''}`}>{money(profit)}</td>
               </tr>
             );
@@ -357,7 +353,7 @@ function Testing({ p }: { p: Project }) {
           {weeksLeft - shorterWeeks > 0 && (
             <p className="small muted">
               {t('Her testi 5 hafta kısaltsan: ~{defects} kusur daha sahaya çıkar, ama araç {n} hafta erken satışa çıkar ve ~{saves} tasarruf edersin.', {
-                defects: fixed(extraDefects, 1),
+                defects: dec(extraDefects, 1),
                 n: weeksLeft - shorterWeeks,
                 saves: money(shorterSaves),
               })}
@@ -395,10 +391,10 @@ function tuningText(tu: Tuning): string {
   const parts: string[] = [];
   if (tu.power > 0.001) parts.push(t('güç +{pct}', { pct: percent(tu.power, 1) }));
   if (tu.fuel > 0.001) parts.push(t('tüketim −{pct}', { pct: percent(tu.fuel, 1) }));
-  if (tu.comfort > 0.05) parts.push(t('konfor +{v}', { v: fixed(tu.comfort, 1) }));
-  if (tu.handling > 0.05) parts.push(t('yol tutuş +{v}', { v: fixed(tu.handling, 1) }));
-  if (tu.safety > 0.05) parts.push(t('güvenlik +{v}', { v: fixed(tu.safety, 1) }));
-  if (tu.reliability > 0.05) parts.push(t('güvenilirlik +{v}', { v: fixed(tu.reliability, 1) }));
+  if (tu.comfort > 0.05) parts.push(t('konfor +{v}', { v: dec(tu.comfort, 1) }));
+  if (tu.handling > 0.05) parts.push(t('yol tutuş +{v}', { v: dec(tu.handling, 1) }));
+  if (tu.safety > 0.05) parts.push(t('güvenlik +{v}', { v: dec(tu.safety, 1) }));
+  if (tu.reliability > 0.05) parts.push(t('güvenilirlik +{v}', { v: dec(tu.reliability, 1) }));
   return parts.length ? t('Şimdiye kadar: {list}.', { list: parts.join(', ') }) : '';
 }
 
@@ -521,7 +517,7 @@ function Production({ p }: { p: Project }) {
                 <label key={l.id} className={`line-option ${lineId === l.id ? 'is-on' : ''} ${claimedBy ? 'is-off' : ''}`}>
                   <input type="radio" name="line" checked={lineId === l.id} disabled={!!claimedBy} onChange={() => setLineId(l.id)} />
                   <span>
-                    <b>{l.name}</b> · {t('{v} araç/hafta', { v: fixed(r.throughput, 1) })}
+                    <b>{l.name}</b> · {t('{v} araç/hafta', { v: dec(r.throughput, 1) })}
                     <br />
                     <span className="muted small">
                       {claimedBy
@@ -630,7 +626,7 @@ function Production({ p }: { p: Project }) {
             </div>
             <div>
               <span>{t('Hat kapasitesi')}</span>
-              <b>{report ? t('{v} araç/hf', { v: fixed(report.throughput, 1) }) : '—'}</b>
+              <b>{report ? t('{v} araç/hf', { v: dec(report.throughput, 1) }) : '—'}</b>
             </div>
             {quote.sharedPlatform && <Badge tone="good">{t('Aynı platform: kalıplar büyük ölçüde ortak')}</Badge>}
           </div>
@@ -837,12 +833,12 @@ function Launch({ p }: { p: Project }) {
           <div>
             <span>{t('Seçili pazarlarda segment ({markets})', { markets: markets.map((mk) => t(MARKETS.find((x) => x.id === mk)!.name)).join(' + ') })}</span>
             <b>
-              {t('{count} araç/yıl', { count: num(segmentWeekly * 52) })} <span className="muted small">{t('(haftada {v})', { v: fixed(segmentWeekly, 0) })}</span>
+              {t('{count} araç/yıl', { count: num(segmentWeekly * 52) })} <span className="muted small">{t('(haftada {v})', { v: dec(segmentWeekly, 0) })}</span>
             </b>
           </div>
           <div>
             <span>{t('Hat kapasitesi')}</span>
-            <b>{t('{v} araç/hafta', { v: fixed(cap, 1) })}</b>
+            <b>{t('{v} araç/hafta', { v: dec(cap, 1) })}</b>
           </div>
           <div>
             <span>{t('Malzeme / araç')}</span>
@@ -858,7 +854,7 @@ function Launch({ p }: { p: Project }) {
           </div>
           <div>
             <span>{t('Beklenen satış (orta tahmin)')}</span>
-            <b>{t('{v} araç/hafta', { v: fixed(sold, 1) })}</b>
+            <b>{t('{v} araç/hafta', { v: dec(sold, 1) })}</b>
           </div>
           <div>
             <span>{t('Aracın haftalık katkısı')}</span>

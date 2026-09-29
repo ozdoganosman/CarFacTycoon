@@ -8,18 +8,14 @@ import { MARKETS } from '../../data/markets';
 import { RIVALS } from '../../data/rivals';
 import { ATTRS, ATTR_NAMES, segmentDef } from '../../data/segments';
 import type { AttrKey, CarStats, GameState, LaunchReport, MarketId } from '../../core/types';
-import { isTurkish, t } from '../../i18n';
-import { fmtNumber } from '../../i18n/format';
+import { t } from '../../i18n';
 import { ads } from '../ads';
 import { store } from '../store';
-import { kmh, litres, money, num, pct, secs } from '../format';
+import { dec, kmh, litres, money, num, pct, secs } from '../format';
 import { Button, ScoreBar } from './ui';
 import { CarSVG } from '../viz/CarSVG';
 
 type Stage = 'reveal' | 'reviews' | 'rivals';
-
-/** One decimal, as the game always showed it in Turkish ("7.5"). */
-const dec1 = (v: number) => (isTurkish() ? v.toFixed(1) : fmtNumber(v, 1));
 
 function verdict(avg: number): { label: string; tone: 'good' | 'warn' | 'bad' } {
   if (avg >= 8) return { label: t('Övgü yağmuru'), tone: 'good' };
@@ -89,14 +85,14 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
                 <article key={r.magazine} className={`review review-reveal ${i < shown ? 'is-in' : ''}`} aria-hidden={i >= shown}>
                   <header>
                     <span className="review-mag">{r.magazine}</span>
-                    <span className={`review-score ${r.score >= 7 ? 'tone-good' : r.score < 5 ? 'tone-bad' : ''}`}>{i < shown ? dec1(r.score) : '?'}</span>
+                    <span className={`review-score ${r.score >= 7 ? 'tone-good' : r.score < 5 ? 'tone-bad' : ''}`}>{i < shown ? dec(r.score) : '?'}</span>
                   </header>
                   <p>“{r.quote}”</p>
                 </article>
               ))}
             </div>
             <div className={`launch-verdict tone-${v.tone} ${allShown ? 'is-in' : ''}`}>
-              <span className="launch-avg">{dec1(m.reviewScore)}</span>
+              <span className="launch-avg">{dec(m.reviewScore)}</span>
               <span>
                 <b>{v.label}</b>
                 <br />
@@ -151,7 +147,7 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
 
 function specCells(st: CarStats, yf: number, seg: Parameters<typeof eraReference>[1]) {
   const a = accelMetric(st, eraReference(yf, seg));
-  return { power: t('{v} bg', { v: st.engine.powerHp.toFixed(0) }), top: kmh(st.topSpeed), accel: secs(a.value), accelLabel: a.label, fuel: litres(st.fuel) };
+  return { power: t('{v} bg', { v: dec(st.engine.powerHp, 0) }), top: kmh(st.topSpeed), accel: secs(a.value), accelLabel: a.label, fuel: litres(st.fuel) };
 }
 
 /** Our car next to every rival in the segment, as buyers see them today. */
@@ -218,7 +214,7 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
                   </td>
                   <td className="rival-appeal">
                     <ScoreBar value={o.appeal} />
-                    <span className="small">{o.appeal.toFixed(0)}</span>
+                    <span className="small">{dec(o.appeal, 0)}</span>
                   </td>
                   <td className="al-r">{pct(o.weight / sm.totalWeight)}</td>
                   <td className="al-r">{money(o.price)}</td>
@@ -241,7 +237,7 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
               </td>
               <td className="al-r">{pct(sm.othersWeight / sm.totalWeight)}</td>
               <td className="al-r">~{money(referencePrice(market, m.segment, yf))}</td>
-              <td className="al-r">{t('{v} bg', { v: ref.powerHp.toFixed(0) })}</td>
+              <td className="al-r">{t('{v} bg', { v: dec(ref.powerHp, 0) })}</td>
               <td className="al-r">{kmh(ref.topSpeed)}</td>
               <td className="al-r">{secs(ref.accel100 ?? ref.accel50)}</td>
               <td className="al-r">{litres(ref.fuel)}</td>
@@ -320,11 +316,11 @@ export function LaunchReportView({ s, modelId, report: r }: { s: GameState; mode
           </div>
           <div>
             <span>{t('Haftalık talep')}</span>
-            <b>{dec1(r.demand)}</b>
+            <b>{dec(r.demand)}</b>
           </div>
           <div>
             <span>{t('Haftalık üretim')}</span>
-            <b>{dec1(r.capacity)}</b>
+            <b>{dec(r.capacity)}</b>
           </div>
           <div>
             <span>

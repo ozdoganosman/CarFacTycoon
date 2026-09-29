@@ -19,7 +19,7 @@ import {
 } from '../../core/research';
 import { yearFloat } from '../../core/time';
 import { store, useGameState } from '../store';
-import { money, pct, pctOf } from '../format';
+import { dec, money, pct, pctOf } from '../format';
 import { inYear } from '../format';
 import { Button, Info, Panel, Progress, Stat } from '../components/ui';
 import { locale, msg, t } from '../../i18n';
@@ -109,7 +109,7 @@ export function Research() {
         />
         <Stat
           label={t('Araştırma hızı')}
-          value={`×${labSpeed(s).toFixed(1)}`}
+          value={`×${dec(labSpeed(s), 1)}`}
           sub={t('{engineers} mühendis · {researchers} Ar-Ge uzmanı', { engineers: s.company.engineers, researchers: s.company.researchers ?? 0 })}
         />
         <Stat
@@ -310,7 +310,7 @@ function LabStaff() {
           {' '}
           ·{' '}
           {t('araştırma hızı ×{speed}, aynı anda {n} konu · maaşları haftada {pay}', {
-            speed: labSpeed(s).toFixed(1),
+            speed: dec(labSpeed(s), 1),
             n: labSlots(s),
             pay: money(n * researcherSalary(yf)),
           })}
@@ -318,7 +318,7 @@ function LabStaff() {
         <span className="small">
           {t(
             '+4 uzmanla hız ×{speed}, {n} konu. Uzmanlar yalnızca araştırır (araba geliştirmez); işe alınca süren araştırmalar da hızlanır. Kişi başı işe alma {hire}, maaş haftada {pay}.',
-            { speed: researchSpeed(e, next).toFixed(1), n: researchSlots(e, next), hire: money(researcherHireCost(yf)), pay: money(researcherSalary(yf)) },
+            { speed: dec(researchSpeed(e, next), 1), n: researchSlots(e, next), hire: money(researcherHireCost(yf)), pay: money(researcherSalary(yf)) },
           )}
         </span>
       </div>
