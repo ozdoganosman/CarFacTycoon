@@ -2056,6 +2056,16 @@ fieldset {
     font-size: 0.7rem;
     align-items: center;
   }
+  /* An item is never narrower than its longest word (German "Wissenskarten"): the bar scrolls instead
+     of the words running into each other. Labels of several words wrap. */
+  .nav-item {
+    flex-shrink: 0;
+  }
+  .nav-label {
+    max-width: 88px;
+    text-align: center;
+    line-height: 1.15;
+  }
   .nav-badge {
     position: absolute;
     top: 2px;

@@ -1,4 +1,5 @@
 import type { BodyId } from '../../core/types';
+import { BODIES } from '../../data/tech';
 import { t } from '../../i18n';
 
 // Procedural side view of a car. Proportions follow the design (size, engine
@@ -136,7 +137,7 @@ export function CarSVG(props: {
   const lampX = frontEnd - lerp(4, 8, s);
 
   return (
-    <svg className={props.className} viewBox={`0 0 ${W} ${H}`} width={props.width} role="img" aria-label={t('{body} gövdeli araç çizimi', { body })}>
+    <svg className={props.className} viewBox={`0 0 ${W} ${H}`} width={props.width} role="img" aria-label={t('{body} gövdeli araç çizimi', { body: t(BODIES.find((x) => x.id === body)?.name ?? body) })}>
       <ellipse cx={cx} cy={ground + 5} rx={wb / 2 + wheelR + 40} ry={5} fill="var(--car-shadow)" />
       {/* running board */}
       {fenderOpacity > 0 && (

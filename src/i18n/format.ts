@@ -10,7 +10,8 @@ const UNITS: Record<string, [string, string, string]> = {
   qps: ['K', 'M', 'B'],
   de: [' Tsd.', ' Mio.', ' Mrd.'],
   es: [' mil', ' M', ' mil M'],
-  hi: [' हज़ार', ' मिलियन', ' अरब'],
+  // Hindi: the Latin units Indian apps use for dollars; "मिलियन" does not fit the game's cards.
+  hi: ['K', 'M', 'B'],
   // Arabic: the Latin units, kept left-to-right as one piece inside the right-to-left text.
   ar: ['K', 'M', 'B'],
 };
