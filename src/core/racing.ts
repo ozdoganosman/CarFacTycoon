@@ -7,6 +7,7 @@ import { boardVeto } from './shares';
 import { weekOfYear, yearFloat, yearOf } from './time';
 import type { CarModel, GameState, MarketId } from './types';
 import { clamp, log, money, spend } from './util';
+import { msg, t } from '../i18n';
 
 // A racing team: money that buys fame. Each season the team's best car and
 // engineers meet the field; wins make the headlines, raise the brand's prestige
@@ -15,10 +16,10 @@ import { clamp, log, money, spend } from './util';
 export const RACING_YEAR = 1906;
 
 export const RACING_LEVELS = [
-  { name: 'Yarışmıyor', share: 0, floor: 0, desc: 'Yarış bütçesi yok.' },
-  { name: 'Amatör sürücüler', share: 0.01, floor: 3000, desc: 'Müşteri arabalarıyla yerel yarışlar ve tepe tırmanışları. Ucuz, ünü yavaş büyür.' },
-  { name: 'Fabrika takımı', share: 0.025, floor: 12000, desc: 'Kendi sürücülerin ve hazırlanmış arabalarınla büyük yarışlarda.' },
-  { name: 'Grand Prix takımı', share: 0.05, floor: 40000, desc: 'Özel yarış arabaları ve en iyi sürücüler: kazanmak için. Çok pahalı.' },
+  { name: msg('Yarışmıyor'), share: 0, floor: 0, desc: msg('Yarış bütçesi yok.') },
+  { name: msg('Amatör sürücüler'), share: 0.01, floor: 3000, desc: msg('Müşteri arabalarıyla yerel yarışlar ve tepe tırmanışları. Ucuz, ünü yavaş büyür.') },
+  { name: msg('Fabrika takımı'), share: 0.025, floor: 12000, desc: msg('Kendi sürücülerin ve hazırlanmış arabalarınla büyük yarışlarda.') },
+  { name: msg('Grand Prix takımı'), share: 0.05, floor: 40000, desc: msg('Özel yarış arabaları ve en iyi sürücüler: kazanmak için. Çok pahalı.') },
 ];
 
 /** Fame gained per result, by level. */
@@ -35,13 +36,13 @@ export function racingBudget(s: GameState, level: number): number {
 /** Prestige points every model of the company gets from the team's fame (applied in modelScores). */
 export const racingPrestige = (s: GameState) => Math.min(8, s.racing?.fame ?? 0);
 
-/** The races of the day in the company's home market. */
+/** The races of the day in the company's home market (in the player's language: it is stored for display). */
 function raceName(home: MarketId, year: number, level: number): string {
-  if (level === 1) return home === 'usa' ? 'Pikes Peak tepe tırmanışı' : 'Shelsley Walsh tepe tırmanışı';
-  if (home === 'usa') return year >= 1911 ? 'Indianapolis 500' : 'Vanderbilt Kupası';
+  if (level === 1) return home === 'usa' ? t('Pikes Peak tepe tırmanışı') : t('Shelsley Walsh tepe tırmanışı');
+  if (home === 'usa') return year >= 1911 ? 'Indianapolis 500' : t('Vanderbilt Kupası');
   if (year >= 1927 && level === 2) return 'Mille Miglia';
-  if (year >= 1923 && level === 2) return 'Le Mans 24 Saat';
-  return 'Fransa Grand Prix’si';
+  if (year >= 1923 && level === 2) return t('Le Mans 24 Saat');
+  return t('Fransa Grand Prix’si');
 }
 
 function bestCar(s: GameState): { m: CarModel; perf: number } | null {
@@ -97,7 +98,13 @@ export function racingWeek(s: GameState) {
   const paused = racingPaused(s.company.hq, yf);
   if (r.level > 0 && paused !== !!r.paused) {
     r.paused = paused;
-    log(s, paused ? 'Savaş yüzünden yarışlar yapılmıyor: takım bekliyor, yarış bütçesi harcanmıyor.' : 'Savaş bitti, yarışlar yeniden başlıyor: takım sezona hazırlanıyor.', 'info');
+    log(
+      s,
+      paused
+        ? t('Savaş yüzünden yarışlar yapılmıyor: takım bekliyor, yarış bütçesi harcanmıyor.')
+        : t('Savaş bitti, yarışlar yeniden başlıyor: takım sezona hazırlanıyor.'),
+      'info',
+    );
   }
   if (r.level > 0 && yf >= RACING_YEAR && !paused) spend(s, racingBudget(s, r.level) / 52, 'marketing');
   const hq = s.markets[s.company.hq];
@@ -124,17 +131,19 @@ export function raceSeason(s: GameState) {
     r.wins = (r.wins ?? 0) + 1;
     (r.winYears ??= []).push(year);
     s.company.reputation = clamp(s.company.reputation + [0, 0.5, 1.5, 3][r.level], 0, 100);
-    log(s, `🏁 ${s.company.name} ${car.m.name} ile ${race}’i kazandı! Marka ünü arttı.`, 'good');
+    log(s, t('🏁 {company} {model} ile {race}’i kazandı! Marka ünü arttı.', { company: s.company.name, model: car.m.name, race }), 'good');
     if (r.level >= 2) publishWin(s, car.m, race);
   } else if (result === 'podium') {
     r.fame += FAME.podium[r.level];
-    log(s, `🏁 ${race}: ${car.m.name} ilk üçe girdi.`, 'good');
+    log(s, t('🏁 {race}: {model} ilk üçe girdi.', { race, model: car.m.name }), 'good');
   } else {
     r.fame += 0.2;
     const age = (s.week - car.m.refreshWeek) / 52;
     log(
       s,
-      `🏁 ${race}: ${car.m.name} dereceye giremedi.${age > 5 ? ` Araba ${Math.floor(age)} yaşında; yeni ve güçlü bir araba olmadan takım para yakıyor.` : ' Daha güçlü bir araba ya da daha büyük bir takım gerekiyor.'}`,
+      age > 5
+        ? t('🏁 {race}: {model} dereceye giremedi. Araba {n} yaşında; yeni ve güçlü bir araba olmadan takım para yakıyor.', { race, model: car.m.name, n: Math.floor(age) })
+        : t('🏁 {race}: {model} dereceye giremedi. Daha güçlü bir araba ya da daha büyük bir takım gerekiyor.', { race, model: car.m.name }),
       (r.dry ?? 0) >= 2 ? 'warn' : 'info',
     );
   }
@@ -142,23 +151,34 @@ export function raceSeason(s: GameState) {
 
 function publishWin(s: GameState, m: CarModel, race: string) {
   const r = s.racing!;
-  const market = MARKETS.find((x) => x.id === s.company.hq)!.name;
+  const market = t(MARKETS.find((x) => x.id === s.company.hq)!.name);
+  const company = s.company.name;
+  const model = m.name;
   publish(s, {
     id: `n${s.nextId++}`,
     week: s.week,
     kind: 'boom',
     lead: {
-      headline: `${m.name}, ${race}’i kazandı!`,
-      deck: `${s.company.name} takımı rakiplerini geride bıraktı; bayilerde yarışı gören meraklılar kuyrukta`,
-      body: `${s.company.name} fabrika takımı, ${race}’de ${m.name} ile birinciliği aldı. Takımın bu ${r.wins === 1 ? 'ilk' : `${r.wins}.`} büyük zaferi, ${market} basınında geniş yer buldu.`,
+      headline: t('{model}, {race}’i kazandı!', { model, race }),
+      deck: t('{company} takımı rakiplerini geride bıraktı; bayilerde yarışı gören meraklılar kuyrukta', { company }),
+      body:
+        r.wins === 1
+          ? t('{company} fabrika takımı, {race}’de {model} ile birinciliği aldı. Takımın bu ilk büyük zaferi, {market} basınında geniş yer buldu.', { company, race, model, market })
+          : t('{company} fabrika takımı, {race}’de {model} ile birinciliği aldı. Takımın bu {wins}. büyük zaferi, {market} basınında geniş yer buldu.', {
+              company,
+              race,
+              model,
+              wins: r.wins ?? 0,
+              market,
+            }),
       paragraphs: [
-        'Yarış çevreleri zaferin sırrını motorun dayanıklılığına ve takımın hazırlığına bağlıyor. Sokaktaki alıcı için mesaj açık: kazanan arabanın kardeşi bayide satılıyor.',
-        `Sektör gözlemcileri, ${s.company.name} markasının önümüzdeki aylarda satışlarını artırmasını bekliyor.`,
+        t('Yarış çevreleri zaferin sırrını motorun dayanıklılığına ve takımın hazırlığına bağlıyor. Sokaktaki alıcı için mesaj açık: kazanan arabanın kardeşi bayide satılıyor.'),
+        t('Sektör gözlemcileri, {company} markasının önümüzdeki aylarda satışlarını artırmasını bekliyor.', { company }),
       ],
       art: { kind: 'car', modelId: m.id },
-      caption: `Kazanan ${m.name}, damalı bayrağın ardından.`,
+      caption: t('Kazanan {model}, damalı bayrağın ardından.', { model }),
     },
-    side: [{ headline: 'Rakip Takımlar Kara Kara Düşünüyor', body: 'Yenilen takımlar gelecek sezon için daha güçlü motorlar ve yeni sürücüler arıyor.' }],
+    side: [{ headline: t('Rakip Takımlar Kara Kara Düşünüyor'), body: t('Yenilen takımlar gelecek sezon için daha güçlü motorlar ve yeni sürücüler arıyor.') }],
   });
 }
 
@@ -169,6 +189,12 @@ export function setRacingLevel(s: GameState, level: number): { ok: boolean; erro
   const veto = next > s.racing.level ? boardVeto(s) : undefined;
   if (veto) return { ok: false, error: veto };
   s.racing.level = next;
-  log(s, s.racing.level ? `Yarış bütçesi: ${RACING_LEVELS[s.racing.level].name} (yılda ~${money(racingBudget(s, s.racing.level))}).` : 'Yarış takımı dağıtıldı.', 'info');
+  log(
+    s,
+    s.racing.level
+      ? t('Yarış bütçesi: {level} (yılda ~{budget}).', { level: t(RACING_LEVELS[s.racing.level].name), budget: money(racingBudget(s, s.racing.level)) })
+      : t('Yarış takımı dağıtıldı.'),
+    'info',
+  );
   return { ok: true };
 }

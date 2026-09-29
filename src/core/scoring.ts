@@ -3,6 +3,7 @@ import { referenceBonus, referenceDesigns } from './ai';
 import { computeCarStats } from './vehicle';
 import { INDUSTRY_RESIDUAL_DEFECTS } from './testing';
 import type { AttrKey, CarStats, MarketId, Scores, SegmentId } from './types';
+import { t } from '../i18n';
 
 // Scores are relative to the average new car of the same class in the same year
 // (50 = class average), so a 1930 car that was great at launch slowly becomes
@@ -68,10 +69,10 @@ export function eraReference(yearFloat: number, segment: SegmentId): EraReferenc
 
 const squash = (z: number) => 50 + 50 * Math.tanh(0.85 * z);
 
-/** Which acceleration metric the era uses for display & scoring. */
+/** Which acceleration metric the era uses for display & scoring (the label in the player's language). */
 export function accelMetric(stats: Pick<CarStats, 'accel50' | 'accel100'>, ref: EraReference): { label: string; value: number | null; refValue: number } {
-  if (ref.accel100 !== null) return { label: '0-100 km/s', value: stats.accel100, refValue: ref.accel100 };
-  return { label: '0-50 km/s', value: stats.accel50, refValue: ref.accel50 };
+  if (ref.accel100 !== null) return { label: t('0-100 km/s'), value: stats.accel100, refValue: ref.accel100 };
+  return { label: t('0-50 km/s'), value: stats.accel50, refValue: ref.accel50 };
 }
 
 export function scoreStats(stats: CarStats, yearFloat: number, segment: SegmentId, reliabilityOverride?: number): Scores {

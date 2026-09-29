@@ -3,6 +3,8 @@ import { referenceDesigns } from './ai';
 import { computeEngine, eraRpmCap } from './engine';
 import type { CarDesign, CarStats, DevBonus, EngineDesign, EngineStats, SegmentId } from './types';
 import { computeCarStats } from './vehicle';
+import { isTurkish, t } from '../i18n';
+import { fmtNumber, fmtPercent } from '../i18n/format';
 
 // Plain-language pros and cons of an engine, measured against the typical
 // engine of the same class in the same year (the yardstick the stats panel
@@ -27,7 +29,6 @@ interface Typical {
   smooth: number;
   rel: number;
   taxHpEurope: number;
-  label: string;
 }
 
 const cache = new Map<string, Typical>();
@@ -41,7 +42,7 @@ function typical(year: number, segment: SegmentId): Typical {
   const designs = referenceDesigns(y, seg).map((d) => d.engine);
   const stats = designs.map((e) => computeEngine(e, y));
   const avg = (f: (x: EngineStats) => number) => stats.reduce((a, x) => a + f(x), 0) / stats.length;
-  const t: Typical = {
+  const out: Typical = {
     hp: avg((x) => x.powerHp),
     torque: avg((x) => x.torqueNm),
     torqueRpm: avg((x) => x.peakTorqueRpm),
@@ -53,75 +54,85 @@ function typical(year: number, segment: SegmentId): Typical {
     smooth: avg((x) => x.smoothness),
     rel: avg((x) => x.reliabilityPenalty),
     taxHpEurope: stats[1].taxHp,
-    label: `~${(avg((x) => x.displacementCc) / 1000).toFixed(1)} L, ~${Math.round(avg((x) => x.powerHp))} bg`,
   };
-  cache.set(key, t);
-  return t;
+  cache.set(key, out);
+  return out;
 }
 
-const pct = (r: number) => `%${Math.round(Math.abs(r - 1) * 100)}`;
+const pct = (r: number) => fmtPercent(Math.abs(r - 1), 0);
+/** One decimal: as the game always wrote it in Turkish, in the language's own way otherwise. */
+const dec = (v: number) => (isTurkish() ? v.toFixed(1) : fmtNumber(v, 1));
 
 export function engineNotes(e: EngineDesign, year: number, segment: SegmentId): EngineNotes {
-  const t = typical(year, segment);
+  const typ = typical(year, segment);
   const x = computeEngine(e, year);
   const pros: string[] = [];
   const cons: string[] = [];
   // Only the American market is played: the European horsepower tax does not apply.
   const europeTax = false;
 
-  const hp = x.powerHp / t.hp;
-  if (hp >= 1.15) pros.push(`Tipik motordan ${pct(hp)} güçlü: hızlanma ve son hız artar.`);
-  else if (hp <= 0.85) cons.push(`Tipik motordan ${pct(hp)} güçsüz: araç ağır kalkar, yokuşta zorlanır.`);
+  const hp = x.powerHp / typ.hp;
+  if (hp >= 1.15) pros.push(t('Tipik motordan {pct} güçlü: hızlanma ve son hız artar.', { pct: pct(hp) }));
+  else if (hp <= 0.85) cons.push(t('Tipik motordan {pct} güçsüz: araç ağır kalkar, yokuşta zorlanır.', { pct: pct(hp) }));
 
-  const tq = x.torqueNm / t.torque;
-  if (tq >= 1.15) pros.push(`Bol tork (${Math.round(x.torqueNm)} Nm): yüklüyken ve yokuşta rahat çeker, vites az değişir.`);
-  else if (tq <= 0.85) cons.push(`Tork az (${Math.round(x.torqueNm)} Nm): yükte ve yokuşta sık vites küçültmek gerekir.`);
+  const tq = x.torqueNm / typ.torque;
+  if (tq >= 1.15) pros.push(t('Bol tork ({nm} Nm): yüklüyken ve yokuşta rahat çeker, vites az değişir.', { nm: Math.round(x.torqueNm) }));
+  else if (tq <= 0.85) cons.push(t('Tork az ({nm} Nm): yükte ve yokuşta sık vites küçültmek gerekir.', { nm: Math.round(x.torqueNm) }));
 
-  if (x.peakTorqueRpm <= t.torqueRpm * 0.8) pros.push(`Torkunu düşük devirde veriyor (${Math.round(x.peakTorqueRpm)} d/d): şehirde esnek ve sessiz.`);
-  else if (x.peakTorqueRpm >= t.torqueRpm * 1.25) cons.push(`Torkunu yüksek devirde veriyor (${Math.round(x.peakTorqueRpm)} d/d): canlı kalmak için bağırtmak gerekir.`);
+  if (x.peakTorqueRpm <= typ.torqueRpm * 0.8)
+    pros.push(t('Torkunu düşük devirde veriyor ({rpm} d/d): şehirde esnek ve sessiz.', { rpm: Math.round(x.peakTorqueRpm) }));
+  else if (x.peakTorqueRpm >= typ.torqueRpm * 1.25)
+    cons.push(t('Torkunu yüksek devirde veriyor ({rpm} d/d): canlı kalmak için bağırtmak gerekir.', { rpm: Math.round(x.peakTorqueRpm) }));
   const capped = !x.diesel && x.redline >= eraRpmCap(e.valvetrain, year) - 1;
   if (capped && e.stroke < e.bore)
-    cons.push(`Devri dönemin supap yayları ve yatakları sınırlıyor (${Math.round(x.redline)} d/d): stroku daha da kısaltmak gücü artırmaz, yalnızca hacmi küçültür.`);
-  if (x.redline >= t.redline * 1.2) pros.push(`Yüksek devre çıkıyor (${Math.round(x.redline)} d/d): kısa strok ve iyi supaplar sayesinde güç tepesi geç gelir.`);
+    cons.push(
+      t('Devri dönemin supap yayları ve yatakları sınırlıyor ({rpm} d/d): stroku daha da kısaltmak gücü artırmaz, yalnızca hacmi küçültür.', {
+        rpm: Math.round(x.redline),
+      }),
+    );
+  if (x.redline >= typ.redline * 1.2)
+    pros.push(t('Yüksek devre çıkıyor ({rpm} d/d): kısa strok ve iyi supaplar sayesinde güç tepesi geç gelir.', { rpm: Math.round(x.redline) }));
 
-  const cc = x.displacementCc / t.cc;
-  if (cc >= 1.3) cons.push(`Hacmi büyük (${(x.displacementCc / 1000).toFixed(1)} L): daha çok yakar.`);
-  else if (cc <= 0.75) pros.push(`Hacmi küçük (${(x.displacementCc / 1000).toFixed(1)} L): az yakar.`);
+  const cc = x.displacementCc / typ.cc;
+  if (cc >= 1.3) cons.push(t('Hacmi büyük ({l} L): daha çok yakar.', { l: dec(x.displacementCc / 1000) }));
+  else if (cc <= 0.75) pros.push(t('Hacmi küçük ({l} L): az yakar.', { l: dec(x.displacementCc / 1000) }));
 
-  const eff = x.peakEfficiency / t.eff;
-  if (eff >= 1.06) pros.push(`Yakıtı iyi değerlendiriyor (verim ${pct(eff)} yüksek): sıkıştırma ve supap düzeni sayesinde.`);
-  else if (eff <= 0.94) cons.push(`Yakıtı boşa yakıyor (verim ${pct(eff)} düşük): sıkıştırmayı ya da supap düzenini iyileştir.`);
+  const eff = x.peakEfficiency / typ.eff;
+  if (eff >= 1.06) pros.push(t('Yakıtı iyi değerlendiriyor (verim {pct} yüksek): sıkıştırma ve supap düzeni sayesinde.', { pct: pct(eff) }));
+  else if (eff <= 0.94) cons.push(t('Yakıtı boşa yakıyor (verim {pct} düşük): sıkıştırmayı ya da supap düzenini iyileştir.', { pct: pct(eff) }));
 
-  const smooth = x.smoothness - t.smooth;
-  if (smooth >= 4) pros.push('Tipik motordan yumuşak ve sessiz çalışıyor: konfor ve prestij artar.');
-  else if (smooth <= -4) cons.push('Tipik motordan sarsıntılı çalışıyor: konfor ve prestij düşer.');
+  const smooth = x.smoothness - typ.smooth;
+  if (smooth >= 4) pros.push(t('Tipik motordan yumuşak ve sessiz çalışıyor: konfor ve prestij artar.'));
+  else if (smooth <= -4) cons.push(t('Tipik motordan sarsıntılı çalışıyor: konfor ve prestij düşer.'));
 
-  if (x.knocking) cons.push(`Vuruntu yapıyor! Bu çapta sıkıştırma en fazla ${x.knockLimit.toFixed(1)} olmalı: güç ve güvenilirlik düşüyor.`);
-  else if (!x.diesel && x.knockLimit - e.compression > 0.8) cons.push(`Sıkıştırma sınırın çok altında (${e.compression.toFixed(1)}, sınır ${x.knockLimit.toFixed(1)}): güç ve verim masada kalıyor.`);
+  if (x.knocking) cons.push(t('Vuruntu yapıyor! Bu çapta sıkıştırma en fazla {limit} olmalı: güç ve güvenilirlik düşüyor.', { limit: dec(x.knockLimit) }));
+  else if (!x.diesel && x.knockLimit - e.compression > 0.8)
+    cons.push(t('Sıkıştırma sınırın çok altında ({cr}, sınır {limit}): güç ve verim masada kalıyor.', { cr: dec(e.compression), limit: dec(x.knockLimit) }));
 
-  const rel = x.reliabilityPenalty - t.rel;
-  if (rel >= 3) cons.push('Tipik motordan karmaşık ya da zorlanmış: arıza riski daha yüksek.');
-  else if (rel <= -3) pros.push('Tipik motordan basit ve sağlam: daha az arıza çıkarır.');
+  const rel = x.reliabilityPenalty - typ.rel;
+  if (rel >= 3) cons.push(t('Tipik motordan karmaşık ya da zorlanmış: arıza riski daha yüksek.'));
+  else if (rel <= -3) pros.push(t('Tipik motordan basit ve sağlam: daha az arıza çıkarır.'));
 
-  const mass = x.massKg / t.mass;
-  if (mass >= 1.25) cons.push(`Ağır (${Math.round(x.massKg)} kg): aracı ağırlaştırır; hızlanma ve yol tutuş düşer.`);
-  else if (mass <= 0.8) pros.push(`Hafif (${Math.round(x.massKg)} kg): aracın geri kalanı da hafifler.`);
+  const mass = x.massKg / typ.mass;
+  if (mass >= 1.25) cons.push(t('Ağır ({kg} kg): aracı ağırlaştırır; hızlanma ve yol tutuş düşer.', { kg: Math.round(x.massKg) }));
+  else if (mass <= 0.8) pros.push(t('Hafif ({kg} kg): aracın geri kalanı da hafifler.', { kg: Math.round(x.massKg) }));
 
-  const cost = x.cost / t.cost;
-  if (cost >= 1.25) cons.push(`Pahalı: tipik motordan ${pct(cost)} fazla tutuyor, birim maliyet artar.`);
-  else if (cost <= 0.8) pros.push(`Ucuz: tipik motordan ${pct(cost)} az tutuyor.`);
+  const cost = x.cost / typ.cost;
+  if (cost >= 1.25) cons.push(t('Pahalı: tipik motordan {pct} fazla tutuyor, birim maliyet artar.', { pct: pct(cost) }));
+  else if (cost <= 0.8) pros.push(t('Ucuz: tipik motordan {pct} az tutuyor.', { pct: pct(cost) }));
 
   if (europeTax) {
-    const tax = x.taxHp / t.taxHpEurope;
-    if (tax >= 1.25) cons.push(`Avrupa’da vergi beygiri yüksek (${x.taxHp.toFixed(1)}): alıcı her yıl daha çok vergi öder. Vergi yalnızca çapa bakar.`);
-    else if (tax <= 0.8) pros.push(`Avrupa’da vergi beygiri düşük (${x.taxHp.toFixed(1)}): uzun strok vergide avantaj sağlıyor.`);
+    const tax = x.taxHp / typ.taxHpEurope;
+    if (tax >= 1.25) cons.push(t('Avrupa’da vergi beygiri yüksek ({hp}): alıcı her yıl daha çok vergi öder. Vergi yalnızca çapa bakar.', { hp: dec(x.taxHp) }));
+    else if (tax <= 0.8) pros.push(t('Avrupa’da vergi beygiri düşük ({hp}): uzun strok vergide avantaj sağlıyor.', { hp: dec(x.taxHp) }));
   }
 
   if (x.diesel) {
-    pros.push('Dizel: çok az yakar ve uzun ömürlüdür.');
-    cons.push('Dizel: ağır, gürültülü ve düşük devirli; alıcılar prestijli bulmaz.');
+    pros.push(t('Dizel: çok az yakar ve uzun ömürlüdür.'));
+    cons.push(t('Dizel: ağır, gürültülü ve düşük devirli; alıcılar prestijli bulmaz.'));
   }
-  return { typical: t.label, pros, cons };
+  // Made here rather than cached with the typical engine, so it follows the language.
+  return { typical: t('~{l} L, ~{hp} bg', { l: dec(typ.cc / 1000), hp: Math.round(typ.hp) }), pros, cons };
 }
 
 // ---------- Gearbox and suspension ----------
@@ -148,7 +159,8 @@ function withTypical(d: CarDesign, refs: CarDesign[], year: number, bonus: DevBo
   return refs.map((ref) => computeCarStats({ ...d, ...patch(ref) }, year, bonus));
 }
 const avgOf = (xs: CarStats[], f: (s: CarStats) => number) => xs.reduce((a, s) => a + f(s), 0) / xs.length;
-const amount = (x: number, small: number) => (Math.abs(x) < small ? 'biraz' : 'belirgin biçimde');
+/** A small difference ("biraz") rather than a clear one ("belirgin biçimde"). */
+const slight = (x: number, small: number) => Math.abs(x) < small;
 
 /**
  * What this gearbox does for this car compared with the class's usual gearbox
@@ -162,30 +174,34 @@ export function gearboxNotes(d: CarDesign, year: number, segment: SegmentId, bon
   const mine = computeCarStats(d, year, bonus);
   const typ = withTypical(d, refs, year, bonus, (ref) => ({ gearbox: ref.gearbox }));
   const accel = mine.accel50 - avgOf(typ, (s) => s.accel50);
-  if (accel <= -0.3) pros.push(`Tipik şanzımanla aynı arabadan ${Math.abs(accel).toFixed(1)} sn daha çabuk hızlanıyor (0-50 km/s).`);
-  else if (accel >= 0.3) cons.push(`Tipik şanzımanla aynı arabadan ${accel.toFixed(1)} sn daha yavaş hızlanıyor (0-50 km/s).`);
+  if (accel <= -0.3) pros.push(t('Tipik şanzımanla aynı arabadan {s} sn daha çabuk hızlanıyor (0-50 km/s).', { s: dec(Math.abs(accel)) }));
+  else if (accel >= 0.3) cons.push(t('Tipik şanzımanla aynı arabadan {s} sn daha yavaş hızlanıyor (0-50 km/s).', { s: dec(accel) }));
   const top = mine.topSpeed - avgOf(typ, (s) => s.topSpeed);
-  if (top >= 2) pros.push(`Son hızı ${Math.round(top)} km/s daha yüksek.`);
-  else if (top <= -2) cons.push(`Son hızı ${Math.round(-top)} km/s daha düşük.`);
+  if (top >= 2) pros.push(t('Son hızı {v} km/s daha yüksek.', { v: Math.round(top) }));
+  else if (top <= -2) cons.push(t('Son hızı {v} km/s daha düşük.', { v: Math.round(-top) }));
   const fuel = mine.fuel / avgOf(typ, (s) => s.fuel);
-  if (fuel <= 0.97) pros.push(`%${Math.round((1 - fuel) * 100)} daha az yakıyor: uzun vitesler motoru düşük devirde tutuyor.`);
-  else if (fuel >= 1.03) cons.push(`%${Math.round((fuel - 1) * 100)} daha çok yakıyor: kısa vitesler motoru yüksek devirde döndürüyor.`);
+  if (fuel <= 0.97) pros.push(t('{pct} daha az yakıyor: uzun vitesler motoru düşük devirde tutuyor.', { pct: fmtPercent(1 - fuel, 0) }));
+  else if (fuel >= 1.03) cons.push(t('{pct} daha çok yakıyor: kısa vitesler motoru yüksek devirde döndürüyor.', { pct: fmtPercent(fuel - 1, 0) }));
   // Do the ratios suit the engine? Try them a little longer and shorter.
   const g = d.gearbox;
   const longer = computeCarStats({ ...d, gearbox: { ...g, spread: Math.min(1, g.spread + 0.15) } }, year, bonus).topSpeed;
   const shorter = computeCarStats({ ...d, gearbox: { ...g, spread: Math.max(0, g.spread - 0.15) } }, year, bonus).topSpeed;
-  if (g.spread < 1 && longer > mine.topSpeed + 1.5) cons.push('Son vites kısa: son hızda motor devir sınırına dayanıyor. Oranları uzatırsan hem daha hızlı gider hem az yakar.');
-  else if (g.spread > 0 && shorter > mine.topSpeed + 1.5) cons.push('Son vites fazla uzun: motor son viteste gücünün tepesine çıkamıyor. Oranları biraz kısaltırsan son hız artar.');
+  if (g.spread < 1 && longer > mine.topSpeed + 1.5)
+    cons.push(t('Son vites kısa: son hızda motor devir sınırına dayanıyor. Oranları uzatırsan hem daha hızlı gider hem az yakar.'));
+  else if (g.spread > 0 && shorter > mine.topSpeed + 1.5)
+    cons.push(t('Son vites fazla uzun: motor son viteste gücünün tepesine çıkamıyor. Oranları biraz kısaltırsan son hız artar.'));
   const refGears = refs.reduce((a, r) => a + r.gearbox.gears, 0) / refs.length;
-  if (g.gears > refGears + 0.5) cons.push('Tipikten fazla vites: şanzıman pahalı ve ağır.');
-  else if (g.gears < refGears - 0.5) cons.push('Tipikten az vites: vitesler arası boşluk büyük, motor güçlü olduğu devirden sık düşer.');
+  if (g.gears > refGears + 0.5) cons.push(t('Tipikten fazla vites: şanzıman pahalı ve ağır.'));
+  else if (g.gears < refGears - 0.5) cons.push(t('Tipikten az vites: vitesler arası boşluk büyük, motor güçlü olduğu devirden sık düşer.'));
   const gb = byId(GEARBOX_TYPES, g.type);
   const refType = byId(GEARBOX_TYPES, refs[0].gearbox.type);
   if (gb.id !== refType.id) {
-    if (gb.comfort + gb.practicality > refType.comfort + refType.practicality) pros.push(`${gb.name}: vites değiştirmek kolay; konfor ve pratiklik artar.`);
-    if (gb.cost > refType.cost) cons.push(`${gb.name} tipik şanzımandan pahalı${gb.mass > refType.mass ? ' ve ağır' : ''}.`);
-    if (gb.efficiency < refType.efficiency) cons.push('Aktarmada daha çok güç kaybediyor.');
-    if (gb.year > year - 4) cons.push('Yeni bir teknoloji: ilk yıllarında arıza riski yüksek.');
+    const name = t(gb.name);
+    if (gb.comfort + gb.practicality > refType.comfort + refType.practicality) pros.push(t('{name}: vites değiştirmek kolay; konfor ve pratiklik artar.', { name }));
+    if (gb.cost > refType.cost)
+      cons.push(gb.mass > refType.mass ? t('{name} tipik şanzımandan pahalı ve ağır.', { name }) : t('{name} tipik şanzımandan pahalı.', { name }));
+    if (gb.efficiency < refType.efficiency) cons.push(t('Aktarmada daha çok güç kaybediyor.'));
+    if (gb.year > year - 4) cons.push(t('Yeni bir teknoloji: ilk yıllarında arıza riski yüksek.'));
   }
   return { pros, cons };
 }
@@ -197,16 +213,17 @@ export function suspensionNotes(d: CarDesign, year: number, segment: SegmentId, 
   const mine = computeCarStats(d, year, bonus);
   const typ = withTypical(d, refDesigns(year, segment), year, bonus, (ref) => ({ suspension: ref.suspension, suspBalance: ref.suspBalance }));
   const comfort = mine.comfort - avgOf(typ, (s) => s.comfort);
-  if (comfort >= 1.5) pros.push(`Tipik süspansiyondan ${amount(comfort, 5)} daha konforlu.`);
-  else if (comfort <= -1.5) cons.push(`Tipik süspansiyondan ${amount(comfort, 5)} daha sert: konfor düşük.`);
+  if (comfort >= 1.5) pros.push(slight(comfort, 5) ? t('Tipik süspansiyondan biraz daha konforlu.') : t('Tipik süspansiyondan belirgin biçimde daha konforlu.'));
+  else if (comfort <= -1.5)
+    cons.push(slight(comfort, 5) ? t('Tipik süspansiyondan biraz daha sert: konfor düşük.') : t('Tipik süspansiyondan belirgin biçimde daha sert: konfor düşük.'));
   const handling = mine.handling - avgOf(typ, (s) => s.handling);
-  if (handling >= 1.5) pros.push(`Yol tutuşu ${amount(handling, 5)} daha iyi.`);
-  else if (handling <= -1.5) cons.push(`Yol tutuşu ${amount(handling, 5)} daha zayıf.`);
+  if (handling >= 1.5) pros.push(slight(handling, 5) ? t('Yol tutuşu biraz daha iyi.') : t('Yol tutuşu belirgin biçimde daha iyi.'));
+  else if (handling <= -1.5) cons.push(slight(handling, 5) ? t('Yol tutuşu biraz daha zayıf.') : t('Yol tutuşu belirgin biçimde daha zayıf.'));
   const cost = mine.unitCost / avgOf(typ, (s) => s.unitCost);
-  if (cost >= 1.02) cons.push(`Aracın birim maliyetini %${Math.round((cost - 1) * 100)} artırıyor.`);
+  if (cost >= 1.02) cons.push(t('Aracın birim maliyetini {pct} artırıyor.', { pct: fmtPercent(cost - 1, 0) }));
   const rel = mine.reliability - avgOf(typ, (s) => s.reliability);
-  if (rel <= -1) cons.push('Yeni ya da karmaşık bir sistem: arıza riski daha yüksek.');
+  if (rel <= -1) cons.push(t('Yeni ya da karmaşık bir sistem: arıza riski daha yüksek.'));
   const susp = byId(SUSPENSIONS, d.suspension);
-  if (susp.year > year - 4 && susp.immaturity > 0) cons.push('Teknoloji yeni: ilk yıllarında sorun çıkarabilir.');
+  if (susp.year > year - 4 && susp.immaturity > 0) cons.push(t('Teknoloji yeni: ilk yıllarında sorun çıkarabilir.'));
   return { pros, cons };
 }

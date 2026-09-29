@@ -4,6 +4,7 @@ import { STAGES, STATIONS, stationDef, type StationDef } from '../data/stations'
 import { CHASSIS, byId } from '../data/tech';
 import type { CarModel, GameState, ProductionLine, Project, StageId } from './types';
 import { yearFloat } from './time';
+import { msg, t } from '../i18n';
 
 /** A night shift keeps a section working around the clock: more output, dearer labour. */
 export const NIGHT_SHIFT_OUTPUT = 1.6;
@@ -94,12 +95,15 @@ export function suggestedLine(s: GameState, p: Project): ProductionLine | undefi
   return s.lines.find((l) => open(l) && !live(l));
 }
 
-/** A name no line has had yet ("Hat 7"): numbers are not reused after a line is closed. */
-export function nextLineName(s: GameState, prefix = 'Hat'): string {
+/**
+ * A name no line has had yet ("Hat 7"): numbers are not reused after a line is closed. The prefix is
+ * shown in the player's language; the number stays last, where the next call looks for it.
+ */
+export function nextLineName(s: GameState, prefix: string = msg('Hat')): string {
   const used = s.lines.map((l) => Number(/(\d+)$/.exec(l.name)?.[1] ?? 0));
   const n = Math.max(s.nextLineNo ?? 0, s.lines.length, ...used) + 1;
   s.nextLineNo = n;
-  return `${prefix} ${n}`;
+  return `${t(prefix)} ${n}`;
 }
 
 export function emptyLine(id: string, name: string): ProductionLine {

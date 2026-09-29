@@ -6,6 +6,7 @@ import { PRICE_REMARK, modelScores, playerOffer } from './market';
 import { makeRng, pick, type Rng } from './rng';
 import { defectText } from './testing';
 import type { AttrKey, CarModel, GameState, MarketId, NewsLetter, SegmentId } from './types';
+import { msg, t } from '../i18n';
 
 // Letters from owners: a name, a town, a trade and a few lines about the car.
 // What they write comes from the car itself (its strong and weak points
@@ -16,64 +17,69 @@ export type Letter = NewsLetter;
 
 const PRAISE: Record<AttrKey, string[]> = {
   accel: [
-    'Kalkışta öyle atılıyor ki komşular hâlâ bu arabanın sırrını soruyor.',
-    'Yokuşları sanki düz yolmuş gibi çıkıyor; at arabalarını geride bırakmak ayrı bir keyif.',
+    msg('Kalkışta öyle atılıyor ki komşular hâlâ bu arabanın sırrını soruyor.'),
+    msg('Yokuşları sanki düz yolmuş gibi çıkıyor; at arabalarını geride bırakmak ayrı bir keyif.'),
   ],
   topSpeed: [
-    'Düz yolda öyle bir hızlanıyor ki hız göstergesine bakmaya korkuyorum.',
-    'Şehirler arası yolda bütün otomobilleri geçtik, kimse arkamızdan yetişemedi.',
+    msg('Düz yolda öyle bir hızlanıyor ki hız göstergesine bakmaya korkuyorum.'),
+    msg('Şehirler arası yolda bütün otomobilleri geçtik, kimse arkamızdan yetişemedi.'),
   ],
   economy: [
-    'Benzin masrafı beklediğimin yarısı; ay sonunda cebimde para kalıyor.',
-    'Bir depo benzinle kasabaya gidip döndük, bir damla daha koymadık.',
+    msg('Benzin masrafı beklediğimin yarısı; ay sonunda cebimde para kalıyor.'),
+    msg('Bir depo benzinle kasabaya gidip döndük, bir damla daha koymadık.'),
   ],
   comfort: [
-    'Taş yollarda bile karım uyuyabiliyor, çocuklar arka koltukta şarkı söylüyor.',
-    'Uzun yolculuktan sonra belim hiç ağrımadı; salondaki koltuğumuzdan rahat.',
+    msg('Taş yollarda bile karım uyuyabiliyor, çocuklar arka koltukta şarkı söylüyor.'),
+    msg('Uzun yolculuktan sonra belim hiç ağrımadı; salondaki koltuğumuzdan rahat.'),
   ],
   handling: [
-    'Virajlarda raylı gibi gidiyor, direksiyon tam istediğim yere dönüyor.',
-    'Dağ yolundaki keskin dönemeçlerde bir an bile tedirgin olmadım.',
+    msg('Virajlarda raylı gibi gidiyor, direksiyon tam istediğim yere dönüyor.'),
+    msg('Dağ yolundaki keskin dönemeçlerde bir an bile tedirgin olmadım.'),
   ],
   safety: [
-    'Geçen ay bir kavşakta çarpıştık; araba ezildi ama hepimiz sapasağlam çıktık.',
-    'Frenleri öyle güçlü ki yola fırlayan bir çocuğun önünde tam zamanında durdum.',
+    msg('Geçen ay bir kavşakta çarpıştık; araba ezildi ama hepimiz sapasağlam çıktık.'),
+    msg('Frenleri öyle güçlü ki yola fırlayan bir çocuğun önünde tam zamanında durdum.'),
   ],
   reliability: [
-    'İki yıldır tek bir kez bile yolda kalmadım; tamirciyi unuttum.',
-    'Kışın en soğuk sabahında bile ilk denemede çalıştı.',
+    msg('İki yıldır tek bir kez bile yolda kalmadım; tamirciyi unuttum.'),
+    msg('Kışın en soğuk sabahında bile ilk denemede çalıştı.'),
   ],
   prestige: [
-    'Kulübün önüne park ettiğimde herkes pencereye koşuyor.',
-    'Kasabadaki herkes kimin geldiğini motorun sesinden anlıyor; gururluyum.',
+    msg('Kulübün önüne park ettiğimde herkes pencereye koşuyor.'),
+    msg('Kasabadaki herkes kimin geldiğini motorun sesinden anlıyor; gururluyum.'),
   ],
   practicality: [
-    'Bütün aile, köpek ve pazar alışverişi rahatça sığıyor.',
-    'Bagajına tarladaki aletlerin hepsini koyup rahatça taşıyorum.',
+    msg('Bütün aile, köpek ve pazar alışverişi rahatça sığıyor.'),
+    msg('Bagajına tarladaki aletlerin hepsini koyup rahatça taşıyorum.'),
   ],
 };
 
 const COMPLAINT: Record<AttrKey, string[]> = {
-  accel: ['Yokuşlarda o kadar ağır tırmanıyor ki arkamızdaki at arabası bile sabırsızlanıyor.', 'Kalkışta öyle nazlı ki kavşakları geçmek bir işkence.'],
-  topSpeed: ['Düz yolda bile herkes bizi solluyor; son hızı hayal kırıklığı.', 'Şehirler arası yolda yarım gün kaybettik, bu kadar yavaş bir araba beklemiyordum.'],
-  economy: ['Benzinci beni artık adımla çağırıyor; bu araba su gibi benzin içiyor.', 'Ay sonunda benzin faturası kiramdan fazla tuttu.'],
-  comfort: ['Her çukurda kafamız tavana çarpıyor; karım bir daha binmem diyor.', 'Yarım saatlik yolculuktan sonra sırtım tutuluyor, koltuklar tahta gibi.'],
-  handling: ['Virajlarda öyle yatıyor ki yolcular birbirine yapışıyor.', 'Direksiyon boşluklu; yolda araba istediği yere gidiyor.'],
-  safety: ['Frenler zayıf; yokuş aşağı inerken yüreğim ağzıma geliyor.', 'Küçük bir sürtmede bile gövde kağıt gibi buruştu.'],
-  reliability: ['Ayda bir yolda kalıyorum; tamirci artık ailemden biri gibi.', 'Soğuk sabahlarda çalıştırmak için yarım saat kol çeviriyorum.'],
-  prestige: ['Komşular arabamı görünce kıs kıs gülüyor; pek gösterişli değil.', 'Kulübün önüne park etmeye utanıyorum.'],
-  practicality: ['Alışveriş torbaları bile zor sığıyor; çocuklardan biri hep evde kalıyor.', 'Bagajı öyle küçük ki şapka kutusu bile sığmıyor.'],
+  accel: [msg('Yokuşlarda o kadar ağır tırmanıyor ki arkamızdaki at arabası bile sabırsızlanıyor.'), msg('Kalkışta öyle nazlı ki kavşakları geçmek bir işkence.')],
+  topSpeed: [msg('Düz yolda bile herkes bizi solluyor; son hızı hayal kırıklığı.'), msg('Şehirler arası yolda yarım gün kaybettik, bu kadar yavaş bir araba beklemiyordum.')],
+  economy: [msg('Benzinci beni artık adımla çağırıyor; bu araba su gibi benzin içiyor.'), msg('Ay sonunda benzin faturası kiramdan fazla tuttu.')],
+  comfort: [msg('Her çukurda kafamız tavana çarpıyor; karım bir daha binmem diyor.'), msg('Yarım saatlik yolculuktan sonra sırtım tutuluyor, koltuklar tahta gibi.')],
+  handling: [msg('Virajlarda öyle yatıyor ki yolcular birbirine yapışıyor.'), msg('Direksiyon boşluklu; yolda araba istediği yere gidiyor.')],
+  safety: [msg('Frenler zayıf; yokuş aşağı inerken yüreğim ağzıma geliyor.'), msg('Küçük bir sürtmede bile gövde kağıt gibi buruştu.')],
+  reliability: [msg('Ayda bir yolda kalıyorum; tamirci artık ailemden biri gibi.'), msg('Soğuk sabahlarda çalıştırmak için yarım saat kol çeviriyorum.')],
+  prestige: [msg('Komşular arabamı görünce kıs kıs gülüyor; pek gösterişli değil.'), msg('Kulübün önüne park etmeye utanıyorum.')],
+  practicality: [msg('Alışveriş torbaları bile zor sığıyor; çocuklardan biri hep evde kalıyor.'), msg('Bagajı öyle küçük ki şapka kutusu bile sığmıyor.')],
 };
+
+/** Nothing to praise, nothing to complain about. */
+const PLAIN = [msg('İşimi görüyor; ne şikâyetim var ne de övecek bir şeyim.'), msg('Sıradan ama dürüst bir otomobil.')];
 
 const ROLES: Record<SegmentId, string[]> = {
-  city: ['doktor', 'ebe', 'satış temsilcisi', 'avukat', 'öğretmen', 'terzi'],
-  family: ['çiftçi', 'öğretmen', 'bakkal', 'memur', 'eczacı', 'demiryolu memuru'],
-  sport: ['yarış meraklısı', 'genç bir mimar', 'subay', 'gazeteci', 'tiyatro oyuncusu'],
-  luxury: ['bankacı', 'sanayici', 'opera sanatçısı', 'toprak sahibi', 'otel sahibi'],
-  pickup: ['çiftçi', 'inşaat ustası', 'nalbur', 'sütçü', 'marangoz'],
-  suv: ['ormancı', 'çiftlik sahibi', 'maden mühendisi', 'veteriner', 'avcı'],
+  city: [msg('doktor'), msg('ebe'), msg('satış temsilcisi'), msg('avukat'), msg('öğretmen'), msg('terzi')],
+  family: [msg('çiftçi'), msg('öğretmen'), msg('bakkal'), msg('memur'), msg('eczacı'), msg('demiryolu memuru')],
+  sport: [msg('yarış meraklısı'), msg('genç bir mimar'), msg('subay'), msg('gazeteci'), msg('tiyatro oyuncusu')],
+  luxury: [msg('bankacı'), msg('sanayici'), msg('opera sanatçısı'), msg('toprak sahibi'), msg('otel sahibi')],
+  pickup: [msg('çiftçi'), msg('inşaat ustası'), msg('nalbur'), msg('sütçü'), msg('marangoz')],
+  suv: [msg('ormancı'), msg('çiftlik sahibi'), msg('maden mühendisi'), msg('veteriner'), msg('avcı')],
 };
 
+// Places are names; the European ones are written the Turkish way (Brüksel, Viyana, Münih), so they are
+// marked for the translators too.
 const NAMES: Record<MarketId, { first: string[]; last: string[]; places: string[] }> = {
   usa: {
     first: ['John', 'Mary', 'William', 'Margaret', 'James', 'Elizabeth', 'George', 'Helen', 'Frank', 'Ruth', 'Walter', 'Dorothy'],
@@ -83,7 +89,18 @@ const NAMES: Record<MarketId, { first: string[]; last: string[]; places: string[
   europe: {
     first: ['Henri', 'Marie', 'Karl', 'Greta', 'Thomas', 'Edith', 'Luigi', 'Anna', 'Arthur', 'Louise', 'Hans', 'Clara'],
     last: ['Dubois', 'Weber', 'Clarke', 'Rossi', 'Moreau', 'Schmidt', 'Hughes', 'Bianchi', 'Lefèvre', 'Wagner', 'Evans', 'Conti'],
-    places: ['Lyon', 'Hamburg', 'Manchester', 'Torino', 'Brüksel', 'Viyana', 'Bordeaux', 'Münih', 'Leeds', 'Milano'],
+    places: [
+      'Lyon',
+      'Hamburg',
+      'Manchester',
+      msg('Torino'),
+      msg('Brüksel'),
+      msg('Viyana'),
+      'Bordeaux',
+      msg('Münih'),
+      'Leeds',
+      msg('Milano'),
+    ],
   },
 };
 
@@ -99,13 +116,13 @@ export function customerLetters(s: GameState, m: CarModel, count = 3, rng: Rng =
   const good = ranked.filter((x) => x.d > 6);
   const bad = ranked.filter((x) => x.d < -6);
   const letters: Letter[] = [];
-  // Several buyers never write the very same sentence.
+  // Several buyers never write the very same sentence (compared in Turkish, written in the player's language).
   const used = new Set<string>();
   const fresh = (list: string[]) => {
     const left = list.filter((x) => !used.has(x));
-    const t = pick(rng, left.length ? left : list);
-    used.add(t);
-    return t;
+    const line = pick(rng, left.length ? left : list);
+    used.add(line);
+    return t(line);
   };
   // Owners write from where our cars are: the states with cars of ours on the road, more from where there are more.
   const owners = STATE_LIST.map((id) => ({ id, n: s.network?.states[id]?.parc ?? 0 })).filter((x) => x.n > 0);
@@ -132,26 +149,26 @@ export function customerLetters(s: GameState, m: CarModel, count = 3, rng: Rng =
     }
     if (surfaced.length && rng() < 0.5) {
       const d = pick(rng, surfaced);
-      parts.push(`Bir derdim var: ${defectText(d).toLowerCase()}. Bayi “biliyoruz” deyip geçiştirdi.`);
+      parts.push(t('Bir derdim var: {defect}. Bayi “biliyoruz” deyip geçiştirdi.', { defect: defectText(d).toLowerCase() }));
       score -= 1;
     }
     if (offer.priceTerm > PRICE_REMARK && rng() < 0.6) {
-      parts.push('Bu paraya bundan iyisi yok; iki maaşımı biriktirip aldım ve hiç pişman değilim.');
+      parts.push(t('Bu paraya bundan iyisi yok; iki maaşımı biriktirip aldım ve hiç pişman değilim.'));
       score += 0.5;
     } else if (offer.priceTerm < -PRICE_REMARK && rng() < 0.6) {
-      parts.push('Yalnız fiyatı çok tuzlu; bu paraya iki at ve bir araba alınırdı.');
+      parts.push(t('Yalnız fiyatı çok tuzlu; bu paraya iki at ve bir araba alınırdı.'));
       score -= 0.5;
     }
     if (offer.age <= -8 && rng() < 0.6) {
-      parts.push('Artık yollarda daha yeni ve modern arabalar görüyorum; bizimki biraz eskidi.');
+      parts.push(t('Artık yollarda daha yeni ve modern arabalar görüyorum; bizimki biraz eskidi.'));
       score -= 0.5;
     }
-    if (!parts.length) parts.push(fresh(['İşimi görüyor; ne şikâyetim var ne de övecek bir şeyim.', 'Sıradan ama dürüst bir otomobil.']));
+    if (!parts.length) parts.push(fresh(PLAIN));
     const stars = Math.max(1, Math.min(5, Math.round(score + (rng() - 0.5) * 0.8)));
     letters.push({
       name: `${pick(rng, names.first)} ${pick(rng, names.last)}`,
-      place: home() ?? pick(rng, names.places),
-      role: pick(rng, ROLES[m.segment]),
+      place: home() ?? t(pick(rng, names.places)),
+      role: t(pick(rng, ROLES[m.segment])),
       stars,
       text: parts.join(' '),
       tone: stars >= 4 ? 'good' : stars <= 2 ? 'bad' : 'mixed',

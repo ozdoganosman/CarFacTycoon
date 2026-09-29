@@ -5,6 +5,8 @@ import { companyValue } from './game';
 import { weekOfYear, yearFloat, yearOf } from './time';
 import type { BoardYear, GameState, ShareState } from './types';
 import { clamp, decide, log, money, pushModal, spend } from './util';
+import { isTurkish, t } from '../i18n';
+import { fmtPercent } from '../i18n/format';
 
 // Selling shares on the stock exchange: money now, then a board that wants the
 // company to grow every year and pay its shareholders. Missed targets wear down
@@ -62,12 +64,13 @@ export function stockMood(yf: number): number {
   );
 }
 
+/** The stock market's mood in words, in the player's language ("Borsa şu an …"). */
 export function moodName(mood: number): string {
-  if (mood >= 1.4) return 'çılgın bir yükselişte';
-  if (mood >= 1.15) return 'coşkulu';
-  if (mood >= 0.9) return 'sakin';
-  if (mood >= 0.65) return 'durgun';
-  return 'çöküşte';
+  if (mood >= 1.4) return t('çılgın bir yükselişte');
+  if (mood >= 1.15) return t('coşkulu');
+  if (mood >= 0.9) return t('sakin');
+  if (mood >= 0.65) return t('durgun');
+  return t('çöküşte');
 }
 
 /** What the stock market pays for the whole company: its worth, the mood of the day and the board's faith in it. */
@@ -81,13 +84,13 @@ export const founderShare = (s: GameState) => 1 - (s.shares?.float ?? 0);
 
 export function canGoPublic(s: GameState): { ok: boolean; why?: string } {
   const yf = yearFloat(s.week);
-  if (s.shares) return { ok: false, why: 'Şirket zaten borsada.' };
-  if (yf < IPO_YEAR) return { ok: false, why: `Borsa otomobil şirketlerine ${IPO_YEAR}’den sonra ısınır.` };
-  if (s.years.length < 3) return { ok: false, why: 'Yatırımcılar en az üç yıllık defter görmek ister.' };
+  if (s.shares) return { ok: false, why: t('Şirket zaten borsada.') };
+  if (yf < IPO_YEAR) return { ok: false, why: t('Borsa otomobil şirketlerine {year}’den sonra ısınır.', { year: IPO_YEAR }) };
+  if (s.years.length < 3) return { ok: false, why: t('Yatırımcılar en az üç yıllık defter görmek ister.') };
   const last = s.years[s.years.length - 1];
-  if (last.profit <= 0) return { ok: false, why: 'Geçen yılı zararla kapattın: kâr etmeyen şirketin hissesini kimse almaz.' };
+  if (last.profit <= 0) return { ok: false, why: t('Geçen yılı zararla kapattın: kâr etmeyen şirketin hissesini kimse almaz.') };
   const min = minValue(yf);
-  if (companyValue(s) < min) return { ok: false, why: `Şirket değeri en az ${money(min)} olmalı.` };
+  if (companyValue(s) < min) return { ok: false, why: t('Şirket değeri en az {value} olmalı.', { value: money(min) }) };
   return { ok: true };
 }
 
@@ -153,7 +156,14 @@ export function goPublic(s: GameState, pct: number): ShareResult {
     basisWeek: s.week,
   };
   s.shares.target = nextTarget(s, first);
-  log(s, `Halka arz: şirketin %${Math.round(share * 100)}’i borsada satıldı, kasaya ${money(cash)} girdi. Artık her yıl yönetim kuruluna hesap vereceksin.`, 'good');
+  log(
+    s,
+    t('Halka arz: şirketin {pct}’i borsada satıldı, kasaya {cash} girdi. Artık her yıl yönetim kuruluna hesap vereceksin.', {
+      pct: fmtPercent(share, 0),
+      cash: money(cash),
+    }),
+    'good',
+  );
   decide(s, 'shares', `Halka arz %${Math.round(share * 100)}: ${money(cash)}`);
   return { ok: true };
 }
@@ -161,15 +171,19 @@ export function goPublic(s: GameState, pct: number): ShareResult {
 /** More shares for more money: the owners' stake shrinks, the board frowns. */
 export function issueShares(s: GameState, pct: number): ShareResult {
   const sh = s.shares;
-  if (!sh) return { ok: false, error: 'Şirket borsada değil.' };
-  if (sh.float + pct > MAX_FLOAT + 1e-6) return { ok: false, error: `Kontrolü kaybetmemek için en fazla %${Math.round(MAX_FLOAT * 100)} dışarıda olabilir.` };
+  if (!sh) return { ok: false, error: t('Şirket borsada değil.') };
+  if (sh.float + pct > MAX_FLOAT + 1e-6) return { ok: false, error: t('Kontrolü kaybetmemek için en fazla {pct} dışarıda olabilir.', { pct: fmtPercent(MAX_FLOAT, 0) }) };
   const cap = marketCap(s);
   const cash = issueProceeds(s, pct);
   s.company.cash += cash;
   addBasis(sh, s.week, pct, cap);
   sh.float += pct;
   sh.confidence = clamp(sh.confidence - 4, 0, 100);
-  log(s, `Yeni hisse: şirketin %${Math.round(pct * 100)}’i daha satıldı, kasaya ${money(cash)} girdi. Hissedarlar paylarının sulandığından hoşnut değil.`, 'info');
+  log(
+    s,
+    t('Yeni hisse: şirketin {pct}’i daha satıldı, kasaya {cash} girdi. Hissedarlar paylarının sulandığından hoşnut değil.', { pct: fmtPercent(pct, 0), cash: money(cash) }),
+    'info',
+  );
   decide(s, 'shares', `Yeni hisse %${Math.round(pct * 100)}: ${money(cash)}`);
   return { ok: true };
 }
@@ -177,11 +191,11 @@ export function issueShares(s: GameState, pct: number): ShareResult {
 /** Buy shares back: dear, but every share bought is one less owner to answer to. */
 export function buyBack(s: GameState, pct: number): ShareResult {
   const sh = s.shares;
-  if (!sh) return { ok: false, error: 'Şirket borsada değil.' };
+  if (!sh) return { ok: false, error: t('Şirket borsada değil.') };
   const take = Math.min(pct, freeFloat(s));
-  if (take <= 0.001) return { ok: false, error: 'Piyasada geri alınacak hisse kalmadı.' };
+  if (take <= 0.001) return { ok: false, error: t('Piyasada geri alınacak hisse kalmadı.') };
   const cost = buybackCost(s, take);
-  if (s.company.cash < cost) return { ok: false, error: `Kasada ${money(cost)} yok.` };
+  if (s.company.cash < cost) return { ok: false, error: t('Kasada {cash} yok.', { cash: money(cost) }) };
   // Paid to shareholders, like a dividend: not a cost of running the company.
   spend(s, cost, 'dividend');
   sh.float -= take;
@@ -189,8 +203,8 @@ export function buyBack(s: GameState, pct: number): ShareResult {
   decide(s, 'shares', `Hisse geri alımı %${Math.round(take * 100)}: ${money(cost)}`);
   if (sh.float < 0.005) {
     delete s.shares;
-    log(s, `Son hisseler de geri alındı (${money(cost)}): şirket yeniden tamamen senin, yönetim kurulu dağıldı.`, 'good');
-  } else log(s, `Hisse geri alımı: şirketin %${Math.round(take * 100)}’i ${money(cost)} karşılığında geri alındı.`, 'info');
+    log(s, t('Son hisseler de geri alındı ({cash}): şirket yeniden tamamen senin, yönetim kurulu dağıldı.', { cash: money(cost) }), 'good');
+  } else log(s, t('Hisse geri alımı: şirketin {pct}’i {cash} karşılığında geri alındı.', { pct: fmtPercent(take, 0), cash: money(cost) }), 'info');
   return { ok: true };
 }
 
@@ -233,7 +247,10 @@ export function nextTarget(s: GameState, year: number): ShareState['target'] {
 export function boardVeto(s: GameState): string | undefined {
   const sh = s.shares;
   if (!sh || sh.confidence >= VETO_AT) return undefined;
-  return `Yönetim kurulu veto etti (güven ${Math.round(sh.confidence)}/100): yarış, rakip satın alma ve yeni hat yok. Güven ${VETO_AT}’ın üstüne çıkınca kalkar.`;
+  return t('Yönetim kurulu veto etti (güven {confidence}/100): yarış, rakip satın alma ve yeni hat yok. Güven {limit}’ın üstüne çıkınca kalkar.', {
+    confidence: Math.round(sh.confidence),
+    limit: VETO_AT,
+  });
 }
 
 /** The dividend a year's profit pays the outside shareholders at the chosen payout. */
@@ -322,17 +339,29 @@ export function boardYear(s: GameState, year: number): boolean {
   };
   sh.history.push(entry);
   if (sh.history.length > 60) sh.history.shift();
-  const pctTxt = (v: number) => `${v >= 0 ? '+' : '−'}%${Math.abs(Math.round(v * 1000) / 10)}`;
+  const pctTxt = (v: number) =>
+    isTurkish() ? `${v >= 0 ? '+' : '−'}%${Math.abs(Math.round(v * 1000) / 10)}` : `${v >= 0 ? '+' : '−'}${fmtPercent(Math.abs(Math.round(v * 1000) / 1000), 1)}`;
+  const report = {
+    year,
+    growth: pctTxt(growth),
+    target: pctTxt(sh.target.growth),
+    dividend: money(dividend),
+    targetDividend: money(sh.target.dividend),
+    before: Math.round(before),
+    after: Math.round(sh.confidence),
+  };
   log(
     s,
-    `Yönetim kurulu, ${year}: ciro ${pctTxt(growth)} (hedef ${pctTxt(sh.target.growth)}), temettü ${money(dividend)} (hedef ${money(sh.target.dividend)}). ${met ? 'Hedefler tuttu.' : 'Hedefler tutmadı.'} Güven ${Math.round(before)} → ${Math.round(sh.confidence)}.`,
+    met
+      ? t('Yönetim kurulu, {year}: ciro {growth} (hedef {target}), temettü {dividend} (hedef {targetDividend}). Hedefler tuttu. Güven {before} → {after}.', report)
+      : t('Yönetim kurulu, {year}: ciro {growth} (hedef {target}), temettü {dividend} (hedef {targetDividend}). Hedefler tutmadı. Güven {before} → {after}.', report),
     met ? 'good' : 'warn',
   );
   // Voted out only after the last warning went unheeded: nobody is thrown out without one.
   if (sh.ultimatum && !met) return true;
   if (sh.ultimatum && met) {
     delete sh.ultimatum;
-    log(s, 'Yönetim kurulu hedeflerin tutmasından memnun: son uyarı geri çekildi.', 'good');
+    log(s, t('Yönetim kurulu hedeflerin tutmasından memnun: son uyarı geri çekildi.'), 'good');
   } else if (sh.confidence < ULTIMATUM_AT) {
     sh.ultimatum = true;
     sh.confidence = Math.max(sh.confidence, 5);
@@ -343,7 +372,7 @@ export function boardYear(s: GameState, year: number): boolean {
   // Pressure before the end: no money for racing while the board has lost faith.
   if (sh.confidence < VETO_AT && s.racing?.level) {
     s.racing.level = 0;
-    log(s, 'Yönetim kurulu yarış bütçesini kesti: takım dağıtıldı.', 'warn');
+    log(s, t('Yönetim kurulu yarış bütçesini kesti: takım dağıtıldı.'), 'warn');
   }
   sh.target = nextTarget(s, year + 1);
   return false;

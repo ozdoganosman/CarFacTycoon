@@ -7,31 +7,32 @@ import type { Rng } from './rng';
 import { segmentWeights } from './scoring';
 import { yearFloat } from './time';
 import type { AttrKey, CarModel, GameState, LaunchReport, MarketId, Review } from './types';
+import { isTurkish, list, locale, msg, t } from '../i18n';
 
 // Reviews and customer feedback are the player's window into the hidden segment weights.
 
 const POSITIVE: Record<AttrKey, string[]> = {
-  accel: ['Hızlanması nefes kesici.', 'Gaza basınca koltuğa yapıştırıyor.', 'Kavşakta ilk kalkan hep o.', 'Motoru istekli; aracı çekmekte hiç zorlanmıyor.'],
-  topSpeed: ['Düz yolda rakiplerini toz duman içinde bırakıyor.', 'Son hızı sınıfının çok üstünde.', 'Açık yolda ibre durmak bilmiyor.', 'Uzun düzlüklerde tam bir rekor avcısı.'],
-  economy: ['Deposu bitmek bilmiyor.', 'Benzin parası cebinizde kalıyor.', 'Tüketimi şaşırtıcı derecede düşük.', 'Az yakıtla çok yol gidiyor.'],
-  comfort: ['Kötü yolda bile salon gibi.', 'Uzun yolculuklar yorgunluk yapmıyor.', 'Koltukları ve süspansiyonu yolu yumuşatıyor.', 'Kabin sessiz ve rahat.'],
-  handling: ['Virajlara ray üstündeymiş gibi giriyor.', 'Direksiyonu hassas ve güven verici.', 'Dönemecin ortasında bile dengesini bozmuyor.', 'Kullanması keyif veriyor.'],
-  safety: ['Sağlam yapısı içinizi rahatlatıyor.', 'Frenleri sınıfının en iyisi.', 'Ailenizi gönül rahatlığıyla bindirebilirsiniz.', 'Kaza anında sizi koruyacak bir gövde.'],
-  reliability: ['Yol kenarında kalmayı unutun.', 'Bozulmuyor; tamirciye yolunuz düşmüyor.', 'Test boyunca tek bir arıza vermedi.', 'Saat gibi çalışıyor.'],
-  prestige: ['Kapısının önüne park edene itibar kazandırıyor.', 'Çizgileri başları çevirtiyor.', 'Kulüp önünde en çok konuşulan araç.', 'İşçiliği ve detayları göz dolduruyor.'],
-  practicality: ['İçine her şey sığıyor.', 'Günlük kullanımda son derece pratik.', 'Bagajı ve kabini geniş.', 'Her işe koşturulabilecek bir araç.'],
+  accel: [msg('Hızlanması nefes kesici.'), msg('Gaza basınca koltuğa yapıştırıyor.'), msg('Kavşakta ilk kalkan hep o.'), msg('Motoru istekli; aracı çekmekte hiç zorlanmıyor.')],
+  topSpeed: [msg('Düz yolda rakiplerini toz duman içinde bırakıyor.'), msg('Son hızı sınıfının çok üstünde.'), msg('Açık yolda ibre durmak bilmiyor.'), msg('Uzun düzlüklerde tam bir rekor avcısı.')],
+  economy: [msg('Deposu bitmek bilmiyor.'), msg('Benzin parası cebinizde kalıyor.'), msg('Tüketimi şaşırtıcı derecede düşük.'), msg('Az yakıtla çok yol gidiyor.')],
+  comfort: [msg('Kötü yolda bile salon gibi.'), msg('Uzun yolculuklar yorgunluk yapmıyor.'), msg('Koltukları ve süspansiyonu yolu yumuşatıyor.'), msg('Kabin sessiz ve rahat.')],
+  handling: [msg('Virajlara ray üstündeymiş gibi giriyor.'), msg('Direksiyonu hassas ve güven verici.'), msg('Dönemecin ortasında bile dengesini bozmuyor.'), msg('Kullanması keyif veriyor.')],
+  safety: [msg('Sağlam yapısı içinizi rahatlatıyor.'), msg('Frenleri sınıfının en iyisi.'), msg('Ailenizi gönül rahatlığıyla bindirebilirsiniz.'), msg('Kaza anında sizi koruyacak bir gövde.')],
+  reliability: [msg('Yol kenarında kalmayı unutun.'), msg('Bozulmuyor; tamirciye yolunuz düşmüyor.'), msg('Test boyunca tek bir arıza vermedi.'), msg('Saat gibi çalışıyor.')],
+  prestige: [msg('Kapısının önüne park edene itibar kazandırıyor.'), msg('Çizgileri başları çevirtiyor.'), msg('Kulüp önünde en çok konuşulan araç.'), msg('İşçiliği ve detayları göz dolduruyor.')],
+  practicality: [msg('İçine her şey sığıyor.'), msg('Günlük kullanımda son derece pratik.'), msg('Bagajı ve kabini geniş.'), msg('Her işe koşturulabilecek bir araç.')],
 };
 
 const NEGATIVE: Record<AttrKey, string[]> = {
-  accel: ['Yokuşta yayadan hallice.', 'Hızlanması sabır istiyor.', 'Motoru aracı taşımakta zorlanıyor.', 'Kalkışta at arabasına bile yetişemiyor.'],
-  topSpeed: ['Düz yolda bile herkes sizi solluyor.', 'Son hızı hayal kırıklığı.', 'Yolda en yavaş araç o.', 'Açık yolda nefesi çabuk kesiliyor.'],
-  economy: ['Benzin istasyonlarının en iyi müşterisi.', 'Yakıt faturası can yakıyor.', 'Deposu göz açıp kapayıncaya kadar boşalıyor.', 'Tüketimi sınıfı için fazla.'],
-  comfort: ['Her tümseği omurganızda hissediyorsunuz.', 'Uzun yolda işkenceye dönüşüyor.', 'Kabin gürültülü ve sarsıntılı.', 'Koltukları tahta sıra gibi.'],
-  handling: ['Virajlarda gemi gibi yalpalıyor.', 'Direksiyon tepkisiz ve belirsiz.', 'Dönemeçlerde ürkütücü.', 'Frene basınca bir yana çekiyor.'],
-  safety: ['Kaza anında sizi koruyacağından emin değiliz.', 'Frenleri güven vermiyor.', 'Gövdesi fazla narin.', 'Güvenlik konusunda sınıfının gerisinde.'],
-  reliability: ['Arıza lambası yoksa bile tamirci sizi tanıyor.', 'Sık sık yolda bırakıyor.', 'Test aracımız iki kez çekiciyle döndü.', 'Parçaları dayanıksız.'],
-  prestige: ['Sıradan, kimse dönüp bakmıyor.', 'Tasarımı sönük ve ucuz görünüyor.', 'İşçiliği fiyatını hak etmiyor.', 'Kalabalıkta kaybolup gidiyor.'],
-  practicality: ['Bagajına bir şapka kutusu zor sığar.', 'Günlük hayatta pratik değil.', 'Kabin dar, binip inmek zor.', 'Ailece kullanmak neredeyse imkânsız.'],
+  accel: [msg('Yokuşta yayadan hallice.'), msg('Hızlanması sabır istiyor.'), msg('Motoru aracı taşımakta zorlanıyor.'), msg('Kalkışta at arabasına bile yetişemiyor.')],
+  topSpeed: [msg('Düz yolda bile herkes sizi solluyor.'), msg('Son hızı hayal kırıklığı.'), msg('Yolda en yavaş araç o.'), msg('Açık yolda nefesi çabuk kesiliyor.')],
+  economy: [msg('Benzin istasyonlarının en iyi müşterisi.'), msg('Yakıt faturası can yakıyor.'), msg('Deposu göz açıp kapayıncaya kadar boşalıyor.'), msg('Tüketimi sınıfı için fazla.')],
+  comfort: [msg('Her tümseği omurganızda hissediyorsunuz.'), msg('Uzun yolda işkenceye dönüşüyor.'), msg('Kabin gürültülü ve sarsıntılı.'), msg('Koltukları tahta sıra gibi.')],
+  handling: [msg('Virajlarda gemi gibi yalpalıyor.'), msg('Direksiyon tepkisiz ve belirsiz.'), msg('Dönemeçlerde ürkütücü.'), msg('Frene basınca bir yana çekiyor.')],
+  safety: [msg('Kaza anında sizi koruyacağından emin değiliz.'), msg('Frenleri güven vermiyor.'), msg('Gövdesi fazla narin.'), msg('Güvenlik konusunda sınıfının gerisinde.')],
+  reliability: [msg('Arıza lambası yoksa bile tamirci sizi tanıyor.'), msg('Sık sık yolda bırakıyor.'), msg('Test aracımız iki kez çekiciyle döndü.'), msg('Parçaları dayanıksız.')],
+  prestige: [msg('Sıradan, kimse dönüp bakmıyor.'), msg('Tasarımı sönük ve ucuz görünüyor.'), msg('İşçiliği fiyatını hak etmiyor.'), msg('Kalabalıkta kaybolup gidiyor.')],
+  practicality: [msg('Bagajına bir şapka kutusu zor sığar.'), msg('Günlük hayatta pratik değil.'), msg('Kabin dar, binip inmek zor.'), msg('Ailece kullanmak neredeyse imkânsız.')],
 };
 
 // Each magazine has its own readers and hobbyhorses, so they notice different things.
@@ -102,18 +103,19 @@ export function writeReviews(state: GameState, model: CarModel, rng: Rng): Revie
       return list[start % list.length];
     };
     if (best) {
-      parts.push(phrase(POSITIVE[best.k]));
+      parts.push(t(phrase(POSITIVE[best.k])));
       used.add(best.k);
     }
     if (worst) {
-      const neg = phrase(NEGATIVE[worst.k]);
-      parts.push(parts.length ? `Ama ${neg.charAt(0).toLocaleLowerCase('tr')}${neg.slice(1)}` : neg);
+      const neg = t(phrase(NEGATIVE[worst.k]));
+      const lower = isTurkish() ? 'tr' : locale();
+      parts.push(parts.length ? t('Ama {text}', { text: `${neg.charAt(0).toLocaleLowerCase(lower)}${neg.slice(1)}` }) : neg);
       used.add(worst.k);
     }
-    if (siblings > 3) parts.push('Kardeş modellerinden ayırt etmek zor: hepsi aynı araba!');
-    if (offer.priceTerm < -PRICE_REMARK) parts.push('Fiyatı fazla iddialı.');
-    else if (offer.priceTerm > PRICE_REMARK) parts.push('Bu paraya kaçırılmaz.');
-    if (!parts.length) parts.push('Sınıfının ortalamasında, sağlam ama sıradan bir araç.');
+    if (siblings > 3) parts.push(t('Kardeş modellerinden ayırt etmek zor: hepsi aynı araba!'));
+    if (offer.priceTerm < -PRICE_REMARK) parts.push(t('Fiyatı fazla iddialı.'));
+    else if (offer.priceTerm > PRICE_REMARK) parts.push(t('Bu paraya kaçırılmaz.'));
+    if (!parts.length) parts.push(t('Sınıfının ortalamasında, sağlam ama sıradan bir araç.'));
     reviews.push({ magazine: mag.name, score, quote: parts.join(' ') });
     if (best) learn(state, model, best.k);
     if (worst) learn(state, model, worst.k);
@@ -133,7 +135,7 @@ export function customerFeedback(state: GameState, model: CarModel, rng: Rng): F
   const market = mainMarket(state, model);
   const { scores } = modelScores(state, model);
   const w = segmentWeights(model.segment, market, yf);
-  const buyers = segmentDef(model.segment).buyers;
+  const buyers = t(segmentDef(model.segment).buyers);
   const lines: FeedbackLine[] = [];
   const pool = ATTRS.map((k) => ({ k, p: w[k] * (1 + Math.abs(scores[k] - 50) / 20) }));
   const total = pool.reduce((s, x) => s + x.p, 0);
@@ -150,17 +152,19 @@ export function customerFeedback(state: GameState, model: CarModel, rng: Rng): F
   }
   for (const k of chosen) {
     const d = scores[k] - 50;
-    const name = ATTR_NAMES[k].toLowerCase();
-    if (d > 8) lines.push({ text: `${buyers} ${model.name} modelinin ${name} konusundan çok memnun.`, tone: 'good' });
-    else if (d < -8) lines.push({ text: `${buyers} ${model.name} modelinin ${name} konusundan şikâyetçi.`, tone: 'bad' });
-    else lines.push({ text: `${buyers} ${model.name} modelinin ${name} konusunu “idare eder” buluyor; bu onlar için önemli.`, tone: 'info' });
+    const name = t(ATTR_NAMES[k]).toLowerCase();
+    const about = { buyers, model: model.name, attr: name };
+    if (d > 8) lines.push({ text: t('{buyers} {model} modelinin {attr} konusundan çok memnun.', about), tone: 'good' });
+    else if (d < -8) lines.push({ text: t('{buyers} {model} modelinin {attr} konusundan şikâyetçi.', about), tone: 'bad' });
+    else lines.push({ text: t('{buyers} {model} modelinin {attr} konusunu “idare eder” buluyor; bu onlar için önemli.', about), tone: 'info' });
     learn(state, model, k);
   }
   const offer = playerOffer(state, model, market);
-  if (offer.priceTerm < -PRICE_REMARK) lines.push({ text: `${buyers} ${model.name} modelini pahalı buluyor.`, tone: 'bad' });
-  else if (offer.priceTerm > PRICE_REMARK) lines.push({ text: `${buyers} ${model.name} modelinin fiyatını çok uygun buluyor.`, tone: 'good' });
-  if (offer.age <= -12) lines.push({ text: `${buyers} ${model.name} modelini artık eski moda buluyor; yeni modellere yöneliyorlar.`, tone: 'bad' });
-  else if (offer.age <= -4) lines.push({ text: `${model.name} yaşlanıyor: rakiplerin yeni modelleri alıcıların ilgisini çekiyor.`, tone: 'bad' });
+  const who = { buyers, model: model.name };
+  if (offer.priceTerm < -PRICE_REMARK) lines.push({ text: t('{buyers} {model} modelini pahalı buluyor.', who), tone: 'bad' });
+  else if (offer.priceTerm > PRICE_REMARK) lines.push({ text: t('{buyers} {model} modelinin fiyatını çok uygun buluyor.', who), tone: 'good' });
+  if (offer.age <= -12) lines.push({ text: t('{buyers} {model} modelini artık eski moda buluyor; yeni modellere yöneliyorlar.', who), tone: 'bad' });
+  else if (offer.age <= -4) lines.push({ text: t('{model} yaşlanıyor: rakiplerin yeni modelleri alıcıların ilgisini çekiyor.', { model: model.name }), tone: 'bad' });
   return lines;
 }
 
@@ -191,16 +195,18 @@ export function buildLaunchReport(state: GameState, model: CarModel): LaunchRepo
   const price: LaunchReport['price'] = !offer ? 'fair' : offer.priceTerm < -PRICE_REMARK ? 'high' : offer.priceTerm > PRICE_REMARK ? 'low' : 'fair';
   const advice: string[] = [];
   if (capacity < 0.05)
-    advice.push('Araba şu an üretilmiyor: hattı yok, hat başka işte ya da üretim hızı sıfır. Fabrika ekranından bir hat ata; aksi halde bayilere araba gitmez.');
-  else if (demand > capacity * 1.3) advice.push('Talep üretimi aşıyor: bayilerde kuyruk var. Fiyatı artırabilir ya da fabrikaya hat ekleyebilirsin.');
-  if (model.inventory > Math.max(6, demand * 6)) advice.push('Stok birikiyor: fiyatı düşür ya da üretim hızını kıs.');
-  if (price === 'high') advice.push('Alıcılar aracı pahalı buluyor.');
-  if (price === 'low' && demand > capacity) advice.push('Fiyatın rakiplerin çok altında: daha pahalıya da satabilirsin.');
-  if (complaints.length) advice.push(`Bir sonraki makyajda ya da yeni kuşakta ${complaints.map((k) => ATTR_NAMES[k].toLowerCase()).join(' ve ')} konusuna eğil.`);
+    advice.push(t('Araba şu an üretilmiyor: hattı yok, hat başka işte ya da üretim hızı sıfır. Fabrika ekranından bir hat ata; aksi halde bayilere araba gitmez.'));
+  else if (demand > capacity * 1.3) advice.push(t('Talep üretimi aşıyor: bayilerde kuyruk var. Fiyatı artırabilir ya da fabrikaya hat ekleyebilirsin.'));
+  if (model.inventory > Math.max(6, demand * 6)) advice.push(t('Stok birikiyor: fiyatı düşür ya da üretim hızını kıs.'));
+  if (price === 'high') advice.push(t('Alıcılar aracı pahalı buluyor.'));
+  if (price === 'low' && demand > capacity) advice.push(t('Fiyatın rakiplerin çok altında: daha pahalıya da satabilirsin.'));
+  if (complaints.length)
+    advice.push(t('Bir sonraki makyajda ya da yeni kuşakta {attrs} konusuna eğil.', { attrs: list(complaints.map((k) => t(ATTR_NAMES[k]).toLowerCase())) }));
   const open = openStates(state).length;
-  if (open < 6) advice.push(`Arabaların yalnızca ${open} eyalette satılıyor: alıcıların çoğu onu hiç görmüyor. Harita ekranından komşu eyaletlerde bayi ara.`);
+  if (open < 6) advice.push(t('Arabaların yalnızca {n} eyalette satılıyor: alıcıların çoğu onu hiç görmüyor. Harita ekranından komşu eyaletlerde bayi ara.', { n: open }));
   const poor = underServed(state).slice(0, 3);
-  if (poor.length) advice.push(`Servis yetersiz: ${poor.map((id) => stateDef(id).name).join(', ')} eyaletlerinde sahipler tamir için bekliyor. Haritadan servis aç.`);
+  if (poor.length)
+    advice.push(t('Servis yetersiz: {states} eyaletlerinde sahipler tamir için bekliyor. Haritadan servis aç.', { states: poor.map((id) => stateDef(id).name).join(', ') }));
   return {
     weeks: since.length,
     sold,

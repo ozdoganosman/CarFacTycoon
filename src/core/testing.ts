@@ -10,6 +10,7 @@ import type {
   SupplierChoice,
   TestId,
 } from './types';
+import { msg, t } from '../i18n';
 
 // Latent defects are created when development ends. Testing finds (and fixes) them;
 // whatever is left over shows up later in customers' hands.
@@ -30,9 +31,9 @@ export interface TestDef {
 export const TESTS: TestDef[] = [
   {
     id: 'dyno',
-    name: 'Dinamometre',
+    name: msg('Dinamometre'),
     year: 1900,
-    desc: 'Motor ve şanzıman test standında saatlerce tam yükte çalıştırılır.',
+    desc: msg('Motor ve şanzıman test standında saatlerce tam yükte çalıştırılır.'),
     protoShare: 0.15,
     costPerWeek: 25,
     rates: { engine: 0.14, gearbox: 0.09 },
@@ -40,9 +41,9 @@ export const TESTS: TestDef[] = [
   },
   {
     id: 'road',
-    name: 'Yol testi',
+    name: msg('Yol testi'),
     year: 1900,
-    desc: 'Prototip her türlü yolda binlerce kilometre sürülür.',
+    desc: msg('Prototip her türlü yolda binlerce kilometre sürülür.'),
     protoShare: 0.26,
     costPerWeek: 40,
     rates: { chassis: 0.09, gearbox: 0.06, electrics: 0.08, brakes: 0.08, body: 0.05, engine: 0.04 },
@@ -50,9 +51,9 @@ export const TESTS: TestDef[] = [
   },
   {
     id: 'crash',
-    name: 'Çarpışma testi',
+    name: msg('Çarpışma testi'),
     year: 1934,
-    desc: 'Prototipler duvara çarptırılır; gövde, şasi ve frenler incelenir.',
+    desc: msg('Prototipler duvara çarptırılır; gövde, şasi ve frenler incelenir.'),
     protoShare: 1.2,
     costPerWeek: 150,
     rates: { body: 0.16, chassis: 0.1, brakes: 0.05 },
@@ -60,9 +61,9 @@ export const TESTS: TestDef[] = [
   },
   {
     id: 'durability',
-    name: 'Dayanıklılık',
+    name: msg('Dayanıklılık'),
     year: 1900,
-    desc: 'Prototip gece gündüz aylarca yorulur. Yavaş ama sinsi arızaları bulur.',
+    desc: msg('Prototip gece gündüz aylarca yorulur. Yavaş ama sinsi arızaları bulur.'),
     protoShare: 0.22,
     costPerWeek: 32,
     rates: { engine: 0.045, gearbox: 0.045, chassis: 0.045, electrics: 0.045, brakes: 0.045, body: 0.045 },
@@ -71,18 +72,18 @@ export const TESTS: TestDef[] = [
 ];
 
 export const AREA_NAMES: Record<DefectArea, string> = {
-  engine: 'Motor',
-  gearbox: 'Şanzıman',
-  chassis: 'Şasi / süspansiyon',
-  electrics: 'Elektrik',
-  brakes: 'Frenler',
-  body: 'Gövde',
+  engine: msg('Motor'),
+  gearbox: msg('Şanzıman'),
+  chassis: msg('Şasi / süspansiyon'),
+  electrics: msg('Elektrik'),
+  brakes: msg('Frenler'),
+  body: msg('Gövde'),
 };
 
 export const SEVERITY_NAMES: Record<Severity, string> = {
-  minor: 'Küçük',
-  major: 'Ciddi',
-  critical: 'Kritik',
+  minor: msg('Küçük'),
+  major: msg('Ciddi'),
+  critical: msg('Kritik'),
 };
 
 const AREA_SHARE: Record<DefectArea, number> = {
@@ -165,10 +166,11 @@ export function expectedRemaining(prior: number, weeks: Record<TestId, number>):
   return total;
 }
 
+/** How risky the hidden defects are, in the player's language. */
 export function riskLabel(expected: number): { label: string; tone: 'good' | 'warn' | 'bad' } {
-  if (expected < 1) return { label: 'Düşük', tone: 'good' };
-  if (expected < 2.5) return { label: 'Orta', tone: 'warn' };
-  return { label: 'Yüksek', tone: 'bad' };
+  if (expected < 1) return { label: t('Düşük'), tone: 'good' };
+  if (expected < 2.5) return { label: t('Orta'), tone: 'warn' };
+  return { label: t('Yüksek'), tone: 'bad' };
 }
 
 export const fixCost = (sev: Severity, year: number) => ({ minor: 80, major: 250, critical: 600 })[sev] * costIndex(year);
@@ -193,9 +195,9 @@ export interface SupplierDef {
 }
 
 export const SUPPLIERS: SupplierDef[] = [
-  { id: 'inhouse', name: 'Kendin üret', desc: 'Atölye yatırımı gerekir. Ucuz; kalite mühendislik becerine bağlı.', costMult: 0.85, leadWeeks: 0 },
-  { id: 'cheap', name: 'Ucuz tedarikçi', desc: 'En düşük fiyat, kısa teslim. Kalite kontrolü zayıf: geri çağırma riski.', costMult: 0.8, leadWeeks: 3 },
-  { id: 'quality', name: 'Kaliteli tedarikçi', desc: 'Pahalı ve teslimi uzun, ama parçalar sağlam.', costMult: 1.12, leadWeeks: 8 },
+  { id: 'inhouse', name: msg('Kendin üret'), desc: msg('Atölye yatırımı gerekir. Ucuz; kalite mühendislik becerine bağlı.'), costMult: 0.85, leadWeeks: 0 },
+  { id: 'cheap', name: msg('Ucuz tedarikçi'), desc: msg('En düşük fiyat, kısa teslim. Kalite kontrolü zayıf: geri çağırma riski.'), costMult: 0.8, leadWeeks: 3 },
+  { id: 'quality', name: msg('Kaliteli tedarikçi'), desc: msg('Pahalı ve teslimi uzun, ama parçalar sağlam.'), costMult: 1.12, leadWeeks: 8 },
 ];
 
 export function supplierReliability(choice: SupplierChoice, skill: number): number {
@@ -244,43 +246,43 @@ export function failureRate(
 
 const DEFECT_TEXTS: Record<DefectArea, Record<Severity, string[]>> = {
   engine: {
-    minor: ['Rölanti düzensiz', 'Yağ keçesi sızdırıyor', 'Karbüratör ayarı kayıyor', 'Egzoz manifoldu çatırdıyor'],
-    major: ['Silindir kapağı contası üflüyor', 'Supaplar erken yanıyor', 'Motor tırmanışta aşırı ısınıyor', 'Su pompası sızdırıyor'],
-    critical: ['Krank mili yatağı eriyor', 'Biyel kolu kırılıyor', 'Motor bloğu soğukta çatlıyor'],
+    minor: [msg('Rölanti düzensiz'), msg('Yağ keçesi sızdırıyor'), msg('Karbüratör ayarı kayıyor'), msg('Egzoz manifoldu çatırdıyor')],
+    major: [msg('Silindir kapağı contası üflüyor'), msg('Supaplar erken yanıyor'), msg('Motor tırmanışta aşırı ısınıyor'), msg('Su pompası sızdırıyor')],
+    critical: [msg('Krank mili yatağı eriyor'), msg('Biyel kolu kırılıyor'), msg('Motor bloğu soğukta çatlıyor')],
   },
   gearbox: {
-    minor: ['Vites geçişleri sert', 'Şanzıman uğulduyor', 'Vites kolu titriyor'],
-    major: ['İkinci vites boşa atıyor', 'Debriyaj kayıyor', 'Diferansiyel ısınıp uğulduyor'],
-    critical: ['Dişliler yük altında kırılıyor', 'Aks mili kırılıyor'],
+    minor: [msg('Vites geçişleri sert'), msg('Şanzıman uğulduyor'), msg('Vites kolu titriyor')],
+    major: [msg('İkinci vites boşa atıyor'), msg('Debriyaj kayıyor'), msg('Diferansiyel ısınıp uğulduyor')],
+    critical: [msg('Dişliler yük altında kırılıyor'), msg('Aks mili kırılıyor')],
   },
   chassis: {
-    minor: ['Makaslar gıcırdıyor', 'Direksiyon titriyor', 'Bijonlar gevşiyor'],
-    major: ['Makas yaprakları çatlıyor', 'Direksiyon boşluğu hızla artıyor', 'Rot başları çabuk aşınıyor'],
-    critical: ['Şasi kaynağı çatlıyor', 'Ön aks yerinden oynuyor'],
+    minor: [msg('Makaslar gıcırdıyor'), msg('Direksiyon titriyor'), msg('Bijonlar gevşiyor')],
+    major: [msg('Makas yaprakları çatlıyor'), msg('Direksiyon boşluğu hızla artıyor'), msg('Rot başları çabuk aşınıyor')],
+    critical: [msg('Şasi kaynağı çatlıyor'), msg('Ön aks yerinden oynuyor')],
   },
   electrics: {
-    minor: ['Farlar sarsıntıda sönüyor', 'Korna ara sıra susuyor', 'Arka lamba bağlantısı kopuyor'],
-    major: ['Ateşleme nemli havada tekliyor', 'Dinamo aküyü dolduramıyor', 'Akü çabuk bitiyor'],
-    critical: ['Kablo tesisatı ısınıp tutuşuyor', 'Ateşleme bobini yolda yanıyor'],
+    minor: [msg('Farlar sarsıntıda sönüyor'), msg('Korna ara sıra susuyor'), msg('Arka lamba bağlantısı kopuyor')],
+    major: [msg('Ateşleme nemli havada tekliyor'), msg('Dinamo aküyü dolduramıyor'), msg('Akü çabuk bitiyor')],
+    critical: [msg('Kablo tesisatı ısınıp tutuşuyor'), msg('Ateşleme bobini yolda yanıyor')],
   },
   brakes: {
-    minor: ['Balatalar gıcırdıyor', 'Fren pedalı boşluk yapıyor', 'El freni yokuşta tutmuyor'],
-    major: ['Frenler bir yana çekiyor', 'Balatalar çok erken bitiyor', 'Kampanalar ısınınca fren zayıflıyor'],
-    critical: ['Fren çubuğu kopuyor', 'Fren kampanası çatlıyor'],
+    minor: [msg('Balatalar gıcırdıyor'), msg('Fren pedalı boşluk yapıyor'), msg('El freni yokuşta tutmuyor')],
+    major: [msg('Frenler bir yana çekiyor'), msg('Balatalar çok erken bitiyor'), msg('Kampanalar ısınınca fren zayıflıyor')],
+    critical: [msg('Fren çubuğu kopuyor'), msg('Fren kampanası çatlıyor')],
   },
   body: {
-    minor: ['Kapılar tıkırdıyor', 'Boya çabuk çatlıyor', 'Çamurluklar titriyor'],
-    major: ['Gövde yağmurda su alıyor', 'Menteşeler sarkıyor', 'Kaporta sacı titreşimden çatlıyor'],
-    critical: ['Kapı kilidi yolda açılıyor', 'Gövde bağlantıları şasiden sökülüyor'],
+    minor: [msg('Kapılar tıkırdıyor'), msg('Boya çabuk çatlıyor'), msg('Çamurluklar titriyor')],
+    major: [msg('Gövde yağmurda su alıyor'), msg('Menteşeler sarkıyor'), msg('Kaporta sacı titreşimden çatlıyor')],
+    critical: [msg('Kapı kilidi yolda açılıyor'), msg('Gövde bağlantıları şasiden sökülüyor')],
   },
 };
 
-/** A defect in words; the same defect always reads the same. */
+/** A defect in words, in the player's language; the same defect always reads the same. */
 export function defectText(d: Defect): string {
   const list = DEFECT_TEXTS[d.area][d.severity];
   let h = 0;
   for (const c of d.id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return list[h % list.length];
+  return t(list[h % list.length]);
 }
 
 /** Rough range for a Poisson count: what "about λ" means in practice. */

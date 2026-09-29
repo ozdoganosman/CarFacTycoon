@@ -1,6 +1,6 @@
 import { segmentDef, ATTR_NAMES } from '../data/segments';
 import { MARKETS } from '../data/markets';
-import { TECH_NEWS, WORLD_NEWS, genericStory } from '../data/technews';
+import { TECH_NEWS, WORLD_NEWS, genericStory, type Story } from '../data/technews';
 import { customerLetters } from './letters';
 import { modelScores, segmentMarket, priceNow } from './market';
 import { lineReport } from './factory';
@@ -9,7 +9,8 @@ import { yearFloat, yearOf } from './time';
 import type { AttrKey, CarModel, GameState, MarketId, NewsIssue, NewsStoryData } from './types';
 import { money, pushModal } from './util';
 import { pctWith } from './turkish';
-import { fmtNumber } from '../i18n/format';
+import { fmtNumber, fmtPercent } from '../i18n/format';
+import { isTurkish, msg, t } from '../i18n';
 
 // Front pages: the day new technology appears in the world, and the day one of
 // the player's cars takes off. Issues are kept for the archive and shown as a
@@ -27,10 +28,12 @@ export function publish(s: GameState, issue: NewsIssue) {
 }
 
 const fmt = (n: number) => fmtNumber(n);
+/** One decimal: as the game always wrote it in Turkish, in the language's own way otherwise. */
+const dec = (v: number) => (isTurkish() ? v.toFixed(1) : fmtNumber(v, 1));
 
 function worldFor(year: number): NewsStoryData | undefined {
   const w = WORLD_NEWS.find((x) => x.year === year);
-  return w ? { headline: w.headline, body: w.body } : undefined;
+  return w ? { headline: t(w.headline), body: t(w.body) } : undefined;
 }
 
 /** Last year's sales in a market, for a line of trade news. */
@@ -45,11 +48,26 @@ function marketLine(s: GameState, year: number): NewsStoryData | undefined {
     else total += v;
   }
   if (total <= 0) return undefined;
-  const name = MARKETS.find((x) => x.id === m)?.name ?? m;
+  const name = t(MARKETS.find((x) => x.id === m)?.name ?? m);
   return {
-    headline: `${name} Pazarı: Geçen Yılın Satışları`,
-    body: `Geçen yıl ${name} pazarında ${fmt(total)} yeni otomobil satıldı. ${mine > 0 ? `${s.company.name} bunun ${pctWith(mine / total, 'possAcc', 1)} aldı.` : 'Yeni firmalar pazarda yer açmaya çalışıyor.'}`,
+    headline: t('{market} Pazarı: Geçen Yılın Satışları', { market: name }),
+    body:
+      mine > 0
+        ? t('Geçen yıl {market} pazarında {count} yeni otomobil satıldı. {company} bunun {share} aldı.', {
+            market: name,
+            count: fmt(total),
+            company: s.company.name,
+            share: pctWith(mine / total, 'possAcc', 1),
+          })
+        : t('Geçen yıl {market} pazarında {count} yeni otomobil satıldı. Yeni firmalar pazarda yer açmaya çalışıyor.', { market: name, count: fmt(total) }),
   };
+}
+
+/** A technology's story in the player's language. */
+function techStory(d: ResearchDef): Story {
+  const st = TECH_NEWS[d.id];
+  if (st) return { headline: t(st.headline), deck: t(st.deck), body: t(st.body) };
+  return genericStory(t(d.name), t(d.desc));
 }
 
 /** New technologies of the year on one front page: the biggest one leads. */
@@ -58,9 +76,8 @@ export function techIssue(s: GameState, fresh: ResearchDef[], year: number): New
   if (!fresh.length && !world) return null;
   const sorted = [...fresh].sort((a, b) => b.cost - a.cost);
   const lead = sorted[0];
-  const story = (d: ResearchDef) => TECH_NEWS[d.id] ?? genericStory(d.name, d.desc);
   const side: NewsStoryData[] = sorted.slice(1, 4).map((d) => {
-    const st = story(d);
+    const st = techStory(d);
     return { headline: st.headline, deck: st.deck, body: st.body };
   });
   const trade = marketLine(s, year);
@@ -75,7 +92,8 @@ export function techIssue(s: GameState, fresh: ResearchDef[], year: number): New
       side,
     };
   }
-  const st = story(lead);
+  const st = techStory(lead);
+  const tech = t(lead.name);
   return {
     id: `n${s.nextId++}`,
     week: s.week,
@@ -85,12 +103,12 @@ export function techIssue(s: GameState, fresh: ResearchDef[], year: number): New
       deck: st.deck,
       body: st.body,
       art: { kind: 'tech', area: lead.category },
-      caption: `${lead.name}. Ar-Ge bölümünüz bu yenilik üzerinde çalışabilir.`,
+      caption: t('{tech}. Ar-Ge bölümünüz bu yenilik üzerinde çalışabilir.', { tech }),
       paragraphs: [
         lead.passive
-          ? `Mühendislerin görüşüne göre ${lead.name.toLowerCase()} bir kez öğrenildiğinde bütün yeni otomobillere uygulanabilecek.`
-          : `Uzmanlar ${lead.name.toLowerCase()} için ilk yıllarda yüksek maliyet ve çıraklık sancıları bekliyor; yaygınlaştıkça ucuzlayacağı tahmin ediliyor.`,
-        lead.effects ? `Beklenen etkisi: ${lead.effects}.` : '',
+          ? t('Mühendislerin görüşüne göre {tech} bir kez öğrenildiğinde bütün yeni otomobillere uygulanabilecek.', { tech: tech.toLowerCase() })
+          : t('Uzmanlar {tech} için ilk yıllarda yüksek maliyet ve çıraklık sancıları bekliyor; yaygınlaştıkça ucuzlayacağı tahmin ediliyor.', { tech: tech.toLowerCase() }),
+        lead.effects ? t('Beklenen etkisi: {effects}.', { effects: lead.effects }) : '',
       ].filter(Boolean),
     },
     side,
@@ -99,27 +117,27 @@ export function techIssue(s: GameState, fresh: ResearchDef[], year: number): New
 }
 
 const SLOGANS: Record<AttrKey, string> = {
-  accel: 'Yokuşların hâkimi!',
-  topSpeed: 'Yolların en hızlısı!',
-  economy: 'Az yakar, çok gider!',
-  comfort: 'Evinizin konforu yolda!',
-  handling: 'Virajlar onun için yaratıldı!',
-  safety: 'Aileniz emin ellerde!',
-  reliability: 'Sizi asla yolda bırakmaz!',
-  prestige: 'Seçkinlerin tercihi!',
-  practicality: 'Herkese ve her şeye yer var!',
+  accel: msg('Yokuşların hâkimi!'),
+  topSpeed: msg('Yolların en hızlısı!'),
+  economy: msg('Az yakar, çok gider!'),
+  comfort: msg('Evinizin konforu yolda!'),
+  handling: msg('Virajlar onun için yaratıldı!'),
+  safety: msg('Aileniz emin ellerde!'),
+  reliability: msg('Sizi asla yolda bırakmaz!'),
+  prestige: msg('Seçkinlerin tercihi!'),
+  practicality: msg('Herkese ve her şeye yer var!'),
 };
 
 const BLURB: Record<AttrKey, string> = {
-  accel: 'Çevik ve güçlü motor',
-  topSpeed: 'Sınıfının en yüksek hızı',
-  economy: 'Şaşırtıcı yakıt ekonomisi',
-  comfort: 'Yumuşacık yolculuk',
-  handling: 'Kusursuz yol tutuş',
-  safety: 'Sağlam ve güvenli gövde',
-  reliability: 'Yıllarca sorunsuz hizmet',
-  prestige: 'Göz alıcı çizgiler',
-  practicality: 'Geniş iç hacim',
+  accel: msg('Çevik ve güçlü motor'),
+  topSpeed: msg('Sınıfının en yüksek hızı'),
+  economy: msg('Şaşırtıcı yakıt ekonomisi'),
+  comfort: msg('Yumuşacık yolculuk'),
+  handling: msg('Kusursuz yol tutuş'),
+  safety: msg('Sağlam ve güvenli gövde'),
+  reliability: msg('Yıllarca sorunsuz hizmet'),
+  prestige: msg('Göz alıcı çizgiler'),
+  practicality: msg('Geniş iç hacim'),
 };
 
 /** Where the model stands in its class in its main market: rank, share and weekly demand. */
@@ -138,7 +156,10 @@ export function boomIssue(s: GameState, m: CarModel, reason: { kind: 'units'; un
   const yf = yearFloat(s.week);
   const seg = segmentDef(m.segment);
   const st = standing(s, m);
-  const marketName = MARKETS.find((x) => x.id === st.market)?.name ?? st.market;
+  const marketName = t(MARKETS.find((x) => x.id === st.market)?.name ?? st.market);
+  const segment = t(seg.name).toLowerCase();
+  const company = s.company.name;
+  const model = m.name;
   const { scores } = modelScores(s, m);
   const best = (Object.keys(scores) as AttrKey[]).sort((a, b) => scores[b] - scores[a]).slice(0, 3);
   const weekly = Object.values(m.lastDemand ?? {}).reduce((a, b) => a + b, 0);
@@ -147,21 +168,30 @@ export function boomIssue(s: GameState, m: CarModel, reason: { kind: 'units'; un
   const price = priceNow(m, s.week);
   const headline =
     reason.kind === 'leader'
-      ? `${m.name}, ${seg.name.toLowerCase()} sınıfının zirvesinde!`
+      ? t('{model}, {segment} sınıfının zirvesinde!', { model, segment })
       : reason.kind === 'company'
-        ? `${s.company.name} bininci otomobilini teslim etti`
+        ? t('{company} bininci otomobilini teslim etti', { company })
         : reason.units >= 1_000_000
-          ? `Bir milyonuncu ${m.name} fabrikadan çıktı!`
-          : `${fmt(reason.units)}. ${m.name} sahibine kavuştu`;
+          ? t('Bir milyonuncu {model} fabrikadan çıktı!', { model })
+          : t('{count}. {model} sahibine kavuştu', { count: fmt(reason.units), model });
   const deck =
     reason.kind === 'leader'
-      ? `${s.company.name}, ${marketName} pazarında rakiplerini geride bıraktı; bayilerde kuyruk var`
-      : `${s.company.name} otomobiline talep durmak bilmiyor: haftada ${fmt(weekly)} sipariş`;
+      ? t('{company}, {market} pazarında rakiplerini geride bıraktı; bayilerde kuyruk var', { company, market: marketName })
+      : t('{company} otomobiline talep durmak bilmiyor: haftada {count} sipariş', { company, count: fmt(weekly) });
+  const factory = { n: lines.length, count: fmt(cap) };
   const paragraphs = [
-    `${s.company.name} fabrikasından çıkan ${m.name}, ${marketName} pazarındaki ${seg.name.toLowerCase()} sınıfında ${st.of} otomobil arasında ${st.rank}. sıraya yükseldi ve sınıfın ${pctWith(st.share, 'possAcc', 1)} aldı. Şimdiye kadar ${fmt(m.unitsSold)} adet satıldı.`,
-    `Bayiler müşterilerin en çok ${best.map((k) => ATTR_NAMES[k].toLowerCase()).join(', ')} konusundaki üstünlüğünü övdüğünü anlatıyor. Otomobil dergilerinin ortalama notu ${m.reviewScore.toFixed(1)}.`,
+    t(
+      '{company} fabrikasından çıkan {model}, {market} pazarındaki {segment} sınıfında {n} otomobil arasında {rank}. sıraya yükseldi ve sınıfın {share} aldı. Şimdiye kadar {sold} adet satıldı.',
+      { company, model, market: marketName, segment, n: st.of, rank: st.rank, share: pctWith(st.share, 'possAcc', 1), sold: fmt(m.unitsSold) },
+    ),
+    t('Bayiler müşterilerin en çok {attrs} konusundaki üstünlüğünü övdüğünü anlatıyor. Otomobil dergilerinin ortalama notu {score}.', {
+      attrs: best.map((k) => t(ATTR_NAMES[k]).toLowerCase()).join(', '),
+      score: dec(m.reviewScore),
+    }),
     cap > 0
-      ? `Fabrika ${lines.length} hatta haftada ${fmt(cap)} otomobil üretebiliyor. ${weekly > cap * 1.1 ? 'Siparişler üretimi aşıyor; alıcılar teslimat için haftalarca bekliyor.' : 'Şirket yetkilileri talebi karşılayabildiklerini söylüyor.'}`
+      ? weekly > cap * 1.1
+        ? t('Fabrika {n} hatta haftada {count} otomobil üretebiliyor. Siparişler üretimi aşıyor; alıcılar teslimat için haftalarca bekliyor.', factory)
+        : t('Fabrika {n} hatta haftada {count} otomobil üretebiliyor. Şirket yetkilileri talebi karşılayabildiklerini söylüyor.', factory)
       : '',
   ].filter(Boolean);
   const year = yearOf(s.week);
@@ -175,25 +205,28 @@ export function boomIssue(s: GameState, m: CarModel, reason: { kind: 'units'; un
       body: paragraphs[0],
       paragraphs: paragraphs.slice(1),
       art: { kind: 'car', modelId: m.id },
-      caption: `${s.company.name} ${m.name}, ${yf < 1930 ? 'fabrika avlusunda' : 'bayi vitrininde'}.`,
+      caption: yf < 1930 ? t('{company} {model}, fabrika avlusunda.', { company, model }) : t('{company} {model}, bayi vitrininde.', { company, model }),
     },
     stats: [
-      { label: 'Toplam satış', value: fmt(m.unitsSold) },
-      { label: 'Haftalık talep', value: fmt(weekly) },
-      { label: 'Sınıf payı', value: `%${(st.share * 100).toFixed(1)}` },
-      { label: 'Fiyatı', value: money(price) },
+      { label: t('Toplam satış'), value: fmt(m.unitsSold) },
+      { label: t('Haftalık talep'), value: fmt(weekly) },
+      { label: t('Sınıf payı'), value: fmtPercent(st.share, 1) },
+      { label: t('Fiyatı'), value: money(price) },
     ],
     side: [
       {
-        headline: 'Rakipler Telaşta',
-        body: `Sınıfın köklü üreticileri ${m.name} karşısında fiyat indirimi ve yeni model hazırlıklarından söz ediyor. Sektör gözlemcileri önümüzdeki yıllarda rekabetin sertleşeceğini düşünüyor.`,
+        headline: t('Rakipler Telaşta'),
+        body: t(
+          'Sınıfın köklü üreticileri {model} karşısında fiyat indirimi ve yeni model hazırlıklarından söz ediyor. Sektör gözlemcileri önümüzdeki yıllarda rekabetin sertleşeceğini düşünüyor.',
+          { model },
+        ),
       },
     ],
     world: worldFor(year),
     ad: {
       modelId: m.id,
-      slogan: SLOGANS[best[0]],
-      lines: best.map((k) => BLURB[k]),
+      slogan: t(SLOGANS[best[0]]),
+      lines: best.map((k) => t(BLURB[k])),
       price,
     },
     letters: customerLetters(s, m, 2),

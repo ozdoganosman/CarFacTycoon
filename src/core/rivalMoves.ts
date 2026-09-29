@@ -9,6 +9,8 @@ import { GREENMAIL_PREMIUM, MAX_FLOAT, marketCap } from './shares';
 import { yearFloat, yearOf } from './time';
 import type { CarDesign, GameState, RivalMove, RivalMoveKind, RivalMovesState, SegmentId } from './types';
 import { log, money, pushModal } from './util';
+import { msg, t } from '../i18n';
+import { fmtPercent } from '../i18n/format';
 
 // The big makers leave a small newcomer alone. Once the player gets ahead of them
 // (more buyers than any of them in a class, or the most cars in the country) they
@@ -108,7 +110,16 @@ export function startPriceWar(s: GameState, company: string, seg: SegmentId) {
     if (rm.active && rm.companyId === company && rm.segment === seg) rm.priceCut = { mult: PRICE_WAR_CUT, until: s.week + PRICE_WAR_WEEKS };
   }
   record(s, { kind: 'priceWar', company, segment: seg });
-  log(s, `${rivalDef(company).name}, ${segmentDef(seg).name.toLowerCase()} sınıfında fiyatlarını %${Math.round((1 - PRICE_WAR_CUT) * 100)} indirdi: fiyat savaşı başladı.`, 'warn', 'rival');
+  log(
+    s,
+    t('{company}, {segment} sınıfında fiyatlarını {pct} indirdi: fiyat savaşı başladı.', {
+      company: rivalDef(company).name,
+      segment: t(segmentDef(seg).name).toLowerCase(),
+      pct: fmtPercent(1 - PRICE_WAR_CUT, 0),
+    }),
+    'warn',
+    'rival',
+  );
 }
 
 /** Answer a price war in kind: our cars in the class 10% cheaper (going back later is not a price hike). */
@@ -136,11 +147,12 @@ export function techLeap(s: GameState, seg: SegmentId, rng: Rng): boolean {
   s.rivalModels.filter((m) => m.companyId === def.id && m.segment === seg && m.active).forEach((m) => (m.active = false));
   const rm = launchRivalModel(s, def, seg, s.week, rng, undefined, TECH_LEAP_BONUS, first ? FIRSTS[first].apply : undefined);
   record(s, { kind: 'techLeap', company: def.id, segment: seg, model: rm.name, first });
+  const segment = t(segmentDef(seg).name).toLowerCase();
   log(
     s,
     first
-      ? `${def.name}, ${segmentDef(seg).name.toLowerCase()} sınıfının ilk ${FIRSTS[first].name} arabasını çıkardı: ${rm.name}.`
-      : `${def.name}, ${segmentDef(seg).name.toLowerCase()} sınıfındaki üstünlüğümüze karşı ${rm.name} modelini çıkardı: mühendislerinin en iddialı işi.`,
+      ? t('{company}, {segment} sınıfının ilk {first} arabasını çıkardı: {model}.', { company: def.name, segment, first: t(FIRSTS[first].name), model: rm.name })
+      : t('{company}, {segment} sınıfındaki üstünlüğümüze karşı {model} modelini çıkardı: mühendislerinin en iddialı işi.', { company: def.name, segment, model: rm.name }),
     'warn',
     'rival',
   );
@@ -151,7 +163,7 @@ export function techLeap(s: GameState, seg: SegmentId, rng: Rng): boolean {
 export const FIRSTS: Record<NonNullable<RivalMove['first']>, { year: number; name: string; has: (d: CarDesign) => boolean; apply: (d: CarDesign) => void }> = {
   automatic: {
     year: 1940,
-    name: 'otomatik şanzımanlı',
+    name: msg('otomatik şanzımanlı'),
     has: (d) => d.gearbox.type === 'automatic',
     apply: (d) => {
       d.gearbox.type = 'automatic';
@@ -160,7 +172,7 @@ export const FIRSTS: Record<NonNullable<RivalMove['first']>, { year: number; nam
   },
   ifs: {
     year: 1934,
-    name: 'bağımsız ön süspansiyonlu',
+    name: msg('bağımsız ön süspansiyonlu'),
     has: (d) => d.suspension !== 'leaf',
     apply: (d) => {
       if (d.suspension === 'leaf') d.suspension = 'ifs';
@@ -168,7 +180,7 @@ export const FIRSTS: Record<NonNullable<RivalMove['first']>, { year: number; nam
   },
   synchro: {
     year: 1928,
-    name: 'senkromeçli vitesli',
+    name: msg('senkromeçli vitesli'),
     has: (d) => d.gearbox.type !== 'sliding',
     apply: (d) => {
       if (d.gearbox.type === 'sliding') d.gearbox.type = 'synchro';
@@ -208,7 +220,7 @@ export function mergeRivals(s: GameState, rng: Rng): boolean {
   buyer.sizeBoost = (buyer.sizeBoost ?? 0) + 0.8 * rivalSize(bought.id, yf, s);
   s.rivalModels.filter((m) => m.companyId === bought.id && m.active).forEach((m) => (m.active = false));
   record(s, { kind: 'merger', company: buyer.id, partner: bought.id });
-  log(s, `${buyer.name}, ${bought.name} şirketini satın aldı: ${bought.name} bayileri artık ${buyer.name} arabaları satıyor.`, 'warn', 'rival');
+  log(s, t('{buyer}, {bought} şirketini satın aldı: {bought} bayileri artık {buyer} arabaları satıyor.', { buyer: buyer.name, bought: bought.name }), 'warn', 'rival');
   return true;
 }
 
@@ -223,7 +235,7 @@ function bid(s: GameState, rng: Rng): boolean {
     const stake = Math.min(s.shares.float, 0.15);
     s.shares.raider = { company: company.id, stake };
     record(s, { kind: 'raid', company: company.id });
-    log(s, `${company.name}, borsadan sessizce şirketimizin %${Math.round(stake * 100)}’ini topladı.`, 'warn', 'rival');
+    log(s, t('{company}, borsadan sessizce şirketimizin {pct}’ini topladı.', { company: company.name, pct: fmtPercent(stake, 0) }), 'warn', 'rival');
     pushModal(s, { kind: 'event', eventId: 'rival-raid' });
     return true;
   }
@@ -255,7 +267,15 @@ export function acceptBid(s: GameState) {
     basisWeek: s.week,
   };
   delete st.bid;
-  log(s, `${rivalDef(b.company).name} şirketin %${Math.round(b.stake * 100)}’ini ${money(b.price)} karşılığında aldı ve yönetim kurulunda koltuk kazandı.`, 'info');
+  log(
+    s,
+    t('{company} şirketin {pct}’ini {price} karşılığında aldı ve yönetim kurulunda koltuk kazandı.', {
+      company: rivalDef(b.company).name,
+      pct: fmtPercent(b.stake, 0),
+      price: money(b.price),
+    }),
+    'info',
+  );
 }
 
 /** Turn the bid down: the bidder goes after our buyers instead. */
@@ -346,9 +366,9 @@ export function greenmailCost(s: GameState): number {
 export const canDilute = (s: GameState) => !!s.shares && s.shares.float + 0.02 <= MAX_FLOAT;
 
 export const MOVE_NAMES: Record<RivalMoveKind, string> = {
-  priceWar: 'Fiyat savaşı',
-  techLeap: 'Teknoloji atağı',
-  merger: 'Birleşme',
-  bid: 'Hisse teklifi',
-  raid: 'Hisse baskını',
+  priceWar: msg('Fiyat savaşı'),
+  techLeap: msg('Teknoloji atağı'),
+  merger: msg('Birleşme'),
+  bid: msg('Hisse teklifi'),
+  raid: msg('Hisse baskını'),
 };
