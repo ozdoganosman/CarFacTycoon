@@ -78,6 +78,10 @@
   "other": "Se están construyendo {n} líneas nuevas ({cost}); empezarán a producir en {weeks} semanas."
  },
  "1y59zdk": "Esta empresa no está en venta.",
+ "2amup8": {
+  "one": "{company} compró {name} por {price}: se unió {n} ingeniero y sus concesionarios ahora venden tus autos ({states}). Estados donde vendes por primera vez: {fresh}.",
+  "other": "{company} compró {name} por {price}: se unieron {n} ingenieros y sus concesionarios ahora venden tus autos ({states}). Estados donde vendes por primera vez: {fresh}."
+ },
  "1g07lv5": {
   "one": "{company} compró {name} por {price}: se unió {n} ingeniero y sus concesionarios ahora venden tus autos ({states}).",
   "other": "{company} compró {name} por {price}: se unieron {n} ingenieros y sus concesionarios ahora venden tus autos ({states})."
@@ -133,6 +137,7 @@
  "tsc3f5": "la fábrica no se amplía mientras dure la guerra",
  "1i43374": "incluso en una línea nueva, el beneficio por auto queda por debajo del 8 %: crecer solo aumentaría las pérdidas; primero corrige el precio o el costo",
  "dyrsdp": "no alcanza la caja",
+ "1ymkj1p": "con la demanda sostenida que falta cubrir, la próxima ampliación no se pagaría sola en dos años",
  "1c8z6lh": "su nueva generación está en camino: no se amplía la fábrica para un auto que envejece",
  "roxm5u": "las líneas están llenas y la demanda insatisfecha es demasiado pequeña para una línea nueva",
  "6ntr5j": {
@@ -159,10 +164,43 @@
   "one": "{n} línea nueva",
   "other": "{n} líneas nuevas"
  },
+ "ll2hnq": "{what} en {line}",
+ "1bzw63e": "una línea nueva de pintura negra de {n} puestos",
+ "1jj42xe": "una línea nueva de {n} puestos",
+ "movklg": "reconstruir {line} como línea de {n} puestos",
+ "u29k5l": "la mejor opción es {what} ({cost}, +{gain} autos/sem.): si se vendieran todos los autos adicionales, se pagaría sola {all}, pero la demanda sostenida supera la producción (incluidas las líneas en construcción) en solo ~{gap} autos/sem.; con esas ventas, se pagaría sola {time}, y la capacidad automática solo invierte en lo que se amortiza en dos años o menos",
+ "121uys3": "la mejor opción, {what} ({cost}, +{gain} autos/sem.), se pagaría sola {time} a este precio; la capacidad automática solo invierte en lo que se amortiza en dos años o menos",
+ "1a7id9c": "en más de diez años",
+ "cmli6o": {
+  "one": "en ~{n} mes",
+  "other": "en ~{n} meses"
+ },
+ "dw16o1": "{what} ({cost}) sumaría +{gain} autos/sem., pero la demanda sostenida supera la producción (incluidas las líneas en construcción) en solo ~{gap} autos/sem.: la línea estaría parada gran parte del tiempo",
+ "ixdmyb": {
+  "one": "la próxima ampliación ({what}) cuesta ~{cost} y se paga sola en ~{n} mes; tu caja libre es de {spare} (se reservan unas semanas de gastos e impuestos). La capacidad automática ampliará la fábrica cuando pidas un préstamo al banco o se acumule dinero en caja",
+  "other": "la próxima ampliación ({what}) cuesta ~{cost} y se paga sola en ~{n} meses; tu caja libre es de {spare} (se reservan unas semanas de gastos e impuestos). La capacidad automática ampliará la fábrica cuando pidas un préstamo al banco o se acumule dinero en caja"
+ },
+ "h0p3qx": "la próxima ampliación ({what}) cuesta ~{cost} y se paga sola en ~{years} años; tu caja libre es de {spare} (se reservan unas semanas de gastos e impuestos). La capacidad automática ampliará la fábrica cuando pidas un préstamo al banco o se acumule dinero en caja",
+ "lmaoib": {
+  "one": "Capacidad automática: {what} para el {name} ({cost}; se amortiza en ~{n} mes). Capacidad: {cap} autos/sem.; demanda: {demand}.",
+  "other": "Capacidad automática: {what} para el {name} ({cost}; se amortiza en ~{n} meses). Capacidad: {cap} autos/sem.; demanda: {demand}."
+ },
  "141oegv": "Capacidad automática: bajó la demanda del {name}; se vendieron las máquinas sobrantes de {line} ({refund}).",
  "i3qpio": {
   "one": "Capacidad automática: bajó la demanda del {name}; se cerró una línea y se vendieron sus máquinas ({refund}).",
   "other": "Capacidad automática: bajó la demanda del {name}; se cerraron {n} líneas y se vendieron sus máquinas ({refund})."
+ },
+ "m6or0y": {
+  "one": "Servicio automático: se abrió {n} taller de servicio ({cost}): {states}.",
+  "other": "Servicio automático: se abrieron {n} talleres de servicio ({cost}): {states}."
+ },
+ "148kley": {
+  "one": "Servicio automático: hace falta {n} taller más ({cost}), pero no alcanza la caja; siempre deja una reserva equivalente a dos semanas de gastos. Lo abrirá cuando se acumule dinero en caja.",
+  "other": "Servicio automático: hacen falta {n} talleres más ({cost}), pero no alcanza la caja; siempre deja una reserva equivalente a dos semanas de gastos. Los abrirá cuando se acumule dinero en caja."
+ },
+ "f7x842": {
+  "one": "Servicio automático: se cerró {n} taller de servicio sin trabajo donde ya circulan menos autos tuyos: {states}.",
+  "other": "Servicio automático: se cerraron {n} talleres de servicio sin trabajo donde ya circulan menos autos tuyos: {states}."
  },
  "33n14i": "Desempeño",
  "yivho4": "Eficiencia",
@@ -456,15 +494,26 @@
  "1ife3gz": "Ahora veo en los caminos autos más nuevos y modernos; el nuestro ya se está quedando viejo.",
  "dhpqqe": "Aquí ya se está buscando concesionario.",
  "1auozi6": "Primero debes vender en un estado vecino: la red crece estado por estado.",
+ "57a93p": {
+  "one": "Solo puedes buscar concesionarios en un estado a la vez; por cada {per} concesionarios tienes una búsqueda más.",
+  "other": "Puedes buscar concesionarios en {n} estados a la vez como máximo; por cada {per} concesionarios tienes una búsqueda más."
+ },
  "fgyht7": {
   "one": "Solo puedes buscar concesionarios en un estado a la vez.",
   "other": "Puedes buscar concesionarios en {n} estados a la vez como máximo."
  },
  "15rbvui": "Buscar concesionario cuesta {cost}.",
+ "1u1kd16": "No quedan estados vecinos donde buscar concesionarios.",
+ "teqnqy": "Estas búsquedas cuestan {cost}.",
  "a2m3lm": "Aquí no hay ningún concesionario que cerrar.",
  "1m2vzs8": "Solo puedes abrir un taller de servicio en un estado donde tengas concesionario.",
  "gdqcwj": "Un taller de servicio cuesta {cost}.",
  "p7acr7": "Aquí no hay ningún taller de servicio que cerrar.",
+ "1149f1q": {
+  "one": "{states} y {n} estado más",
+  "other": "{states} y {n} estados más"
+ },
+ "5puw9d": "El servicio alcanza: en todos los estados hay dónde atender tus autos.",
  "1wz018e": "Abrió tu primer concesionario en {state}: {dealer}. Ahora tus autos también se venden allí.",
  "1ltljsz": {
   "one": "Un nuevo concesionario firmó contrato en {state} ({n} concesionario).",
@@ -610,8 +659,11 @@
  "1paky53": "No quedan acciones en el mercado para recomprar.",
  "rimmls": "No tienes {cash} en la caja.",
  "168r9yh": "Se recompraron las últimas acciones ({cash}): la empresa vuelve a ser toda tuya y el consejo se disolvió.",
+ "1u3iyad": "Recompra de acciones: se recompró el {pct} de la empresa por {cash}. El objetivo de dividendos del consejo para {year}, recalculado según la parte en manos externas, queda en {target}.",
+ "kszb3s": "Veto del consejo (confianza {confidence}/100): ni carreras, ni compra de rivales, ni líneas nuevas. Se levanta cuando la confianza supere {limit}.",
  "659tkt": "Consejo, {year}: ingresos {growth} (objetivo {target}), dividendo {dividend} (objetivo {targetDividend}). Objetivos cumplidos. Confianza {before} → {after}.",
  "183aeiz": "Consejo, {year}: ingresos {growth} (objetivo {target}), dividendo {dividend} (objetivo {targetDividend}). Objetivos incumplidos. Confianza {before} → {after}.",
+ "1po3w2h": "Los ingresos quedaron por debajo del objetivo, pero el beneficio creció {growth}: el consejo dio por cumplido el objetivo de crecimiento.",
  "wwuyn9": "El consejo está satisfecho por los objetivos cumplidos: se retiró el último aviso.",
  "16zj7e5": "El consejo recortó el presupuesto de carreras: el equipo se disolvió.",
  "w6ifi7": "Dinero del patrocinador: entraron {amount} en la caja.",
@@ -825,6 +877,7 @@
  "10hgv2q": "Crisis de Suez",
  "yiooo": "El Canal de Suez está cerrado; la gasolina se raciona en Europa. En los próximos meses, la economía de combustible importará más que nunca a los compradores europeos.",
  "d2rk85": "Un rival",
+ "1f56w0b": "Objetivos de {year}: ingresos o beneficio {growth}, y al menos {dividend} en dividendos para los accionistas externos.",
  "7eqjmy": "{name} no soportó que le tomáramos la delantera en el segmento {segment}: bajó sus precios un 15 % y anunció que los mantendrá así durante un año y medio.\n\nLos periódicos dicen que “los precios de los autos están bajando”. Parte de los compradores se pasará al auto más barato.",
  "1p7h4e3": "Mantenemos nuestros precios",
  "1irr5w8": "Perderemos algunos compradores, pero el beneficio por auto se mantiene. Un auto conocido y de calidad aguanta mejor una guerra de precios.",
@@ -857,6 +910,8 @@
  "1jv7554": "Se vende un 10 % de acciones nuevas a bancos amigos (~{cash} a la caja). El rival se retira, pero a los accionistas no les gusta la dilución (confianza −8).",
  "tv2h67": "Se vendieron acciones nuevas a bancos amigos; el rival que intentó el asalto se retiró.",
  "18lclar": "El consejo está inquieto",
+ "1lyj5bb": "La confianza del consejo en ti cayó a {confidence}/100. Los accionistas esperan crecimiento y dividendos; en la reunión subió el tono.\n\n{targets}\n\nAhora el consejo veta el presupuesto de carreras, la compra de rivales y la construcción de líneas nuevas; el veto se levanta cuando la confianza supere {veto}. Puedes ajustar el reparto de dividendos en la pantalla Empresa. Si la confianza baja de {last}, llegará un último aviso y, después, te destituirán.",
+ "14rzbf4": "La confianza del consejo en ti cayó a {confidence}/100. Los accionistas esperan crecimiento y dividendos; en la reunión subió el tono.\n\n{targets}\n\nEsto es una advertencia: si la confianza baja de {veto}, el consejo vetará el presupuesto de carreras, la compra de rivales y la construcción de líneas nuevas. Puedes ajustar el reparto de dividendos en la pantalla Empresa. Si la confianza baja de {last}, llegará un último aviso y, después, te destituirán.",
  "yof0ue": "Último aviso del consejo",
  "dz5ukz": "Confianza: {confidence}/100. El consejo fue claro: si tampoco se cumplen los objetivos de este año, te destituirá y pondrá la empresa en otras manos.\n\n{targets}\n\nSalidas: cumplir los objetivos, o recomprar todas las acciones externas y librarte del consejo (pantalla Empresa).",
  "1ht7xvx": "Radiador de panal",
@@ -1692,10 +1747,12 @@
  "aoc950": "Demasiados envíos seguidos; se volverá a intentar en un momento.",
  "13aqgse": "La partida guardada es demasiado grande para enviarla.",
  "yzcb9b": "No se pudo enviar; se volverá a intentar en un momento.",
- "1o164q1": "Bolsa y consejo",
  "12vfseb": "Reúnes capital vendiendo parte de la empresa en la bolsa; el control siempre queda en tus manos (puedes vender como máximo el {share}).",
  "49kn7j": "A cambio, cada año rindes cuentas al consejo. Los ingresos deben crecer más rápido que el mercado (tras un año muy bueno, las expectativas suben); los accionistas quieren la mitad del beneficio y un poco más de dividendos cada año. El reparto de dividendos empieza en el 20 %: subirlo depende de ti, y saca dinero real de tu caja.",
+ "nqtuhq": "El beneficio también cuenta para el objetivo de crecimiento: aunque los ingresos queden por debajo del objetivo, el consejo da el año por bueno si el beneficio creció al menos lo que pide el objetivo. Cuando el mercado se contrae, el consejo baja el objetivo de ingresos, y el de dividendos en la misma medida. Si recompras acciones o vendes acciones nuevas, el objetivo de dividendos de ese año se recalcula según la parte en manos externas.",
+ "e2cex0": "El consejo tiene poca memoria: el mérito de los años buenos se reduce a la mitad cada año. Pero se endurece paso a paso: mientras la confianza esté por encima de {warn}, un solo mal año trae como mucho una advertencia. Si la confianza baja de {veto}, el consejo veta las carreras, la compra de rivales y la construcción de líneas nuevas; por debajo de {last} llega el último aviso, y si después vuelves a fallar los objetivos, te destituyen y la partida termina.",
  "vefgje": "En la puntuación final solo cuenta tu parte del valor de la empresa. El ánimo de la bolsa fija el precio: vender en 1928 y recomprar en 1932 sale barato.",
+ "1o164q1": "Bolsa y consejo",
  "ns0frx": "Vende acciones para conseguir capital: entra mucho dinero en caja, pero cada año tendrás objetivos de crecimiento y de dividendos. Ahora la bolsa está <b>{mood}</b> (×{x}).",
  "tcyov4": "¿Salir a bolsa?",
  "1yc16m9": "Se vende el {share} de la empresa y entran {cash} en caja (ya descontada la comisión de los banqueros). A partir de entonces, cada año rindes cuentas al consejo. Más adelante puedes recomprar las acciones, pero con prima.",
@@ -1709,7 +1766,9 @@
  "hpgonm": "Confianza del consejo <tone>{v}/100</tone>",
  "1h4m70e": "último aviso: si este año no cumples los objetivos, te destituyen",
  "199iy3v": "Objetivo de ingresos {growth}: al menos <b>{needed}</b> a fin de año (el año pasado, {prev}). A este ritmo, la previsión a fin de año es <b>{projected}</b>.",
+ "j6e1ic": "El beneficio también cuenta: si el beneficio del año llega al menos a <b>{needed}</b> (el año pasado, {prev}), se cumple el objetivo de crecimiento. Previsión de beneficio: <b>{projected}</b>.",
  "1bjhbiu": "Objetivo de dividendos: <b>{target}</b>. Con este reparto, el dividendo previsto es <b>{dividend}</b> (beneficio anual previsto: {profit}).",
+ "1tisdmv": "Como el mercado se contrajo, el consejo también bajó el objetivo de dividendos en la misma medida que el de ingresos ({cut}).",
  "1u5o5b4": "El consejo te evaluará por primera vez a finales de {year}.",
  "1ys3il8": "Reparto de dividendos (qué parte del beneficio que corresponde a los accionistas externos se reparte). El consejo espera la mitad del beneficio y un poco más que el año pasado; con un rival en el consejo, todavía más:",
  "1t4pse2": "Reparto de dividendos (qué parte del beneficio que corresponde a los accionistas externos se reparte). El consejo espera la mitad del beneficio y un poco más que el año pasado:",
@@ -1717,6 +1776,8 @@
  "c04pt2": "{name} tiene el {share} de la empresa.",
  "1es22gz": "La recompra cuesta un 10 % más que el precio de mercado y nunca baja del precio al que se vendieron las acciones (más un 6 % anual); bajo un último aviso, un 50 % más encima de eso.",
  "gx2reh": "La recompra cuesta un 10 % más que el precio de mercado y nunca baja del precio al que se vendieron las acciones (más un 6 % anual).",
+ "1pwg9od": "Recomprar hace subir el precio: cada 5 % recomprado en el mismo año lo sube alrededor de un 5 %.",
+ "10ntbav": "El siguiente tramo cuesta un {premium} más que el precio de mercado.",
  "x43nck": "Acciones recompradas",
  "2d2byu": "Recomprar el {share} ({cash})",
  "1x12n9w": "¿Recomprar todas las acciones?",
@@ -1730,6 +1791,7 @@
  "xymkcy": "Ingresos",
  "otzdz8": "Dividendo",
  "xuewor": "Confianza",
+ "yhi2uz": "beneficio {growth}",
  "15zdfro": "{name} bajó un 15 % sus precios en el segmento {seg}.",
  "1xc4jre": "{name} lanzó el primer auto {tech} del segmento {seg}: {model}.",
  "ntyt3x": "{name} atacó el segmento {seg} con el {model}.",
@@ -2071,6 +2133,11 @@
  "k4p4sa": "Lo espera en nuestro concesionario más cercano",
  "8jgzsq": "Cartas de los lectores",
  "s4q2el": "Todavía no salió nada en los periódicos.",
+ "1b3lvob": {
+  "one": "🎉 <b>{name} está listo</b> y lleva {n} semana esperando el lanzamiento: mientras tanto pagas sueldos, pero no vendes autos.",
+  "other": "🎉 <b>{name} está listo</b> y lleva {n} semanas esperando el lanzamiento: mientras tanto pagas sueldos, pero no vendes autos."
+ },
+ "9y6ftf": "🎉 <b>{name} está listo:</b> elige el precio y lánzalo.",
  "1hoxwfx": "<b>Juego en pausa.</b> Con el tiempo detenido, los ingenieros no trabajan, las pruebas no avanzan y la fábrica no produce.",
  "1mp8dv6": "Continuar (espacio)",
  "1bttp5n": "I+D terminada",
@@ -2267,10 +2334,20 @@
  "b03b2g": "Temporada {year}, {race}: <b>{model}</b> terminó entre los tres primeros.",
  "9h6c9x": "Temporada {year}, {race}: <b>{model}</b> no logró clasificarse entre los primeros.",
  "e2svqw": "Comprar un rival",
+ "hvqtx": "Los fabricantes más pequeños que tú están en venta. Si compras uno, sus modelos se retiran del mercado (sus clientes buscan otra marca), sus ingenieros se unen a ti y sus concesionarios venden tus autos: tendrás concesionarios nuevos en los estados donde era fuerte, incluso en los que todavía no vendes.",
  "k2nqjf": "Año pasado",
  "1pywtch": "Ingenieros",
+ "19ojzma": "Concesionarios",
  "1wzf2zp": "Precio",
  "12shofk": "¿Comprar {company}?",
+ "1y15ke1": {
+  "one": "Precio: {price} (tu caja: {cash}). Se une {n} ingeniero, con su sueldo, y los modelos de {company} se retiran del mercado. Sus concesionarios venderán tus autos: {states} (estados donde venderás por primera vez: {fresh}). Esto no se puede deshacer.",
+  "other": "Precio: {price} (tu caja: {cash}). Se unen {n} ingenieros, con sus sueldos, y los modelos de {company} se retiran del mercado. Sus concesionarios venderán tus autos: {states} (estados donde venderás por primera vez: {fresh}). Esto no se puede deshacer."
+ },
+ "3n9pba": {
+  "one": "Precio: {price} (tu caja: {cash}). Se une {n} ingeniero, con su sueldo, y los modelos de {company} se retiran del mercado. Sus concesionarios venderán tus autos: {states}. Esto no se puede deshacer.",
+  "other": "Precio: {price} (tu caja: {cash}). Se unen {n} ingenieros, con sus sueldos, y los modelos de {company} se retiran del mercado. Sus concesionarios venderán tus autos: {states}. Esto no se puede deshacer."
+ },
  "2z0gur": "Pagar {price} y comprar",
  "10ujepk": "Compraste {company}",
  "dvsto1": "Comprar",
@@ -2497,15 +2574,26 @@
   "other": "Si se vende cada auto que fabrica, te quedan ~{margin} por auto: la línea se paga sola en <pay>~{n} meses</pay>."
  },
  "5rc7fj": "Si se vende cada auto que fabrica, te quedan ~{margin} por auto: la línea se paga sola en <pay>~{years} años</pay>.",
+ "ezvvj1": "La demanda sostenida (sin contar el entusiasmo del lanzamiento) ya está cubierta por tus líneas actuales y las que están en construcción: a este precio, una línea nueva quedaría parada.",
+ "2eyeoe": {
+  "one": "Pero la demanda sostenida supera tu producción en solo ~{gap} autos/sem. (sin contar el entusiasmo del lanzamiento e incluidas las líneas en construcción): si solo se vende eso, la línea se paga sola en <pay>~{n} mes</pay>. La capacidad automática hace la misma cuenta y solo invierte en lo que se amortiza en dos años o menos.",
+  "other": "Pero la demanda sostenida supera tu producción en solo ~{gap} autos/sem. (sin contar el entusiasmo del lanzamiento e incluidas las líneas en construcción): si solo se vende eso, la línea se paga sola en <pay>~{n} meses</pay>. La capacidad automática hace la misma cuenta y solo invierte en lo que se amortiza en dos años o menos."
+ },
  "68utlu": "A este precio no queda nada por auto: una línea nueva no se pagará sola.",
  "1hzpn4f": "Tamaño de la línea",
  "mzwbql": "Tamaño de la línea (puestos por sección):",
  "1xagys4": "{output} autos/sem. · {cost}",
+ "2h9ofg": {
+  "one": "{n} puesto · {output}/sem. (recomendado)",
+  "other": "{n} puestos · {output}/sem. (recomendado)"
+ },
  "1c3azsw": {
   "one": "{n} puesto · {output}/sem.",
   "other": "{n} puestos · {output}/sem."
  },
  "uxhspv": "Usar hornos de esmalte negro: {black} autos/sem. por línea en vez de {normal}",
+ "aiwc6h": "Seca mucho más rápido, pero los autos salen solo en negro: prestigio −5. La capacidad automática no usará hornos de esmalte negro para el {model} (los autos de lujo y los deportivos siguen saliendo en colores).",
+ "xxt953": "Seca mucho más rápido, pero los autos salen solo en negro: prestigio −5. La capacidad automática también usará este horno para el {model}.",
  "116q2eu": "Seca mucho más rápido, pero los autos salen solo en negro: prestigio −5.",
  "1nxyp9h": "<b>Línea de taller pequeña:</b> como el taller con el que empezaste, con máquinas de trabajo manual. Es lenta y la mano de obra por auto sale cara, pero es barata: +{output} autos/sem., <b>{cost}</b> troqueles incluidos.",
  "5vu13l": "Línea de taller construida: {model}",
@@ -2652,6 +2740,14 @@
   "one": "Ahora mismo no se está buscando concesionario en ningún estado (vendes en {n} estado). Expándete a un estado nuevo desde el mapa.",
   "other": "Ahora mismo no se está buscando concesionario en ningún estado (vendes en {n} estados). Expándete a un estado nuevo desde el mapa."
  },
+ "1h8u3z2": {
+  "one": "Puedes buscar concesionarios en {max} estados a la vez, pero ahora solo tienes {active} en marcha (vendes en {n} estado). Expándete a estados nuevos.",
+  "other": "Puedes buscar concesionarios en {max} estados a la vez, pero ahora solo tienes {active} en marcha (vendes en {n} estados). Expándete a estados nuevos."
+ },
+ "1w2wm13": "Buscar concesionarios en estados vecinos",
+ "umi4n0": "Servicio insuficiente: tienes {shops} talleres de servicio para tus {parc} autos y te faltan ~{n}. Los peor atendidos: {states}. El servicio automático los abre a medida que alcanza la caja.",
+ "12m6wnz": "Servicio insuficiente: tienes {shops} talleres de servicio para tus {parc} autos y te faltan ~{n}. Los peor atendidos: {states}. Los dueños esperan y los autos terminan como chatarra antes de tiempo.",
+ "z01h6p": "Reforzar el servicio",
  "n9gm28": "Tu red de concesionarios y talleres de servicio cuesta el {share} de los ingresos por ventas: piensa en cerrar los concesionarios que venden poco.",
  "1wqn0xe": "ingresos",
  "bbt9lw": "dividendo",
@@ -2721,16 +2817,59 @@
  "1bnh3zy": "Ninguno",
  "ax161e": "Mapa de concesionarios y servicio",
  "1jy8ci7": "Estados con ventas",
- "19ojzma": "Concesionarios",
  "zr421h": "Tus autos en circulación",
  "haqig7": "Dados de baja",
  "1kuxj5d": "Satisfacción con el servicio",
  "1j609d": "Costo de la red",
  "12h6tp3": "{cost}/año",
  "tl6ylm": "Flete (este año)",
+ "1ldrl7u": "Búsquedas de concesionario",
  "1h2z4ds": "Vista del mapa",
  "46817k": "ESTADOS UNIDOS",
  "c7o1xu": "Mapa de Concesionarios y Servicio",
+ "pbkif6": {
+  "one": "Reforzar el servicio: ¿abrir {n} taller de servicio?",
+  "other": "Reforzar el servicio: ¿abrir {n} talleres de servicio?"
+ },
+ "lsam2n": "Atender todos tus autos requiere {all} talleres ({allCost}), pero tu caja solo alcanza para {n}: primero van a los estados donde los dueños esperan más. Talleres que se abrirán: {states}. Abrirlos cuesta {cost}; el costo anual de la red sube ~{upkeep} (incluidas oficinas regionales y depósitos de repuestos).",
+ "10sdc4c": "Talleres que se abrirán: {states}. Abrirlos cuesta {cost}; el costo anual de la red sube ~{upkeep} (incluidas oficinas regionales y depósitos de repuestos). Después, en todos los estados habrá dónde atender tus autos.",
+ "1klkjef": "Pagar {cost} y abrir",
+ "16xegjs": {
+  "one": "{n} taller de servicio abierto",
+  "other": "{n} talleres de servicio abiertos"
+ },
+ "rh8u21": {
+  "one": "{state} ({n} semana · probabilidad {chance})",
+  "other": "{state} ({n} semanas · probabilidad {chance})"
+ },
+ "ytpgvy": {
+  "one": "¿Buscar concesionarios en {n} estado?",
+  "other": "¿Buscar concesionarios en {n} estados?"
+ },
+ "oge9op": "Se buscan concesionarios en los estados vecinos con más compradores: {states}. Las búsquedas cuestan {cost}; donde no se encuentre ninguno, volver a intentarlo será más fácil.",
+ "p0kpjf": "Pagar {cost} y buscar",
+ "1uy3gye": {
+  "one": "Buscando concesionarios en {n} estado",
+  "other": "Buscando concesionarios en {n} estados"
+ },
+ "196shsl": "Servicio automático",
+ "kr7p2": "Si está activado, cada mes abre talleres de servicio en los estados donde tus autos esperan reparaciones (primero los peor atendidos) y cierra los que quedan sin trabajo donde ya circulan menos autos tuyos. Siempre deja en caja una reserva equivalente a dos semanas de gastos.",
+ "ms4tmf": {
+  "one": "{n} taller en espera por falta de caja.",
+  "other": "{n} talleres en espera por falta de caja."
+ },
+ "1ty6sfo": {
+  "one": "Tienes <b>{parc}</b> autos en circulación y <b>{shops}</b> talleres de servicio: para atenderlos a todos, te falta <warn>~{n} taller más</warn>.",
+  "other": "Tienes <b>{parc}</b> autos en circulación y <b>{shops}</b> talleres de servicio: para atenderlos a todos, te faltan <warn>~{n} talleres más</warn>."
+ },
+ "11w7q6r": {
+  "one": "Reforzar el servicio ({n} taller · {cost})",
+  "other": "Reforzar el servicio ({n} talleres · {cost})"
+ },
+ "vbqfa": {
+  "one": "Buscar concesionarios en {n} estado vecino ({cost})",
+  "other": "Buscar concesionarios en {n} estados vecinos ({cost})"
+ },
  "av6ub0": {
   "one": "Buscando concesionario · {n} semana",
   "other": "Buscando concesionario · {n} semanas"
@@ -2755,6 +2894,10 @@
  "18672jj": "(+ fábrica)",
  "wqvqp": "Servicio: capacidad para {cap} autos, {parc} autos en circulación",
  "1veechb": "Nivel de servicio {q}",
+ "y48ynd": {
+  "one": "Para atender todos tus autos aquí falta ~{n} taller más.",
+  "other": "Para atender todos tus autos aquí faltan ~{n} talleres más."
+ },
  "sihnig": "Primer concesionario: {dealer}",
  "1k6jddu": "{state}: búsqueda de concesionario iniciada",
  "q4ug58": {
@@ -2867,6 +3010,7 @@
  "1ywdimb": "Efecto del precio",
  "16ko2gj": "Marca",
  "oau2rp": "Entusiasmo del lanzamiento",
+ "19siu9l": "Desde el día de su lanzamiento envejece un poco cada año, y rápido a partir de los cuatro años; un rediseño o una nueva generación lo renuevan.",
  "1q293v4": "Antigüedad",
  "1stf8d9": "Los autos de lujo y los deportivos se compran para destacar: cuando más de una cuarta parte del segmento maneja el mismo modelo, su atractivo disminuye.",
  "fs1qin": "Todos tienen uno",
@@ -2905,6 +3049,22 @@
  "lsp6eg": "más rentable",
  "bzok9n": "más rentable con esta línea",
  "18hhnsp": "las revistas lo llaman “ambicioso”",
+ "11lwnpe": "Los compradores se van mucho más rápido cuando el precio supera el del segmento en más del {over}. Las revistas valoran el precio según el segmento: cuanto más por encima del precio del segmento, más baja la nota, poco a poco, y en este segmento, a más del {steep} por encima, lo llaman “ambicioso”; una nota baja también reduce el público del lanzamiento. Empezar barato y subir el precio después no funciona: en los tres años posteriores al lanzamiento, una subida de más del {hike} hace que las revistas reescriban sus reseñas y te cuesta reputación.",
+ "1p535an": "Lo que aporta el rediseño",
+ "vrbl57": "Antigüedad percibida",
+ "bih7nd": "{now} → {after} años",
+ "1r59t6n": "Atractivo (media del seg. 50)",
+ "fzffj5": "Demanda semanal (al precio actual)",
+ "1fbgbv5": "{now} → {after} autos/sem.",
+ "1qr90eb": "Si saliera hoy a la venta, este rediseño aumentaría la demanda en <good>~{pct}</good> ({now} → {after} autos/sem.); en los primeros meses, el entusiasmo del lanzamiento sumará compradores por encima de eso.",
+ "zdaqj6": "Este rediseño solo aumenta la demanda en <warn>~{pct}</warn> ({now} → {after} autos/sem.). Si orientas el enfoque de desarrollo hacia lo que les importa a los compradores, rendirá más.",
+ "1wrrqm8": "<bad>Este rediseño no aumenta la demanda</bad> ({now} → {after} autos/sem.). Orienta el enfoque de desarrollo hacia lo que les importa a los compradores o piensa en una nueva generación.",
+ "1rvm1sw": "El rediseño conserva los ajustes de desarrollo y pruebas del auto; si aun así el atractivo baja, los cambios de diseño están empeorando el auto en algún aspecto: revisa el diseño y el enfoque.",
+ "1tsei44": {
+  "one": "El rediseño hace que el auto parezca más nuevo: hoy aparenta {now} años; justo después del rediseño, {after}. Tarda ~{n} semana en salir a la venta; sin rediseño, para entonces aparentará {later} años.",
+  "other": "El rediseño hace que el auto parezca más nuevo: hoy aparenta {now} años; justo después del rediseño, {after}. Tarda ~{n} semanas en salir a la venta; sin rediseño, para entonces aparentará {later} años."
+ },
+ "94pj78": "Lo que esperan tus ingenieros con el enfoque y el plan de pruebas actuales, sin contar el entusiasmo del lanzamiento. El veredicto final lo dan las revistas en el lanzamiento.",
  "19siuhf": "<b>Programa de pruebas terminado.</b> Lo siguiente: proveedores y línea de producción.",
  "1akrla8": "Programa de pruebas",
  "1js6jm1": "Las pruebas avanzan en paralelo cada semana y los defectos que encuentran se corrigen de inmediato. Si recortas semanas de pruebas, el auto sale antes, pero los defectos ocultos estallan en la calle.",
@@ -3007,6 +3167,10 @@
  "42adsq": "Para pedir los troqueles, primero elige la línea que fabricará el auto.",
  "u2u6ix": "{tooling}: hacer el pedido ({cost})",
  "1mgf6wd": "{tooling}: hacer el pedido",
+ "11ikr20": "Ahorras <b>{saving}</b> por auto frente al proveedor de calidad. Pero la calidad de tus propias piezas depende de tu habilidad en ingeniería (ahora {skill}): la nota de confiabilidad que verán en la calle los compradores y las revistas es ~<tone>{rel}</tone>, frente a ~{quality} si todo viniera del proveedor de calidad. Los defectos ocultos de estas piezas provocan {mult} veces más fallas.",
+ "1mm99an": "Ahorras <b>{saving}</b> por auto frente al proveedor de calidad. Pero la nota de confiabilidad que verán en la calle los compradores y las revistas es ~<tone>{rel}</tone>, frente a ~{quality} si todo viniera del proveedor de calidad. Los defectos ocultos de estas piezas provocan {mult} veces más fallas.",
+ "jrj3jb": "Tus propias piezas serán tan sólidas como las del proveedor de calidad con habilidad {rel}, y fallarán igual de poco con {fail}.",
+ "19dhs7h": "Tus propias piezas ya son tan sólidas como las del proveedor de calidad; con habilidad {fail}, también fallarán igual de poco.",
  "128t4ek": "<b>¿Por qué no puedes hacer el pedido?</b> {tooling}: {cost}; tienes {cash} en caja: te faltan {short}.",
  "1b9k335": "{tooling}: elegir ({cost}, te alcanza)",
  "1qlk287": "Préstamo de {amount} obtenido, troqueles pedidos",
