@@ -1,14 +1,16 @@
 import { costIndex } from '../data/economy';
-import { STATE_LIST, openPlannedShops, planStates, servicePlan, stateNet, surplusShops } from './network';
+import { STATE_LIST, openPlannedShops, planStates, servicePlan, serviceTarget, stateNet, surplusShops } from './network';
 import { yearFloat } from './time';
 import type { GameState } from './types';
 import { log, money } from './util';
 import { t } from '../i18n';
+import { fmtPercent } from '../i18n/format';
 
 // "Otomatik servis": like "Talebi otomatik karşıla" for the factory, the service network keeps up
-// with the cars on the road by itself. Monthly it opens shops wherever owners wait for repairs,
-// the worst-served states first, from the cash above a reserve; and it closes the shops that
-// stand idle where the cars have gone.
+// with the cars on the road by itself. Monthly it opens shops wherever service falls below the
+// company's target (every car looked after, or nine or eight in ten), the worst-served states
+// first, from the cash above a reserve; and it closes the shops that stand idle where the cars
+// have gone, or beyond what the target needs.
 
 /**
  * Cash automatic service never touches: made like automatic capacity's reserve (autocap.ts), but
@@ -25,8 +27,9 @@ export function autoService(s: GameState) {
   const net = s.network;
   if (!net?.autoService) return;
   const yf = yearFloat(s.week);
-  const all = servicePlan(s, yf);
-  const plan = all.count ? servicePlan(s, yf, s.company.cash - serviceReserve(s)) : all;
+  const target = serviceTarget(s);
+  const all = servicePlan(s, yf, Infinity, target);
+  const plan = all.count ? servicePlan(s, yf, s.company.cash - serviceReserve(s), target) : all;
   if (plan.count) {
     openPlannedShops(s, plan);
     log(s, t('Otomatik servis: {n} servis atölyesi açıldı ({cost}): {states}.', { n: plan.count, cost: money(plan.cost), states: planStates(plan.states) }), 'info');
@@ -45,9 +48,16 @@ export function autoService(s: GameState) {
     );
   }
   net.autoServiceWaiting = waiting > 0 ? waiting : undefined;
-  const idle = STATE_LIST.map((id) => ({ id, shops: surplusShops(s, id, yf) })).filter((x) => x.shops > 0);
+  const idle = STATE_LIST.map((id) => ({ id, shops: surplusShops(s, id, yf, target) })).filter((x) => x.shops > 0);
   if (idle.length) {
     for (const x of idle) stateNet(s, x.id).service -= x.shops;
-    log(s, t('Otomatik servis: arabaların azaldığı yerlerde boş kalan {n} servis atölyesi kapatıldı: {states}.', { n: idle.reduce((a, x) => a + x.shops, 0), states: planStates(idle) }), 'info');
+    const p = { n: idle.reduce((a, x) => a + x.shops, 0), states: planStates(idle), target: fmtPercent(target, 0) };
+    log(
+      s,
+      target < 1
+        ? t('Otomatik servis: arabaların azaldığı ya da {target} servis hedefinin gerektirdiğini aşan yerlerde {n} servis atölyesi kapatıldı: {states}.', p)
+        : t('Otomatik servis: arabaların azaldığı yerlerde boş kalan {n} servis atölyesi kapatıldı: {states}.', p),
+      'info',
+    );
   }
 }

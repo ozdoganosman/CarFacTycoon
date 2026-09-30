@@ -9,6 +9,7 @@ import { yearFloat, yearOf } from './time';
 import type { GameState, NetworkState, SegmentId, StateNet } from './types';
 import { clamp, decide, log, money, num, spend } from './util';
 import { list, t } from '../i18n';
+import { fmtPercent } from '../i18n/format';
 
 // The company across the country, state by state. Cars are only sold where the make has
 // a dealer; the network grows into neighbouring states by dealer searches (one at a time
@@ -113,7 +114,7 @@ export function coverage(s: GameState, id: StateId, yf: number): number {
 export const dealerServiceCap = (yf: number) => interp([[1900, 60], [1920, 250], [1960, 700]], yf);
 export const shopServiceCap = (yf: number) => interp([[1900, 300], [1920, 1200], [1960, 4000]], yf);
 /** Work a car needs: early cars broke all the time. */
-const serviceNeed = (yf: number) => interp([[1900, 1.5], [1925, 1], [1960, 0.6]], yf);
+export const serviceNeed = (yf: number) => interp([[1900, 1.5], [1925, 1], [1960, 0.6]], yf);
 
 export function serviceCapacity(s: GameState, id: StateId, yf: number): number {
   const n = peek(s, id);
@@ -279,11 +280,16 @@ export const shopUpkeep = (yf: number) => 25 * tradeScale(yf) * costIndex(yf);
  * It grows faster than the network (a size of 100 costs about 40× a size of 10).
  */
 export function networkOverhead(s: GameState, yf: number): number {
-  const size = totalDealers(s) + 2 * totalService(s);
-  return OVERHEAD * Math.pow(size, OVERHEAD_EXP) * tradeScale(yf) * costIndex(yf);
+  return OVERHEAD * Math.pow(networkSize(s), OVERHEAD_EXP) * tradeScale(yf) * costIndex(yf);
 }
 const OVERHEAD = 0.9;
 const OVERHEAD_EXP = 1.6;
+/**
+ * A service shop weighs as much as a dealer in the network's size: its parts come from the same
+ * depots and the same zone man calls on both.
+ */
+const SHOP_WEIGHT = 1;
+const networkSize = (s: GameState) => totalDealers(s) + SHOP_WEIGHT * totalService(s);
 
 export function networkWeekly(s: GameState, yf = yearFloat(s.week)): number {
   return totalDealers(s) * dealerSupport(yf) + totalService(s) * shopUpkeep(yf) + networkOverhead(s, yf);
@@ -291,9 +297,44 @@ export function networkWeekly(s: GameState, yf = yearFloat(s.week)): number {
 
 /** What one more dealer (or shop) would add to the weekly bill, overhead included. */
 export function marginalWeekly(s: GameState, dealers: number, shops: number, yf = yearFloat(s.week)): number {
-  const size = totalDealers(s) + 2 * totalService(s);
-  const extra = OVERHEAD * (Math.pow(size + dealers + 2 * shops, OVERHEAD_EXP) - Math.pow(size, OVERHEAD_EXP)) * tradeScale(yf) * costIndex(yf);
+  const size = networkSize(s);
+  const extra = OVERHEAD * (Math.pow(size + dealers + SHOP_WEIGHT * shops, OVERHEAD_EXP) - Math.pow(size, OVERHEAD_EXP)) * tradeScale(yf) * costIndex(yf);
   return dealers * dealerSupport(yf) + shops * shopUpkeep(yf) + extra;
+}
+
+// ---------------- parts and repairs ----------------
+
+/**
+ * What the company's own shops take in (parts sold, repairs billed) for each car they look after
+ * a week. Set so a busy shop takes in not quite twice its own upkeep in every era: early cars
+ * broke all the time, later shops looked after thousands. A big network stays a real cost (its
+ * shops earn about half of what it costs in the late twenties), for the zone offices and parts
+ * depots behind the shops (the overhead) grow faster than the network. Historically the parts
+ * counter and the repair bay kept many dealers alive through the Depression, when hardly anyone
+ * bought a new car.
+ */
+export const partsPerCar = (yf: number) => (PARTS_PER_UPKEEP * shopUpkeep(yf) * serviceNeed(yf)) / shopServiceCap(yf);
+const PARTS_PER_UPKEEP = 1.75;
+/** What a busy shop takes in a week. */
+export const partsPerShop = (yf: number) => PARTS_PER_UPKEEP * shopUpkeep(yf);
+
+/**
+ * Cars in a state that the company's own shops look after (the factory's workshop at home too):
+ * what the dealers' workshops cannot take, up to what the shops can do. More shops than the cars
+ * need earn nothing more.
+ */
+export function shopCars(s: GameState, id: StateId, yf: number): number {
+  const n = peek(s, id);
+  if (!n || n.parc < 1) return 0;
+  const need = serviceNeed(yf);
+  const own = n.service * shopServiceCap(yf) + (id === homeState(s) ? shopServiceCap(yf) : 0);
+  const left = Math.max(0, n.parc * need - n.dealers * dealerServiceCap(yf));
+  return Math.min(left, own) / need;
+}
+
+/** The week's parts and repair income from the company's own shops, all states together. */
+export function partsWeekly(s: GameState, yf = yearFloat(s.week)): number {
+  return STATE_IDS.reduce((a, id) => a + shopCars(s, id, yf), 0) * partsPerCar(yf);
 }
 
 // ---------------- dealer search ----------------
@@ -442,11 +483,37 @@ export function underServed(s: GameState, yf = yearFloat(s.week), below = 0.8): 
 /** Room left above today's need when shops open: the cars sold next month need service too. */
 const SERVICE_ROOM = 1.1;
 
-/** Shops a state needs for every car on the road there to be looked after (none where it already is, or where the make does not sell). */
-export function shopsNeeded(s: GameState, id: StateId, yf: number): number {
+/**
+ * How much of the service the cars need the network is kept to ("Servis hedefi"): all of it, or
+ * nine or eight tenths for a firm that would rather save the shops' cost. Below 80% owners talk and
+ * the name suffers; above it only the state's sales (at most 8% fewer) and warranty (8% dearer) do.
+ */
+export const SERVICE_TARGETS = [1, 0.9, 0.8] as const;
+export const serviceTarget = (s: GameState) => s.network?.serviceTarget ?? 1;
+
+export function setServiceTarget(s: GameState, target: number) {
+  if (!SERVICE_TARGETS.some((x) => x === target)) return;
+  network(s).serviceTarget = target;
+  network(s).autoServiceWaiting = undefined;
+  decide(s, 'serviceTarget', `Servis hedefi %${Math.round(target * 100)}`);
+}
+
+/** "Service is enough", for the target the company keeps. */
+export function serviceEnough(s: GameState): string {
+  const target = serviceTarget(s);
+  return target < 1
+    ? t('Servis hedefi ({target}) tutuyor: her eyalette arabalarının en az bu kadarına bakacak yer var.', { target: fmtPercent(target, 0) })
+    : t('Servis yetiyor: her eyalette arabalarına bakacak yer var.');
+}
+
+/**
+ * Shops a state needs for the service there to reach `target` of what its cars on the road need
+ * (none where it already does, or where the make does not sell).
+ */
+export function shopsNeeded(s: GameState, id: StateId, yf: number, target = 1): number {
   const parc = peek(s, id)?.parc ?? 0;
   if (parc < 1 || !isOpen(s, id)) return 0;
-  const need = parc * serviceNeed(yf);
+  const need = parc * serviceNeed(yf) * target;
   const cap = serviceCapacity(s, id, yf);
   return cap >= need ? 0 : Math.ceil((need * SERVICE_ROOM - cap) / shopServiceCap(yf));
 }
@@ -459,15 +526,16 @@ export interface ServicePlan {
 }
 
 /**
- * The shops it takes for every car on the road to be looked after. With a budget, as many
- * as it pays for, each one where owners wait longest.
+ * The shops it takes for the service to reach the company's target everywhere (every car looked
+ * after, unless the player chose less). With a budget, as many as it pays for, each one where
+ * owners wait longest.
  */
-export function servicePlan(s: GameState, yf = yearFloat(s.week), budget = Infinity): ServicePlan {
+export function servicePlan(s: GameState, yf = yearFloat(s.week), budget = Infinity, target = serviceTarget(s)): ServicePlan {
   const price = serviceShopCost(yf);
   const per = shopServiceCap(yf);
   const want = STATE_IDS.map((id) => ({
     id,
-    max: shopsNeeded(s, id, yf),
+    max: shopsNeeded(s, id, yf, target),
     shops: 0,
     have: serviceCapacity(s, id, yf),
     need: (peek(s, id)?.parc ?? 0) * serviceNeed(yf),
@@ -503,10 +571,13 @@ export function openPlannedShops(s: GameState, plan: ServicePlan) {
   for (const x of plan.states) stateNet(s, x.id).service += x.shops;
 }
 
-/** "Servisi yetir": open every shop the cars on the road need now, as many as the cash pays for, the worst served first. */
+/**
+ * "Servisi yetir": open every shop the cars on the road need now to reach the service target, as
+ * many as the cash pays for, the worst served first.
+ */
 export function coverService(s: GameState): { ok: true; opened: number } | { ok: false; error: string } {
   const yf = yearFloat(s.week);
-  if (!servicePlan(s, yf).count) return { ok: false, error: t('Servis yetiyor: her eyalette arabalarına bakacak yer var.') };
+  if (!servicePlan(s, yf).count) return { ok: false, error: serviceEnough(s) };
   const plan = servicePlan(s, yf, s.company.cash);
   if (!plan.count) return { ok: false, error: t('Servis atölyesi {cost} tutar.', { cost: money(serviceShopCost(yf)) }) };
   openPlannedShops(s, plan);
@@ -514,18 +585,22 @@ export function coverService(s: GameState): { ok: true; opened: number } | { ok:
   return { ok: true, opened: plan.count };
 }
 
+/** Shops close once service would stay this far above the target without one; enough stay for this much. */
+const SURPLUS = 1.3;
+const SURPLUS_KEEP = 1.2;
+
 /**
- * Shops standing idle where the cars have gone (scrapped, or the dealers' own workshops grew):
- * closed only when service stays well above the need without them.
+ * Shops standing idle where the cars have gone (scrapped, or the dealers' own workshops grew), or
+ * beyond what the target needs: closed only when service stays well above it without them.
  */
-export function surplusShops(s: GameState, id: StateId, yf: number): number {
+export function surplusShops(s: GameState, id: StateId, yf: number, target = 1): number {
   const n = peek(s, id);
   if (!n || n.service <= 0) return 0;
-  const need = n.parc * serviceNeed(yf);
+  const need = n.parc * serviceNeed(yf) * target;
   const cap = serviceCapacity(s, id, yf);
   const per = shopServiceCap(yf);
-  if (cap - per < need * 1.5) return 0;
-  return Math.min(n.service, Math.floor((cap - need * 1.25) / per));
+  if (cap - per < need * SURPLUS) return 0;
+  return Math.min(n.service, Math.floor((cap - need * SURPLUS_KEEP) / per));
 }
 
 /** "Otomatik servis": shops open (and idle ones close) by themselves every month (see autoService). */

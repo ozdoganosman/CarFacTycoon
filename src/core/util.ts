@@ -39,6 +39,7 @@ export function financeNow(state: GameState): FinanceWeek {
     f = {
       week: state.week,
       revenue: 0,
+      parts: 0,
       materials: 0,
       labor: 0,
       salaries: 0,
@@ -58,7 +59,9 @@ export function financeNow(state: GameState): FinanceWeek {
   return f;
 }
 
-export type CostCategory = Exclude<keyof FinanceWeek, 'week' | 'revenue'>;
+export type CostCategory = Exclude<keyof FinanceWeek, 'week' | 'revenue' | IncomeCategory>;
+/** Income kept on a line of its own besides the revenue it is part of. */
+export type IncomeCategory = 'parts';
 
 export function spend(state: GameState, amount: number, category: CostCategory) {
   state.company.cash -= amount;
@@ -66,9 +69,12 @@ export function spend(state: GameState, amount: number, category: CostCategory) 
   f[category] = (f[category] ?? 0) + amount;
 }
 
-export function earn(state: GameState, amount: number) {
+/** Money coming in: revenue, and with a category also on that income line (the service shops' parts and repairs). */
+export function earn(state: GameState, amount: number, category?: IncomeCategory) {
   state.company.cash += amount;
-  financeNow(state).revenue += amount;
+  const f = financeNow(state);
+  f.revenue += amount;
+  if (category) f[category] = (f[category] ?? 0) + amount;
 }
 
 export const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));

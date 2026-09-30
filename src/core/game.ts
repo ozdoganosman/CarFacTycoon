@@ -10,7 +10,7 @@ import { buildLaunchReport, customerFeedback } from './feedback';
 import { ensureEstimate, narrowForTest } from './estimate';
 import { MILITARY_COMPLEXITY, emptyLine, lineOffline, lineReport, lineUpkeep, militaryMargin, stationPrice } from './factory';
 import { MARKET_IDS, SEGMENT_IDS, modelScores, priceNow, segmentMarket } from './market';
-import { network, networkWeek, networkWeekly, noteStateSales, recordStateSales, serviceSatisfaction, totalParc } from './network';
+import { network, networkWeek, networkWeekly, noteStateSales, partsWeekly, recordStateSales, serviceSatisfaction, totalParc } from './network';
 import { cityDef, type CityId } from '../data/cities';
 import type { StateId } from '../data/states';
 import { makeRng, rand, stateRng } from './rng';
@@ -436,7 +436,8 @@ function closeYear(s: GameState, year: number) {
   }
   const breakdown = {} as YearSummary['costs'];
   for (const k of COST_KEYS) breakdown[k] = weeks.reduce((a, f) => a + (f[k] ?? 0), 0);
-  s.years.push({ year, revenue, profit: revenue - costs, unitsSold: units, shareByMarket, cashEnd: s.company.cash, costs: breakdown });
+  const parts = weeks.reduce((a, f) => a + (f.parts ?? 0), 0);
+  s.years.push({ year, revenue, parts, profit: revenue - costs, unitsSold: units, shareByMarket, cashEnd: s.company.cash, costs: breakdown });
   payCorporateTax(s, year, revenue - (costs - breakdown.tax) - 0.2 * breakdown.investment);
   // Shareholders get their dividend and the board meets.
   if (s.week < s.endWeek && boardYear(s, year)) {
@@ -813,6 +814,9 @@ function fixedCosts(s: GameState) {
     spend(s, dealerUpkeep(s, m), 'dealers');
     if (s.markets[m].adBudget > 0) spend(s, s.markets[m].adBudget, 'marketing');
   }
+  // The service shops' parts counters and repair bays (network.ts).
+  const parts = partsWeekly(s, yf);
+  if (parts > 0) earn(s, parts, 'parts');
   if (s.company.loan > 0) spend(s, (s.company.loan * credit(s).rate) / 52, 'interest');
 }
 

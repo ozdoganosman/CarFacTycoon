@@ -537,15 +537,19 @@
  },
  "m6or0y": {
   "tr": "Otomatik servis: {n} servis atölyesi açıldı ({cost}): {states}.",
-  "at": "src/core/autoservice.ts:32"
+  "at": "src/core/autoservice.ts:35"
  },
  "148kley": {
   "tr": "Otomatik servis: {n} atölye daha gerekiyor ({cost}) ama kasa yetmiyor; kasada iki haftalık gider kadar yedek bırakıyor. Kasa birikince açar.",
-  "at": "src/core/autoservice.ts:40"
+  "at": "src/core/autoservice.ts:43"
+ },
+ "y269e7": {
+  "tr": "Otomatik servis: arabaların azaldığı ya da {target} servis hedefinin gerektirdiğini aşan yerlerde {n} servis atölyesi kapatıldı: {states}.",
+  "at": "src/core/autoservice.ts:58"
  },
  "f7x842": {
   "tr": "Otomatik servis: arabaların azaldığı yerlerde boş kalan {n} servis atölyesi kapatıldı: {states}.",
-  "at": "src/core/autoservice.ts:51"
+  "at": "src/core/autoservice.ts:59"
  },
  "33n14i": {
   "tr": "Performans",
@@ -1337,43 +1341,43 @@
  },
  "zydhpn": {
   "tr": "{year} kurumlar vergisi: {tax} (vergilenen kârın {rate}), dört taksitte ödenecek. Önceki yılların zararı düşüldü.",
-  "at": "src/core/game.ts:535"
+  "at": "src/core/game.ts:536"
  },
  "sn5g7b": {
   "tr": "{year} kurumlar vergisi: {tax} (vergilenen kârın {rate}), dört taksitte ödenecek.",
-  "at": "src/core/game.ts:536"
+  "at": "src/core/game.ts:537"
  },
  "1tl8rje": {
   "tr": "Ar-Ge tamamlandı: {name} bundan sonraki bütün tasarımlara kendiliğinden girer.",
-  "at": "src/core/game.ts:570"
+  "at": "src/core/game.ts:571"
  },
  "1227rgv": {
   "tr": "Ar-Ge tamamlandı: {name} artık tasarımlarda kullanılabilir.",
-  "at": "src/core/game.ts:571"
+  "at": "src/core/game.ts:572"
  },
  "14kgqdm": {
   "tr": "{name}: geliştirme tamamlandı. İstersen biraz daha cilala ya da teste geç.",
-  "at": "src/core/game.ts:594"
+  "at": "src/core/game.ts:595"
  },
  "15elkk9": {
   "tr": "{name}: test programı bitti.",
-  "at": "src/core/game.ts:623"
+  "at": "src/core/game.ts:624"
  },
  "1czydbg": {
   "tr": "{name}: üretim hattı hazır. Lansman zamanı!",
-  "at": "src/core/game.ts:628"
+  "at": "src/core/game.ts:629"
  },
  "psx13f": {
   "tr": "SKANDAL: {name}’deki bilinen kusuru gizlediğin ortaya çıktı. Davalar ve zorunlu geri çağırma: {cost}. İtibar −15.",
-  "at": "src/core/game.ts:801"
+  "at": "src/core/game.ts:802"
  },
  "1oyrjra": {
   "tr": "Kasa eksiye düştü! 12 hafta içinde toparlanmazsan şirket iflas eder. Banka kredisi alabilir, masrafları kısabilirsin.",
-  "at": "src/core/game.ts:865"
+  "at": "src/core/game.ts:869"
  },
  "rmcw96": {
   "tr": "Son uyarı: {n} hafta içinde kasa artıya geçmezse iflas!",
-  "at": "src/core/game.ts:869"
+  "at": "src/core/game.ts:873"
  },
  "1h89j6m": {
   "tr": "Kalkışta öyle atılıyor ki komşular hâlâ bu arabanın sırrını soruyor.",
@@ -1685,71 +1689,75 @@
  },
  "dhpqqe": {
   "tr": "Burada zaten bayi aranıyor.",
-  "at": "src/core/network.ts:318"
+  "at": "src/core/network.ts:359"
  },
  "1auozi6": {
   "tr": "Önce komşu bir eyalette satış yapmalısın: ağ eyalet eyalet büyür.",
-  "at": "src/core/network.ts:319"
+  "at": "src/core/network.ts:360"
  },
  "57a93p": {
   "tr": "Aynı anda en çok {n} eyalette bayi aranabilir; her {per} bayi bir arama daha açar.",
-  "at": "src/core/network.ts:325"
+  "at": "src/core/network.ts:366"
  },
  "fgyht7": {
   "tr": "Aynı anda en çok {n} eyalette bayi aranabilir.",
-  "at": "src/core/network.ts:326"
+  "at": "src/core/network.ts:367"
  },
  "15rbvui": {
   "tr": "Bayi aramak {cost} tutar.",
-  "at": "src/core/network.ts:361"
+  "at": "src/core/network.ts:402"
  },
  "1u1kd16": {
   "tr": "Bayi aranabilecek komşu eyalet kalmadı.",
-  "at": "src/core/network.ts:387"
+  "at": "src/core/network.ts:428"
  },
  "teqnqy": {
   "tr": "Bu aramalar {cost} tutar.",
-  "at": "src/core/network.ts:390"
+  "at": "src/core/network.ts:431"
  },
  "a2m3lm": {
   "tr": "Burada kapatılacak bayi yok.",
-  "at": "src/core/network.ts:406"
+  "at": "src/core/network.ts:447"
  },
  "1m2vzs8": {
   "tr": "Servis ancak bayisi olan bir eyalette açılabilir.",
-  "at": "src/core/network.ts:415"
+  "at": "src/core/network.ts:456"
  },
  "gdqcwj": {
   "tr": "Servis atölyesi {cost} tutar.",
-  "at": "src/core/network.ts:417"
+  "at": "src/core/network.ts:458"
  },
  "p7acr7": {
   "tr": "Burada kapatılacak servis yok.",
-  "at": "src/core/network.ts:427"
+  "at": "src/core/network.ts:468"
  },
- "1149f1q": {
-  "tr": "{states} ve {n} eyalet daha",
-  "at": "src/core/network.ts:496"
+ "151ta7j": {
+  "tr": "Servis hedefi ({target}) tutuyor: her eyalette arabalarının en az bu kadarına bakacak yer var.",
+  "at": "src/core/network.ts:505"
  },
  "5puw9d": {
   "tr": "Servis yetiyor: her eyalette arabalarına bakacak yer var.",
-  "at": "src/core/network.ts:509"
+  "at": "src/core/network.ts:506"
+ },
+ "1149f1q": {
+  "tr": "{states} ve {n} eyalet daha",
+  "at": "src/core/network.ts:564"
  },
  "1wz018e": {
   "tr": "{state}’da ilk bayin açıldı: {dealer}. Arabaların artık orada da satılıyor.",
-  "at": "src/core/network.ts:577"
+  "at": "src/core/network.ts:652"
  },
  "1ltljsz": {
   "tr": "{state}’da yeni bir bayi sözleşme imzaladı ({n} bayi).",
-  "at": "src/core/network.ts:578"
+  "at": "src/core/network.ts:653"
  },
  "wdxb6x": {
   "tr": "{state}’da bayi bulunamadı: kimse markanı satmaya yanaşmadı. Yeniden denersen tanıdıkların artar; itibarın yükseldikçe de kolaylaşır.",
-  "at": "src/core/network.ts:581"
+  "at": "src/core/network.ts:656"
  },
  "2qhhu2": {
   "tr": "{company} (eski bayi)",
-  "at": "src/core/network.ts:665"
+  "at": "src/core/network.ts:740"
  },
  "ze6253": {
   "tr": "{market} Pazarı: Geçen Yılın Satışları",
@@ -7665,51 +7673,51 @@
  },
  "bu8kvy": {
   "tr": "Faaliyet kârı",
-  "at": "src/ui/components/ModalHost.tsx:732"
+  "at": "src/ui/components/ModalHost.tsx:738"
  },
  "7xt68q": {
   "tr": "{market} payı",
-  "at": "src/ui/components/ModalHost.tsx:738"
+  "at": "src/ui/components/ModalHost.tsx:744"
  },
  "1y5c6dh": {
   "tr": "Yönetim kurulu: ciro {growth} (hedef {targetGrowth}), temettü {dividend} (hedef {targetDividend}).",
-  "at": "src/ui/components/ModalHost.tsx:747"
+  "at": "src/ui/components/ModalHost.tsx:753"
  },
  "11wicnc": {
   "tr": "Hedefler tuttu, güven {v}/100.",
-  "at": "src/ui/components/ModalHost.tsx:754"
+  "at": "src/ui/components/ModalHost.tsx:760"
  },
  "zxu8e6": {
   "tr": "Hedefler tutmadı, güven {v}/100.",
-  "at": "src/ui/components/ModalHost.tsx:755"
+  "at": "src/ui/components/ModalHost.tsx:761"
  },
  "84lsr4": {
   "tr": "En çok satan rakipler",
-  "at": "src/ui/components/ModalHost.tsx:760"
+  "at": "src/ui/components/ModalHost.tsx:766"
  },
  "1bkqppp": {
   "tr": "{year} yılında gelen yenilikler",
-  "at": "src/ui/components/ModalHost.tsx:772"
+  "at": "src/ui/components/ModalHost.tsx:778"
  },
  "3hlexw": {
   "tr": "{year} yılı raporu",
-  "at": "src/ui/components/ModalHost.tsx:804"
+  "at": "src/ui/components/ModalHost.tsx:810"
  },
  "sjm0py": {
   "tr": "Kapat",
-  "at": "src/ui/components/ModalHost.tsx:808"
+  "at": "src/ui/components/ModalHost.tsx:814"
  },
  "1qys4zz": {
   "tr": "{year} yılı kapandı",
-  "at": "src/ui/components/ModalHost.tsx:820"
+  "at": "src/ui/components/ModalHost.tsx:826"
  },
  "1kto54u": {
   "tr": "Kâr",
-  "at": "src/ui/components/ModalHost.tsx:830"
+  "at": "src/ui/components/ModalHost.tsx:836"
  },
  "fh05kg": {
   "tr": "Raporu aç",
-  "at": "src/ui/components/ModalHost.tsx:835"
+  "at": "src/ui/components/ModalHost.tsx:841"
  },
  "10xkb1f": {
   "tr": "Merkez",
@@ -8351,57 +8359,61 @@
   "tr": "Ayrıntı",
   "at": "src/ui/components/ui.tsx:240"
  },
+ "hz6ql0": {
+  "tr": "Parça ve tamir",
+  "at": "src/ui/format.ts:50"
+ },
  "b84y0": {
   "tr": "Malzeme ve parça",
-  "at": "src/ui/format.ts:50"
+  "at": "src/ui/format.ts:55"
  },
  "1ign6rh": {
   "tr": "Hat işçiliği",
-  "at": "src/ui/format.ts:51"
+  "at": "src/ui/format.ts:56"
  },
  "1yg1cn": {
   "tr": "Mühendis maaşları",
-  "at": "src/ui/format.ts:52"
+  "at": "src/ui/format.ts:57"
  },
  "nupbby": {
   "tr": "Bayi ve servis ağı",
-  "at": "src/ui/format.ts:53"
+  "at": "src/ui/format.ts:58"
  },
  "vs24pg": {
   "tr": "Nakliye (eyalet dışı)",
-  "at": "src/ui/format.ts:54"
+  "at": "src/ui/format.ts:59"
  },
  "1e9wnzs": {
   "tr": "Reklam ve fuar",
-  "at": "src/ui/format.ts:55"
+  "at": "src/ui/format.ts:60"
  },
  "yrk6ll": {
   "tr": "Prototip, test ve Ar-Ge",
-  "at": "src/ui/format.ts:56"
+  "at": "src/ui/format.ts:61"
  },
  "6wjvjj": {
   "tr": "Garanti ve geri çağırma",
-  "at": "src/ui/format.ts:57"
+  "at": "src/ui/format.ts:62"
  },
  "1w4sun9": {
   "tr": "Kredi faizi",
-  "at": "src/ui/format.ts:58"
+  "at": "src/ui/format.ts:63"
  },
  "p3cgk2": {
   "tr": "Genel gider ve depo",
-  "at": "src/ui/format.ts:59"
+  "at": "src/ui/format.ts:64"
  },
  "1g6v3c7": {
   "tr": "Kurumlar vergisi",
-  "at": "src/ui/format.ts:60"
+  "at": "src/ui/format.ts:65"
  },
  "17uiv9s": {
   "tr": "Yatırım (hat, kalıp, bayi)",
-  "at": "src/ui/format.ts:61"
+  "at": "src/ui/format.ts:66"
  },
  "1n6a078": {
   "tr": "Temettü ve hisse geri alımı",
-  "at": "src/ui/format.ts:62"
+  "at": "src/ui/format.ts:67"
  },
  "19ddvki": {
   "tr": "Her yeni teknoloji bir kart açar: “Neden böyle çalışıyor?” ({seen}/{total})",
@@ -9614,311 +9626,335 @@
  },
  "1ijytt3": {
   "tr": "Kredi borcu",
-  "at": "src/ui/screens/Finance.tsx:31"
+  "at": "src/ui/screens/Finance.tsx:32"
  },
  "bfxcvu": {
   "tr": "faiz {rate}/yıl",
-  "at": "src/ui/screens/Finance.tsx:31"
+  "at": "src/ui/screens/Finance.tsx:32"
  },
  "1j07zjy": {
   "tr": "Kredi limiti",
-  "at": "src/ui/screens/Finance.tsx:32"
+  "at": "src/ui/screens/Finance.tsx:33"
  },
  "2qm5ua": {
   "tr": "varlık ve itibara bağlı",
-  "at": "src/ui/screens/Finance.tsx:32"
+  "at": "src/ui/screens/Finance.tsx:33"
  },
  "18sbxpz": {
   "tr": "Son 52 hafta faaliyet kârı",
-  "at": "src/ui/screens/Finance.tsx:33"
+  "at": "src/ui/screens/Finance.tsx:34"
  },
  "150lb6q": {
   "tr": "Banka",
-  "at": "src/ui/screens/Finance.tsx:36"
+  "at": "src/ui/screens/Finance.tsx:37"
  },
  "1pm9w4x": {
   "tr": "Tutar",
-  "at": "src/ui/screens/Finance.tsx:38"
+  "at": "src/ui/screens/Finance.tsx:39"
  },
  "2d05bh": {
   "tr": "Kredi al",
-  "at": "src/ui/screens/Finance.tsx:40"
+  "at": "src/ui/screens/Finance.tsx:41"
  },
  "5k0005": {
   "tr": "Borç ödendi",
-  "at": "src/ui/screens/Finance.tsx:42"
+  "at": "src/ui/screens/Finance.tsx:43"
  },
  "1ia5tic": {
   "tr": "Borç öde",
-  "at": "src/ui/screens/Finance.tsx:43"
+  "at": "src/ui/screens/Finance.tsx:44"
  },
  "5hkow3": {
   "tr": "Kasa 12 hafta üst üste ekside kalırsa şirket iflas eder. Buhran yıllarında (1930-33) bankalar limiti yarıya indirir ve faizi artırır.",
-  "at": "src/ui/screens/Finance.tsx:46"
+  "at": "src/ui/screens/Finance.tsx:47"
  },
  "n4nbru": {
   "tr": "Yıllık faaliyet kârı",
-  "at": "src/ui/screens/Finance.tsx:50"
+  "at": "src/ui/screens/Finance.tsx:51"
  },
  "1ufu224": {
   "tr": "Yıllara göre faaliyet kârı",
-  "at": "src/ui/screens/Finance.tsx:54"
+  "at": "src/ui/screens/Finance.tsx:55"
  },
  "5ygpof": {
   "tr": "Son 52 hafta gelir-gider",
-  "at": "src/ui/screens/Finance.tsx:57"
+  "at": "src/ui/screens/Finance.tsx:58"
  },
  "k3pfwx": {
   "tr": "Kalem",
-  "at": "src/ui/screens/Finance.tsx:59"
+  "at": "src/ui/screens/Finance.tsx:60"
  },
  "n4836l": {
   "tr": "Ciroya oranı",
-  "at": "src/ui/screens/Finance.tsx:59"
+  "at": "src/ui/screens/Finance.tsx:60"
  },
  "q91145": {
   "tr": "bunun “talebi otomatik karşıla” payı (satılan makineler düşülmüş)",
-  "at": "src/ui/screens/Finance.tsx:65"
+  "at": "src/ui/screens/Finance.tsx:69"
  },
  "14phn9x": {
   "tr": "Faaliyet kârı (yatırım hariç)",
-  "at": "src/ui/screens/Finance.tsx:67"
+  "at": "src/ui/screens/Finance.tsx:71"
  },
  "i4efms": {
   "tr": "İlk aracını tasarla: yeni bir proje başlat.",
-  "at": "src/ui/screens/HQ.tsx:41"
+  "at": "src/ui/screens/HQ.tsx:43"
  },
  "umcqex": {
   "tr": "{name}: tasarımı bitir ve geliştirmeyi başlat.",
-  "at": "src/ui/screens/HQ.tsx:44"
+  "at": "src/ui/screens/HQ.tsx:46"
  },
  "ru9blv": {
   "tr": "{name} geliştirmesi ~{left} hafta sürecek; 5 mühendis daha alırsan ~{n} hafta. Mühendisleri bu sayfadaki “Mühendislik ekibi” kutusundan al.",
-  "at": "src/ui/screens/HQ.tsx:50"
+  "at": "src/ui/screens/HQ.tsx:52"
  },
  "eamxij": {
   "tr": "{name}: geliştirme bitti, teste geç.",
-  "at": "src/ui/screens/HQ.tsx:56"
+  "at": "src/ui/screens/HQ.tsx:58"
  },
  "16ppgnc": {
   "tr": "{name}: tedarikçileri ve üretim hattını seç.",
-  "at": "src/ui/screens/HQ.tsx:57"
+  "at": "src/ui/screens/HQ.tsx:59"
  },
  "10do6dn": {
   "tr": "{name}: lansman zamanı!",
-  "at": "src/ui/screens/HQ.tsx:58"
+  "at": "src/ui/screens/HQ.tsx:60"
  },
  "12ybms3": {
   "tr": "{name} artık üretilmiyor ve stoku bitti. Üretimden kaldır ya da bir hatta ata.",
-  "at": "src/ui/screens/HQ.tsx:64"
+  "at": "src/ui/screens/HQ.tsx:66"
  },
  "18oh8lm": {
   "tr": "{name} hiçbir hatta üretilmiyor; stoktan satılıyor.",
-  "at": "src/ui/screens/HQ.tsx:65"
+  "at": "src/ui/screens/HQ.tsx:67"
  },
  "bbcbb7": {
   "tr": "{name} için talep üretimi aşıyor. Darboğazı çöz ya da hat ekle.",
-  "at": "src/ui/screens/HQ.tsx:68"
+  "at": "src/ui/screens/HQ.tsx:70"
  },
  "1a547ql": {
   "tr": "{name} stokları birikiyor. Fiyatı ya da üretim hızını düşür.",
-  "at": "src/ui/screens/HQ.tsx:69"
+  "at": "src/ui/screens/HQ.tsx:71"
  },
  "e0xgfw": {
   "tr": "{name} fiyatı sınıfın {gap} üstünde ve hatlar boş kalıyor. Fiyatı gözden geçir.",
-  "at": "src/ui/screens/HQ.tsx:73"
+  "at": "src/ui/screens/HQ.tsx:75"
  },
  "1gu74d5": {
   "tr": "{name} {n} yaşında ve her yıl eskiyor; makyaj ya da yeni kuşak düşün.",
-  "at": "src/ui/screens/HQ.tsx:76"
+  "at": "src/ui/screens/HQ.tsx:78"
  },
  "ycppx6": {
   "tr": "Arabaların yalnızca fabrikanın eyaletinde satılıyor. Haritadan komşu bir eyalette bayi ara.",
-  "at": "src/ui/screens/HQ.tsx:94"
+  "at": "src/ui/screens/HQ.tsx:96"
  },
  "1q2so0b": {
   "tr": "Şu an hiçbir eyalette bayi aranmıyor ({n} eyalette satış var). Haritadan yeni bir eyalete açıl.",
-  "at": "src/ui/screens/HQ.tsx:96"
+  "at": "src/ui/screens/HQ.tsx:98"
  },
  "1h8u3z2": {
   "tr": "Aynı anda {max} eyalette bayi aranabilir, şu an {active} arama sürüyor ({n} eyalette satış var). Yeni eyaletlere açıl.",
-  "at": "src/ui/screens/HQ.tsx:97"
+  "at": "src/ui/screens/HQ.tsx:99"
  },
  "1w2wm13": {
   "tr": "Komşularda bayi ara",
-  "at": "src/ui/screens/HQ.tsx:99"
+  "at": "src/ui/screens/HQ.tsx:101"
+ },
+ "x8o3e7": {
+  "tr": "Servis yetmiyor: {parc} araban için {shops} servis atölyesi var, {target} servis hedefi için ~{n} tane daha gerekiyor. En kötüleri: {states}. Otomatik servis kasa yettikçe açıyor.",
+  "at": "src/ui/screens/HQ.tsx:114"
+ },
+ "1wdrfwa": {
+  "tr": "Servis yetmiyor: {parc} araban için {shops} servis atölyesi var, {target} servis hedefi için ~{n} tane daha gerekiyor. En kötüleri: {states}. Sahipler bekliyor, arabalar erken hurdaya çıkıyor.",
+  "at": "src/ui/screens/HQ.tsx:115"
  },
  "umi4n0": {
   "tr": "Servis yetmiyor: {parc} araban için {shops} servis atölyesi var, ~{n} tane daha gerekiyor. En kötüleri: {states}. Otomatik servis kasa yettikçe açıyor.",
-  "at": "src/ui/screens/HQ.tsx:108"
+  "at": "src/ui/screens/HQ.tsx:117"
  },
  "12m6wnz": {
   "tr": "Servis yetmiyor: {parc} araban için {shops} servis atölyesi var, ~{n} tane daha gerekiyor. En kötüleri: {states}. Sahipler bekliyor, arabalar erken hurdaya çıkıyor.",
-  "at": "src/ui/screens/HQ.tsx:109"
+  "at": "src/ui/screens/HQ.tsx:118"
  },
  "z01h6p": {
   "tr": "Servisi yetir",
-  "at": "src/ui/screens/HQ.tsx:111"
+  "at": "src/ui/screens/HQ.tsx:120"
+ },
+ "w71gis": {
+  "tr": "Bayi ve servis ağı yılda {cost} tutuyor, parça ve tamir {parts} getiriyor: net gideri son bir yılın cirosunun {share}. Şirket bu yükü uzun taşıyamaz: servis hedefini {target} yapmak atölyeleri ve genel gideri azaltır.",
+  "at": "src/ui/screens/HQ.tsx:137"
+ },
+ "16xn7c8": {
+  "tr": "Bayi ve servis ağı yılda {cost} tutuyor, parça ve tamir {parts} getiriyor: net gideri son bir yılın cirosunun {share}. Servis hedefi zaten en düşükte ({target}): az satan bayileri kapat.",
+  "at": "src/ui/screens/HQ.tsx:138"
+ },
+ "1ixvjjt": {
+  "tr": "Servis hedefi {target}",
+  "at": "src/ui/screens/HQ.tsx:140"
+ },
+ "1qb5gfl": {
+  "tr": "Bayi ve servis ağı yılda {cost} tutuyor, parça ve tamir {parts} getiriyor: net gideri satış gelirinin {share}. Az satan bayileri kapatmayı düşün.",
+  "at": "src/ui/screens/HQ.tsx:146"
  },
  "n9gm28": {
   "tr": "Bayi ve servis ağının gideri satış gelirinin {share}’i: az satan bayileri kapatmayı düşün.",
-  "at": "src/ui/screens/HQ.tsx:117"
+  "at": "src/ui/screens/HQ.tsx:147"
  },
  "1wqn0xe": {
   "tr": "ciro",
-  "at": "src/ui/screens/HQ.tsx:124"
+  "at": "src/ui/screens/HQ.tsx:154"
  },
  "bbt9lw": {
   "tr": "temettü",
-  "at": "src/ui/screens/HQ.tsx:124"
+  "at": "src/ui/screens/HQ.tsx:154"
  },
  "1ha2in5": {
   "tr": "Yönetim kurulunun {year} hedefleri tutmayacak gibi ({what}). Güven {trust}/100: son uyarı.",
-  "at": "src/ui/screens/HQ.tsx:129"
+  "at": "src/ui/screens/HQ.tsx:159"
  },
  "8r8245": {
   "tr": "Yönetim kurulunun {year} hedefleri tutmayacak gibi ({what}). Güven {trust}/100.",
-  "at": "src/ui/screens/HQ.tsx:130"
+  "at": "src/ui/screens/HQ.tsx:160"
  },
  "1vi2xx1": {
   "tr": "Ar-Ge sırası bekliyor: {tech}, serbest kasanın yarısından pahalı (sıra fabrikanın parasına dokunmaz). Elle başlatabilir ya da kasanın birikmesini bekleyebilirsin.",
-  "at": "src/ui/screens/HQ.tsx:142"
+  "at": "src/ui/screens/HQ.tsx:172"
  },
  "1wzg23l": {
   "tr": "Ar-Ge boşta. Rakiplerin çoğu kullanıyor, sen bilmiyorsun: {techs}.",
-  "at": "src/ui/screens/HQ.tsx:153"
+  "at": "src/ui/screens/HQ.tsx:183"
  },
  "o7zghr": {
   "tr": "Yarış takımı {model} ile yarışıyor ({n} yaşında, ilk üç şansı {podium}): bütçe boşa gidiyor. Daha güçlü bir araba çıkar ya da takımı küçült.",
-  "at": "src/ui/screens/HQ.tsx:168"
+  "at": "src/ui/screens/HQ.tsx:198"
  },
  "lwn97": {
   "tr": "{n} mühendis boşta ({reason}) ama haftada {pay} maaş alıyor: yeni bir proje ya da Ar-Ge başlat, gerekirse bir kısmını çıkar.",
-  "at": "src/ui/screens/HQ.tsx:180"
+  "at": "src/ui/screens/HQ.tsx:210"
  },
  "rlwf6z": {
   "tr": "Kasa ekside! Kredi al ya da masrafları kıs.",
-  "at": "src/ui/screens/HQ.tsx:187"
+  "at": "src/ui/screens/HQ.tsx:218"
  },
  "134thrc": {
   "tr": "Şirketim",
-  "at": "src/ui/screens/HQ.tsx:192"
+  "at": "src/ui/screens/HQ.tsx:223"
  },
  "3l951u": {
   "tr": "Müşteriler",
-  "at": "src/ui/screens/HQ.tsx:193"
+  "at": "src/ui/screens/HQ.tsx:224"
  },
  "ka8yd3": {
   "tr": "Rakipler",
-  "at": "src/ui/screens/HQ.tsx:194"
+  "at": "src/ui/screens/HQ.tsx:225"
  },
  "edr0go": {
   "tr": "Teknoloji",
-  "at": "src/ui/screens/HQ.tsx:195"
+  "at": "src/ui/screens/HQ.tsx:226"
  },
  "1jn1lo4": {
   "tr": "Tümü",
-  "at": "src/ui/screens/HQ.tsx:196"
+  "at": "src/ui/screens/HQ.tsx:227"
  },
  "jc8eqg": {
   "tr": "Haberler ve raporlar",
-  "at": "src/ui/screens/HQ.tsx:207"
+  "at": "src/ui/screens/HQ.tsx:238"
  },
  "179fhki": {
   "tr": "Bu başlıkta haber yok.",
-  "at": "src/ui/screens/HQ.tsx:228"
+  "at": "src/ui/screens/HQ.tsx:259"
  },
  "1she978": {
   "tr": "Kredi: {loan}",
-  "at": "src/ui/screens/HQ.tsx:258"
+  "at": "src/ui/screens/HQ.tsx:289"
  },
  "5s53ew": {
   "tr": "Haftalık kâr",
-  "at": "src/ui/screens/HQ.tsx:260"
+  "at": "src/ui/screens/HQ.tsx:291"
  },
  "1esok7a": {
   "tr": "son 4 hafta ort.",
-  "at": "src/ui/screens/HQ.tsx:260"
+  "at": "src/ui/screens/HQ.tsx:291"
  },
  "btzs91": {
   "tr": "{year} satışı",
-  "at": "src/ui/screens/HQ.tsx:261"
+  "at": "src/ui/screens/HQ.tsx:292"
  },
  "2i5xqq": {
   "tr": "araç",
-  "at": "src/ui/screens/HQ.tsx:261"
+  "at": "src/ui/screens/HQ.tsx:292"
  },
  "18a1da6": {
   "tr": "{n} kişi boşta",
-  "at": "src/ui/screens/HQ.tsx:267"
+  "at": "src/ui/screens/HQ.tsx:298"
  },
  "50f40g": {
   "tr": "projede · beceri {skill}",
-  "at": "src/ui/screens/HQ.tsx:267"
+  "at": "src/ui/screens/HQ.tsx:298"
  },
  "mmr0av": {
   "tr": "Yapılacaklar",
-  "at": "src/ui/screens/HQ.tsx:272"
+  "at": "src/ui/screens/HQ.tsx:303"
  },
  "1ep0t1n": {
   "tr": "Git",
-  "at": "src/ui/screens/HQ.tsx:287"
+  "at": "src/ui/screens/HQ.tsx:318"
  },
  "tbrbxc": {
   "tr": "Her şey yolunda. Zamanı ilerlet (boşluk tuşu) ya da yeni bir proje düşün.",
-  "at": "src/ui/screens/HQ.tsx:296"
+  "at": "src/ui/screens/HQ.tsx:327"
  },
  "1xkznir": {
   "tr": "Aktif proje yok.",
-  "at": "src/ui/screens/HQ.tsx:316"
+  "at": "src/ui/screens/HQ.tsx:347"
  },
  "16j2wbc": {
   "tr": "Yeni proje",
-  "at": "src/ui/screens/HQ.tsx:318"
+  "at": "src/ui/screens/HQ.tsx:349"
  },
  "u5kmg0": {
   "tr": "Satıştaki modeller",
-  "at": "src/ui/screens/HQ.tsx:327"
+  "at": "src/ui/screens/HQ.tsx:358"
  },
  "1uyk1gi": {
   "tr": "Ayrıntılar",
-  "at": "src/ui/screens/HQ.tsx:327"
+  "at": "src/ui/screens/HQ.tsx:358"
  },
  "mdrz46": {
   "tr": "Segment",
-  "at": "src/ui/screens/HQ.tsx:331"
+  "at": "src/ui/screens/HQ.tsx:362"
  },
  "t48n6l": {
   "tr": "Haftalık satış",
-  "at": "src/ui/screens/HQ.tsx:331"
+  "at": "src/ui/screens/HQ.tsx:362"
  },
  "qrw8wk": {
   "tr": "Stok",
-  "at": "src/ui/screens/HQ.tsx:331"
+  "at": "src/ui/screens/HQ.tsx:362"
  },
  "1rxb0am": {
   "tr": "Fiyat",
-  "at": "src/ui/screens/HQ.tsx:331"
+  "at": "src/ui/screens/HQ.tsx:362"
  },
  "5oy6ic": {
   "tr": "Dergi",
-  "at": "src/ui/screens/HQ.tsx:331"
+  "at": "src/ui/screens/HQ.tsx:362"
  },
  "1phuos9": {
   "tr": "Haftalık satış (araç)",
-  "at": "src/ui/screens/HQ.tsx:349"
+  "at": "src/ui/screens/HQ.tsx:380"
  },
  "57wta3": {
   "tr": "Modellerin haftalık satış grafiği",
-  "at": "src/ui/screens/HQ.tsx:350"
+  "at": "src/ui/screens/HQ.tsx:381"
  },
  "gqnx2r": {
   "tr": "Henüz satışta bir modelin yok.",
-  "at": "src/ui/screens/HQ.tsx:354"
+  "at": "src/ui/screens/HQ.tsx:385"
  },
  "1v3wtoz": {
   "tr": "Gazete arşivi",
-  "at": "src/ui/screens/HQ.tsx:358"
+  "at": "src/ui/screens/HQ.tsx:389"
  },
  "1xahij4": {
   "tr": "Pazar ve bayi ağı",
@@ -10006,351 +10042,379 @@
  },
  "ax161e": {
   "tr": "Bayi ve servis haritası",
-  "at": "src/ui/screens/Markets.tsx:130"
+  "at": "src/ui/screens/Markets.tsx:132"
  },
  "1jy8ci7": {
   "tr": "Satış yapılan eyalet",
-  "at": "src/ui/screens/Markets.tsx:133"
+  "at": "src/ui/screens/Markets.tsx:135"
  },
  "zr421h": {
   "tr": "Yoldaki araçların",
-  "at": "src/ui/screens/Markets.tsx:145"
+  "at": "src/ui/screens/Markets.tsx:147"
  },
  "haqig7": {
   "tr": "Hurdaya çıkan",
-  "at": "src/ui/screens/Markets.tsx:149"
+  "at": "src/ui/screens/Markets.tsx:151"
  },
  "1kuxj5d": {
   "tr": "Servis memnuniyeti",
-  "at": "src/ui/screens/Markets.tsx:153"
+  "at": "src/ui/screens/Markets.tsx:155"
  },
  "1j609d": {
   "tr": "Ağ gideri",
-  "at": "src/ui/screens/Markets.tsx:157"
+  "at": "src/ui/screens/Markets.tsx:159"
  },
  "12h6tp3": {
   "tr": "{cost}/yıl",
-  "at": "src/ui/screens/Markets.tsx:158"
+  "at": "src/ui/screens/Markets.tsx:160"
+ },
+ "1a7r2f5": {
+  "tr": "Ağın net gideri",
+  "at": "src/ui/screens/Markets.tsx:167"
  },
  "tl6ylm": {
   "tr": "Nakliye (bu yıl)",
-  "at": "src/ui/screens/Markets.tsx:161"
+  "at": "src/ui/screens/Markets.tsx:171"
  },
  "1ldrl7u": {
   "tr": "Bayi araması",
-  "at": "src/ui/screens/Markets.tsx:165"
+  "at": "src/ui/screens/Markets.tsx:175"
  },
  "1h2z4ds": {
   "tr": "Harita görünümü",
-  "at": "src/ui/screens/Markets.tsx:172"
+  "at": "src/ui/screens/Markets.tsx:182"
  },
  "46817k": {
   "tr": "BİRLEŞİK DEVLETLER",
-  "at": "src/ui/screens/Markets.tsx:186"
+  "at": "src/ui/screens/Markets.tsx:196"
  },
  "c7o1xu": {
   "tr": "Bayi ve Servis Haritası",
-  "at": "src/ui/screens/Markets.tsx:187"
+  "at": "src/ui/screens/Markets.tsx:197"
  },
- "pbkif6": {
-  "tr": "Servisi yetir: {n} servis atölyesi açılsın mı?",
-  "at": "src/ui/screens/Markets.tsx:217"
+ "lxi60d": {
+  "tr": "Servisi {target} hedefine çıkarmak için {all} atölye gerekiyor ({allCost}) ama kasan {n} tanesine yetiyor: önce sahiplerin en çok beklediği eyaletlere. Açılacak atölyeler: {states}. Açılışları {cost}; ağın yıllık gideri ~{upkeep} artar (bölge müdürlükleri ve parça depoları dahil).",
+  "at": "src/ui/screens/Markets.tsx:232"
+ },
+ "1ctyhhr": {
+  "tr": "Açılacak atölyeler: {states}. Açılışları {cost}; ağın yıllık gideri ~{upkeep} artar (bölge müdürlükleri ve parça depoları dahil). Sonra her eyalette servis {target} hedefini tutar.",
+  "at": "src/ui/screens/Markets.tsx:236"
  },
  "lsam2n": {
   "tr": "Bütün arabalarına bakmak için {all} atölye gerekiyor ({allCost}) ama kasan {n} tanesine yetiyor: önce sahiplerin en çok beklediği eyaletlere. Açılacak atölyeler: {states}. Açılışları {cost}; ağın yıllık gideri ~{upkeep} artar (bölge müdürlükleri ve parça depoları dahil).",
-  "at": "src/ui/screens/Markets.tsx:220"
+  "at": "src/ui/screens/Markets.tsx:238"
  },
  "10sdc4c": {
   "tr": "Açılacak atölyeler: {states}. Açılışları {cost}; ağın yıllık gideri ~{upkeep} artar (bölge müdürlükleri ve parça depoları dahil). Sonra her eyalette arabalarına bakacak yer olur.",
-  "at": "src/ui/screens/Markets.tsx:224"
+  "at": "src/ui/screens/Markets.tsx:242"
+ },
+ "pbkif6": {
+  "tr": "Servisi yetir: {n} servis atölyesi açılsın mı?",
+  "at": "src/ui/screens/Markets.tsx:244"
  },
  "1klkjef": {
   "tr": "{cost} öde, aç",
-  "at": "src/ui/screens/Markets.tsx:225"
+  "at": "src/ui/screens/Markets.tsx:246"
  },
  "16xegjs": {
   "tr": "{n} servis atölyesi açıldı",
-  "at": "src/ui/screens/Markets.tsx:227"
+  "at": "src/ui/screens/Markets.tsx:248"
  },
  "rh8u21": {
   "tr": "{state} ({n} hafta · şans {chance})",
-  "at": "src/ui/screens/Markets.tsx:239"
+  "at": "src/ui/screens/Markets.tsx:260"
  },
  "ytpgvy": {
   "tr": "{n} eyalette bayi aransın mı?",
-  "at": "src/ui/screens/Markets.tsx:241"
+  "at": "src/ui/screens/Markets.tsx:262"
  },
  "oge9op": {
   "tr": "Alıcısı en çok olan komşu eyaletlerde bayi aranır: {states}. Aramalar {cost} tutar; bulunamayan yerde yeniden denemek kolaylaşır.",
-  "at": "src/ui/screens/Markets.tsx:242"
+  "at": "src/ui/screens/Markets.tsx:263"
  },
  "p0kpjf": {
   "tr": "{cost} öde, ara",
-  "at": "src/ui/screens/Markets.tsx:243"
+  "at": "src/ui/screens/Markets.tsx:264"
  },
  "1uy3gye": {
   "tr": "{n} eyalette bayi aranıyor",
-  "at": "src/ui/screens/Markets.tsx:245"
+  "at": "src/ui/screens/Markets.tsx:266"
  },
  "196shsl": {
   "tr": "Otomatik servis",
-  "at": "src/ui/screens/Markets.tsx:262"
+  "at": "src/ui/screens/Markets.tsx:285"
  },
  "kr7p2": {
   "tr": "Açıkken her ay, arabaların tamir beklediği eyaletlerde servis atölyesi açar (en kötü durumdakiler önce); arabaları azalan yerlerde boş kalanları kapatır. Kasada her zaman iki haftalık gider kadar yedek bırakır.",
-  "at": "src/ui/screens/Markets.tsx:265"
+  "at": "src/ui/screens/Markets.tsx:288"
  },
  "ms4tmf": {
   "tr": "Kasa yetmediği için {n} atölye bekliyor.",
-  "at": "src/ui/screens/Markets.tsx:268"
+  "at": "src/ui/screens/Markets.tsx:291"
+ },
+ "cgge5y": {
+  "tr": "Servis hedefi",
+  "at": "src/ui/screens/Markets.tsx:295"
+ },
+ "1veja9x": {
+  "tr": "Otomatik servis ve “Servisi yetir” atölyeleri bu düzeye kadar açar; otomatik servis, hedefin 1,3 katını aşan atölyeleri kapatır. %90 ya da %80 daha az atölye ve daha az genel gider demek; karşılığında o eyaletlerde satış en çok %4 ya da %8 düşer, garanti aynı oranda pahalanır, parça ve tamir geliri azalır. İtibar ancak memnuniyet %80’in altına inerse zarar görür.",
+  "at": "src/ui/screens/Markets.tsx:310"
+ },
+ "1xvsesf": {
+  "tr": "Yolda <b>{parc}</b> araban var, <b>{shops}</b> servis atölyen var: {target} servis hedefi için <warn>~{n} atölye daha</warn> gerekiyor.",
+  "at": "src/ui/screens/Markets.tsx:319"
  },
  "1ty6sfo": {
   "tr": "Yolda <b>{parc}</b> araban var, <b>{shops}</b> servis atölyen var: hepsine bakmak için <warn>~{n} atölye daha</warn> gerekiyor.",
-  "at": "src/ui/screens/Markets.tsx:275"
+  "at": "src/ui/screens/Markets.tsx:320"
  },
  "11w7q6r": {
   "tr": "Servisi yetir ({n} atölye · {cost})",
-  "at": "src/ui/screens/Markets.tsx:284"
+  "at": "src/ui/screens/Markets.tsx:325"
  },
  "vbqfa": {
   "tr": "Komşularda bayi ara ({n} eyalet · {cost})",
-  "at": "src/ui/screens/Markets.tsx:296"
+  "at": "src/ui/screens/Markets.tsx:337"
  },
  "av6ub0": {
   "tr": "Bayi aranıyor · {n} hafta",
-  "at": "src/ui/screens/Markets.tsx:306"
+  "at": "src/ui/screens/Markets.tsx:347"
  },
  "1yvinjh": {
   "tr": "Fabrikanın eyaleti",
-  "at": "src/ui/screens/Markets.tsx:307"
+  "at": "src/ui/screens/Markets.tsx:348"
  },
  "t16c8b": {
   "tr": "Satış yapılıyor",
-  "at": "src/ui/screens/Markets.tsx:308"
+  "at": "src/ui/screens/Markets.tsx:349"
  },
  "1koz2co": {
   "tr": "Komşu: bayi aranabilir",
-  "at": "src/ui/screens/Markets.tsx:309"
+  "at": "src/ui/screens/Markets.tsx:350"
  },
  "5ok0l5": {
   "tr": "Henüz uzak",
-  "at": "src/ui/screens/Markets.tsx:310"
+  "at": "src/ui/screens/Markets.tsx:351"
  },
  "r87l2j": {
   "tr": "{year}’e kadar toprak (territory)",
-  "at": "src/ui/screens/Markets.tsx:330"
+  "at": "src/ui/screens/Markets.tsx:371"
  },
  "184vx37": {
   "tr": "Nüfus",
-  "at": "src/ui/screens/Markets.tsx:333"
+  "at": "src/ui/screens/Markets.tsx:374"
  },
  "1k0icym": {
   "tr": "{v} mn",
-  "at": "src/ui/screens/Markets.tsx:334"
+  "at": "src/ui/screens/Markets.tsx:375"
  },
  "16j6eaw": {
   "tr": "Ülkedeki araç talebinden payı",
-  "at": "src/ui/screens/Markets.tsx:335"
+  "at": "src/ui/screens/Markets.tsx:376"
  },
  "xwtsub": {
   "tr": "Satışın (geçen yıl · bu yıl)",
-  "at": "src/ui/screens/Markets.tsx:337"
+  "at": "src/ui/screens/Markets.tsx:378"
  },
  "1qeqfsm": {
   "tr": "Pazar payın",
-  "at": "src/ui/screens/Markets.tsx:343"
+  "at": "src/ui/screens/Markets.tsx:384"
  },
  "1rukur8": {
   "tr": "Bayi kapsaması",
-  "at": "src/ui/screens/Markets.tsx:345"
+  "at": "src/ui/screens/Markets.tsx:386"
  },
  "104mu3w": {
   "tr": "Bilinirlik",
-  "at": "src/ui/screens/Markets.tsx:347"
+  "at": "src/ui/screens/Markets.tsx:388"
  },
  "jnsrbk": {
   "tr": "Nakliye (araç başına)",
-  "at": "src/ui/screens/Markets.tsx:351"
+  "at": "src/ui/screens/Markets.tsx:392"
  },
  "1womy5g": {
   "tr": "Yok (fabrika burada)",
-  "at": "src/ui/screens/Markets.tsx:352"
+  "at": "src/ui/screens/Markets.tsx:393"
  },
  "awn1vk": {
   "tr": "Yoldaki araçların · ort. yaş",
-  "at": "src/ui/screens/Markets.tsx:353"
+  "at": "src/ui/screens/Markets.tsx:394"
  },
  "oujkph": {
   "tr": "{v} yıl",
-  "at": "src/ui/screens/Markets.tsx:355"
+  "at": "src/ui/screens/Markets.tsx:396"
  },
  "ey7nq": {
   "tr": "Bayi · servis atölyesi",
-  "at": "src/ui/screens/Markets.tsx:359"
+  "at": "src/ui/screens/Markets.tsx:400"
  },
  "18672jj": {
   "tr": "(+ fabrika)",
-  "at": "src/ui/screens/Markets.tsx:362"
+  "at": "src/ui/screens/Markets.tsx:403"
  },
  "wqvqp": {
   "tr": "Servis: {cap} araçlık kapasite, {parc} araç",
-  "at": "src/ui/screens/Markets.tsx:368"
+  "at": "src/ui/screens/Markets.tsx:409"
  },
  "1veechb": {
   "tr": "Servis yeterliliği {q}",
-  "at": "src/ui/screens/Markets.tsx:370"
+  "at": "src/ui/screens/Markets.tsx:411"
  },
  "y48ynd": {
   "tr": "Buradaki arabaların hepsine bakmak için ~{n} atölye daha gerekiyor.",
-  "at": "src/ui/screens/Markets.tsx:373"
+  "at": "src/ui/screens/Markets.tsx:414"
  },
  "sihnig": {
   "tr": "İlk bayi: {dealer}",
-  "at": "src/ui/screens/Markets.tsx:376"
+  "at": "src/ui/screens/Markets.tsx:417"
  },
  "1k6jddu": {
   "tr": "{state}: bayi aranıyor",
-  "at": "src/ui/screens/Markets.tsx:379"
+  "at": "src/ui/screens/Markets.tsx:420"
  },
  "q4ug58": {
   "tr": "Yeni bayi ara ({cost} · {n} hafta · şans {chance})",
-  "at": "src/ui/screens/Markets.tsx:381"
+  "at": "src/ui/screens/Markets.tsx:422"
  },
  "11z3onx": {
   "tr": "Bayi ara ({cost} · {n} hafta · şans {chance})",
-  "at": "src/ui/screens/Markets.tsx:386"
+  "at": "src/ui/screens/Markets.tsx:427"
  },
  "5yrxd9": {
   "tr": "{state}: servis atölyesi açıldı",
-  "at": "src/ui/screens/Markets.tsx:396"
+  "at": "src/ui/screens/Markets.tsx:437"
  },
  "lmsgv7": {
   "tr": "Servis aç ({cost})",
-  "at": "src/ui/screens/Markets.tsx:397"
+  "at": "src/ui/screens/Markets.tsx:438"
  },
  "8kzm8p": {
   "tr": "{state}: bir bayi kapatılsın mı?",
-  "at": "src/ui/screens/Markets.tsx:407"
+  "at": "src/ui/screens/Markets.tsx:448"
  },
  "zm4t75": {
   "tr": "Bu, eyaletteki son bayin: kapatırsan orada satış durur. Yoldaki arabalar servis ister.",
-  "at": "src/ui/screens/Markets.tsx:408"
+  "at": "src/ui/screens/Markets.tsx:449"
  },
  "1nsn2w0": {
   "tr": "Kapsama azalır, ağ gideri düşer.",
-  "at": "src/ui/screens/Markets.tsx:408"
+  "at": "src/ui/screens/Markets.tsx:449"
  },
  "vemeqr": {
   "tr": "Bayi kapat",
-  "at": "src/ui/screens/Markets.tsx:415"
+  "at": "src/ui/screens/Markets.tsx:456"
  },
  "1h26w4k": {
   "tr": "Servis kapat",
-  "at": "src/ui/screens/Markets.tsx:420"
+  "at": "src/ui/screens/Markets.tsx:461"
  },
  "xzz9hc": {
   "tr": "Ağ büyüdükçe genel gideri orantısız artar (bölge müdürlükleri, parça depoları): bir bayi daha yılda ~{dealer}, bir servis atölyesi ~{shop} ekler.",
-  "at": "src/ui/screens/Markets.tsx:425"
+  "at": "src/ui/screens/Markets.tsx:466"
+ },
+ "nm81qv": {
+  "tr": "Dolu çalışan bir atölye parça ve tamirden yılda ~{income} getirir; arabaların gerektirdiğinden fazla atölye bir şey getirmez.",
+  "at": "src/ui/screens/Markets.tsx:470"
  },
  "198gg56": {
   "tr": "Eyaletler",
-  "at": "src/ui/screens/Markets.tsx:444"
+  "at": "src/ui/screens/Markets.tsx:486"
  },
  "12cbrez": {
   "tr": "Yalnızca satış yapılan ve komşu eyaletler",
-  "at": "src/ui/screens/Markets.tsx:446"
+  "at": "src/ui/screens/Markets.tsx:488"
  },
  "crxd3u": {
   "tr": "Bütün eyaletler",
-  "at": "src/ui/screens/Markets.tsx:446"
+  "at": "src/ui/screens/Markets.tsx:488"
  },
  "1od0xo7": {
   "tr": "Eyalet",
-  "at": "src/ui/screens/Markets.tsx:451"
+  "at": "src/ui/screens/Markets.tsx:493"
  },
  "b1cy2u": {
   "tr": "Durum",
-  "at": "src/ui/screens/Markets.tsx:451"
+  "at": "src/ui/screens/Markets.tsx:493"
  },
  "kvnye8": {
   "tr": "Yoldaki",
-  "at": "src/ui/screens/Markets.tsx:451"
+  "at": "src/ui/screens/Markets.tsx:493"
  },
  "ldmdhf": {
   "tr": "Bayi·Servis",
-  "at": "src/ui/screens/Markets.tsx:451"
+  "at": "src/ui/screens/Markets.tsx:493"
  },
  "10oprza": {
   "tr": "Amerikan pazarı",
-  "at": "src/ui/screens/Markets.tsx:493"
+  "at": "src/ui/screens/Markets.tsx:535"
  },
  "ld0ikr": {
   "tr": "Yıllık pazar ({year})",
-  "at": "src/ui/screens/Markets.tsx:496"
+  "at": "src/ui/screens/Markets.tsx:538"
  },
  "1owfnmv": {
   "tr": "Geçen yıl ülkedeki payın",
-  "at": "src/ui/screens/Markets.tsx:500"
+  "at": "src/ui/screens/Markets.tsx:542"
  },
  "1cezvp4": {
   "tr": "Bilinirlik (satış yapılan eyaletler)",
-  "at": "src/ui/screens/Markets.tsx:504"
+  "at": "src/ui/screens/Markets.tsx:546"
  },
  "zxib1u": {
   "tr": "Alıcıların zevki: {tastes}",
-  "at": "src/ui/screens/Markets.tsx:509"
+  "at": "src/ui/screens/Markets.tsx:551"
  },
  "1v97rho": {
   "tr": "Yıllık yeni araç satışı",
-  "at": "src/ui/screens/Markets.tsx:517"
+  "at": "src/ui/screens/Markets.tsx:559"
  },
  "tfrqu2": {
   "tr": "{v} bin",
-  "at": "src/ui/screens/Markets.tsx:522"
+  "at": "src/ui/screens/Markets.tsx:564"
  },
  "hy88fw": {
   "tr": "Amerikan pazarının büyüklüğü",
-  "at": "src/ui/screens/Markets.tsx:524"
+  "at": "src/ui/screens/Markets.tsx:566"
  },
  "yh9o4e": {
   "tr": "Segment payları",
-  "at": "src/ui/screens/Markets.tsx:527"
+  "at": "src/ui/screens/Markets.tsx:569"
  },
  "bvph7x": {
   "tr": "Haftalık reklam bütçesi",
-  "at": "src/ui/screens/Markets.tsx:545"
+  "at": "src/ui/screens/Markets.tsx:587"
  },
  "1b20710": {
   "tr": "Uygula",
-  "at": "src/ui/screens/Markets.tsx:547"
+  "at": "src/ui/screens/Markets.tsx:589"
  },
  "1t0d3h7": {
   "tr": "Reklam, satış yaptığın bütün eyaletlerde bilinirliği artırır; etkisi azalan getirilidir. Satılan ve yolda görülen her araba da markanı tanıtır. Bayiler satıştan %12 komisyon alır.",
-  "at": "src/ui/screens/Markets.tsx:551"
+  "at": "src/ui/screens/Markets.tsx:593"
  },
  "db8uxo": {
   "tr": "Rakip modeller",
-  "at": "src/ui/screens/Markets.tsx:556"
+  "at": "src/ui/screens/Markets.tsx:598"
  },
  "8l8zqt": {
   "tr": "Üretici",
-  "at": "src/ui/screens/Markets.tsx:558"
+  "at": "src/ui/screens/Markets.tsx:600"
  },
  "2e1dh6": {
   "tr": "Segment bilgisi: alıcılar neye önem veriyor?",
-  "at": "src/ui/screens/Markets.tsx:576"
+  "at": "src/ui/screens/Markets.tsx:618"
  },
  "1ixgzbr": {
   "tr": "Tablo, dergi yorumları ve müşteri geri bildirimleriyle zamanla dolar. ● sayısı önemi gösterir; “?” henüz bilinmiyor demek. Pazar araştırması tüm satırı hemen açar.",
-  "at": "src/ui/screens/Markets.tsx:578"
+  "at": "src/ui/screens/Markets.tsx:620"
  },
  "87mgi8": {
   "tr": "Biliniyor",
-  "at": "src/ui/screens/Markets.tsx:608"
+  "at": "src/ui/screens/Markets.tsx:650"
  },
  "1n0elrp": {
   "tr": "Araştır ({cost})",
-  "at": "src/ui/screens/Markets.tsx:611"
+  "at": "src/ui/screens/Markets.tsx:653"
  },
  "o2nuaf": {
   "tr": "({gen}. kuşak)",
