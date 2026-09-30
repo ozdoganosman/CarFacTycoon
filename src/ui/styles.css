@@ -3189,6 +3189,55 @@ fieldset {
   border: 1px solid color-mix(in srgb, var(--accent2) 45%, var(--line));
   background: color-mix(in srgb, var(--accent2) 10%, var(--panel));
 }
+/* What most rival cars of the class have and the design lacks. */
+.class-gap {
+  margin: 10px 16px 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--warn) 10%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--line));
+}
+.class-gap h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.class-gap > p {
+  margin: 2px 0 4px;
+}
+.gap-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gap-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 10px;
+  padding: 5px 0;
+  border-top: 1px solid color-mix(in srgb, var(--warn) 22%, var(--line));
+}
+.gap-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  min-width: 0;
+}
+.gap-act {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+.gap-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 6px 0 0;
+}
 
 /* ---------- Newspapers ---------- */
 .news-card {

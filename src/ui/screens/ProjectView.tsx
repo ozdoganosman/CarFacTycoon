@@ -22,7 +22,7 @@ import { pctWith } from '../../core/turkish';
 import { Badge, Button, Choice, NumberInput, Panel, Progress, Slider, Toggle } from '../components/ui';
 import { newEstimate } from '../../core/estimate';
 import { devWeeksLeft, launchBudget } from '../../core/budget';
-import { researcherSalary } from '../../core/research';
+import { classGap, gapNames, researcherSalary } from '../../core/research';
 import { BudgetLine } from '../components/BudgetLine';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { Designer } from './Designer';
@@ -901,6 +901,8 @@ function Launch({ p }: { p: Project }) {
   const now = recentProfit(s, 8);
   const showCost = A.autoShowCost(s, markets);
   const showShare = s.company.cash > 0 ? showCost / s.company.cash : 1;
+  // The design is locked by now: say what the magazines will find missing, while the price is still open.
+  const behind = classGap(s, p.design, p.segment, yf).items;
   return (
     <div className="grid-2">
       <Panel title={t('Fiyat ve pazarlar')}>
@@ -988,6 +990,13 @@ function Launch({ p }: { p: Project }) {
           <p className="small tone-bad">
             {t('Bu fiyatta ve beklenen talepte şirket haftada {loss} kaybeder. Hat işçiliği az üretimde de ödenir; fiyatı, hattı ya da mühendis sayısını gözden geçir.', {
               loss: money(-weeklyNet),
+            })}
+          </p>
+        )}
+        {behind.length > 0 && (
+          <p className="note small">
+            {t('Sınıftaki arabaların çoğunda olan {list} bu arabada yok: dergiler bunu fark eder, fiyatı buna göre koy. Çoğu makyajla sonradan eklenebilir.', {
+              list: gapNames(behind),
             })}
           </p>
         )}

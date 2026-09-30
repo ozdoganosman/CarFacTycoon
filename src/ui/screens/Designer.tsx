@@ -4,7 +4,7 @@ import { enginePresets, withStrokeRatio } from '../../core/ai';
 import { DIESEL_COMPRESSION, DIESEL_YEAR, displacementCc, eraRpmCap, isDiesel, knockLimit } from '../../core/engine';
 import { newEstimate } from '../../core/estimate';
 import { engineNotes, gearboxNotes, suspensionNotes, typicalSuspBalance } from '../../core/engineNotes';
-import { knownMaxGears, techState, unknownTech } from '../../core/research';
+import { classGap, knownKnowhow, knownMaxGears, researchCost, researchDef, researchWeeks, techState, unknownTech, type ClassGapItem } from '../../core/research';
 import { effectsText, knowhowDef } from '../../data/knowhow';
 import { yearFloat } from '../../core/time';
 import { engineCurve, gearSpeeds, tractionCurves, rollingResistance } from '../../core/vehicle';
@@ -21,7 +21,7 @@ import {
   maxCompression,
   maxGears,
 } from '../../data/tech';
-import type { CarDesign, EngineDesign, FeatureId, Project } from '../../core/types';
+import type { CarDesign, EngineDesign, FeatureId, GearboxTypeId, Project, SuspensionTypeId } from '../../core/types';
 import { isTurkish, msg, t, tc } from '../../i18n';
 import { fmtNumber } from '../../i18n/format';
 import { store, useGameState } from '../store';
@@ -135,6 +135,115 @@ function ResearchHint({ ids }: { ids: string[] }) {
   );
 }
 
+/** Rows the class comparison shows before "more". */
+const GAP_ROWS = 5;
+
+/**
+ * What most rival cars of the class already have and this design lacks, each with its way in: put it
+ * in now, or research it first (and how far that research is).
+ */
+function ClassGapList({ project, platformLocked, set }: { project: Project; platformLocked: boolean; set: (patch: Partial<CarDesign>) => void }) {
+  const s = useGameState();
+  const yf = yearFloat(s.week);
+  const [all, setAll] = useState(false);
+  const d = project.design;
+  // What the engineers have learned goes into the car when development starts.
+  const gap = classGap(s, { ...d, knowhow: knownKnowhow(s) }, project.segment, yf);
+  if (!gap.items.length) return null;
+  const rows = all || gap.items.length <= GAP_ROWS + 1 ? gap.items : gap.items.slice(0, GAP_ROWS);
+  const toQueue = gap.items.filter((x) => x.state === 'available');
+  const fit = (id: string) => {
+    const [kind, what] = id.split(':');
+    if (kind === 'feat') {
+      const f = FEATURES.find((x) => x.id === what)!;
+      set({ features: [...new Set([...d.features, ...(f.requires ?? []), f.id])] });
+    } else if (kind === 'gb') {
+      const type = what as GearboxTypeId;
+      set({ gearbox: { ...d.gearbox, type, gears: type === 'automatic' ? 4 : Math.min(d.gearbox.gears, knownMaxGears(s, maxGears(yf))) } });
+    } else if (kind === 'susp') set({ suspension: what as SuspensionTypeId });
+  };
+  const action = (x: ClassGapItem) => {
+    const def = researchDef(x.id)!;
+    switch (x.state) {
+      case 'fit':
+        // Know-how the company knows is already in (see above); a platform or facelift fixes the suspension.
+        if (def.passive) return null;
+        return x.id.startsWith('susp:') && platformLocked ? (
+          <span className="muted">{t('bu projede değişmez')}</span>
+        ) : (
+          <Button small kind="primary" onClick={() => fit(x.id)}>
+            {t('Ekle')}
+          </Button>
+        );
+      case 'researching':
+        return (
+          <span>
+            {t('Ar-Ge’de')} · {t('{n} hf', { n: Math.ceil(s.research?.active.find((a) => a.id === x.id)?.weeksLeft ?? 0) })}
+          </span>
+        );
+      case 'queued':
+        return <span className="rtag">{t('sırada #{pos}', { pos: (s.research?.queue ?? []).indexOf(x.id) + 1 })}</span>;
+      case 'available':
+        return (
+          <>
+            <span className="muted">
+              {money(researchCost(def, yf, s))} · {t('{n} hf', { n: researchWeeks(def, yf, s.company.engineers, s.company.researchers ?? 0) })}
+            </span>
+            <Button small onClick={() => store.try((st) => A.queueResearch(st, x.id), t('{tech} sıraya eklendi', { tech: t(def.name) }))}>
+              {t('+ Sıra')}
+            </Button>
+          </>
+        );
+      case 'future':
+        return <span className="muted">{t('{year} çıkar', { year: inYear(def.year) })}</span>;
+    }
+  };
+  return (
+    <section className="class-gap">
+      <h4>{gap.basis === 'rivals' ? t('Rakiplerin çoğunda var, sende yok') : t('Sınıfın tipik arabasında var, sende yok')}</h4>
+      <p className="muted small">
+        {gap.basis === 'rivals'
+          ? t('Bu sınıfta satılan {n} rakip arabanın yarısından çoğunda var; dergiler arabanı onlarla karşılaştırır.', { n: gap.cars })
+          : t('Sınıfta henüz rakip yok; dergiler arabanı sınıfın tipik yeni arabasıyla karşılaştırır.')}
+      </p>
+      <ul className="gap-list">
+        {rows.map((x) => {
+          const def = researchDef(x.id)!;
+          return (
+            <li key={x.id} className="gap-row">
+              <span className="gap-name">
+                <b>{t(def.name)}</b>
+                {gap.basis === 'rivals' && <span className="muted small">{t('{count}/{total} rakipte', { count: x.count, total: gap.cars })}</span>}
+                {def.passive && <span className="rtag">{t('otomatik uygulanır')}</span>}
+              </span>
+              <span className="gap-act small">{action(x)}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {(rows.length < gap.items.length || toQueue.length > 1 || gap.items.some((x) => x.state !== 'fit')) && (
+        <p className="gap-foot small">
+          {rows.length < gap.items.length && (
+            <button type="button" className="link-btn" onClick={() => setAll(true)}>
+              {t('{n} tane daha göster', { n: gap.items.length - rows.length })}
+            </button>
+          )}
+          {toQueue.length > 1 && (
+            <Button small onClick={() => store.act((st) => toQueue.forEach((x) => A.queueResearch(st, x.id)))}>
+              {t('Listedeki {n} konunun hepsini sıraya ekle', { n: toQueue.length })}
+            </Button>
+          )}
+          {gap.items.some((x) => x.state !== 'fit') && (
+            <button type="button" className="link-btn" onClick={() => store.go({ id: 'research' })}>
+              {t('Ar-Ge’ye git')}
+            </button>
+          )}
+        </p>
+      )}
+    </section>
+  );
+}
+
 export function Designer({ project, readOnly, below }: { project: Project; readOnly?: boolean; below?: ReactNode }) {
   const s = useGameState();
   const yf = yearFloat(s.week);
@@ -169,6 +278,7 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
             ))}
           </div>
           <KnowhowStrip ids={d.knowhow ?? []} />
+          {!readOnly && <ClassGapList project={project} platformLocked={platformLocked} set={set} />}
           {readOnly && <p className="note design-locked">{t('Geliştirme başladı: tasarım kilitli. Değişiklik için makyaj ya da yeni kuşak projesi gerekir.')}</p>}
           <fieldset className="tab-body" disabled={readOnly}>
             {tab === 'chassis' && (
