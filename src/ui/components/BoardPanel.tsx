@@ -6,11 +6,13 @@ import {
   MAX_FLOAT,
   PAYOUT_STEPS,
   ULTIMATUM_AT,
+  VETO_AT,
   WARNING_AT,
   boardOutlook,
   boardVeto,
   buyBack,
   buybackCost,
+  buybackPremium,
   canGoPublic,
   freeFloat,
   goPublic,
@@ -35,6 +37,32 @@ const signedPct = (v: number) => {
   return `${v >= 0 ? '+' : '−'}${pct(tenths / 1000, tenths % 10 ? 1 : 0)}`;
 };
 
+/** How the board judges the company: shown before the listing and on the board panel. */
+function BoardRules() {
+  return (
+    <Info>
+      <p>{t('Şirketin bir kısmını borsada satarak sermaye toplarsın; kontrol hep sende kalır (en fazla {share} satılabilir).', { share: pct(MAX_FLOAT, 0) })}</p>
+      <p>
+        {t(
+          'Karşılığında her yıl yönetim kuruluna hesap verirsin. Ciro pazardan hızlı büyümeli (çok iyi bir yıldan sonra beklenti yükselir); hissedarlar kârın yarısını ve her yıl biraz daha fazla temettü ister. Temettü oranı %20 başlar: yükseltmek senin işin ve kasadan gerçek para çıkarır.',
+        )}
+      </p>
+      <p>
+        {t(
+          'Büyüme hedefinde kâr da sayılır: ciro hedefin altında kalsa bile kâr en az hedef kadar büyüdüyse kurul yılı başarılı sayar. Pazar daralırken kurul ciro hedefini düşürür, temettü hedefini de aynı oranda. Hisse geri alınca ya da yeni hisse satınca o yılın temettü hedefi dışarıdaki paya göre yeniden hesaplanır.',
+        )}
+      </p>
+      <p>
+        {t(
+          'Kurulun hafızası kısadır: iyi yılların kredisi her yıl yarıya iner. Ama adım adım sertleşir: güven {warn}’ın üstündeyken tek bir kötü yıl en fazla uyarı getirir. Güven {veto}’in altına inerse kurul yarışı, rakip satın almayı ve yeni hat kurmayı veto eder; {last}’in altında son uyarı gelir, sonra da tutmazsa görevden alınırsın ve oyun biter.',
+          { warn: WARNING_AT, veto: VETO_AT, last: ULTIMATUM_AT },
+        )}
+      </p>
+      <p>{t('Oyun sonu puanında şirket değerinin yalnızca senin payın sayılır. Borsanın havası fiyatı belirler: 1928’de satmak, 1932’de geri almak ucuzdur.')}</p>
+    </Info>
+  );
+}
+
 /** Selling shares, the board's targets and its patience. */
 export function SharesPanel({ s }: { s: GameState }) {
   const yf = yearFloat(s.week);
@@ -48,21 +76,7 @@ export function SharesPanel({ s }: { s: GameState }) {
         title={
           <>
             {t('Borsa ve yönetim kurulu')}
-            <Info>
-              <p>{t('Şirketin bir kısmını borsada satarak sermaye toplarsın; kontrol hep sende kalır (en fazla {share} satılabilir).', { share: pct(MAX_FLOAT, 0) })}</p>
-              <p>
-                {t(
-                  'Karşılığında her yıl yönetim kuruluna hesap verirsin. Ciro pazardan hızlı büyümeli (çok iyi bir yıldan sonra beklenti yükselir); hissedarlar kârın yarısını ve her yıl biraz daha fazla temettü ister. Temettü oranı %20 başlar: yükseltmek senin işin ve kasadan gerçek para çıkarır.',
-                )}
-              </p>
-              <p>
-                {t(
-                  'Kurulun hafızası kısadır: iyi yılların kredisi her yıl yarıya iner. Güven {warn}’ın altına inerse kurul yarışı, rakip satın almayı ve yeni hat kurmayı veto eder; {last}’in altında son uyarı gelir, sonra da tutmazsa görevden alınırsın ve oyun biter.',
-                  { warn: WARNING_AT, last: ULTIMATUM_AT },
-                )}
-              </p>
-              <p>{t('Oyun sonu puanında şirket değerinin yalnızca senin payın sayılır. Borsanın havası fiyatı belirler: 1928’de satmak, 1932’de geri almak ucuzdur.')}</p>
-            </Info>
+            <BoardRules />
           </>
         }
       >
@@ -113,8 +127,17 @@ export function SharesPanel({ s }: { s: GameState }) {
   const step = 0.05;
   const free = freeFloat(s);
   const backAll = buybackCost(s, free);
+  const slice = Math.min(step, free);
   return (
-    <Panel title={t('Borsa ve yönetim kurulu')} className="board-panel">
+    <Panel
+      title={
+        <>
+          {t('Borsa ve yönetim kurulu')}
+          <BoardRules />
+        </>
+      }
+      className="board-panel"
+    >
       <div className="stats-row">
         <Stat label={t('Dışarıdaki pay')} value={pct(sh.float, 0)} sub={t('senin payın {share}', { share: pct(1 - sh.float, 0) })} />
         <Stat label={t('Piyasa değeri')} value={money(cap)} sub={t('borsa {mood}', { mood: moodName(mood) })} />
@@ -127,20 +150,33 @@ export function SharesPanel({ s }: { s: GameState }) {
       <Progress value={sh.confidence} max={100} tone={tone} />
       {out.judged ? (
         <ul className="small">
-          <li className={out.projected >= out.needed ? 'tone-good' : 'tone-bad'}>
+          <li className={out.growthOk ? 'tone-good' : 'tone-bad'}>
             {tx('Ciro hedefi {growth}: yıl sonunda en az <b>{needed}</b> (geçen yıl {prev}). Bu hızla yıl sonu tahmini <b>{projected}</b>.', {
               growth: signedPct(sh.target.growth),
               needed: money(out.needed),
               prev: money(out.prev),
               projected: money(out.projected),
             })}
+            {out.neededProfit !== undefined && (
+              <>
+                {' '}
+                {tx('Kâr da sayılır: yıl kârı en az <b>{needed}</b> olursa (geçen yıl {prev}) büyüme hedefi tutar. Kâr tahmini <b>{projected}</b>.', {
+                  needed: money(out.neededProfit),
+                  prev: money(out.prevProfit),
+                  projected: money(out.profit),
+                })}
+              </>
+            )}
           </li>
-          <li className={out.dividend >= sh.target.dividend * 0.98 ? 'tone-good' : 'tone-bad'}>
+          <li className={out.dividendOk ? 'tone-good' : 'tone-bad'}>
             {tx('Temettü hedefi <b>{target}</b>. Bu oranla tahmini temettü <b>{dividend}</b> (yıllık kâr tahmini {profit}).', {
               target: money(sh.target.dividend),
               dividend: money(out.dividend),
               profit: money(out.profit),
             })}
+            {sh.target.growth < 0 && (
+              <span className="muted"> {t('Pazar daraldığı için kurul temettü hedefini de ciro hedefi kadar ({cut}) düşürdü.', { cut: pct(-sh.target.growth, 0) })}</span>
+            )}
           </li>
         </ul>
       ) : (
@@ -173,15 +209,17 @@ export function SharesPanel({ s }: { s: GameState }) {
       <p className="small muted">
         {sh.ultimatum
           ? t('Geri alım piyasa fiyatının %10 fazlasına olur ve hisselerin satıldığı fiyatın (yılda %6 faiziyle) altına inmez; son uyarı altındayken bunun da %50 fazlası.')
-          : t('Geri alım piyasa fiyatının %10 fazlasına olur ve hisselerin satıldığı fiyatın (yılda %6 faiziyle) altına inmez.')}
+          : t('Geri alım piyasa fiyatının %10 fazlasına olur ve hisselerin satıldığı fiyatın (yılda %6 faiziyle) altına inmez.')}{' '}
+        {t('Alım fiyatı yükseltir: aynı yıl içinde geri alınan her %5, fiyatı yaklaşık %5 artırır.')}
+        {free > 0.001 && <> {t('Sıradaki dilim piyasa fiyatının {premium} üstünde.', { premium: pct(buybackPremium(s, slice), 0) })}</>}
       </p>
       <div className="row board-actions">
         <Button
           small
-          disabled={free <= 0.001 || s.company.cash < buybackCost(s, Math.min(step, free))}
+          disabled={free <= 0.001 || s.company.cash < buybackCost(s, slice)}
           onClick={() => store.try((st) => buyBack(st, step), t('Hisseler geri alındı'))}
         >
-          {t('{share} geri al ({cash})', { share: pct(Math.min(step, free), 0), cash: money(buybackCost(s, Math.min(step, free))) })}
+          {t('{share} geri al ({cash})', { share: pct(slice, 0), cash: money(buybackCost(s, slice)) })}
         </Button>
         <Button
           small
@@ -221,6 +259,9 @@ export function SharesPanel({ s }: { s: GameState }) {
               </span>,
               <span key="g">
                 {signedPct(b.growth)} <span className="muted small">/ {signedPct(b.targetGrowth)}</span>
+                {b.profitGrowth !== undefined && b.growth < b.targetGrowth - 0.01 && b.profitGrowth >= b.targetGrowth - 0.01 && (
+                  <span className="muted small"> · {t('kâr {growth}', { growth: signedPct(b.profitGrowth) })}</span>
+                )}
               </span>,
               <span key="d">
                 {money(b.dividend)} <span className="muted small">/ {money(b.targetDividend)}</span>

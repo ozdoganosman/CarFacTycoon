@@ -2117,95 +2117,99 @@
  },
  "yjcoyj": {
   "tr": "çılgın bir yükselişte",
-  "at": "src/core/shares.ts:69"
+  "at": "src/core/shares.ts:75"
  },
  "80js3b": {
   "tr": "coşkulu",
-  "at": "src/core/shares.ts:70"
+  "at": "src/core/shares.ts:76"
  },
  "ame5sp": {
   "tr": "sakin",
-  "at": "src/core/shares.ts:71"
+  "at": "src/core/shares.ts:77"
  },
  "16n3zqy": {
   "tr": "durgun",
-  "at": "src/core/shares.ts:72"
+  "at": "src/core/shares.ts:78"
  },
  "c1e9cz": {
   "tr": "çöküşte",
-  "at": "src/core/shares.ts:73"
+  "at": "src/core/shares.ts:79"
  },
  "dknzy8": {
   "tr": "Şirket zaten borsada.",
-  "at": "src/core/shares.ts:87"
+  "at": "src/core/shares.ts:98"
  },
  "1k8xf6y": {
   "tr": "Borsa otomobil şirketlerine {year}’den sonra ısınır.",
-  "at": "src/core/shares.ts:88"
+  "at": "src/core/shares.ts:99"
  },
  "b6bi7d": {
   "tr": "Yatırımcılar en az üç yıllık defter görmek ister.",
-  "at": "src/core/shares.ts:89"
+  "at": "src/core/shares.ts:100"
  },
  "v8gy8n": {
   "tr": "Geçen yılı zararla kapattın: kâr etmeyen şirketin hissesini kimse almaz.",
-  "at": "src/core/shares.ts:91"
+  "at": "src/core/shares.ts:102"
  },
  "mqqxv7": {
   "tr": "Şirket değeri en az {value} olmalı.",
-  "at": "src/core/shares.ts:93"
+  "at": "src/core/shares.ts:104"
  },
  "f16efo": {
   "tr": "Halka arz: şirketin {pct}’i borsada satıldı, kasaya {cash} girdi. Artık her yıl yönetim kuruluna hesap vereceksin.",
-  "at": "src/core/shares.ts:161"
+  "at": "src/core/shares.ts:195"
  },
  "18a1hyz": {
   "tr": "Şirket borsada değil.",
-  "at": "src/core/shares.ts:174"
+  "at": "src/core/shares.ts:208"
  },
  "483zdj": {
   "tr": "Kontrolü kaybetmemek için en fazla {pct} dışarıda olabilir.",
-  "at": "src/core/shares.ts:175"
+  "at": "src/core/shares.ts:209"
  },
  "1jc08cq": {
   "tr": "Yeni hisse: şirketin {pct}’i daha satıldı, kasaya {cash} girdi. Hissedarlar paylarının sulandığından hoşnut değil.",
-  "at": "src/core/shares.ts:184"
+  "at": "src/core/shares.ts:218"
  },
  "1paky53": {
   "tr": "Piyasada geri alınacak hisse kalmadı.",
-  "at": "src/core/shares.ts:196"
+  "at": "src/core/shares.ts:230"
  },
  "rimmls": {
   "tr": "Kasada {cash} yok.",
-  "at": "src/core/shares.ts:198"
+  "at": "src/core/shares.ts:232"
  },
  "168r9yh": {
   "tr": "Son hisseler de geri alındı ({cash}): şirket yeniden tamamen senin, yönetim kurulu dağıldı.",
-  "at": "src/core/shares.ts:206"
+  "at": "src/core/shares.ts:243"
  },
- "1s83ltj": {
-  "tr": "Hisse geri alımı: şirketin {pct}’i {cash} karşılığında geri alındı.",
-  "at": "src/core/shares.ts:207"
+ "1u3iyad": {
+  "tr": "Hisse geri alımı: şirketin {pct} {cash} karşılığında geri alındı. Yönetim kurulunun {year} temettü hedefi dışarıda kalan paya göre {target} oldu.",
+  "at": "src/core/shares.ts:247"
  },
- "187rm1s": {
-  "tr": "Yönetim kurulu veto etti (güven {confidence}/100): yarış, rakip satın alma ve yeni hat yok. Güven {limit}’ın üstüne çıkınca kalkar.",
-  "at": "src/core/shares.ts:250"
+ "kszb3s": {
+  "tr": "Yönetim kurulu veto etti (güven {confidence}/100): yarış, rakip satın alma ve yeni hat yok. Güven {limit}’in üstüne çıkınca kalkar.",
+  "at": "src/core/shares.ts:299"
  },
  "659tkt": {
   "tr": "Yönetim kurulu, {year}: ciro {growth} (hedef {target}), temettü {dividend} (hedef {targetDividend}). Hedefler tuttu. Güven {before} → {after}.",
-  "at": "src/core/shares.ts:356"
+  "at": "src/core/shares.ts:425"
  },
  "183aeiz": {
   "tr": "Yönetim kurulu, {year}: ciro {growth} (hedef {target}), temettü {dividend} (hedef {targetDividend}). Hedefler tutmadı. Güven {before} → {after}.",
-  "at": "src/core/shares.ts:357"
+  "at": "src/core/shares.ts:426"
+ },
+ "1po3w2h": {
+  "tr": "Ciro hedefin altında kaldı ama kâr {growth} büyüdü: kurul büyüme hedefini tutmuş saydı.",
+  "at": "src/core/shares.ts:427"
  },
  "wwuyn9": {
   "tr": "Yönetim kurulu hedeflerin tutmasından memnun: son uyarı geri çekildi.",
-  "at": "src/core/shares.ts:364"
+  "at": "src/core/shares.ts:433"
  },
  "16zj7e5": {
   "tr": "Yönetim kurulu yarış bütçesini kesti: takım dağıtıldı.",
-  "at": "src/core/shares.ts:375"
+  "at": "src/core/shares.ts:445"
  },
  "w6ifi7": {
   "tr": "Sponsor desteği: kasaya {amount} girdi.",
@@ -3039,8 +3043,8 @@
   "tr": "Bir rakip",
   "at": "src/data/events.ts:307"
  },
- "v6ek3b": {
-  "tr": "{year} hedefleri: ciro {growth}, dış hissedarlara en az {dividend} temettü.",
+ "1f56w0b": {
+  "tr": "{year} hedefleri: ciro ya da kâr {growth}, dış hissedarlara en az {dividend} temettü.",
   "at": "src/data/events.ts:317"
  },
  "7eqjmy": {
@@ -3159,17 +3163,21 @@
   "tr": "Yönetim kurulu huzursuz",
   "at": "src/data/events.ts:486"
  },
- "iu141a": {
-  "tr": "Yönetim kurulunun sana güveni {confidence}/100’e düştü. Hissedarlar büyüme ve temettü bekliyor; toplantıda sesler yükseldi.\n\n{targets}\n\nKurul artık yarış bütçesini, rakip satın almayı ve yeni hat kurmayı veto ediyor; güven 40’ın üstüne çıkınca kalkar. Temettü oranını Şirket ekranından ayarlayabilirsin. Güven 25’in altına inerse son uyarı gelir, sonra görevden alınırsın.",
-  "at": "src/data/events.ts:489"
+ "1lyj5bb": {
+  "tr": "Yönetim kurulunun sana güveni {confidence}/100’e düştü. Hissedarlar büyüme ve temettü bekliyor; toplantıda sesler yükseldi.\n\n{targets}\n\nKurul artık yarış bütçesini, rakip satın almayı ve yeni hat kurmayı veto ediyor; güven {veto}’in üstüne çıkınca kalkar. Temettü oranını Şirket ekranından ayarlayabilirsin. Güven {last}’in altına inerse son uyarı gelir, sonra görevden alınırsın.",
+  "at": "src/data/events.ts:492"
+ },
+ "14rzbf4": {
+  "tr": "Yönetim kurulunun sana güveni {confidence}/100’e düştü. Hissedarlar büyüme ve temettü bekliyor; toplantıda sesler yükseldi.\n\n{targets}\n\nBu bir uyarı: güven {veto}’in altına inerse kurul yarış bütçesini, rakip satın almayı ve yeni hat kurmayı veto eder. Temettü oranını Şirket ekranından ayarlayabilirsin. Güven {last}’in altına inerse son uyarı gelir, sonra görevden alınırsın.",
+  "at": "src/data/events.ts:496"
  },
  "yof0ue": {
   "tr": "Yönetim kurulundan son uyarı",
-  "at": "src/data/events.ts:498"
+  "at": "src/data/events.ts:506"
  },
  "dz5ukz": {
   "tr": "Güven {confidence}/100. Yönetim kurulu açık konuştu: bu yılın hedefleri de tutmazsa seni görevden alacak ve şirketi başka birine verecek.\n\n{targets}\n\nÇıkış yolları: hedefleri tutturmak ya da dışarıdaki bütün hisseleri geri alıp yönetim kurulundan kurtulmak (Şirket ekranı).",
-  "at": "src/data/events.ts:501"
+  "at": "src/data/events.ts:509"
  },
  "1ht7xvx": {
   "tr": "Petek radyatör",
@@ -6455,233 +6463,257 @@
   "tr": "Gönderilemedi, biraz sonra yeniden denenecek.",
   "at": "src/ui/claudeLink.ts:112"
  },
- "1o164q1": {
-  "tr": "Borsa ve yönetim kurulu",
-  "at": "src/ui/components/BoardPanel.tsx:50"
- },
  "12vfseb": {
   "tr": "Şirketin bir kısmını borsada satarak sermaye toplarsın; kontrol hep sende kalır (en fazla {share} satılabilir).",
-  "at": "src/ui/components/BoardPanel.tsx:52"
+  "at": "src/ui/components/BoardPanel.tsx:44"
  },
  "49kn7j": {
   "tr": "Karşılığında her yıl yönetim kuruluna hesap verirsin. Ciro pazardan hızlı büyümeli (çok iyi bir yıldan sonra beklenti yükselir); hissedarlar kârın yarısını ve her yıl biraz daha fazla temettü ister. Temettü oranı %20 başlar: yükseltmek senin işin ve kasadan gerçek para çıkarır.",
-  "at": "src/ui/components/BoardPanel.tsx:54"
+  "at": "src/ui/components/BoardPanel.tsx:46"
  },
- "1lq2wve": {
-  "tr": "Kurulun hafızası kısadır: iyi yılların kredisi her yıl yarıya iner. Güven {warn}’ın altına inerse kurul yarışı, rakip satın almayı ve yeni hat kurmayı veto eder; {last}’in altında son uyarı gelir, sonra da tutmazsa görevden alınırsın ve oyun biter.",
-  "at": "src/ui/components/BoardPanel.tsx:59"
+ "nqtuhq": {
+  "tr": "Büyüme hedefinde kâr da sayılır: ciro hedefin altında kalsa bile kâr en az hedef kadar büyüdüyse kurul yılı başarılı sayar. Pazar daralırken kurul ciro hedefini düşürür, temettü hedefini de aynı oranda. Hisse geri alınca ya da yeni hisse satınca o yılın temettü hedefi dışarıdaki paya göre yeniden hesaplanır.",
+  "at": "src/ui/components/BoardPanel.tsx:51"
+ },
+ "e2cex0": {
+  "tr": "Kurulun hafızası kısadır: iyi yılların kredisi her yıl yarıya iner. Ama adım adım sertleşir: güven {warn}’ın üstündeyken tek bir kötü yıl en fazla uyarı getirir. Güven {veto}’in altına inerse kurul yarışı, rakip satın almayı ve yeni hat kurmayı veto eder; {last}’in altında son uyarı gelir, sonra da tutmazsa görevden alınırsın ve oyun biter.",
+  "at": "src/ui/components/BoardPanel.tsx:56"
  },
  "vefgje": {
   "tr": "Oyun sonu puanında şirket değerinin yalnızca senin payın sayılır. Borsanın havası fiyatı belirler: 1928’de satmak, 1932’de geri almak ucuzdur.",
-  "at": "src/ui/components/BoardPanel.tsx:64"
+  "at": "src/ui/components/BoardPanel.tsx:61"
+ },
+ "1o164q1": {
+  "tr": "Borsa ve yönetim kurulu",
+  "at": "src/ui/components/BoardPanel.tsx:78"
  },
  "ns0frx": {
   "tr": "Sermaye için hisse sat: kasaya büyük para girer, ama her yıl büyüme ve temettü hedefleri gelir. Borsa şu an <b>{mood}</b> (×{x}).",
-  "at": "src/ui/components/BoardPanel.tsx:70"
+  "at": "src/ui/components/BoardPanel.tsx:84"
  },
  "tcyov4": {
   "tr": "Halka arz edilsin mi?",
-  "at": "src/ui/components/BoardPanel.tsx:91"
+  "at": "src/ui/components/BoardPanel.tsx:105"
  },
  "1yc16m9": {
   "tr": "Şirketin {share}’i satılır, kasaya {cash} girer (bankacıların payı düşülmüş). Bundan sonra her yıl yönetim kuruluna hesap verirsin. Hisseleri sonradan geri alabilirsin ama primli.",
-  "at": "src/ui/components/BoardPanel.tsx:92"
+  "at": "src/ui/components/BoardPanel.tsx:106"
  },
  "e0036": {
   "tr": "Halka arz et",
-  "at": "src/ui/components/BoardPanel.tsx:96"
+  "at": "src/ui/components/BoardPanel.tsx:110"
  },
  "ypk742": {
   "tr": "Şirket borsada",
-  "at": "src/ui/components/BoardPanel.tsx:98"
+  "at": "src/ui/components/BoardPanel.tsx:112"
  },
  "1g29cyu": {
   "tr": "Dışarıdaki pay",
-  "at": "src/ui/components/BoardPanel.tsx:119"
+  "at": "src/ui/components/BoardPanel.tsx:142"
  },
  "13ew4zo": {
   "tr": "senin payın {share}",
-  "at": "src/ui/components/BoardPanel.tsx:119"
+  "at": "src/ui/components/BoardPanel.tsx:142"
  },
  "o5uhdq": {
   "tr": "Piyasa değeri",
-  "at": "src/ui/components/BoardPanel.tsx:120"
+  "at": "src/ui/components/BoardPanel.tsx:143"
  },
  "1kvacv5": {
   "tr": "borsa {mood}",
-  "at": "src/ui/components/BoardPanel.tsx:120"
+  "at": "src/ui/components/BoardPanel.tsx:143"
  },
  "f7fhrk": {
   "tr": "Ödenen temettü",
-  "at": "src/ui/components/BoardPanel.tsx:121"
+  "at": "src/ui/components/BoardPanel.tsx:144"
  },
  "hpgonm": {
   "tr": "Yönetim kurulunun güveni <tone>{v}/100</tone>",
-  "at": "src/ui/components/BoardPanel.tsx:124"
+  "at": "src/ui/components/BoardPanel.tsx:147"
  },
  "1h4m70e": {
   "tr": "son uyarı: bu yıl hedefler tutmazsa görevden alınırsın",
-  "at": "src/ui/components/BoardPanel.tsx:125"
+  "at": "src/ui/components/BoardPanel.tsx:148"
  },
  "199iy3v": {
   "tr": "Ciro hedefi {growth}: yıl sonunda en az <b>{needed}</b> (geçen yıl {prev}). Bu hızla yıl sonu tahmini <b>{projected}</b>.",
-  "at": "src/ui/components/BoardPanel.tsx:131"
+  "at": "src/ui/components/BoardPanel.tsx:154"
+ },
+ "j6e1ic": {
+  "tr": "Kâr da sayılır: yıl kârı en az <b>{needed}</b> olursa (geçen yıl {prev}) büyüme hedefi tutar. Kâr tahmini <b>{projected}</b>.",
+  "at": "src/ui/components/BoardPanel.tsx:163"
  },
  "1bjhbiu": {
   "tr": "Temettü hedefi <b>{target}</b>. Bu oranla tahmini temettü <b>{dividend}</b> (yıllık kâr tahmini {profit}).",
-  "at": "src/ui/components/BoardPanel.tsx:139"
+  "at": "src/ui/components/BoardPanel.tsx:172"
+ },
+ "1tisdmv": {
+  "tr": "Pazar daraldığı için kurul temettü hedefini de ciro hedefi kadar ({cut}) düşürdü.",
+  "at": "src/ui/components/BoardPanel.tsx:178"
  },
  "1u5o5b4": {
   "tr": "Yönetim kurulu seni ilk kez {year} sonunda değerlendirecek.",
-  "at": "src/ui/components/BoardPanel.tsx:147"
+  "at": "src/ui/components/BoardPanel.tsx:183"
  },
  "1ys3il8": {
   "tr": "Temettü oranı (kârın dış hissedarlara düşen payından ne kadarı dağıtılır). Kurul kârın yarısını ve geçen yıldan biraz fazlasını bekliyor; rakip yönetimde olduğu için daha da fazlasını:",
-  "at": "src/ui/components/BoardPanel.tsx:152"
+  "at": "src/ui/components/BoardPanel.tsx:188"
  },
  "1t4pse2": {
   "tr": "Temettü oranı (kârın dış hissedarlara düşen payından ne kadarı dağıtılır). Kurul kârın yarısını ve geçen yıldan biraz fazlasını bekliyor:",
-  "at": "src/ui/components/BoardPanel.tsx:155"
+  "at": "src/ui/components/BoardPanel.tsx:191"
  },
  "u20rhg": {
   "tr": "{name} şirketin {share}’ini elinde tutuyor ve yönetim kurulunda oturuyor: hedefler daha sıkı.",
-  "at": "src/ui/components/BoardPanel.tsx:166"
+  "at": "src/ui/components/BoardPanel.tsx:202"
  },
  "c04pt2": {
   "tr": "{name} şirketin {share}’ini elinde tutuyor.",
-  "at": "src/ui/components/BoardPanel.tsx:170"
+  "at": "src/ui/components/BoardPanel.tsx:206"
  },
  "1es22gz": {
   "tr": "Geri alım piyasa fiyatının %10 fazlasına olur ve hisselerin satıldığı fiyatın (yılda %6 faiziyle) altına inmez; son uyarı altındayken bunun da %50 fazlası.",
-  "at": "src/ui/components/BoardPanel.tsx:175"
+  "at": "src/ui/components/BoardPanel.tsx:211"
  },
  "gx2reh": {
   "tr": "Geri alım piyasa fiyatının %10 fazlasına olur ve hisselerin satıldığı fiyatın (yılda %6 faiziyle) altına inmez.",
-  "at": "src/ui/components/BoardPanel.tsx:176"
+  "at": "src/ui/components/BoardPanel.tsx:212"
+ },
+ "1pwg9od": {
+  "tr": "Alım fiyatı yükseltir: aynı yıl içinde geri alınan her %5, fiyatı yaklaşık %5 artırır.",
+  "at": "src/ui/components/BoardPanel.tsx:213"
+ },
+ "10ntbav": {
+  "tr": "Sıradaki dilim piyasa fiyatının {premium} üstünde.",
+  "at": "src/ui/components/BoardPanel.tsx:214"
  },
  "x43nck": {
   "tr": "Hisseler geri alındı",
-  "at": "src/ui/components/BoardPanel.tsx:182"
+  "at": "src/ui/components/BoardPanel.tsx:220"
  },
  "2d2byu": {
   "tr": "{share} geri al ({cash})",
-  "at": "src/ui/components/BoardPanel.tsx:184"
+  "at": "src/ui/components/BoardPanel.tsx:222"
  },
  "1x12n9w": {
   "tr": "Bütün hisseler geri alınsın mı?",
-  "at": "src/ui/components/BoardPanel.tsx:192"
+  "at": "src/ui/components/BoardPanel.tsx:230"
  },
  "ef42vk": {
   "tr": "Piyasadaki {share} {cash} karşılığında geri alınır. Rakibin bloğu satılık değil.",
-  "at": "src/ui/components/BoardPanel.tsx:194"
+  "at": "src/ui/components/BoardPanel.tsx:232"
  },
  "65kjrl": {
   "tr": "Piyasadaki {share} {cash} karşılığında geri alınır. Yönetim kurulu dağılır, şirket yeniden tamamen senin olur.",
-  "at": "src/ui/components/BoardPanel.tsx:195"
+  "at": "src/ui/components/BoardPanel.tsx:233"
  },
  "acv4yd": {
   "tr": "{cash} öde",
-  "at": "src/ui/components/BoardPanel.tsx:199"
+  "at": "src/ui/components/BoardPanel.tsx:237"
  },
  "5jz25j": {
   "tr": "Hepsini geri al ({cash})",
-  "at": "src/ui/components/BoardPanel.tsx:205"
+  "at": "src/ui/components/BoardPanel.tsx:243"
  },
  "yjw8mk": {
   "tr": "Yeni hisse satıldı",
-  "at": "src/ui/components/BoardPanel.tsx:207"
+  "at": "src/ui/components/BoardPanel.tsx:245"
  },
  "1m90q85": {
   "tr": "%5 yeni hisse sat (+{cash})",
-  "at": "src/ui/components/BoardPanel.tsx:208"
+  "at": "src/ui/components/BoardPanel.tsx:246"
  },
  "1mxgv1l": {
   "tr": "Yıl",
-  "at": "src/ui/components/BoardPanel.tsx:213"
+  "at": "src/ui/components/BoardPanel.tsx:251"
  },
  "xymkcy": {
   "tr": "Ciro",
-  "at": "src/ui/components/BoardPanel.tsx:213"
+  "at": "src/ui/components/BoardPanel.tsx:251"
  },
  "otzdz8": {
   "tr": "Temettü",
-  "at": "src/ui/components/BoardPanel.tsx:213"
+  "at": "src/ui/components/BoardPanel.tsx:251"
  },
  "xuewor": {
   "tr": "Güven",
-  "at": "src/ui/components/BoardPanel.tsx:213"
+  "at": "src/ui/components/BoardPanel.tsx:251"
+ },
+ "yhi2uz": {
+  "tr": "kâr {growth}",
+  "at": "src/ui/components/BoardPanel.tsx:263"
  },
  "15zdfro": {
   "tr": "{name}, {seg} sınıfında fiyatlarını %15 indirdi.",
-  "at": "src/ui/components/BoardPanel.tsx:241"
+  "at": "src/ui/components/BoardPanel.tsx:282"
  },
  "1xc4jre": {
   "tr": "{name}, {seg} sınıfının ilk {tech} arabasını çıkardı: {model}.",
-  "at": "src/ui/components/BoardPanel.tsx:244"
+  "at": "src/ui/components/BoardPanel.tsx:285"
  },
  "ntyt3x": {
   "tr": "{name}, {seg} sınıfına {model} ile saldırdı.",
-  "at": "src/ui/components/BoardPanel.tsx:246"
+  "at": "src/ui/components/BoardPanel.tsx:287"
  },
  "14086b3": {
   "tr": "{name}, {seg} sınıfına yeni bir model ile saldırdı.",
-  "at": "src/ui/components/BoardPanel.tsx:247"
+  "at": "src/ui/components/BoardPanel.tsx:288"
  },
  "196vkl1": {
   "tr": "{name}, {partner} şirketini yuttu.",
-  "at": "src/ui/components/BoardPanel.tsx:249"
+  "at": "src/ui/components/BoardPanel.tsx:290"
  },
  "1t2rdvs": {
   "tr": "{name}, bir rakibi şirketini yuttu.",
-  "at": "src/ui/components/BoardPanel.tsx:249"
+  "at": "src/ui/components/BoardPanel.tsx:290"
  },
  "agatag": {
   "tr": "{name} şirketimizden hisse almak istedi.",
-  "at": "src/ui/components/BoardPanel.tsx:251"
+  "at": "src/ui/components/BoardPanel.tsx:292"
  },
  "174haq8": {
   "tr": "{name} borsadan hissemizi topladı.",
-  "at": "src/ui/components/BoardPanel.tsx:253"
+  "at": "src/ui/components/BoardPanel.tsx:294"
  },
  "ua0esv": {
   "tr": "Rakip hamleleri",
-  "at": "src/ui/components/BoardPanel.tsx:270"
+  "at": "src/ui/components/BoardPanel.tsx:311"
  },
  "144ng7e": {
   "tr": "Büyük üreticiler küçük bir yeni markayı umursamaz. Ama bir sınıfta onlardan fazla alıcı çekmeye ya da ülkede en çok satan olmaya başladığında karşılık verirler.",
-  "at": "src/ui/components/BoardPanel.tsx:272"
+  "at": "src/ui/components/BoardPanel.tsx:313"
  },
  "1xfqlr2": {
   "tr": "Fiyat savaşı, sana karşı yapılmış yeni bir model, iki rakibin birleşmesi ve şirketinden hisse almaya kalkmak. En fazla yılda bir hamle gelir.",
-  "at": "src/ui/components/BoardPanel.tsx:273"
+  "at": "src/ui/components/BoardPanel.tsx:314"
  },
  "walfr7": {
   "tr": "Ulusal sıran geçen yıl: <b>{rank}.</b>",
-  "at": "src/ui/components/BoardPanel.tsx:279"
+  "at": "src/ui/components/BoardPanel.tsx:320"
  },
  "wcdm33": {
   "tr": "Ulusal sıran geçen yıl: <b>—</b>",
-  "at": "src/ui/components/BoardPanel.tsx:279"
+  "at": "src/ui/components/BoardPanel.tsx:320"
  },
  "1xp4o77": {
   "tr": "Önde olduğun sınıflar: <b>{segs}</b>. Rakipler bunu fark etti.",
-  "at": "src/ui/components/BoardPanel.tsx:283"
+  "at": "src/ui/components/BoardPanel.tsx:324"
  },
  "11ia3uk": {
   "tr": "Şu an hiçbir sınıfta önde değilsin, ama rakiplerin son hamleleri sürüyor.",
-  "at": "src/ui/components/BoardPanel.tsx:286"
+  "at": "src/ui/components/BoardPanel.tsx:327"
  },
  "rmfyux": {
   "tr": "Hiçbir sınıfta önde değilsin: büyük üreticiler seni henüz ciddiye almıyor.",
-  "at": "src/ui/components/BoardPanel.tsx:288"
+  "at": "src/ui/components/BoardPanel.tsx:329"
  },
  "c8icus": {
   "tr": "Süren fiyat savaşı: {wars}, bitişi {date}.",
-  "at": "src/ui/components/BoardPanel.tsx:293"
+  "at": "src/ui/components/BoardPanel.tsx:334"
  },
  "wjcx4o": {
   "tr": "Henüz bir karşılık gelmedi.",
-  "at": "src/ui/components/BoardPanel.tsx:308"
+  "at": "src/ui/components/BoardPanel.tsx:349"
  },
  "1f1jopf": {
   "tr": "Lansmana kadar ~{n} hafta · ihtiyaç ~{need}",

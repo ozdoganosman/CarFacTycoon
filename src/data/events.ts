@@ -3,7 +3,7 @@ import { segmentDef } from './segments';
 import { stateDef } from './states';
 import { log, money } from '../core/util';
 import { FIRSTS, acceptBid, canDilute, greenmailCost, lastMove, matchPriceWar, refuseBid, rivalMoves } from '../core/rivalMoves';
-import { dilute, grantSeat, greenmail, marketCap } from '../core/shares';
+import { ULTIMATUM_AT, VETO_AT, dilute, grantSeat, greenmail, marketCap } from '../core/shares';
 import { rivalDef } from '../core/rivals';
 import type { GameState } from '../core/types';
 import { isTurkish, lower, msg, t } from '../i18n';
@@ -314,7 +314,7 @@ const pctTxt = (v: number) => `${v >= 0 ? '+' : '−'}${isTurkish() ? `%${Math.a
 const targetsText = (s: GameState) => {
   const target = s.shares?.target;
   return target
-    ? t('{year} hedefleri: ciro {growth}, dış hissedarlara en az {dividend} temettü.', {
+    ? t('{year} hedefleri: ciro ya da kâr {growth}, dış hissedarlara en az {dividend} temettü.', {
         year: target.year,
         growth: pctTxt(target.growth),
         dividend: money(target.dividend),
@@ -485,11 +485,19 @@ export const DYNAMIC_EVENTS: GameEventDef[] = [
     month: 0,
     title: msg('Yönetim kurulu huzursuz'),
     icon: '🎩',
-    body: (s) =>
-      t(
-        'Yönetim kurulunun sana güveni {confidence}/100’e düştü. Hissedarlar büyüme ve temettü bekliyor; toplantıda sesler yükseldi.\n\n{targets}\n\nKurul artık yarış bütçesini, rakip satın almayı ve yeni hat kurmayı veto ediyor; güven 40’ın üstüne çıkınca kalkar. Temettü oranını Şirket ekranından ayarlayabilirsin. Güven 25’in altına inerse son uyarı gelir, sonra görevden alınırsın.',
-        { confidence: Math.round(s.shares?.confidence ?? 0), targets: targetsText(s) },
-      ),
+    // First a warning; the veto only after another bad year.
+    body: (s) => {
+      const p = { confidence: Math.round(s.shares?.confidence ?? 0), targets: targetsText(s), veto: VETO_AT, last: ULTIMATUM_AT };
+      return (s.shares?.confidence ?? 0) < VETO_AT
+        ? t(
+            'Yönetim kurulunun sana güveni {confidence}/100’e düştü. Hissedarlar büyüme ve temettü bekliyor; toplantıda sesler yükseldi.\n\n{targets}\n\nKurul artık yarış bütçesini, rakip satın almayı ve yeni hat kurmayı veto ediyor; güven {veto}’in üstüne çıkınca kalkar. Temettü oranını Şirket ekranından ayarlayabilirsin. Güven {last}’in altına inerse son uyarı gelir, sonra görevden alınırsın.',
+            p,
+          )
+        : t(
+            'Yönetim kurulunun sana güveni {confidence}/100’e düştü. Hissedarlar büyüme ve temettü bekliyor; toplantıda sesler yükseldi.\n\n{targets}\n\nBu bir uyarı: güven {veto}’in altına inerse kurul yarış bütçesini, rakip satın almayı ve yeni hat kurmayı veto eder. Temettü oranını Şirket ekranından ayarlayabilirsin. Güven {last}’in altına inerse son uyarı gelir, sonra görevden alınırsın.',
+            p,
+          );
+    },
   },
   {
     id: 'board-ultimatum',

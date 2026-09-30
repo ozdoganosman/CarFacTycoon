@@ -107,7 +107,8 @@ describe('the board and the rivals', () => {
     const floor = sh.basis! * Math.pow(1.06, 9) * 0.3;
     expect(buybackCost(s, 0.3)).toBeGreaterThanOrEqual(floor * 0.999);
     sh.ultimatum = true;
-    expect(buybackCost(s, 0.3)).toBeCloseTo(floor * 1.5, -2);
+    // Half as much again under the last warning; buying 30% at once pushes the price up along the way (+15% on average).
+    expect(buybackCost(s, 0.3)).toBeCloseTo(floor * 1.5 * 1.15, -2);
   });
 
   it('a workshop with a waiting list leads nothing: rivals answer cars delivered', () => {

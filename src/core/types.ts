@@ -486,7 +486,10 @@ export interface RivalMovesState {
 /** One year's report to the board. */
 export interface BoardYear {
   year: number;
+  /** Revenue growth over the year before. */
   growth: number;
+  /** Profit growth over the year before (none after a loss year): the board counts it too. */
+  profitGrowth?: number;
   targetGrowth: number;
   dividend: number;
   targetDividend: number;
@@ -518,6 +521,8 @@ export interface ShareState {
    */
   basis?: number;
   basisWeek?: number;
+  /** Shares bought back in `year` and what they cost: every slice pushes the price of the next one up. */
+  bought?: { year: number; pct: number; cash: number };
   /** A rival bought a block of shares: it wants a say. */
   raider?: { company: string; stake: number };
   /** A rival sits on the board: the targets are stricter. */
