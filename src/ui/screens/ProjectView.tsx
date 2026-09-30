@@ -279,7 +279,7 @@ function FaceliftGain({ p }: { p: Project }) {
             ? tx('Bu makyaj talebi yalnız <warn>~{pct}</warn> artırır ({now} → {after} araç/hf). Geliştirme odağını alıcıların önem verdiği özelliklere çevirirsen getirisi artar.', d)
             : tx('<bad>Bu makyaj talebi artırmıyor</bad> ({now} → {after} araç/hf). Geliştirme odağını alıcıların önem verdiği özelliklere çevir ya da yeni kuşak düşün.', d)}{' '}
         {o.appealAfter < o.appealNow &&
-          `${t('Makyaj, arabanın eski geliştirme ve test ayarlarının yerine geçer: test aşamasında dinamometre ve dayanıklılık haftaları planlamazsan eskisinin kazandırdığı güç, tüketim ve güvenilirlik ayarı kaybolur.')} `}
+          `${t('Makyaj arabanın geliştirme ve test ayarlarını korur; buna rağmen çekicilik düşüyorsa tasarımdaki değişiklikler arabayı bir yönden geriletiyor: tasarımı ve odağı gözden geçir.')} `}
         {t('Makyaj arabayı genç gösterir: bugün {now} yaşında görünüyor, makyajdan hemen sonra {after}. Satışa çıkması ~{n} hafta sürer; makyajsız o gün {later} yaşında görünecek.', {
           now: dec(o.ageNow, 1),
           after: dec(o.ageAfter, 1),

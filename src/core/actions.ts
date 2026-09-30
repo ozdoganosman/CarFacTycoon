@@ -190,6 +190,23 @@ export function startProject(s: GameState, o: StartProjectOptions): { ok: true; 
   return { ok: true, id };
 }
 
+/** The better of two sets of development gains, one by one (a facelift keeps what the car already had). */
+export function keepTuning(old: DevBonus, fresh: DevBonus): DevBonus {
+  return {
+    ...fresh,
+    powerMult: Math.max(old.powerMult, fresh.powerMult),
+    massMult: Math.min(old.massMult, fresh.massMult),
+    fuelMult: Math.min(old.fuelMult, fresh.fuelMult),
+    costMult: Math.min(old.costMult, fresh.costMult),
+    comfort: Math.max(old.comfort, fresh.comfort),
+    safety: Math.max(old.safety, fresh.safety),
+    reliability: Math.max(old.reliability, fresh.reliability),
+    handling: Math.max(old.handling ?? 0, fresh.handling ?? 0),
+    practicality: Math.max(old.practicality ?? 0, fresh.practicality ?? 0),
+    defectMult: Math.min(old.defectMult ?? 1, fresh.defectMult ?? 1),
+  };
+}
+
 /** Facelift: short project on an existing model (styling, trim, equipment, tuning). */
 export function startFacelift(s: GameState, modelId: string): { ok: true; id: string } | { ok: false; error: string } {
   const m = model(s, modelId);
@@ -489,9 +506,12 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
 
   if (p.kind === 'facelift' && p.replacesModelId) {
     const m = model(s, p.replacesModelId);
+    // The engineers do not forget the car's development and test tuning: each gain stays unless the
+    // facelift's own work does better (a facelift with few test weeks used to lose it all).
+    const kept = keepTuning(m.bonus ?? NO_BONUS, bonus);
     m.design = p.design;
-    m.bonus = bonus;
-    m.stats = stats;
+    m.bonus = kept;
+    m.stats = computeCarStats(p.design, yf, kept);
     m.price = o.price;
     m.priceWeek = s.week;
     m.markets = markets;
@@ -500,7 +520,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
     m.faceliftCount += 1;
     m.refreshWeek = s.week;
     m.cache = undefined;
-    m.perceivedReliability = Math.max(m.perceivedReliability, (m.perceivedReliability + stats.reliability) / 2);
+    m.perceivedReliability = Math.max(m.perceivedReliability, (m.perceivedReliability + m.stats.reliability) / 2);
     const reviews = writeReviews(s, m, rng);
     m.reviews = reviews;
     m.reviewScore = reviews.reduce((a, r) => a + r.score, 0) / reviews.length;
@@ -1238,7 +1258,8 @@ export function faceliftOutlook(s: GameState, p: Project): FaceliftOutlook | nul
   if (!m) return null;
   const yf = yearFloat(s.week);
   const planned = Object.fromEntries(TESTS.map((x) => [x.id, { done: Math.max(p.tests[x.id].done, p.tests[x.id].planned) }])) as Record<TestId, { done: number }>;
-  const bonus = withTuning(p.devBonus ?? projectedBonus(s, p), planned);
+  // As at launch: the facelift keeps the car's own tuning wherever its work does no better.
+  const bonus = keepTuning(m.bonus ?? NO_BONUS, withTuning(p.devBonus ?? projectedBonus(s, p), planned));
   const stats = computeCarStats(p.design, yf, bonus);
   const now: CarModel = { ...m, hype: 0 };
   const after: CarModel = {
