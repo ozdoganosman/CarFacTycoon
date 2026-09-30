@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as A from '../../core/actions';
-import { AUTO_HOLD_TEXT } from '../../core/autocap';
+import { autoHoldText } from '../../core/autocap';
 import { materialUnitCost } from '../../core/game';
 import { lineReport } from '../../core/factory';
 import { CLASS_GAP_WARN, classGap, demandAtPrice, modelScores, priceNow, referencePrice, segmentMarket } from '../../core/market';
@@ -138,7 +138,7 @@ export function ModelView({ modelId }: { modelId: string }) {
                     {m.autoCapacity && m.autoHold && (
                       <span className="tone-warn">
                         {' '}
-                        {t('Alıcılar bekliyor ama büyütmüyor: {reason}.', { reason: t(AUTO_HOLD_TEXT[m.autoHold]) })}
+                        {t('Alıcılar bekliyor ama büyütmüyor: {reason}.', { reason: autoHoldText(m) })}
                         {m.autoHint && <b>{' '}{t('Çıkış yolu: {hint}.', { hint: m.autoHint })}</b>}
                       </span>
                     )}

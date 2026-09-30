@@ -46,16 +46,20 @@ function classStanding(s: GameState, seg: SegmentId): { mine: number; share: num
   return { mine, share: mine / sm.demand, rivals };
 }
 
+/**
+ * Do we lead this class: selling more cars than any single rival maker, and at least an eighth of the
+ * class? The one test for "leader" everywhere (the Company screen, a car's first-month report, the
+ * rivals' reactions).
+ */
+export function leadsClass(s: GameState, seg: SegmentId): boolean {
+  const st = classStanding(s, seg);
+  if (!st || st.mine <= 0) return false;
+  return st.share >= 0.12 && st.mine > Math.max(0, ...st.rivals.values());
+}
+
 /** Classes where we sell more cars than any single rival maker (and at least an eighth of the class). */
 export function ledSegments(s: GameState): SegmentId[] {
-  const out: SegmentId[] = [];
-  for (const seg of SEGMENT_IDS) {
-    const st = classStanding(s, seg);
-    if (!st || st.mine <= 0) continue;
-    const best = Math.max(0, ...st.rivals.values());
-    if (st.share >= 0.12 && st.mine > best) out.push(seg);
-  }
-  return out;
+  return SEGMENT_IDS.filter((seg) => leadsClass(s, seg));
 }
 
 /** Last year's American makers by cars sold, and where we stand among them (1 = the biggest). */

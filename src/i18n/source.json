@@ -413,87 +413,123 @@
  },
  "ole1q2": {
   "tr": "siyah boyalı bir hat ~{n} ayda kendini öder (araba yalnız siyah olur, prestij −5); Fabrika’daki planlayıcıdan kurulabilir",
-  "at": "src/core/autocap.ts:112"
+  "at": "src/core/autocap.ts:157"
  },
  "5uytk8": {
   "tr": "alıcılar üretimin {times} katını istiyor: fiyatı ~{rise} artırırsan sıradaki büyütme kendini öder (lansmandan sonraki üç yılda büyük zam dergileri kızdırır; makyajla birlikte yapmak daha güvenli)",
-  "at": "src/core/autocap.ts:125"
+  "at": "src/core/autocap.ts:170"
  },
  "1rkoq8x": {
   "tr": "alıcılar üretimin {times} katını istiyor: fiyatı ~{rise} artırırsan sıradaki büyütme kendini öder",
-  "at": "src/core/autocap.ts:126"
+  "at": "src/core/autocap.ts:171"
  },
  "1pe90pc": {
   "tr": "{a}; ya da {b}",
-  "at": "src/core/autocap.ts:130"
+  "at": "src/core/autocap.ts:175"
  },
  "tsc3f5": {
   "tr": "savaş sürerken fabrika büyütülmüyor",
-  "at": "src/core/autocap.ts:136"
+  "at": "src/core/autocap.ts:184"
  },
  "1i43374": {
   "tr": "yeni bir hatta bile araç başına kâr %8’in altında kalıyor: büyümek zararı büyütür, önce fiyatı ya da maliyeti düzelt",
-  "at": "src/core/autocap.ts:137"
+  "at": "src/core/autocap.ts:185"
  },
  "dyrsdp": {
   "tr": "kasa yetmiyor",
-  "at": "src/core/autocap.ts:138"
+  "at": "src/core/autocap.ts:186"
  },
- "x4mms0": {
-  "tr": "sıradaki büyütme bu fiyatla iki yılda kendini ödemiyor",
-  "at": "src/core/autocap.ts:139"
+ "1ymkj1p": {
+  "tr": "sıradaki büyütme kalıcı talep açığıyla iki yılda kendini ödemiyor",
+  "at": "src/core/autocap.ts:187"
  },
  "1c8z6lh": {
   "tr": "yeni kuşağı yolda: eskiyen arabaya fabrika kurulmuyor",
-  "at": "src/core/autocap.ts:140"
+  "at": "src/core/autocap.ts:188"
  },
  "roxm5u": {
   "tr": "hatlar dolu ve talep açığı yeni bir hat için küçük",
-  "at": "src/core/autocap.ts:141"
+  "at": "src/core/autocap.ts:189"
  },
  "6ntr5j": {
   "tr": "{n} siyah boya fırını",
-  "at": "src/core/autocap.ts:146"
+  "at": "src/core/autocap.ts:199"
  },
  "usnfdj": {
   "tr": "{n} istasyon",
-  "at": "src/core/autocap.ts:147"
+  "at": "src/core/autocap.ts:200"
  },
  "1j43kp0": {
   "tr": "{n} makine yenileme",
-  "at": "src/core/autocap.ts:148"
+  "at": "src/core/autocap.ts:201"
  },
  "14oxalk": {
   "tr": "{n} genişletme",
-  "at": "src/core/autocap.ts:149"
+  "at": "src/core/autocap.ts:202"
  },
  "18vwciw": {
   "tr": "{n} hat yenileme",
-  "at": "src/core/autocap.ts:150"
+  "at": "src/core/autocap.ts:203"
  },
  "1md14eb": {
   "tr": "{n} yeni hat",
-  "at": "src/core/autocap.ts:151"
+  "at": "src/core/autocap.ts:204"
  },
- "lltxcc": {
-  "tr": "sıradaki büyütme ~{cost} tutuyor ve ~{n} ayda kendini öder; kasada ayrılabilen {spare} (birkaç haftalık gider ve vergi yedekte). Banka kredisi alırsan ya da kasa birikince otomatik kapasite büyütür",
-  "at": "src/core/autocap.ts:329"
+ "ll2hnq": {
+  "tr": "{line} hattına {what}",
+  "at": "src/core/autocap.ts:251"
  },
- "1vzx854": {
-  "tr": "sıradaki büyütme ~{cost} tutuyor ve ~{years} yılda kendini öder; kasada ayrılabilen {spare} (birkaç haftalık gider ve vergi yedekte). Banka kredisi alırsan ya da kasa birikince otomatik kapasite büyütür",
-  "at": "src/core/autocap.ts:334"
+ "1bzw63e": {
+  "tr": "{n} yerli siyah vernikli yeni hat",
+  "at": "src/core/autocap.ts:282"
  },
- "1040d4g": {
-  "tr": "Otomatik kapasite: {name} için {what} ({cost}). Kapasite {cap} araç/hf, talep {demand}.",
-  "at": "src/core/autocap.ts:360"
+ "1jj42xe": {
+  "tr": "{n} yerli yeni hat",
+  "at": "src/core/autocap.ts:282"
+ },
+ "movklg": {
+  "tr": "{line} hattını {n} yerle yenilemek",
+  "at": "src/core/autocap.ts:304"
+ },
+ "u29k5l": {
+  "tr": "en iyi seçenek {what} ({cost}, +{gain} araç/hf): ürettiği her araç satılsa {all} kendini öderdi, ama kalıcı talep üretimi (inşaattaki hatlar dahil) yalnız ~{gap} araç/hf aşıyor; bu kadar satışla {time} öder, otomatik kapasite en çok iki yıl bekler",
+  "at": "src/core/autocap.ts:347"
+ },
+ "121uys3": {
+  "tr": "en iyi seçenek {what} ({cost}, +{gain} araç/hf) bu fiyatla {time} kendini öder; otomatik kapasite en çok iki yıl bekler",
+  "at": "src/core/autocap.ts:351"
+ },
+ "1a7id9c": {
+  "tr": "on yıldan uzun sürede",
+  "at": "src/core/autocap.ts:356"
+ },
+ "cmli6o": {
+  "tr": "~{n} ayda",
+  "at": "src/core/autocap.ts:356"
+ },
+ "dw16o1": {
+  "tr": "yeni bir hat ({what}, {cost}) +{gain} araç/hf yapar ama kalıcı talep üretimi (inşaattaki hatlar dahil) yalnız ~{gap} araç/hf aşıyor: hat çoğu zaman boş kalırdı",
+  "at": "src/core/autocap.ts:412"
+ },
+ "ixdmyb": {
+  "tr": "sıradaki büyütme ({what}) ~{cost} tutuyor ve ~{n} ayda kendini öder; kasada ayrılabilen {spare} (birkaç haftalık gider ve vergi yedekte). Banka kredisi alırsan ya da kasa birikince otomatik kapasite büyütür",
+  "at": "src/core/autocap.ts:431"
+ },
+ "h0p3qx": {
+  "tr": "sıradaki büyütme ({what}) ~{cost} tutuyor ve ~{years} yılda kendini öder; kasada ayrılabilen {spare} (birkaç haftalık gider ve vergi yedekte). Banka kredisi alırsan ya da kasa birikince otomatik kapasite büyütür",
+  "at": "src/core/autocap.ts:437"
+ },
+ "lmaoib": {
+  "tr": "Otomatik kapasite: {name} için {what} ({cost}; ~{n} ayda kendini öder). Kapasite {cap} araç/hf, talep {demand}.",
+  "at": "src/core/autocap.ts:464"
  },
  "141oegv": {
   "tr": "Otomatik kapasite: {name} için talep düştü; {line} hattındaki fazla makineler satıldı ({refund}).",
-  "at": "src/core/autocap.ts:379"
+  "at": "src/core/autocap.ts:492"
  },
  "i3qpio": {
   "tr": "Otomatik kapasite: {name} için talep düştü; {n} hat kapatıldı, makineler satıldı ({refund}).",
-  "at": "src/core/autocap.ts:401"
+  "at": "src/core/autocap.ts:514"
  },
  "33n14i": {
   "tr": "Performans",
@@ -829,383 +865,383 @@
  },
  "14g9hqu": {
   "tr": "Hızlanması nefes kesici.",
-  "at": "src/core/feedback.ts:15"
+  "at": "src/core/feedback.ts:16"
  },
  "puvhh8": {
   "tr": "Gaza basınca koltuğa yapıştırıyor.",
-  "at": "src/core/feedback.ts:15"
+  "at": "src/core/feedback.ts:16"
  },
  "bll6k3": {
   "tr": "Kavşakta ilk kalkan hep o.",
-  "at": "src/core/feedback.ts:15"
+  "at": "src/core/feedback.ts:16"
  },
  "1sbx7po": {
   "tr": "Motoru istekli; aracı çekmekte hiç zorlanmıyor.",
-  "at": "src/core/feedback.ts:15"
+  "at": "src/core/feedback.ts:16"
  },
  "d4axoy": {
   "tr": "Düz yolda rakiplerini toz duman içinde bırakıyor.",
-  "at": "src/core/feedback.ts:16"
+  "at": "src/core/feedback.ts:17"
  },
  "10vk5y7": {
   "tr": "Son hızı sınıfının çok üstünde.",
-  "at": "src/core/feedback.ts:16"
+  "at": "src/core/feedback.ts:17"
  },
  "1lojs0b": {
   "tr": "Açık yolda ibre durmak bilmiyor.",
-  "at": "src/core/feedback.ts:16"
+  "at": "src/core/feedback.ts:17"
  },
  "zdne63": {
   "tr": "Uzun düzlüklerde tam bir rekor avcısı.",
-  "at": "src/core/feedback.ts:16"
+  "at": "src/core/feedback.ts:17"
  },
  "1r92nk2": {
   "tr": "Deposu bitmek bilmiyor.",
-  "at": "src/core/feedback.ts:17"
+  "at": "src/core/feedback.ts:18"
  },
  "xgjoxx": {
   "tr": "Benzin parası cebinizde kalıyor.",
-  "at": "src/core/feedback.ts:17"
+  "at": "src/core/feedback.ts:18"
  },
  "14q44d4": {
   "tr": "Tüketimi şaşırtıcı derecede düşük.",
-  "at": "src/core/feedback.ts:17"
+  "at": "src/core/feedback.ts:18"
  },
  "1ry353b": {
   "tr": "Az yakıtla çok yol gidiyor.",
-  "at": "src/core/feedback.ts:17"
+  "at": "src/core/feedback.ts:18"
  },
  "6ce3of": {
   "tr": "Kötü yolda bile salon gibi.",
-  "at": "src/core/feedback.ts:18"
+  "at": "src/core/feedback.ts:19"
  },
  "5cxxie": {
   "tr": "Uzun yolculuklar yorgunluk yapmıyor.",
-  "at": "src/core/feedback.ts:18"
+  "at": "src/core/feedback.ts:19"
  },
  "v5mcq": {
   "tr": "Koltukları ve süspansiyonu yolu yumuşatıyor.",
-  "at": "src/core/feedback.ts:18"
+  "at": "src/core/feedback.ts:19"
  },
  "12dnwao": {
   "tr": "Kabin sessiz ve rahat.",
-  "at": "src/core/feedback.ts:18"
+  "at": "src/core/feedback.ts:19"
  },
  "1fovck9": {
   "tr": "Virajlara ray üstündeymiş gibi giriyor.",
-  "at": "src/core/feedback.ts:19"
+  "at": "src/core/feedback.ts:20"
  },
  "11vbp2t": {
   "tr": "Direksiyonu hassas ve güven verici.",
-  "at": "src/core/feedback.ts:19"
+  "at": "src/core/feedback.ts:20"
  },
  "1vohvq6": {
   "tr": "Dönemecin ortasında bile dengesini bozmuyor.",
-  "at": "src/core/feedback.ts:19"
+  "at": "src/core/feedback.ts:20"
  },
  "1euw6hg": {
   "tr": "Kullanması keyif veriyor.",
-  "at": "src/core/feedback.ts:19"
+  "at": "src/core/feedback.ts:20"
  },
  "127haaw": {
   "tr": "Sağlam yapısı içinizi rahatlatıyor.",
-  "at": "src/core/feedback.ts:20"
+  "at": "src/core/feedback.ts:21"
  },
  "198jrkx": {
   "tr": "Frenleri sınıfının en iyisi.",
-  "at": "src/core/feedback.ts:20"
+  "at": "src/core/feedback.ts:21"
  },
  "1mqtts0": {
   "tr": "Ailenizi gönül rahatlığıyla bindirebilirsiniz.",
-  "at": "src/core/feedback.ts:20"
+  "at": "src/core/feedback.ts:21"
  },
  "1kggvfh": {
   "tr": "Kaza anında sizi koruyacak bir gövde.",
-  "at": "src/core/feedback.ts:20"
+  "at": "src/core/feedback.ts:21"
  },
  "1tmcfd7": {
   "tr": "Yol kenarında kalmayı unutun.",
-  "at": "src/core/feedback.ts:21"
+  "at": "src/core/feedback.ts:22"
  },
  "io3gfb": {
   "tr": "Bozulmuyor; tamirciye yolunuz düşmüyor.",
-  "at": "src/core/feedback.ts:21"
+  "at": "src/core/feedback.ts:22"
  },
  "xjhdi4": {
   "tr": "Test boyunca tek bir arıza vermedi.",
-  "at": "src/core/feedback.ts:21"
+  "at": "src/core/feedback.ts:22"
  },
  "1twmxck": {
   "tr": "Saat gibi çalışıyor.",
-  "at": "src/core/feedback.ts:21"
+  "at": "src/core/feedback.ts:22"
  },
  "1srny13": {
   "tr": "Kapısının önüne park edene itibar kazandırıyor.",
-  "at": "src/core/feedback.ts:22"
+  "at": "src/core/feedback.ts:23"
  },
  "xdknyp": {
   "tr": "Çizgileri başları çevirtiyor.",
-  "at": "src/core/feedback.ts:22"
+  "at": "src/core/feedback.ts:23"
  },
  "14akbwx": {
   "tr": "Kulüp önünde en çok konuşulan araç.",
-  "at": "src/core/feedback.ts:22"
+  "at": "src/core/feedback.ts:23"
  },
  "81ros1": {
   "tr": "İşçiliği ve detayları göz dolduruyor.",
-  "at": "src/core/feedback.ts:22"
+  "at": "src/core/feedback.ts:23"
  },
  "rjm7b2": {
   "tr": "İçine her şey sığıyor.",
-  "at": "src/core/feedback.ts:23"
+  "at": "src/core/feedback.ts:24"
  },
  "15zjwv6": {
   "tr": "Günlük kullanımda son derece pratik.",
-  "at": "src/core/feedback.ts:23"
+  "at": "src/core/feedback.ts:24"
  },
  "1ada8rm": {
   "tr": "Bagajı ve kabini geniş.",
-  "at": "src/core/feedback.ts:23"
+  "at": "src/core/feedback.ts:24"
  },
  "nvoudm": {
   "tr": "Her işe koşturulabilecek bir araç.",
-  "at": "src/core/feedback.ts:23"
+  "at": "src/core/feedback.ts:24"
  },
  "1xi4nwm": {
   "tr": "Yokuşta yayadan hallice.",
-  "at": "src/core/feedback.ts:27"
+  "at": "src/core/feedback.ts:28"
  },
  "17uk8sj": {
   "tr": "Hızlanması sabır istiyor.",
-  "at": "src/core/feedback.ts:27"
+  "at": "src/core/feedback.ts:28"
  },
  "1h46ton": {
   "tr": "Motoru aracı taşımakta zorlanıyor.",
-  "at": "src/core/feedback.ts:27"
+  "at": "src/core/feedback.ts:28"
  },
  "1q64wrb": {
   "tr": "Kalkışta at arabasına bile yetişemiyor.",
-  "at": "src/core/feedback.ts:27"
+  "at": "src/core/feedback.ts:28"
  },
  "csme64": {
   "tr": "Düz yolda bile herkes sizi solluyor.",
-  "at": "src/core/feedback.ts:28"
+  "at": "src/core/feedback.ts:29"
  },
  "nefnjd": {
   "tr": "Son hızı hayal kırıklığı.",
-  "at": "src/core/feedback.ts:28"
+  "at": "src/core/feedback.ts:29"
  },
  "56tqhr": {
   "tr": "Yolda en yavaş araç o.",
-  "at": "src/core/feedback.ts:28"
+  "at": "src/core/feedback.ts:29"
  },
  "xz56ov": {
   "tr": "Açık yolda nefesi çabuk kesiliyor.",
-  "at": "src/core/feedback.ts:28"
+  "at": "src/core/feedback.ts:29"
  },
  "9posf6": {
   "tr": "Benzin istasyonlarının en iyi müşterisi.",
-  "at": "src/core/feedback.ts:29"
+  "at": "src/core/feedback.ts:30"
  },
  "ts1t90": {
   "tr": "Yakıt faturası can yakıyor.",
-  "at": "src/core/feedback.ts:29"
+  "at": "src/core/feedback.ts:30"
  },
  "fcrasp": {
   "tr": "Deposu göz açıp kapayıncaya kadar boşalıyor.",
-  "at": "src/core/feedback.ts:29"
+  "at": "src/core/feedback.ts:30"
  },
  "29upl5": {
   "tr": "Tüketimi sınıfı için fazla.",
-  "at": "src/core/feedback.ts:29"
+  "at": "src/core/feedback.ts:30"
  },
  "1gwrkdq": {
   "tr": "Her tümseği omurganızda hissediyorsunuz.",
-  "at": "src/core/feedback.ts:30"
+  "at": "src/core/feedback.ts:31"
  },
  "1l39hdh": {
   "tr": "Uzun yolda işkenceye dönüşüyor.",
-  "at": "src/core/feedback.ts:30"
+  "at": "src/core/feedback.ts:31"
  },
  "2olkn8": {
   "tr": "Kabin gürültülü ve sarsıntılı.",
-  "at": "src/core/feedback.ts:30"
+  "at": "src/core/feedback.ts:31"
  },
  "17e6j91": {
   "tr": "Koltukları tahta sıra gibi.",
-  "at": "src/core/feedback.ts:30"
+  "at": "src/core/feedback.ts:31"
  },
  "orrl3m": {
   "tr": "Virajlarda gemi gibi yalpalıyor.",
-  "at": "src/core/feedback.ts:31"
+  "at": "src/core/feedback.ts:32"
  },
  "1e3hm5w": {
   "tr": "Direksiyon tepkisiz ve belirsiz.",
-  "at": "src/core/feedback.ts:31"
+  "at": "src/core/feedback.ts:32"
  },
  "6bjzxv": {
   "tr": "Dönemeçlerde ürkütücü.",
-  "at": "src/core/feedback.ts:31"
+  "at": "src/core/feedback.ts:32"
  },
  "sa8uz8": {
   "tr": "Frene basınca bir yana çekiyor.",
-  "at": "src/core/feedback.ts:31"
+  "at": "src/core/feedback.ts:32"
  },
  "1ld8n1z": {
   "tr": "Kaza anında sizi koruyacağından emin değiliz.",
-  "at": "src/core/feedback.ts:32"
+  "at": "src/core/feedback.ts:33"
  },
  "1r55spr": {
   "tr": "Frenleri güven vermiyor.",
-  "at": "src/core/feedback.ts:32"
+  "at": "src/core/feedback.ts:33"
  },
  "1gs5p1p": {
   "tr": "Gövdesi fazla narin.",
-  "at": "src/core/feedback.ts:32"
+  "at": "src/core/feedback.ts:33"
  },
  "s4gne8": {
   "tr": "Güvenlik konusunda sınıfının gerisinde.",
-  "at": "src/core/feedback.ts:32"
+  "at": "src/core/feedback.ts:33"
  },
  "1vsf2dw": {
   "tr": "Arıza lambası yoksa bile tamirci sizi tanıyor.",
-  "at": "src/core/feedback.ts:33"
+  "at": "src/core/feedback.ts:34"
  },
  "sex3xs": {
   "tr": "Sık sık yolda bırakıyor.",
-  "at": "src/core/feedback.ts:33"
+  "at": "src/core/feedback.ts:34"
  },
  "1wf15iu": {
   "tr": "Test aracımız iki kez çekiciyle döndü.",
-  "at": "src/core/feedback.ts:33"
+  "at": "src/core/feedback.ts:34"
  },
  "ep2oq7": {
   "tr": "Parçaları dayanıksız.",
-  "at": "src/core/feedback.ts:33"
+  "at": "src/core/feedback.ts:34"
  },
  "qe1oem": {
   "tr": "Sıradan, kimse dönüp bakmıyor.",
-  "at": "src/core/feedback.ts:34"
+  "at": "src/core/feedback.ts:35"
  },
  "1iiwawe": {
   "tr": "Tasarımı sönük ve ucuz görünüyor.",
-  "at": "src/core/feedback.ts:34"
+  "at": "src/core/feedback.ts:35"
  },
  "11vhuk3": {
   "tr": "İşçiliği fiyatını hak etmiyor.",
-  "at": "src/core/feedback.ts:34"
+  "at": "src/core/feedback.ts:35"
  },
  "1ppakka": {
   "tr": "Kalabalıkta kaybolup gidiyor.",
-  "at": "src/core/feedback.ts:34"
+  "at": "src/core/feedback.ts:35"
  },
  "5ttin1": {
   "tr": "Bagajına bir şapka kutusu zor sığar.",
-  "at": "src/core/feedback.ts:35"
+  "at": "src/core/feedback.ts:36"
  },
  "14ibbc5": {
   "tr": "Günlük hayatta pratik değil.",
-  "at": "src/core/feedback.ts:35"
+  "at": "src/core/feedback.ts:36"
  },
  "1v2o7ho": {
   "tr": "Kabin dar, binip inmek zor.",
-  "at": "src/core/feedback.ts:35"
+  "at": "src/core/feedback.ts:36"
  },
  "agdui3": {
   "tr": "Ailece kullanmak neredeyse imkânsız.",
-  "at": "src/core/feedback.ts:35"
+  "at": "src/core/feedback.ts:36"
  },
  "jg3b3f": {
   "tr": "Motor Postası",
-  "at": "src/core/feedback.ts:40"
+  "at": "src/core/feedback.ts:41"
  },
  "b6we5i": {
   "tr": "Yol & Hız",
-  "at": "src/core/feedback.ts:41"
+  "at": "src/core/feedback.ts:42"
  },
  "1e98ff4": {
   "tr": "Otomobil Gazetesi",
-  "at": "src/core/feedback.ts:42"
+  "at": "src/core/feedback.ts:43"
  },
  "6e3vs3": {
   "tr": "Ama {text}",
-  "at": "src/core/feedback.ts:112"
+  "at": "src/core/feedback.ts:113"
  },
  "1w953d3": {
   "tr": "Kardeş modellerinden ayırt etmek zor: hepsi aynı araba!",
-  "at": "src/core/feedback.ts:115"
+  "at": "src/core/feedback.ts:116"
  },
  "115j275": {
   "tr": "Fiyatı fazla iddialı.",
-  "at": "src/core/feedback.ts:116"
+  "at": "src/core/feedback.ts:117"
  },
  "rzkm6t": {
   "tr": "Bu paraya kaçırılmaz.",
-  "at": "src/core/feedback.ts:117"
+  "at": "src/core/feedback.ts:118"
  },
  "1qoo0ms": {
   "tr": "Sınıfının ortalamasında, sağlam ama sıradan bir araç.",
-  "at": "src/core/feedback.ts:118"
+  "at": "src/core/feedback.ts:119"
  },
  "10jfuc7": {
   "tr": "{buyers} {model} modelinin {attr} konusundan çok memnun.",
-  "at": "src/core/feedback.ts:157"
+  "at": "src/core/feedback.ts:158"
  },
  "79f7vl": {
   "tr": "{buyers} {model} modelinin {attr} konusundan şikâyetçi.",
-  "at": "src/core/feedback.ts:158"
+  "at": "src/core/feedback.ts:159"
  },
  "svyvug": {
   "tr": "{buyers} {model} modelinin {attr} konusunu “idare eder” buluyor; bu onlar için önemli.",
-  "at": "src/core/feedback.ts:159"
+  "at": "src/core/feedback.ts:160"
  },
  "ct66j6": {
   "tr": "{buyers} {model} modelini pahalı buluyor.",
-  "at": "src/core/feedback.ts:164"
+  "at": "src/core/feedback.ts:165"
  },
  "14ry1ch": {
   "tr": "{buyers} {model} modelinin fiyatını çok uygun buluyor.",
-  "at": "src/core/feedback.ts:165"
+  "at": "src/core/feedback.ts:166"
  },
  "1awazu2": {
   "tr": "{buyers} {model} modelini artık eski moda buluyor; yeni modellere yöneliyorlar.",
-  "at": "src/core/feedback.ts:166"
+  "at": "src/core/feedback.ts:167"
  },
  "1hs03v0": {
   "tr": "{model} yaşlanıyor: rakiplerin yeni modelleri alıcıların ilgisini çekiyor.",
-  "at": "src/core/feedback.ts:167"
+  "at": "src/core/feedback.ts:168"
  },
  "bhkdy5": {
   "tr": "Araba şu an üretilmiyor: hattı yok, hat başka işte ya da üretim hızı sıfır. Fabrika ekranından bir hat ata; aksi halde bayilere araba gitmez.",
-  "at": "src/core/feedback.ts:198"
+  "at": "src/core/feedback.ts:200"
  },
  "1ubymwl": {
   "tr": "Talep üretimi aşıyor: bayilerde kuyruk var. Fiyatı artırabilir ya da fabrikaya hat ekleyebilirsin.",
-  "at": "src/core/feedback.ts:199"
+  "at": "src/core/feedback.ts:201"
  },
  "10rvxzr": {
   "tr": "Stok birikiyor: fiyatı düşür ya da üretim hızını kıs.",
-  "at": "src/core/feedback.ts:200"
+  "at": "src/core/feedback.ts:202"
  },
  "e5k06r": {
   "tr": "Alıcılar aracı pahalı buluyor.",
-  "at": "src/core/feedback.ts:201"
+  "at": "src/core/feedback.ts:203"
  },
  "1b3nik9": {
   "tr": "Fiyatın rakiplerin çok altında: daha pahalıya da satabilirsin.",
-  "at": "src/core/feedback.ts:202"
+  "at": "src/core/feedback.ts:204"
  },
  "1tiw9jc": {
   "tr": "Bir sonraki makyajda ya da yeni kuşakta {attrs} konusuna eğil.",
-  "at": "src/core/feedback.ts:204"
+  "at": "src/core/feedback.ts:206"
  },
  "1rn3u7e": {
   "tr": "Arabaların yalnızca {n} eyalette satılıyor: alıcıların çoğu onu hiç görmüyor. Harita ekranından komşu eyaletlerde bayi ara.",
-  "at": "src/core/feedback.ts:206"
+  "at": "src/core/feedback.ts:208"
  },
  "1tl7wxo": {
   "tr": "Servis yetersiz: {states} eyaletlerinde sahipler tamir için bekliyor. Haritadan servis aç.",
-  "at": "src/core/feedback.ts:209"
+  "at": "src/core/feedback.ts:211"
  },
  "bbl0o9": {
   "tr": "{name} kuruldu. Bol şans!",
@@ -2021,59 +2057,59 @@
  },
  "kl1ew8": {
   "tr": "{company}, {segment} sınıfında fiyatlarını {pct} indirdi: fiyat savaşı başladı.",
-  "at": "src/core/rivalMoves.ts:115"
+  "at": "src/core/rivalMoves.ts:119"
  },
  "7x5zni": {
   "tr": "{company}, {segment} sınıfının ilk {first} arabasını çıkardı: {model}.",
-  "at": "src/core/rivalMoves.ts:154"
+  "at": "src/core/rivalMoves.ts:158"
  },
  "fxbhhc": {
   "tr": "{company}, {segment} sınıfındaki üstünlüğümüze karşı {model} modelini çıkardı: mühendislerinin en iddialı işi.",
-  "at": "src/core/rivalMoves.ts:155"
+  "at": "src/core/rivalMoves.ts:159"
  },
  "42i7lz": {
   "tr": "otomatik şanzımanlı",
-  "at": "src/core/rivalMoves.ts:166"
+  "at": "src/core/rivalMoves.ts:170"
  },
  "1tdbp2p": {
   "tr": "bağımsız ön süspansiyonlu",
-  "at": "src/core/rivalMoves.ts:175"
+  "at": "src/core/rivalMoves.ts:179"
  },
  "bve4w3": {
   "tr": "senkromeçli vitesli",
-  "at": "src/core/rivalMoves.ts:183"
+  "at": "src/core/rivalMoves.ts:187"
  },
  "kcbtfi": {
   "tr": "{buyer}, {bought} şirketini satın aldı: {bought} bayileri artık {buyer} arabaları satıyor.",
-  "at": "src/core/rivalMoves.ts:223"
+  "at": "src/core/rivalMoves.ts:227"
  },
  "15nu11s": {
   "tr": "{company}, borsadan sessizce şirketimizin {pct}’ini topladı.",
-  "at": "src/core/rivalMoves.ts:238"
+  "at": "src/core/rivalMoves.ts:242"
  },
  "1xanjl4": {
   "tr": "{company} şirketin {pct}’ini {price} karşılığında aldı ve yönetim kurulunda koltuk kazandı.",
-  "at": "src/core/rivalMoves.ts:272"
+  "at": "src/core/rivalMoves.ts:276"
  },
  "cehgbr": {
   "tr": "Fiyat savaşı",
-  "at": "src/core/rivalMoves.ts:369"
+  "at": "src/core/rivalMoves.ts:373"
  },
  "ankbio": {
   "tr": "Teknoloji atağı",
-  "at": "src/core/rivalMoves.ts:370"
+  "at": "src/core/rivalMoves.ts:374"
  },
  "1igpdy4": {
   "tr": "Birleşme",
-  "at": "src/core/rivalMoves.ts:371"
+  "at": "src/core/rivalMoves.ts:375"
  },
  "13dtk71": {
   "tr": "Hisse teklifi",
-  "at": "src/core/rivalMoves.ts:372"
+  "at": "src/core/rivalMoves.ts:376"
  },
  "ng7zfg": {
   "tr": "Hisse baskını",
-  "at": "src/core/rivalMoves.ts:373"
+  "at": "src/core/rivalMoves.ts:377"
  },
  "1o9wq6m": {
   "tr": "{company} kapılarını kapattı. Pazarında boşluk oluştu.",
@@ -2333,207 +2369,207 @@
  },
  "1k1z0bs": {
   "tr": "Rölanti düzensiz",
-  "at": "src/core/testing.ts:249"
+  "at": "src/core/testing.ts:275"
  },
  "151889m": {
   "tr": "Yağ keçesi sızdırıyor",
-  "at": "src/core/testing.ts:249"
+  "at": "src/core/testing.ts:275"
  },
  "gevj22": {
   "tr": "Karbüratör ayarı kayıyor",
-  "at": "src/core/testing.ts:249"
+  "at": "src/core/testing.ts:275"
  },
  "1xmvjv7": {
   "tr": "Egzoz manifoldu çatırdıyor",
-  "at": "src/core/testing.ts:249"
+  "at": "src/core/testing.ts:275"
  },
  "fb2feh": {
   "tr": "Silindir kapağı contası üflüyor",
-  "at": "src/core/testing.ts:250"
+  "at": "src/core/testing.ts:276"
  },
  "1u4p6hd": {
   "tr": "Supaplar erken yanıyor",
-  "at": "src/core/testing.ts:250"
+  "at": "src/core/testing.ts:276"
  },
  "59o6x2": {
   "tr": "Motor tırmanışta aşırı ısınıyor",
-  "at": "src/core/testing.ts:250"
+  "at": "src/core/testing.ts:276"
  },
  "lf0kag": {
   "tr": "Su pompası sızdırıyor",
-  "at": "src/core/testing.ts:250"
+  "at": "src/core/testing.ts:276"
  },
  "zcfmeq": {
   "tr": "Krank mili yatağı eriyor",
-  "at": "src/core/testing.ts:251"
+  "at": "src/core/testing.ts:277"
  },
  "1apyj9z": {
   "tr": "Biyel kolu kırılıyor",
-  "at": "src/core/testing.ts:251"
+  "at": "src/core/testing.ts:277"
  },
  "17v9kfo": {
   "tr": "Motor bloğu soğukta çatlıyor",
-  "at": "src/core/testing.ts:251"
+  "at": "src/core/testing.ts:277"
  },
  "1jniuyr": {
   "tr": "Vites geçişleri sert",
-  "at": "src/core/testing.ts:254"
+  "at": "src/core/testing.ts:280"
  },
  "1g2p3ux": {
   "tr": "Şanzıman uğulduyor",
-  "at": "src/core/testing.ts:254"
+  "at": "src/core/testing.ts:280"
  },
  "spudxp": {
   "tr": "Vites kolu titriyor",
-  "at": "src/core/testing.ts:254"
+  "at": "src/core/testing.ts:280"
  },
  "cxfe8f": {
   "tr": "İkinci vites boşa atıyor",
-  "at": "src/core/testing.ts:255"
+  "at": "src/core/testing.ts:281"
  },
  "zqfxob": {
   "tr": "Debriyaj kayıyor",
-  "at": "src/core/testing.ts:255"
+  "at": "src/core/testing.ts:281"
  },
  "1wscmic": {
   "tr": "Diferansiyel ısınıp uğulduyor",
-  "at": "src/core/testing.ts:255"
+  "at": "src/core/testing.ts:281"
  },
  "1jvjsie": {
   "tr": "Dişliler yük altında kırılıyor",
-  "at": "src/core/testing.ts:256"
+  "at": "src/core/testing.ts:282"
  },
  "w0dy8v": {
   "tr": "Aks mili kırılıyor",
-  "at": "src/core/testing.ts:256"
+  "at": "src/core/testing.ts:282"
  },
  "1vf225c": {
   "tr": "Makaslar gıcırdıyor",
-  "at": "src/core/testing.ts:259"
+  "at": "src/core/testing.ts:285"
  },
  "h90co8": {
   "tr": "Direksiyon titriyor",
-  "at": "src/core/testing.ts:259"
+  "at": "src/core/testing.ts:285"
  },
  "mb0j7u": {
   "tr": "Bijonlar gevşiyor",
-  "at": "src/core/testing.ts:259"
+  "at": "src/core/testing.ts:285"
  },
  "1azcb35": {
   "tr": "Makas yaprakları çatlıyor",
-  "at": "src/core/testing.ts:260"
+  "at": "src/core/testing.ts:286"
  },
  "mseybf": {
   "tr": "Direksiyon boşluğu hızla artıyor",
-  "at": "src/core/testing.ts:260"
+  "at": "src/core/testing.ts:286"
  },
  "ps7e5s": {
   "tr": "Rot başları çabuk aşınıyor",
-  "at": "src/core/testing.ts:260"
+  "at": "src/core/testing.ts:286"
  },
  "1qjuh21": {
   "tr": "Şasi kaynağı çatlıyor",
-  "at": "src/core/testing.ts:261"
+  "at": "src/core/testing.ts:287"
  },
  "jqd4zn": {
   "tr": "Ön aks yerinden oynuyor",
-  "at": "src/core/testing.ts:261"
+  "at": "src/core/testing.ts:287"
  },
  "155qduo": {
   "tr": "Farlar sarsıntıda sönüyor",
-  "at": "src/core/testing.ts:264"
+  "at": "src/core/testing.ts:290"
  },
  "193kvi7": {
   "tr": "Korna ara sıra susuyor",
-  "at": "src/core/testing.ts:264"
+  "at": "src/core/testing.ts:290"
  },
  "4er69g": {
   "tr": "Arka lamba bağlantısı kopuyor",
-  "at": "src/core/testing.ts:264"
+  "at": "src/core/testing.ts:290"
  },
  "1iaqora": {
   "tr": "Ateşleme nemli havada tekliyor",
-  "at": "src/core/testing.ts:265"
+  "at": "src/core/testing.ts:291"
  },
  "w9du49": {
   "tr": "Dinamo aküyü dolduramıyor",
-  "at": "src/core/testing.ts:265"
+  "at": "src/core/testing.ts:291"
  },
  "lggw25": {
   "tr": "Akü çabuk bitiyor",
-  "at": "src/core/testing.ts:265"
+  "at": "src/core/testing.ts:291"
  },
  "6gwt0g": {
   "tr": "Kablo tesisatı ısınıp tutuşuyor",
-  "at": "src/core/testing.ts:266"
+  "at": "src/core/testing.ts:292"
  },
  "10a5nxw": {
   "tr": "Ateşleme bobini yolda yanıyor",
-  "at": "src/core/testing.ts:266"
+  "at": "src/core/testing.ts:292"
  },
  "m1pxto": {
   "tr": "Balatalar gıcırdıyor",
-  "at": "src/core/testing.ts:269"
+  "at": "src/core/testing.ts:295"
  },
  "18ut70e": {
   "tr": "Fren pedalı boşluk yapıyor",
-  "at": "src/core/testing.ts:269"
+  "at": "src/core/testing.ts:295"
  },
  "1oa28cz": {
   "tr": "El freni yokuşta tutmuyor",
-  "at": "src/core/testing.ts:269"
+  "at": "src/core/testing.ts:295"
  },
  "nnjb55": {
   "tr": "Frenler bir yana çekiyor",
-  "at": "src/core/testing.ts:270"
+  "at": "src/core/testing.ts:296"
  },
  "30t50f": {
   "tr": "Balatalar çok erken bitiyor",
-  "at": "src/core/testing.ts:270"
+  "at": "src/core/testing.ts:296"
  },
  "848wxc": {
   "tr": "Kampanalar ısınınca fren zayıflıyor",
-  "at": "src/core/testing.ts:270"
+  "at": "src/core/testing.ts:296"
  },
  "107g9x2": {
   "tr": "Fren çubuğu kopuyor",
-  "at": "src/core/testing.ts:271"
+  "at": "src/core/testing.ts:297"
  },
  "5g3h6a": {
   "tr": "Fren kampanası çatlıyor",
-  "at": "src/core/testing.ts:271"
+  "at": "src/core/testing.ts:297"
  },
  "jhfkxd": {
   "tr": "Kapılar tıkırdıyor",
-  "at": "src/core/testing.ts:274"
+  "at": "src/core/testing.ts:300"
  },
  "zmn33p": {
   "tr": "Boya çabuk çatlıyor",
-  "at": "src/core/testing.ts:274"
+  "at": "src/core/testing.ts:300"
  },
  "pil352": {
   "tr": "Çamurluklar titriyor",
-  "at": "src/core/testing.ts:274"
+  "at": "src/core/testing.ts:300"
  },
  "v4mwfj": {
   "tr": "Gövde yağmurda su alıyor",
-  "at": "src/core/testing.ts:275"
+  "at": "src/core/testing.ts:301"
  },
  "17j6lyl": {
   "tr": "Menteşeler sarkıyor",
-  "at": "src/core/testing.ts:275"
+  "at": "src/core/testing.ts:301"
  },
  "1tmcjz4": {
   "tr": "Kaporta sacı titreşimden çatlıyor",
-  "at": "src/core/testing.ts:275"
+  "at": "src/core/testing.ts:301"
  },
  "1d449fl": {
   "tr": "Kapı kilidi yolda açılıyor",
-  "at": "src/core/testing.ts:276"
+  "at": "src/core/testing.ts:302"
  },
  "tprpj0": {
   "tr": "Gövde bağlantıları şasiden sökülüyor",
-  "at": "src/core/testing.ts:276"
+  "at": "src/core/testing.ts:302"
  },
  "kth3yo": {
   "tr": "Dört zamanlı motor",
@@ -7117,91 +7153,91 @@
  },
  "1dd3cq2": {
   "tr": "Üretim durmuş",
-  "at": "src/ui/components/LaunchShow.tsx:297"
+  "at": "src/ui/components/LaunchShow.tsx:299"
  },
  "vpeeu": {
   "tr": "Segmentinin lideri!",
-  "at": "src/ui/components/LaunchShow.tsx:299"
+  "at": "src/ui/components/LaunchShow.tsx:301"
  },
  "z4twus": {
   "tr": "Güçlü bir başlangıç",
-  "at": "src/ui/components/LaunchShow.tsx:301"
+  "at": "src/ui/components/LaunchShow.tsx:303"
  },
  "px5bp4": {
   "tr": "Bayilerde kuyruk var",
-  "at": "src/ui/components/LaunchShow.tsx:303"
+  "at": "src/ui/components/LaunchShow.tsx:305"
  },
  "ifskgg": {
   "tr": "Zorlu bir başlangıç",
-  "at": "src/ui/components/LaunchShow.tsx:304"
+  "at": "src/ui/components/LaunchShow.tsx:306"
  },
  "1p2lfrd": {
   "tr": "İlk ay raporu",
-  "at": "src/ui/components/LaunchShow.tsx:308"
+  "at": "src/ui/components/LaunchShow.tsx:310"
  },
  "1k2auop": {
   "tr": "İlk {n} haftada satış",
-  "at": "src/ui/components/LaunchShow.tsx:314"
+  "at": "src/ui/components/LaunchShow.tsx:316"
  },
  "12xa2nb": {
   "tr": "{count} araç",
-  "at": "src/ui/components/LaunchShow.tsx:315"
+  "at": "src/ui/components/LaunchShow.tsx:317"
  },
  "ykcem2": {
   "tr": "Haftalık üretim",
-  "at": "src/ui/components/LaunchShow.tsx:322"
+  "at": "src/ui/components/LaunchShow.tsx:324"
  },
  "3iojlm": {
   "tr": "Segmentteki sıra",
-  "at": "src/ui/components/LaunchShow.tsx:327"
+  "at": "src/ui/components/LaunchShow.tsx:329"
  },
  "uobe2n": {
   "tr": "Segment payı",
-  "at": "src/ui/components/LaunchShow.tsx:334"
+  "at": "src/ui/components/LaunchShow.tsx:336"
  },
  "17p986b": {
   "tr": "Fiyat algısı",
-  "at": "src/ui/components/LaunchShow.tsx:338"
+  "at": "src/ui/components/LaunchShow.tsx:340"
  },
  "179lslq": {
   "tr": "Pahalı",
-  "at": "src/ui/components/LaunchShow.tsx:339"
+  "at": "src/ui/components/LaunchShow.tsx:341"
  },
  "zorsc0": {
   "tr": "Çok uygun",
-  "at": "src/ui/components/LaunchShow.tsx:339"
+  "at": "src/ui/components/LaunchShow.tsx:341"
  },
  "1ilafm1": {
   "tr": "Makul",
-  "at": "src/ui/components/LaunchShow.tsx:339"
+  "at": "src/ui/components/LaunchShow.tsx:341"
  },
  "1xwwa3y": {
   "tr": "{buyers} neyi sevdi?",
-  "at": "src/ui/components/LaunchShow.tsx:344"
+  "at": "src/ui/components/LaunchShow.tsx:346"
  },
  "1vnhycu": {
   "tr": "Kimseyi heyecanlandıran bir yanı olmadı.",
-  "at": "src/ui/components/LaunchShow.tsx:354"
+  "at": "src/ui/components/LaunchShow.tsx:356"
  },
  "11eu6gp": {
   "tr": "Neden şikâyet etti?",
-  "at": "src/ui/components/LaunchShow.tsx:358"
+  "at": "src/ui/components/LaunchShow.tsx:360"
  },
  "15kdqkt": {
   "tr": "Ciddi bir şikâyet yok.",
-  "at": "src/ui/components/LaunchShow.tsx:368"
+  "at": "src/ui/components/LaunchShow.tsx:370"
  },
  "q030ih": {
   "tr": "Satış müdürünün notları",
-  "at": "src/ui/components/LaunchShow.tsx:374"
+  "at": "src/ui/components/LaunchShow.tsx:376"
  },
  "16kl9vo": {
   "tr": "Bu yorumlar segment bilgisi tablona işlendi.",
-  "at": "src/ui/components/LaunchShow.tsx:382"
+  "at": "src/ui/components/LaunchShow.tsx:384"
  },
  "1x7tomf": {
   "tr": "Tamam",
-  "at": "src/ui/components/LaunchShow.tsx:394"
+  "at": "src/ui/components/LaunchShow.tsx:396"
  },
  "1x90ri1": {
   "tr": "Neden böyle çalışıyor? {title}",
@@ -7723,13 +7759,21 @@
   "tr": "Henüz gazetede çıkan bir haber yok.",
   "at": "src/ui/components/Newspaper.tsx:210"
  },
+ "1b3lvob": {
+  "tr": "🎉 <b>{name} hazır</b> ve {n} haftadır lansman bekliyor: bu sürede maaşlar ödeniyor ama araba satılmıyor.",
+  "at": "src/ui/components/PauseBanner.tsx:24"
+ },
+ "9y6ftf": {
+  "tr": "🎉 <b>{name} hazır:</b> fiyatı seçip lansmanı yap.",
+  "at": "src/ui/components/PauseBanner.tsx:25"
+ },
  "1hoxwfx": {
   "tr": "<b>Oyun duraklatıldı.</b> Zaman akmadan mühendisler çalışmaz, testler ilerlemez, fabrika üretmez.",
-  "at": "src/ui/components/PauseBanner.tsx:17"
+  "at": "src/ui/components/PauseBanner.tsx:47"
  },
  "1mp8dv6": {
   "tr": "Devam et (boşluk)",
-  "at": "src/ui/components/PauseBanner.tsx:19"
+  "at": "src/ui/components/PauseBanner.tsx:49"
  },
  "1bttp5n": {
   "tr": "Ar-Ge tamamlandı",
@@ -8229,15 +8273,15 @@
  },
  "sl9bhk": {
   "tr": "{v} / 100 (50 = sınıf ortalaması)",
-  "at": "src/ui/components/ui.tsx:151"
+  "at": "src/ui/components/ui.tsx:154"
  },
  "kxl8uk": {
   "tr": "Tahmin: {lo}–{hi} (50 = sınıf ortalaması)",
-  "at": "src/ui/components/ui.tsx:226"
+  "at": "src/ui/components/ui.tsx:229"
  },
  "1oucclv": {
   "tr": "Ayrıntı",
-  "at": "src/ui/components/ui.tsx:237"
+  "at": "src/ui/components/ui.tsx:240"
  },
  "b84y0": {
   "tr": "Malzeme ve parça",
@@ -9098,383 +9142,399 @@
  },
  "w5xjxj": {
   "tr": "Motor atölyesi",
-  "at": "src/ui/screens/Factory.tsx:33"
+  "at": "src/ui/screens/Factory.tsx:35"
  },
  "1f0aqva": {
   "tr": "Şanzıman atölyesi",
-  "at": "src/ui/screens/Factory.tsx:33"
+  "at": "src/ui/screens/Factory.tsx:35"
  },
  "hh4lez": {
   "tr": "Elektrik atölyesi",
-  "at": "src/ui/screens/Factory.tsx:33"
+  "at": "src/ui/screens/Factory.tsx:35"
  },
  "t1nwge": {
   "tr": "En yavaş istasyon bütün hattın hızını belirler. Darboğaz kırmızı yanar.",
-  "at": "src/ui/screens/Factory.tsx:44"
+  "at": "src/ui/screens/Factory.tsx:46"
  },
  "j3cn3i": {
   "tr": "Boş hat kuruldu",
-  "at": "src/ui/screens/Factory.tsx:46"
+  "at": "src/ui/screens/Factory.tsx:48"
  },
  "1m3lgn5": {
   "tr": "+ Boş hat, elle doldur ({cost})",
-  "at": "src/ui/screens/Factory.tsx:47"
+  "at": "src/ui/screens/Factory.tsx:49"
  },
  "1iqxkfa": {
   "tr": "Askeri sözleşme sürüyor. Askeri üretimdeki hatlar masrafını ve araç başına {profit} kâr getirir.",
-  "at": "src/ui/screens/Factory.tsx:53"
+  "at": "src/ui/screens/Factory.tsx:55"
  },
  "1exc73l": {
   "tr": "Parça atölyeleri (yap ya da satın al)",
-  "at": "src/ui/screens/Factory.tsx:59"
+  "at": "src/ui/screens/Factory.tsx:61"
  },
  "1vbcgbd": {
   "tr": "Atölye kurarsan o parçayı kendin üretebilirsin: tedarikçiden %15 ucuz, kalite mühendislik becerine bağlı.",
-  "at": "src/ui/screens/Factory.tsx:60"
+  "at": "src/ui/screens/Factory.tsx:62"
  },
  "1q1wkdz": {
   "tr": "Kuruldu",
-  "at": "src/ui/screens/Factory.tsx:66"
+  "at": "src/ui/screens/Factory.tsx:68"
  },
  "1s24h2x": {
   "tr": "{shop} kuruldu",
-  "at": "src/ui/screens/Factory.tsx:68"
+  "at": "src/ui/screens/Factory.tsx:70"
  },
  "2m3l7t": {
   "tr": "Kur ({cost})",
-  "at": "src/ui/screens/Factory.tsx:69"
+  "at": "src/ui/screens/Factory.tsx:71"
  },
  "1wzty9x": {
   "tr": "Kapasite planlayıcı",
-  "at": "src/ui/screens/Factory.tsx:132"
+  "at": "src/ui/screens/Factory.tsx:137"
  },
  "h2v9k9": {
   "tr": "talep ~{demand}/hf · üretim {output}/hf",
-  "at": "src/ui/screens/Factory.tsx:144"
+  "at": "src/ui/screens/Factory.tsx:149"
  },
  "196va67": {
   "tr": "~{n} araç/hf kaçıyor",
-  "at": "src/ui/screens/Factory.tsx:146"
+  "at": "src/ui/screens/Factory.tsx:151"
  },
  "1qp7ar5": {
   "tr": "otomatik durdu: {reason}",
-  "at": "src/ui/screens/Factory.tsx:149"
+  "at": "src/ui/screens/Factory.tsx:154"
  },
  "a957s6": {
   "tr": "Çıkış yolu: {hint}.",
-  "at": "src/ui/screens/Factory.tsx:150"
+  "at": "src/ui/screens/Factory.tsx:155"
  },
  "1liayln": {
   "tr": "Otomatik",
-  "at": "src/ui/screens/Factory.tsx:157"
+  "at": "src/ui/screens/Factory.tsx:162"
  },
  "1oc6mwo": {
   "tr": "Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır.",
-  "at": "src/ui/screens/Factory.tsx:158"
+  "at": "src/ui/screens/Factory.tsx:163"
  },
  "q5krcd": {
   "tr": "<b>Anahtar teslim hat:</b> bugünün en iyi makineleriyle ve dengeli kurulur (hiçbir bölüm darboğazın besleyebileceğinden fazla makine almaz). {model} için {size} yerli hat başına <b>+{output} araç/hf</b>, kalıp dahil <b>{cost}</b>. Binası ve makineleri <b>{n} haftada</b> kurulur.",
-  "at": "src/ui/screens/Factory.tsx:167"
+  "at": "src/ui/screens/Factory.tsx:172"
  },
  "g65qhv": {
   "tr": "Ürettiği her araç satılırsa araç başına ~{margin} kalır: hat kendini <pay>~{n} ayda</pay> öder.",
-  "at": "src/ui/screens/Factory.tsx:174"
+  "at": "src/ui/screens/Factory.tsx:179"
  },
  "5rc7fj": {
   "tr": "Ürettiği her araç satılırsa araç başına ~{margin} kalır: hat kendini <pay>~{years} yılda</pay> öder.",
-  "at": "src/ui/screens/Factory.tsx:179"
+  "at": "src/ui/screens/Factory.tsx:184"
+ },
+ "ezvvj1": {
+  "tr": "Kalıcı talep (lansman heyecanı hariç) şimdiki ve inşaattaki hatlarla karşılanıyor: bu fiyatla yeni hat boş kalır.",
+  "at": "src/ui/screens/Factory.tsx:191"
+ },
+ "2eyeoe": {
+  "tr": "Ama alıcılar kalıcı olarak yalnız ~{gap} araç/hf daha istiyor (lansman heyecanı hariç, inşaattaki hatlar dahil): yalnız bu kadar satılırsa hat <pay>~{n} ayda</pay> öder. Otomatik kapasite de böyle hesaplar ve en çok iki yıl bekler.",
+  "at": "src/ui/screens/Factory.tsx:193"
  },
  "68utlu": {
   "tr": "Bu fiyatla araç başına para kalmıyor: yeni hat kendini ödemez.",
-  "at": "src/ui/screens/Factory.tsx:186"
+  "at": "src/ui/screens/Factory.tsx:201"
  },
  "1hzpn4f": {
   "tr": "Hat boyu",
-  "at": "src/ui/screens/Factory.tsx:189"
+  "at": "src/ui/screens/Factory.tsx:204"
  },
  "mzwbql": {
   "tr": "Hat boyu (bölüm başına yer):",
-  "at": "src/ui/screens/Factory.tsx:190"
+  "at": "src/ui/screens/Factory.tsx:205"
  },
  "1xagys4": {
   "tr": "{output} araç/hf · {cost}",
-  "at": "src/ui/screens/Factory.tsx:199"
+  "at": "src/ui/screens/Factory.tsx:214"
  },
- "ak2cs4": {
-  "tr": "{n} yer · {output}/hf (açığa göre)",
-  "at": "src/ui/screens/Factory.tsx:202"
+ "2h9ofg": {
+  "tr": "{n} yer · {output}/hf (önerilen)",
+  "at": "src/ui/screens/Factory.tsx:217"
  },
  "1c3azsw": {
   "tr": "{n} yer · {output}/hf",
-  "at": "src/ui/screens/Factory.tsx:203"
+  "at": "src/ui/screens/Factory.tsx:218"
  },
  "uxhspv": {
   "tr": "Siyah vernik fırını kullan: hat başına {normal} yerine {black} araç/hf",
-  "at": "src/ui/screens/Factory.tsx:211"
+  "at": "src/ui/screens/Factory.tsx:226"
+ },
+ "aiwc6h": {
+  "tr": "Çok daha hızlı kurur ama araç yalnızca siyah olur: prestij −5. Otomatik kapasite {model} için siyah vernik fırını kullanmaz (lüks ve spor arabalar renkli kalır).",
+  "at": "src/ui/screens/Factory.tsx:230"
+ },
+ "xxt953": {
+  "tr": "Çok daha hızlı kurur ama araç yalnızca siyah olur: prestij −5. Otomatik kapasite {model} için bu fırını da kullanır.",
+  "at": "src/ui/screens/Factory.tsx:231"
  },
  "116q2eu": {
   "tr": "Çok daha hızlı kurur ama araç yalnızca siyah olur: prestij −5.",
-  "at": "src/ui/screens/Factory.tsx:212"
+  "at": "src/ui/screens/Factory.tsx:232"
  },
  "1nxyp9h": {
   "tr": "<b>Küçük atölye hattı:</b> başlangıçtaki atölye gibi, el işçiliği makineleriyle. Yavaş ve araç başına işçiliği pahalı ama ucuz: +{output} araç/hf, kalıp dahil <b>{cost}</b>.",
-  "at": "src/ui/screens/Factory.tsx:218"
+  "at": "src/ui/screens/Factory.tsx:239"
  },
  "5vu13l": {
   "tr": "Atölye hattı kuruldu: {model}",
-  "at": "src/ui/screens/Factory.tsx:223"
+  "at": "src/ui/screens/Factory.tsx:244"
  },
  "a3jqk4": {
   "tr": "Atölye hattı kur",
-  "at": "src/ui/screens/Factory.tsx:224"
+  "at": "src/ui/screens/Factory.tsx:245"
  },
  "cqrz09": {
   "tr": "Kurulacak hat sayısı",
-  "at": "src/ui/screens/Factory.tsx:229"
+  "at": "src/ui/screens/Factory.tsx:250"
  },
  "1qxouu2": {
   "tr": "Bir hat az",
-  "at": "src/ui/screens/Factory.tsx:230"
+  "at": "src/ui/screens/Factory.tsx:251"
  },
  "1by45ra": {
   "tr": "{n} hat",
-  "at": "src/ui/screens/Factory.tsx:233"
+  "at": "src/ui/screens/Factory.tsx:254"
  },
  "1ffpnbp": {
   "tr": "Bir hat fazla",
-  "at": "src/ui/screens/Factory.tsx:234"
+  "at": "src/ui/screens/Factory.tsx:255"
  },
  "2f9kjs": {
   "tr": "Toplam {cost} · +{output} araç/hf",
-  "at": "src/ui/screens/Factory.tsx:239"
+  "at": "src/ui/screens/Factory.tsx:260"
  },
  "1gb2kmi": {
   "tr": "açığı kapatmak için ~{n} hat",
-  "at": "src/ui/screens/Factory.tsx:240"
+  "at": "src/ui/screens/Factory.tsx:261"
  },
  "q0fp4e": {
   "tr": "kasan {n} hatta yetiyor",
-  "at": "src/ui/screens/Factory.tsx:241"
+  "at": "src/ui/screens/Factory.tsx:262"
  },
  "1lr8319": {
   "tr": "{n} yeni hat kurulsun mu?",
-  "at": "src/ui/screens/Factory.tsx:248"
+  "at": "src/ui/screens/Factory.tsx:269"
  },
  "1ndhtoj": {
   "tr": "{model} için {n} anahtar teslim hat: {cost} şimdi ödenir, hatlar {weeks} hafta sonra üretime başlar (+{output} araç/hf). Talep şu an ~{demand}/hf, üretim {cap}/hf.",
-  "at": "src/ui/screens/Factory.tsx:249"
+  "at": "src/ui/screens/Factory.tsx:270"
  },
  "g9usaw": {
   "tr": "{n} hat kur",
-  "at": "src/ui/screens/Factory.tsx:261"
+  "at": "src/ui/screens/Factory.tsx:282"
  },
  "1xxr12z": {
   "tr": "{n} hat inşa ediliyor: {model}",
-  "at": "src/ui/screens/Factory.tsx:263"
+  "at": "src/ui/screens/Factory.tsx:284"
  },
  "1bmnlnj": {
   "tr": "Kasada {cash} var, eksik {short}. Hat ~{n} ayda kendini ödüyorsa eksiği kredi ile kapatmak mantıklı olabilir (faiz yılda {rate}).",
-  "at": "src/ui/screens/Factory.tsx:277"
+  "at": "src/ui/screens/Factory.tsx:298"
  },
  "s53483": {
   "tr": "Kasada {cash} var, eksik {short}. Hat ~{years} yılda kendini ödüyorsa eksiği kredi ile kapatmak mantıklı olabilir (faiz yılda {rate}).",
-  "at": "src/ui/screens/Factory.tsx:283"
+  "at": "src/ui/screens/Factory.tsx:304"
  },
  "njl531": {
   "tr": "Kredi alındı",
-  "at": "src/ui/screens/Factory.tsx:289"
+  "at": "src/ui/screens/Factory.tsx:310"
  },
  "1m4ekqz": {
   "tr": "{amount} kredi al",
-  "at": "src/ui/screens/Factory.tsx:290"
+  "at": "src/ui/screens/Factory.tsx:311"
  },
  "zyr4zn": {
   "tr": "Kasa ve banka kredisi ({credit}) bu hattı kurmaya yetmiyor: daha küçük bir hat boyu seç ya da hatları tek tek büyüt.",
-  "at": "src/ui/screens/Factory.tsx:295"
+  "at": "src/ui/screens/Factory.tsx:316"
  },
  "cy73a2": {
   "tr": "Satışta model yok. Hat kurmadan önce bir araç çıkar.",
-  "at": "src/ui/screens/Factory.tsx:303"
+  "at": "src/ui/screens/Factory.tsx:324"
  },
  "4idocg": {
   "tr": "<b>{n} hat eski makinelerle çalışıyor.</b> Hepsini bugünün makineleriyle yenile: net {cost} (eski makineler satılır), 2 hafta kurulum.",
-  "at": "src/ui/screens/Factory.tsx:308"
+  "at": "src/ui/screens/Factory.tsx:329"
  },
  "11ihstd": {
   "tr": "{n} hat yenilensin mi?",
-  "at": "src/ui/screens/Factory.tsx:317"
+  "at": "src/ui/screens/Factory.tsx:338"
  },
  "y2g2yz": {
   "tr": "Eski makineler satılır, yerine bugünün makineleri gelir: net {cost}. Her hat kurulum sırasında 2 hafta üretmez.",
-  "at": "src/ui/screens/Factory.tsx:318"
+  "at": "src/ui/screens/Factory.tsx:339"
  },
  "1932rz5": {
   "tr": "Hepsini yenile",
-  "at": "src/ui/screens/Factory.tsx:319"
+  "at": "src/ui/screens/Factory.tsx:340"
  },
  "rdtccr": {
   "tr": "{n} hat yenilendi",
-  "at": "src/ui/screens/Factory.tsx:323"
+  "at": "src/ui/screens/Factory.tsx:344"
  },
  "1t6mkcy": {
   "tr": "{on}/{all} bölümde",
-  "at": "src/ui/screens/Factory.tsx:354"
+  "at": "src/ui/screens/Factory.tsx:375"
  },
  "1edqedx": {
   "tr": "askeri üretim",
-  "at": "src/ui/screens/Factory.tsx:361"
+  "at": "src/ui/screens/Factory.tsx:382"
  },
  "12s8tkj": {
   "tr": "boş",
-  "at": "src/ui/screens/Factory.tsx:361"
+  "at": "src/ui/screens/Factory.tsx:382"
  },
  "9uwcjh": {
   "tr": "inşaatta ({n} hf)",
-  "at": "src/ui/screens/Factory.tsx:362"
+  "at": "src/ui/screens/Factory.tsx:383"
  },
  "b2xe85": {
   "tr": "{output} araç/hafta · işçilik {cost}/hafta",
-  "at": "src/ui/screens/Factory.tsx:363"
+  "at": "src/ui/screens/Factory.tsx:384"
  },
  "ryvgxz": {
   "tr": "darboğaz: {stage}",
-  "at": "src/ui/screens/Factory.tsx:364"
+  "at": "src/ui/screens/Factory.tsx:385"
  },
  "17j91p8": {
   "tr": "gece vardiyası: {state}",
-  "at": "src/ui/screens/Factory.tsx:365"
+  "at": "src/ui/screens/Factory.tsx:386"
  },
  "eo8hj0": {
   "tr": "Gece vardiyası (tüm hat)",
-  "at": "src/ui/screens/Factory.tsx:375"
+  "at": "src/ui/screens/Factory.tsx:396"
  },
  "1212klc": {
   "tr": "Hatta üretilecek model",
-  "at": "src/ui/screens/Factory.tsx:379"
+  "at": "src/ui/screens/Factory.tsx:400"
  },
  "1ysejmw": {
   "tr": "{line} hattında {model} üretilsin mi?",
-  "at": "src/ui/screens/Factory.tsx:386"
+  "at": "src/ui/screens/Factory.tsx:407"
  },
  "1jtxji3": {
   "tr": "Hat yeniden ayarlanır: 3 hafta üretim durur ve {cost} kalıp masrafı çıkar.",
-  "at": "src/ui/screens/Factory.tsx:387"
+  "at": "src/ui/screens/Factory.tsx:408"
  },
  "nvy49": {
   "tr": "Hattı ayarla",
-  "at": "src/ui/screens/Factory.tsx:388"
+  "at": "src/ui/screens/Factory.tsx:409"
  },
  "i3avhn": {
   "tr": "— Boş —",
-  "at": "src/ui/screens/Factory.tsx:395"
+  "at": "src/ui/screens/Factory.tsx:416"
  },
  "1ayee0l": {
   "tr": "Askeri üretim",
-  "at": "src/ui/screens/Factory.tsx:402"
+  "at": "src/ui/screens/Factory.tsx:423"
  },
  "ed3ygq": {
   "tr": "İnşaat sürüyor: {n} hafta sonra üretime hazır",
-  "at": "src/ui/screens/Factory.tsx:415"
+  "at": "src/ui/screens/Factory.tsx:436"
  },
  "19gzz10": {
   "tr": "Kalıp değişimi sürüyor…",
-  "at": "src/ui/screens/Factory.tsx:417"
+  "at": "src/ui/screens/Factory.tsx:438"
  },
  "htgmdh": {
   "tr": "Hat boşta: bir model ata",
-  "at": "src/ui/screens/Factory.tsx:418"
+  "at": "src/ui/screens/Factory.tsx:439"
  },
  "12cmfyw": {
   "tr": "Bölüm başına yer: {slots}/{max}",
-  "at": "src/ui/screens/Factory.tsx:428"
+  "at": "src/ui/screens/Factory.tsx:449"
  },
  "1nsr396": {
   "tr": "{model} üretim zorluğu {value}",
-  "at": "src/ui/screens/Factory.tsx:429"
+  "at": "src/ui/screens/Factory.tsx:450"
  },
  "1cgkpgv": {
   "tr": "Hat genişletildi",
-  "at": "src/ui/screens/Factory.tsx:433"
+  "at": "src/ui/screens/Factory.tsx:454"
  },
  "1i443ri": {
   "tr": "Hattı genişlet ({cost})",
-  "at": "src/ui/screens/Factory.tsx:434"
+  "at": "src/ui/screens/Factory.tsx:455"
  },
  "ngulbe": {
   "tr": "{line} yenilendi",
-  "at": "src/ui/screens/Factory.tsx:438"
+  "at": "src/ui/screens/Factory.tsx:459"
  },
  "ara356": {
   "tr": "Yenile: ham kapasite {before} → {after} ({cost})",
-  "at": "src/ui/screens/Factory.tsx:439"
+  "at": "src/ui/screens/Factory.tsx:460"
  },
  "1wt9z8u": {
   "tr": "{v}/hf",
-  "at": "src/ui/screens/Factory.tsx:466"
+  "at": "src/ui/screens/Factory.tsx:487"
  },
  "f7ica3": {
   "tr": "Darboğaz",
-  "at": "src/ui/screens/Factory.tsx:468"
+  "at": "src/ui/screens/Factory.tsx:489"
  },
  "1mtx4x": {
   "tr": "{cap}/hf · {cost}/hf (her biri)",
-  "at": "src/ui/screens/Factory.tsx:478"
+  "at": "src/ui/screens/Factory.tsx:499"
  },
  "8wy41v": {
   "tr": "{cap}/hf · {cost}/hf",
-  "at": "src/ui/screens/Factory.tsx:479"
+  "at": "src/ui/screens/Factory.tsx:500"
  },
  "1m560wc": {
   "tr": "Bir {station} sat",
-  "at": "src/ui/screens/Factory.tsx:486"
+  "at": "src/ui/screens/Factory.tsx:507"
  },
  "13lw205": {
   "tr": "Birini sat (%30 geri alınır)",
-  "at": "src/ui/screens/Factory.tsx:487"
+  "at": "src/ui/screens/Factory.tsx:508"
  },
  "1yervmx": {
   "tr": "Bir {station} daha al",
-  "at": "src/ui/screens/Factory.tsx:495"
+  "at": "src/ui/screens/Factory.tsx:516"
  },
  "j0h9vm": {
   "tr": "Yer yok",
-  "at": "src/ui/screens/Factory.tsx:496"
+  "at": "src/ui/screens/Factory.tsx:517"
  },
  "ox12eh": {
   "tr": "Bir tane daha al ({cost})",
-  "at": "src/ui/screens/Factory.tsx:496"
+  "at": "src/ui/screens/Factory.tsx:517"
  },
  "12ujkqz": {
   "tr": "{n} boş yer",
-  "at": "src/ui/screens/Factory.tsx:507"
+  "at": "src/ui/screens/Factory.tsx:528"
  },
  "f7uokg": {
   "tr": "{stage} bölümüne istasyon ekle",
-  "at": "src/ui/screens/Factory.tsx:511"
+  "at": "src/ui/screens/Factory.tsx:532"
  },
  "hkp1ik": {
   "tr": "+ İstasyon ekle",
-  "at": "src/ui/screens/Factory.tsx:516"
+  "at": "src/ui/screens/Factory.tsx:537"
  },
  "16qwc4k": {
   "tr": "{station}: {cap}/hf · {cost} · sadece siyah",
-  "at": "src/ui/screens/Factory.tsx:520"
+  "at": "src/ui/screens/Factory.tsx:541"
  },
  "wv893y": {
   "tr": "{station}: {cap}/hf · {cost}",
-  "at": "src/ui/screens/Factory.tsx:521"
+  "at": "src/ui/screens/Factory.tsx:542"
  },
  "1qcbgk3": {
   "tr": "{v} ham kapasite",
-  "at": "src/ui/screens/Factory.tsx:525"
+  "at": "src/ui/screens/Factory.tsx:546"
  },
  "czzz6d": {
   "tr": "Gece vardiyası",
-  "at": "src/ui/screens/Factory.tsx:530"
+  "at": "src/ui/screens/Factory.tsx:551"
  },
  "9sdp7l": {
   "tr": "+{extra} kapasite · işçilik ×{cost}",
-  "at": "src/ui/screens/Factory.tsx:531"
+  "at": "src/ui/screens/Factory.tsx:552"
  },
  "1ijytt3": {
   "tr": "Kredi borcu",
@@ -10418,567 +10478,631 @@
  },
  "5o9kqs": {
   "tr": "Tasarım ve geliştirme",
-  "at": "src/ui/screens/ProjectView.tsx:31"
+  "at": "src/ui/screens/ProjectView.tsx:32"
  },
  "t7ura3": {
   "tr": "Üretim hazırlığı",
-  "at": "src/ui/screens/ProjectView.tsx:33"
+  "at": "src/ui/screens/ProjectView.tsx:34"
  },
  "q3bc2z": {
   "tr": "Lansman",
-  "at": "src/ui/screens/ProjectView.tsx:34"
+  "at": "src/ui/screens/ProjectView.tsx:35"
  },
  "o5m532": {
   "tr": "Model adı",
-  "at": "src/ui/screens/ProjectView.tsx:50"
+  "at": "src/ui/screens/ProjectView.tsx:51"
  },
  "t38e0a": {
   "tr": "makyaj projesi",
-  "at": "src/ui/screens/ProjectView.tsx:57"
+  "at": "src/ui/screens/ProjectView.tsx:58"
  },
  "p3wbd3": {
   "tr": "yeni kuşak",
-  "at": "src/ui/screens/ProjectView.tsx:57"
+  "at": "src/ui/screens/ProjectView.tsx:58"
  },
  "8a9i8z": {
   "tr": "{name} iptal edilsin mi?",
-  "at": "src/ui/screens/ProjectView.tsx:65"
+  "at": "src/ui/screens/ProjectView.tsx:66"
  },
  "maoxyd": {
   "tr": "Bu projeye harcanan para geri gelmez.",
-  "at": "src/ui/screens/ProjectView.tsx:66"
+  "at": "src/ui/screens/ProjectView.tsx:67"
  },
  "1plq5sq": {
   "tr": "Projeyi iptal et",
-  "at": "src/ui/screens/ProjectView.tsx:67"
+  "at": "src/ui/screens/ProjectView.tsx:68"
  },
  "1raixj3": {
   "tr": "Hattın kapasitesi henüz belli değil: kâr, talebin tamamı üretilir diye hesaplandı.",
-  "at": "src/ui/screens/ProjectView.tsx:133"
+  "at": "src/ui/screens/ProjectView.tsx:136"
  },
  "kx8oug": {
   "tr": "Orta tahmin hattın {x} katı: fiyatı biraz yükseltebilir ya da kapasite ekleyebilirsin.",
-  "at": "src/ui/screens/ProjectView.tsx:135"
+  "at": "src/ui/screens/ProjectView.tsx:138"
  },
  "1gzkw3f": {
   "tr": "Hat orta tahminin {x} katını üretebilir: fiyatı düşürmeyi ya da daha küçük bir hattı düşün.",
-  "at": "src/ui/screens/ProjectView.tsx:137"
+  "at": "src/ui/screens/ProjectView.tsx:140"
  },
  "1p0feii": {
   "tr": "Orta tahmine göre talep ve kapasite dengeli.",
-  "at": "src/ui/screens/ProjectView.tsx:138"
+  "at": "src/ui/screens/ProjectView.tsx:141"
  },
  "2iqqph": {
   "tr": "Fiyat rehberi",
-  "at": "src/ui/screens/ProjectView.tsx:166"
+  "at": "src/ui/screens/ProjectView.tsx:169"
  },
  "sdo43h": {
   "tr": "Rakiplerin alıcı fiyatları: en ucuz {low} · ortanca {mid} · en pahalı {high}.",
-  "at": "src/ui/screens/ProjectView.tsx:169"
+  "at": "src/ui/screens/ProjectView.tsx:172"
  },
  "1e6z9du": {
   "tr": "Bu fiyatta tahmini talep: <b>{lo}–{hi} araç/hafta</b> (sınıfın ~{share}) · hat {cap} araç/hafta.",
-  "at": "src/ui/screens/ProjectView.tsx:178"
+  "at": "src/ui/screens/ProjectView.tsx:181"
  },
  "ft5k7c": {
   "tr": "Bu fiyatta tahmini talep: <b>{lo}–{hi} araç/hafta</b> · hat {cap} araç/hafta.",
-  "at": "src/ui/screens/ProjectView.tsx:184"
+  "at": "src/ui/screens/ProjectView.tsx:187"
  },
  "1t5pkho": {
   "tr": "Sınıfın bu kadarını tek bir araba nadiren alır: bayiler, üretim ve rakiplerin yanıtı payı sınırlar; tahmini iyimser say.",
-  "at": "src/ui/screens/ProjectView.tsx:188"
+  "at": "src/ui/screens/ProjectView.tsx:191"
  },
  "7s4m62": {
   "tr": "<b>Hat küçük.</b> “En kârlı” fiyat bu hattın az üretmesinden yüksek çıkıyor. Sınıf fiyatında ({price}) talep ~{demand} araç/hf: ona yetecek bir hatla haftada ~{profit} brüt kâr kalır (bu hatla en iyisi {best}). Fabrika’dan hat kur ya da büyüt; “talebi otomatik karşıla” da kasa yettikçe büyütür.",
-  "at": "src/ui/screens/ProjectView.tsx:192"
+  "at": "src/ui/screens/ProjectView.tsx:195"
  },
  "l21ho0": {
   "tr": "Talep (orta)",
-  "at": "src/ui/screens/ProjectView.tsx:202"
+  "at": "src/ui/screens/ProjectView.tsx:205"
  },
  "1vymacu": {
   "tr": "Haftalık brüt kâr",
-  "at": "src/ui/screens/ProjectView.tsx:203"
+  "at": "src/ui/screens/ProjectView.tsx:206"
  },
  "m8tlu2": {
   "tr": "sınıf fiyatı",
-  "at": "src/ui/screens/ProjectView.tsx:217"
+  "at": "src/ui/screens/ProjectView.tsx:220"
  },
  "lsp6eg": {
   "tr": "en kârlı",
-  "at": "src/ui/screens/ProjectView.tsx:218"
+  "at": "src/ui/screens/ProjectView.tsx:221"
  },
  "bzok9n": {
   "tr": "bu hatla en kârlı",
-  "at": "src/ui/screens/ProjectView.tsx:218"
+  "at": "src/ui/screens/ProjectView.tsx:221"
  },
  "18hhnsp": {
   "tr": "dergiler “iddialı” der",
-  "at": "src/ui/screens/ProjectView.tsx:219"
+  "at": "src/ui/screens/ProjectView.tsx:222"
  },
  "1mj5fsf": {
   "tr": "Dergiler fiyatı sınıfa göre tartar: sınıf fiyatının üstüne çıktıkça puan azar azar düşer, bu sınıfta {steep} üstünde “iddialı” derler. Ucuz başlayıp sonra zam yapmak işe yaramaz: lansmandan sonraki üç yılda {hike}’den büyük bir zam dergilerin yeniden yazmasına ve itibar kaybına yol açar.",
-  "at": "src/ui/screens/ProjectView.tsx:230"
+  "at": "src/ui/screens/ProjectView.tsx:233"
+ },
+ "1p535an": {
+  "tr": "Makyajın getirisi",
+  "at": "src/ui/screens/ProjectView.tsx:258"
+ },
+ "vrbl57": {
+  "tr": "Alıcı gözünde yaşı",
+  "at": "src/ui/screens/ProjectView.tsx:261"
+ },
+ "bih7nd": {
+  "tr": "{now} → {after} yıl",
+  "at": "src/ui/screens/ProjectView.tsx:262"
+ },
+ "1r59t6n": {
+  "tr": "Çekicilik (sınıf ort. 50)",
+  "at": "src/ui/screens/ProjectView.tsx:265"
+ },
+ "fzffj5": {
+  "tr": "Haftalık talep (bugünkü fiyatla)",
+  "at": "src/ui/screens/ProjectView.tsx:271"
+ },
+ "1fbgbv5": {
+  "tr": "{now} → {after} araç/hf",
+  "at": "src/ui/screens/ProjectView.tsx:272"
+ },
+ "1qr90eb": {
+  "tr": "Bugün satışa çıksa bu makyaj talebi <good>~{pct}</good> artırır ({now} → {after} araç/hf); lansman heyecanı ilk aylarda bunun üstüne alıcı getirir.",
+  "at": "src/ui/screens/ProjectView.tsx:277"
+ },
+ "zdaqj6": {
+  "tr": "Bu makyaj talebi yalnız <warn>~{pct}</warn> artırır ({now} → {after} araç/hf). Geliştirme odağını alıcıların önem verdiği özelliklere çevirirsen getirisi artar.",
+  "at": "src/ui/screens/ProjectView.tsx:279"
+ },
+ "1wrrqm8": {
+  "tr": "<bad>Bu makyaj talebi artırmıyor</bad> ({now} → {after} araç/hf). Geliştirme odağını alıcıların önem verdiği özelliklere çevir ya da yeni kuşak düşün.",
+  "at": "src/ui/screens/ProjectView.tsx:280"
+ },
+ "11gyg8i": {
+  "tr": "Makyaj, arabanın eski geliştirme ve test ayarlarının yerine geçer: test aşamasında dinamometre ve dayanıklılık haftaları planlamazsan eskisinin kazandırdığı güç, tüketim ve güvenilirlik ayarı kaybolur.",
+  "at": "src/ui/screens/ProjectView.tsx:282"
+ },
+ "1tsei44": {
+  "tr": "Makyaj arabayı genç gösterir: bugün {now} yaşında görünüyor, makyajdan hemen sonra {after}. Satışa çıkması ~{n} hafta sürer; makyajsız o gün {later} yaşında görünecek.",
+  "at": "src/ui/screens/ProjectView.tsx:283"
+ },
+ "94pj78": {
+  "tr": "Mühendislerin bugünkü odak ve test planıyla beklediği sonuç; lansman heyecanı hariç. Kesin tepkiyi dergiler lansmanda verir.",
+  "at": "src/ui/screens/ProjectView.tsx:290"
  },
  "19siuhf": {
   "tr": "<b>Test programı bitti.</b> Sırada tedarikçiler ve üretim hattı var.",
-  "at": "src/ui/screens/ProjectView.tsx:245"
+  "at": "src/ui/screens/ProjectView.tsx:301"
  },
  "1akrla8": {
   "tr": "Test programı",
-  "at": "src/ui/screens/ProjectView.tsx:276"
+  "at": "src/ui/screens/ProjectView.tsx:332"
  },
  "1js6jm1": {
   "tr": "Testler her hafta paralel ilerler ve bulunan kusurlar hemen giderilir. Test haftalarını azaltırsan araç daha erken çıkar ama gizli kusurlar sahada patlar.",
-  "at": "src/ui/screens/ProjectView.tsx:279"
+  "at": "src/ui/screens/ProjectView.tsx:335"
  },
  "163cyad": {
   "tr": "{cost}/hafta",
-  "at": "src/ui/screens/ProjectView.tsx:288"
+  "at": "src/ui/screens/ProjectView.tsx:344"
  },
  "1pcov1s": {
   "tr": "Planlanan süre",
-  "at": "src/ui/screens/ProjectView.tsx:292"
+  "at": "src/ui/screens/ProjectView.tsx:348"
  },
  "9mtlfr": {
   "tr": "Testleri erken bitir (riskli)",
-  "at": "src/ui/screens/ProjectView.tsx:306"
+  "at": "src/ui/screens/ProjectView.tsx:362"
  },
  "e8ksfm": {
   "tr": "Kusur raporu",
-  "at": "src/ui/screens/ProjectView.tsx:311"
+  "at": "src/ui/screens/ProjectView.tsx:367"
  },
  "wj5y88": {
   "tr": "Geliştirmeden çıkan gizli kusur (tahmin)",
-  "at": "src/ui/screens/ProjectView.tsx:313"
+  "at": "src/ui/screens/ProjectView.tsx:369"
  },
  "lp3j6r": {
   "tr": "{lo}–{n} kusur",
-  "at": "src/ui/screens/ProjectView.tsx:314"
+  "at": "src/ui/screens/ProjectView.tsx:370"
  },
  "1xos746": {
   "tr": "Bu test planı bitince kalması beklenen",
-  "at": "src/ui/screens/ProjectView.tsx:317"
+  "at": "src/ui/screens/ProjectView.tsx:373"
  },
  "t6z6b6": {
   "tr": "{level} risk",
-  "at": "src/ui/screens/ProjectView.tsx:319"
+  "at": "src/ui/screens/ProjectView.tsx:375"
  },
  "14mthf1": {
   "tr": "Kaç kusur olduğunu kimse kesin bilmez.",
-  "at": "src/ui/screens/ProjectView.tsx:323"
+  "at": "src/ui/screens/ProjectView.tsx:379"
  },
  "2sputf": {
   "tr": "Ekibin ilk arabalarında çok hata yapar; Kalan her kusur sahada arıza, garanti masrafı ve geri çağırma demektir.",
-  "at": "src/ui/screens/ProjectView.tsx:325"
+  "at": "src/ui/screens/ProjectView.tsx:381"
  },
  "1th5p4u": {
   "tr": "Kalan her kusur sahada arıza, garanti masrafı ve geri çağırma demektir.",
-  "at": "src/ui/screens/ProjectView.tsx:326"
+  "at": "src/ui/screens/ProjectView.tsx:382"
  },
  "237s38": {
   "tr": "Bazı kusurlar ancak binlerce müşterinin elinde, yıllarca kullanımda ortaya çıkar: en uzun test programı bile hepsini yakalayamaz.",
-  "at": "src/ui/screens/ProjectView.tsx:327"
+  "at": "src/ui/screens/ProjectView.tsx:383"
  },
  "1kfxz4f": {
   "tr": "Bulunan ve giderilen: <b>{n}</b>",
-  "at": "src/ui/screens/ProjectView.tsx:330"
+  "at": "src/ui/screens/ProjectView.tsx:386"
  },
  "q4lpox": {
   "tr": "test maliyeti ~{cost}/hafta",
-  "at": "src/ui/screens/ProjectView.tsx:331"
+  "at": "src/ui/screens/ProjectView.tsx:387"
  },
  "1pbjb92": {
   "tr": "giderildi",
-  "at": "src/ui/screens/ProjectView.tsx:338"
+  "at": "src/ui/screens/ProjectView.tsx:394"
  },
  "kxojaa": {
   "tr": "Planın bedeli",
-  "at": "src/ui/screens/ProjectView.tsx:343"
+  "at": "src/ui/screens/ProjectView.tsx:399"
  },
  "d0lmyi": {
   "tr": "<b>{n} hafta</b> daha: test gideri ~{tests}, mühendis maaşları ~{salaries}. Araç o kadar geç satışa çıkar.",
-  "at": "src/ui/screens/ProjectView.tsx:346"
+  "at": "src/ui/screens/ProjectView.tsx:402"
  },
  "5j8aow": {
   "tr": "Plan tamamlandı.",
-  "at": "src/ui/screens/ProjectView.tsx:351"
+  "at": "src/ui/screens/ProjectView.tsx:407"
  },
  "34013a": {
   "tr": "Her testi 5 hafta kısaltsan: ~{defects} kusur daha sahaya çıkar, ama araç {n} hafta erken satışa çıkar ve ~{saves} tasarruf edersin.",
-  "at": "src/ui/screens/ProjectView.tsx:355"
+  "at": "src/ui/screens/ProjectView.tsx:411"
  },
  "2ym53t": {
   "tr": "Testlerin araca katkısı",
-  "at": "src/ui/screens/ProjectView.tsx:362"
+  "at": "src/ui/screens/ProjectView.tsx:418"
  },
  "iahmiu": {
   "tr": "Testler başlayınca ayarlar iyileşir: dinamometre gücü ve tüketimi, yol testi konfor ve yol tutuşu, çarpışma testi güvenliği, dayanıklılık güvenilirliği.",
-  "at": "src/ui/screens/ProjectView.tsx:366"
+  "at": "src/ui/screens/ProjectView.tsx:422"
  },
  "1s7q626": {
   "tr": "Dinamometre hızı ve tüketimi, yol testi konfor ve yol tutuşu, çarpışma testi güvenliği, dayanıklılık güvenilirliği ölçer.",
-  "at": "src/ui/screens/ProjectView.tsx:382"
+  "at": "src/ui/screens/ProjectView.tsx:438"
  },
  "1vz6l2l": {
   "tr": "konfor +{v}",
-  "at": "src/ui/screens/ProjectView.tsx:394"
+  "at": "src/ui/screens/ProjectView.tsx:450"
  },
  "1kjj3jp": {
   "tr": "yol tutuş +{v}",
-  "at": "src/ui/screens/ProjectView.tsx:395"
+  "at": "src/ui/screens/ProjectView.tsx:451"
  },
  "1mq121w": {
   "tr": "güvenlik +{v}",
-  "at": "src/ui/screens/ProjectView.tsx:396"
+  "at": "src/ui/screens/ProjectView.tsx:452"
  },
  "w0u306": {
   "tr": "güvenilirlik +{v}",
-  "at": "src/ui/screens/ProjectView.tsx:397"
+  "at": "src/ui/screens/ProjectView.tsx:453"
  },
  "13rcigr": {
   "tr": "Şimdiye kadar: {list}.",
-  "at": "src/ui/screens/ProjectView.tsx:398"
+  "at": "src/ui/screens/ProjectView.tsx:454"
  },
  "1n6pdhf": {
   "tr": "Elektrik ve donanım",
-  "at": "src/ui/screens/ProjectView.tsx:401"
+  "at": "src/ui/screens/ProjectView.tsx:457"
  },
  "1i1vrj9": {
   "tr": "{tooling} ve ilk parçalar hazırlanıyor ({line}). Kalan: <b>{n} hafta</b>.",
-  "at": "src/ui/screens/ProjectView.tsx:422"
+  "at": "src/ui/screens/ProjectView.tsx:478"
  },
  "uxya": {
   "tr": "Bu sürede hat mevcut modeli üretmeye devam eder. Lansmanda yeni model hattı devralır.",
-  "at": "src/ui/screens/ProjectView.tsx:429"
+  "at": "src/ui/screens/ProjectView.tsx:485"
  },
  "k1padl": {
   "tr": "{what} kurulsun mu?",
-  "at": "src/ui/screens/ProjectView.tsx:445"
+  "at": "src/ui/screens/ProjectView.tsx:501"
  },
  "rj0xce": {
   "tr": "{cost} şimdi ödenir; hat {n} haftada kurulur ve bu arabaya seçilir. Kalıplar da bu sürede hazırlanabilir.",
-  "at": "src/ui/screens/ProjectView.tsx:446"
+  "at": "src/ui/screens/ProjectView.tsx:502"
  },
  "1o04vrh": {
   "tr": "Kur",
-  "at": "src/ui/screens/ProjectView.tsx:447"
+  "at": "src/ui/screens/ProjectView.tsx:503"
  },
  "5m2q6g": {
   "tr": "<b>Üretim hazırlığı: araba çizimden fabrikaya geçiyor.</b> Üç karar var; hepsi birim maliyeti, işçilik kalitesini ve lansman tarihini etkiler.",
-  "at": "src/ui/screens/ProjectView.tsx:461"
+  "at": "src/ui/screens/ProjectView.tsx:517"
  },
  "i738pk": {
   "tr": "<b>Parçalar:</b> motoru, şanzımanı ve elektriği kim yapacak? Tedarikçi fiyatı, kaliteyi ve teslim süresini belirler.",
-  "at": "src/ui/screens/ProjectView.tsx:464"
+  "at": "src/ui/screens/ProjectView.tsx:520"
  },
  "i3wqie": {
   "tr": "<b>Hat:</b> arabayı hangi hat üretecek? Hattın en yavaş bölümü (darboğaz) haftada kaç araba çıkacağını belirler.",
-  "at": "src/ui/screens/ProjectView.tsx:465"
+  "at": "src/ui/screens/ProjectView.tsx:521"
  },
  "1n4wid3": {
   "tr": "<b>Kalıplar:</b> gövde panellerini basan kalıplar ve montaj fikstürleri. Parasını şimdi ödersin; kalitesi arabanın işçiliğini ve firesini belirler.",
-  "at": "src/ui/screens/ProjectView.tsx:466"
+  "at": "src/ui/screens/ProjectView.tsx:522"
  },
  "r43ggj": {
   "tr": "1 · Parçalar: yap ya da al",
-  "at": "src/ui/screens/ProjectView.tsx:471"
+  "at": "src/ui/screens/ProjectView.tsx:527"
  },
  "ez4ks4": {
   "tr": "İlk modelinde parçaları güvenilir tedarikçilerden alıyorsun: pahalı ama sağlam. Kimden alacağına (ya da kendin üretmeye) ikinci modelinde sen karar vereceksin.",
-  "at": "src/ui/screens/ProjectView.tsx:474"
+  "at": "src/ui/screens/ProjectView.tsx:530"
  },
  "ipywv4": {
   "tr": "parça bedeli {cost}",
-  "at": "src/ui/screens/ProjectView.tsx:483"
+  "at": "src/ui/screens/ProjectView.tsx:539"
  },
  "19ztt0b": {
   "tr": "{n} hf teslim",
-  "at": "src/ui/screens/ProjectView.tsx:492"
+  "at": "src/ui/screens/ProjectView.tsx:548"
  },
  "1fwejmu": {
   "tr": "hemen",
-  "at": "src/ui/screens/ProjectView.tsx:492"
+  "at": "src/ui/screens/ProjectView.tsx:548"
  },
  "1o18lg": {
   "tr": "Atölye kuruldu",
-  "at": "src/ui/screens/ProjectView.tsx:496"
+  "at": "src/ui/screens/ProjectView.tsx:552"
  },
  "117wrvt": {
   "tr": "{part} atölyesi kur ({cost})",
-  "at": "src/ui/screens/ProjectView.tsx:497"
+  "at": "src/ui/screens/ProjectView.tsx:553"
  },
  "8k2hm9": {
   "tr": "Birim malzeme maliyeti: <b>{cost}</b>",
-  "at": "src/ui/screens/ProjectView.tsx:503"
+  "at": "src/ui/screens/ProjectView.tsx:559"
  },
  "1sshubm": {
   "tr": "2 · Hangi hat üretecek?",
-  "at": "src/ui/screens/ProjectView.tsx:505"
+  "at": "src/ui/screens/ProjectView.tsx:562"
  },
  "1tfxf9k": {
   "tr": "Bir hat aynı anda tek model üretir. Başka bir modelin hattını seçersen o model lansmanda hattını kaybeder. Kapasite, bu arabanın üretim zorluğuna göre hesaplandı.",
-  "at": "src/ui/screens/ProjectView.tsx:507"
+  "at": "src/ui/screens/ProjectView.tsx:564"
  },
  "1rtck1d": {
   "tr": "{v} araç/hafta",
-  "at": "src/ui/screens/ProjectView.tsx:520"
+  "at": "src/ui/screens/ProjectView.tsx:577"
  },
  "1b3o3ml": {
   "tr": "{name} projesine ayrıldı",
-  "at": "src/ui/screens/ProjectView.tsx:524"
+  "at": "src/ui/screens/ProjectView.tsx:581"
  },
  "39jig6": {
   "tr": "Şu an: {name} (yerine geçecek)",
-  "at": "src/ui/screens/ProjectView.tsx:527"
+  "at": "src/ui/screens/ProjectView.tsx:584"
  },
  "1quxpje": {
   "tr": "Şu an: {name}; lansmanda bu hattı kaybeder",
-  "at": "src/ui/screens/ProjectView.tsx:528"
+  "at": "src/ui/screens/ProjectView.tsx:585"
  },
  "3z280l": {
   "tr": "İnşaatta: {n} hafta",
-  "at": "src/ui/screens/ProjectView.tsx:530"
+  "at": "src/ui/screens/ProjectView.tsx:587"
  },
  "1d1vukz": {
   "tr": "Boş",
-  "at": "src/ui/screens/ProjectView.tsx:531"
+  "at": "src/ui/screens/ProjectView.tsx:588"
  },
  "2ew1zs": {
   "tr": "Satıştaki başka arabaların hatları ({n}): seçersen o araba lansmanda hattını kaybeder",
-  "at": "src/ui/screens/ProjectView.tsx:548"
+  "at": "src/ui/screens/ProjectView.tsx:605"
  },
  "11qbe71": {
   "tr": "Boşta hat yok: bütün hatlarda satıştaki bir araba ya da başka bir proje var. Bu araba için yeni bir hat kur.",
-  "at": "src/ui/screens/ProjectView.tsx:556"
+  "at": "src/ui/screens/ProjectView.tsx:613"
  },
  "1ylmejm": {
   "tr": "Atölye hattı kuruluyor",
-  "at": "src/ui/screens/ProjectView.tsx:566"
+  "at": "src/ui/screens/ProjectView.tsx:623"
  },
  "1c70trx": {
   "tr": "Küçük atölye hattı",
-  "at": "src/ui/screens/ProjectView.tsx:567"
+  "at": "src/ui/screens/ProjectView.tsx:624"
  },
  "hwmsyg": {
   "tr": "+ Küçük atölye hattı ({cost})",
-  "at": "src/ui/screens/ProjectView.tsx:573"
+  "at": "src/ui/screens/ProjectView.tsx:630"
  },
  "1rujat7": {
   "tr": "Yeni hat kuruluyor",
-  "at": "src/ui/screens/ProjectView.tsx:579"
+  "at": "src/ui/screens/ProjectView.tsx:636"
  },
  "15kmxab": {
   "tr": "Dengeli yeni hat",
-  "at": "src/ui/screens/ProjectView.tsx:579"
+  "at": "src/ui/screens/ProjectView.tsx:636"
  },
  "1t7l4f4": {
   "tr": "+ Dengeli yeni hat ({cost}, {n} hf)",
-  "at": "src/ui/screens/ProjectView.tsx:581"
+  "at": "src/ui/screens/ProjectView.tsx:638"
  },
  "66u66n": {
   "tr": "Kapasiteyi sonra Fabrika ekranından büyütebilir ya da “talebi otomatik karşıla” ile fabrikaya bırakabilirsin.",
-  "at": "src/ui/screens/ProjectView.tsx:584"
+  "at": "src/ui/screens/ProjectView.tsx:641"
  },
  "1mkndz5": {
   "tr": "3 · Kalıplar",
-  "at": "src/ui/screens/ProjectView.tsx:587"
+  "at": "src/ui/screens/ProjectView.tsx:644"
  },
  "1k2buoj": {
   "tr": "birim maliyet {change}",
-  "at": "src/ui/screens/ProjectView.tsx:603"
+  "at": "src/ui/screens/ProjectView.tsx:660"
  },
  "iygz9z": {
   "tr": "olağan fire",
-  "at": "src/ui/screens/ProjectView.tsx:604"
+  "at": "src/ui/screens/ProjectView.tsx:661"
  },
  "iju8uq": {
   "tr": "Kalıp maliyeti",
-  "at": "src/ui/screens/ProjectView.tsx:616"
+  "at": "src/ui/screens/ProjectView.tsx:673"
  },
  "4soaf3": {
   "tr": "Üretime hazır",
-  "at": "src/ui/screens/ProjectView.tsx:620"
+  "at": "src/ui/screens/ProjectView.tsx:677"
  },
  "19ajzam": {
   "tr": "{n} hafta sonra",
-  "at": "src/ui/screens/ProjectView.tsx:621"
+  "at": "src/ui/screens/ProjectView.tsx:678"
  },
  "x1s6z9": {
   "tr": "Birim malzeme",
-  "at": "src/ui/screens/ProjectView.tsx:624"
+  "at": "src/ui/screens/ProjectView.tsx:681"
  },
  "15cetui": {
   "tr": "Hat kapasitesi",
-  "at": "src/ui/screens/ProjectView.tsx:628"
+  "at": "src/ui/screens/ProjectView.tsx:685"
  },
  "tyxwot": {
   "tr": "{v} araç/hf",
-  "at": "src/ui/screens/ProjectView.tsx:629"
+  "at": "src/ui/screens/ProjectView.tsx:686"
  },
  "1frcp0": {
   "tr": "Aynı platform: kalıplar büyük ölçüde ortak",
-  "at": "src/ui/screens/ProjectView.tsx:631"
+  "at": "src/ui/screens/ProjectView.tsx:688"
  },
  "1g95fxt": {
   "tr": "Hazırlık süresini parça tedarikçisinin teslimi belirliyor ({n} hafta).",
-  "at": "src/ui/screens/ProjectView.tsx:635"
+  "at": "src/ui/screens/ProjectView.tsx:692"
  },
  "dcq9ts": {
   "tr": "Satışa çıkınca talebi otomatik karşıla",
-  "at": "src/ui/screens/ProjectView.tsx:640"
+  "at": "src/ui/screens/ProjectView.tsx:697"
  },
  "1ptcw5m": {
   "tr": "Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır. Sonradan Model ve Fabrika ekranlarından değiştirebilirsin.",
-  "at": "src/ui/screens/ProjectView.tsx:641"
+  "at": "src/ui/screens/ProjectView.tsx:698"
  },
  "42adsq": {
   "tr": "Kalıpları sipariş etmek için önce arabanın üretileceği hattı seç.",
-  "at": "src/ui/screens/ProjectView.tsx:645"
+  "at": "src/ui/screens/ProjectView.tsx:702"
  },
  "u2u6ix": {
   "tr": "{tooling}: sipariş et ({cost})",
-  "at": "src/ui/screens/ProjectView.tsx:650"
+  "at": "src/ui/screens/ProjectView.tsx:707"
  },
  "1mgf6wd": {
   "tr": "{tooling}: sipariş et",
-  "at": "src/ui/screens/ProjectView.tsx:651"
+  "at": "src/ui/screens/ProjectView.tsx:708"
+ },
+ "11ikr20": {
+  "tr": "Kaliteli tedarikçiye göre araç başına <b>{saving}</b> ucuz. Ama kendi parçalarının kalitesi mühendislik becerisine bağlı (şimdi {skill}): alıcıların ve dergilerin sahada göreceği güvenilirlik puanı ~<tone>{rel}</tone>, hepsi kaliteli tedarikçiden olsa ~{quality}. Bu parçalardaki gizli kusurlar {mult} kat sık arıza çıkarır.",
+  "at": "src/ui/screens/ProjectView.tsx:743"
+ },
+ "1mm99an": {
+  "tr": "Kaliteli tedarikçiye göre araç başına <b>{saving}</b> ucuz. Ama alıcıların ve dergilerin sahada göreceği güvenilirlik puanı ~<tone>{rel}</tone>, hepsi kaliteli tedarikçiden olsa ~{quality}. Bu parçalardaki gizli kusurlar {mult} kat sık arıza çıkarır.",
+  "at": "src/ui/screens/ProjectView.tsx:748"
+ },
+ "jrj3jb": {
+  "tr": "Kendi parçaların beceri {rel} olunca kaliteli tedarikçininki kadar sağlam, {fail} olunca o kadar az arızalı olur.",
+  "at": "src/ui/screens/ProjectView.tsx:757"
+ },
+ "19dhs7h": {
+  "tr": "Kendi parçaların artık kaliteli tedarikçininki kadar sağlam; beceri {fail} olunca o kadar az arızalı da olur.",
+  "at": "src/ui/screens/ProjectView.tsx:758"
  },
  "128t4ek": {
   "tr": "<b>Neden sipariş edilemiyor?</b> {tooling} {cost} tutuyor, kasada {cash} var: {short} eksik.",
-  "at": "src/ui/screens/ProjectView.tsx:669"
+  "at": "src/ui/screens/ProjectView.tsx:775"
  },
  "1b9k335": {
   "tr": "{tooling} seç ({cost}, kasaya yetiyor)",
-  "at": "src/ui/screens/ProjectView.tsx:679"
+  "at": "src/ui/screens/ProjectView.tsx:785"
  },
  "1qlk287": {
   "tr": "{amount} kredi alındı, kalıplar sipariş edildi",
-  "at": "src/ui/screens/ProjectView.tsx:690"
+  "at": "src/ui/screens/ProjectView.tsx:796"
  },
  "1hl7o53": {
   "tr": "Eksiği krediyle karşıla ({amount} kredi)",
-  "at": "src/ui/screens/ProjectView.tsx:693"
+  "at": "src/ui/screens/ProjectView.tsx:799"
  },
  "1v5lcxi": {
   "tr": "Kalıpçıya vadeli sipariş",
-  "at": "src/ui/screens/ProjectView.tsx:701"
+  "at": "src/ui/screens/ProjectView.tsx:807"
  },
  "15nlyqc": {
   "tr": "Kalıpçı parayı sonra, satışlardan almayı kabul ediyor ama {pct} fazlasını istiyor: {amount} şirketin borcuna eklenir ve faiz işler. Bankanın kredi limiti bu borcu da sayar.",
-  "at": "src/ui/screens/ProjectView.tsx:702"
+  "at": "src/ui/screens/ProjectView.tsx:808"
  },
  "1bi4tos": {
   "tr": "Vadeli sipariş et",
-  "at": "src/ui/screens/ProjectView.tsx:706"
+  "at": "src/ui/screens/ProjectView.tsx:812"
  },
  "f2scdc": {
   "tr": "Kalıplar vadeli sipariş edildi",
-  "at": "src/ui/screens/ProjectView.tsx:707"
+  "at": "src/ui/screens/ProjectView.tsx:813"
  },
  "cpjlnt": {
   "tr": "Kalıpçıya vadeli sipariş et (+{pct}, borca eklenir)",
-  "at": "src/ui/screens/ProjectView.tsx:710"
+  "at": "src/ui/screens/ProjectView.tsx:816"
  },
  "f1ukly": {
   "tr": "Kasa ve banka kredisi yetmiyor. Vadeli sipariş son çıkış yolu; ya da satıştaki arabalardan para gelmesini bekle, gereksiz mühendisleri çıkar.",
-  "at": "src/ui/screens/ProjectView.tsx:716"
+  "at": "src/ui/screens/ProjectView.tsx:822"
  },
  "jwjh5b": {
   "tr": "Yeni hat bu arabaya ayrıldı",
-  "at": "src/ui/screens/ProjectView.tsx:736"
+  "at": "src/ui/screens/ProjectView.tsx:842"
  },
  "cwsoa3": {
   "tr": "Bu arabanın hattı yok",
-  "at": "src/ui/screens/ProjectView.tsx:739"
+  "at": "src/ui/screens/ProjectView.tsx:845"
  },
  "1o3knt8": {
   "tr": "Kalıplar hazır ama yapıldıkları hat artık yok (satıldı ya da başka bir arabaya verildi). Lansmandan önce arabanın üretileceği hattı seç ya da yeni bir hat kur.",
-  "at": "src/ui/screens/ProjectView.tsx:741"
+  "at": "src/ui/screens/ProjectView.tsx:847"
  },
  "1t9tq8f": {
   "tr": "{name} seçildi",
-  "at": "src/ui/screens/ProjectView.tsx:746"
+  "at": "src/ui/screens/ProjectView.tsx:852"
  },
  "ezgq07": {
   "tr": "şu an {name}; lansmanda hattını kaybeder",
-  "at": "src/ui/screens/ProjectView.tsx:750"
+  "at": "src/ui/screens/ProjectView.tsx:856"
  },
  "1sh6qx2": {
   "tr": "Sınıfın tipik fiyatı: {price}. Fiyat enflasyona göre otomatik güncellenir; istersen Modeller ekranından değiştirirsin.",
-  "at": "src/ui/screens/ProjectView.tsx:803"
+  "at": "src/ui/screens/ProjectView.tsx:909"
  },
  "1i2y3ml": {
   "tr": "Satış yapılan {n} eyalette sunulur · segment {count} araç/yıl (bütün ülke) · araç başına ortalama nakliye {freight}.",
-  "at": "src/ui/screens/ProjectView.tsx:808"
+  "at": "src/ui/screens/ProjectView.tsx:914"
  },
  "mirk0e": {
   "tr": "Otomobil fuarında tanıt",
-  "at": "src/ui/screens/ProjectView.tsx:817"
+  "at": "src/ui/screens/ProjectView.tsx:923"
  },
  "1uw3qqr": {
   "tr": "{cost} · <share>kasanın {pct}</share> · bilinirlik ve lansman heyecanı artar",
-  "at": "src/ui/screens/ProjectView.tsx:818"
+  "at": "src/ui/screens/ProjectView.tsx:924"
  },
  "1d25bcn": {
   "tr": "Lansman özeti",
-  "at": "src/ui/screens/ProjectView.tsx:831"
+  "at": "src/ui/screens/ProjectView.tsx:937"
  },
  "ilt3ab": {
   "tr": "Seçili pazarlarda segment ({markets})",
-  "at": "src/ui/screens/ProjectView.tsx:834"
+  "at": "src/ui/screens/ProjectView.tsx:940"
  },
  "1rvz0l": {
   "tr": "(haftada {v})",
-  "at": "src/ui/screens/ProjectView.tsx:836"
+  "at": "src/ui/screens/ProjectView.tsx:942"
  },
  "1ryuv0a": {
   "tr": "Malzeme / araç",
-  "at": "src/ui/screens/ProjectView.tsx:844"
+  "at": "src/ui/screens/ProjectView.tsx:950"
  },
  "1idvj7p": {
   "tr": "İşçilik / araç (tam kapasite)",
-  "at": "src/ui/screens/ProjectView.tsx:848"
+  "at": "src/ui/screens/ProjectView.tsx:954"
  },
  "z8qnbh": {
   "tr": "Araç başı brüt kâr (tam kapasite)",
-  "at": "src/ui/screens/ProjectView.tsx:852"
+  "at": "src/ui/screens/ProjectView.tsx:958"
  },
  "10vhh57": {
   "tr": "Beklenen satış (orta tahmin)",
-  "at": "src/ui/screens/ProjectView.tsx:856"
+  "at": "src/ui/screens/ProjectView.tsx:962"
  },
  "klv60r": {
   "tr": "Aracın haftalık katkısı",
-  "at": "src/ui/screens/ProjectView.tsx:860"
+  "at": "src/ui/screens/ProjectView.tsx:966"
  },
  "55h7oi": {
   "tr": "Sabit giderler (maaş, genel gider, bayi)",
-  "at": "src/ui/screens/ProjectView.tsx:864"
+  "at": "src/ui/screens/ProjectView.tsx:970"
  },
  "174u2qc": {
   "tr": "Şirketin haftalık kârı: şimdi → bu araçla",
-  "at": "src/ui/screens/ProjectView.tsx:869"
+  "at": "src/ui/screens/ProjectView.tsx:975"
  },
  "1if8qiq": {
   "tr": "Haftalık net",
-  "at": "src/ui/screens/ProjectView.tsx:876"
+  "at": "src/ui/screens/ProjectView.tsx:982"
  },
  "zxv6i2": {
   "tr": "Bu fiyatta ve beklenen talepte şirket haftada {loss} kaybeder. Hat işçiliği az üretimde de ödenir; fiyatı, hattı ya da mühendis sayısını gözden geçir.",
-  "at": "src/ui/screens/ProjectView.tsx:883"
+  "at": "src/ui/screens/ProjectView.tsx:989"
  },
  "qbbj9d": {
   "tr": "Alıcıların aracını nasıl karşılayacağını lansmanda göreceksin: dergi puanları, rakiplerle karşılaştırma ve dört hafta sonra ilk ay raporu.",
-  "at": "src/ui/screens/ProjectView.tsx:890"
+  "at": "src/ui/screens/ProjectView.tsx:996"
  },
  "1mmw5aw": {
   "tr": "Lansmanı yap",
-  "at": "src/ui/screens/ProjectView.tsx:902"
+  "at": "src/ui/screens/ProjectView.tsx:1008"
  },
  "99ud4t": {
   "tr": "Hat: {name}",
-  "at": "src/ui/screens/ProjectView.tsx:905"
+  "at": "src/ui/screens/ProjectView.tsx:1011"
  },
  "1ajzw1u": {
   "tr": "Tasarım",
@@ -11499,11 +11623,11 @@
  },
  "kzs36z": {
   "tr": "Olmadı.",
-  "at": "src/ui/store.ts:146"
+  "at": "src/ui/store.ts:150"
  },
  "lnlxx6": {
   "tr": "Oyunda bir hata oluştu ve oyun durdu. Hata kaydedildi; Claude’a gönderilecek.",
-  "at": "src/ui/store.ts:234"
+  "at": "src/ui/store.ts:238"
  },
  "ve6mvq": {
   "tr": "{body} gövdeli araç çizimi",

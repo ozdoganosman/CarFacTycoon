@@ -22,13 +22,13 @@ import {
   materialUnitCost,
   rescueLoan,
 } from './game';
-import { modelScores, priceNow, referencePrice } from './market';
+import { datedPenalty, demandAtPrice, modelAgeYears, modelScores, priceNow, referencePrice } from './market';
 import { stateRng } from './rng';
 import { acquisitionTargets } from './acquisitions';
 import { boardVeto } from './shares';
 import { beginResearch, ensureResearch, knownKnowhow, labSlots, missingRequirements, pumpResearchQueue, researchCost, researchDef, researcherHireCost, restrictToKnown, unknownTech } from './research';
 import { experienceFactor, newEstimate } from './estimate';
-import { TESTS, SUPPLIERS, expectedDefects, generateDefects } from './testing';
+import { TESTS, SUPPLIERS, expectedDefects, generateDefects, withTuning } from './testing';
 import { yearFloat } from './time';
 import type {
   CarDesign,
@@ -1201,4 +1201,69 @@ export function previewModel(s: GameState, p: Project, price: number, markets: M
     warrantyCost: 0,
     status: 'active',
   };
+}
+
+export interface FaceliftOutlook {
+  /** Buyers a week at today's price: the car as it is, and as the facelift would make it (both without launch buzz). */
+  demandNow: number;
+  demandAfter: number;
+  /** How old the car looks to buyers (years), now and just after the facelift. */
+  ageNow: number;
+  ageAfter: number;
+  /** What its age costs the car with buyers (utility points, negative), now and after. */
+  datedNow: number;
+  datedAfter: number;
+  /** How attractive it is to its class (average 50), now and after. */
+  appealNow: number;
+  appealAfter: number;
+}
+
+/**
+ * What a facelift would really bring, to judge it before committing: the car's buyers a week at today's
+ * price as it is and as if the facelift were on sale today (the engineers' expected result of the
+ * current brief and test plan; the launch buzz left out of both), and how old it looks to buyers.
+ * The market's own sums (market.ts) do the work: the facelifted car takes the old one's place.
+ */
+export function faceliftOutlook(s: GameState, p: Project): FaceliftOutlook | null {
+  const m = p.kind === 'facelift' ? s.models.find((x) => x.id === p.replacesModelId && x.status === 'active') : undefined;
+  if (!m) return null;
+  const yf = yearFloat(s.week);
+  const planned = Object.fromEntries(TESTS.map((x) => [x.id, { done: Math.max(p.tests[x.id].done, p.tests[x.id].planned) }])) as Record<TestId, { done: number }>;
+  const bonus = withTuning(p.devBonus ?? projectedBonus(s, p), planned);
+  const stats = computeCarStats(p.design, yf, bonus);
+  const now: CarModel = { ...m, hype: 0 };
+  const after: CarModel = {
+    ...m,
+    design: p.design,
+    bonus,
+    stats,
+    suppliers: p.suppliers,
+    refreshWeek: s.week,
+    hype: 0,
+    cache: undefined,
+    // As at a facelift's launch: buyers half believe the new figures.
+    perceivedReliability: Math.max(m.perceivedReliability, (m.perceivedReliability + stats.reliability) / 2),
+  };
+  const price = priceNow(m, s.week);
+  const market = m.markets.includes(s.company.hq) ? s.company.hq : m.markets[0];
+  // Each version is priced alone in the market (the car on sale steps aside meanwhile).
+  const status = m.status;
+  m.status = 'retired';
+  try {
+    const demand = (x: CarModel) => x.markets.reduce((a, mk) => a + demandAtPrice(s, x, mk, price), 0);
+    const ageNow = modelAgeYears(m, s.week);
+    const ageAfter = modelAgeYears(after, s.week);
+    return {
+      demandNow: demand(now),
+      demandAfter: demand(after),
+      ageNow,
+      ageAfter,
+      datedNow: datedPenalty(ageNow),
+      datedAfter: datedPenalty(ageAfter),
+      appealNow: modelScores(s, now).appeal[market],
+      appealAfter: modelScores(s, after).appeal[market],
+    };
+  } finally {
+    m.status = status;
+  }
 }

@@ -5,7 +5,7 @@ import { computeEngine, displacementCc, eraRpmCap, racHp } from '../src/core/eng
 import { researchCost, researchDef, researchDefs, researchScale, researchSlots, unknownTech } from '../src/core/research';
 import { KNOWHOW } from '../src/data/knowhow';
 import { capexScale, corporateTaxRate, costIndex } from '../src/data/economy';
-import { lineOffline, lineReport, nextLineName, reservedLines, stationPrice, suggestedLine } from '../src/core/factory';
+import { lineOffline, lineReport, nextLineName, paybackYears, reservedLines, stationPrice, suggestedLine } from '../src/core/factory';
 import { credit, finalScore, materialUnitCost, newGame, tick } from '../src/core/game';
 import { racingOutlook, racingPaused, setRacingLevel } from '../src/core/racing';
 import { pctWith, withSuffix } from '../src/core/turkish';
@@ -15,7 +15,7 @@ import { datedPenalty, modelAgeYears, priceNow, segmentMarket } from '../src/cor
 import { makeRng } from '../src/core/rng';
 import { deserialize, serialize } from '../src/core/save';
 import { eraReference, scoreStats } from '../src/core/scoring';
-import { TESTS, expectedRemaining, testWeekCost } from '../src/core/testing';
+import { TESTS, expectedRemaining, inhouseParity, partsVsQuality, testWeekCost } from '../src/core/testing';
 import { isBlockingModal } from '../src/core/util';
 import { computeCarStats } from '../src/core/vehicle';
 import type { CarDesign } from '../src/core/types';
@@ -24,7 +24,10 @@ import { SEGMENTS } from '../src/data/segments';
 import { inYear } from '../src/ui/format';
 import { FOCUS_KEYS, bonusFromPoints, presetFocus, teamOutput } from '../src/core/development';
 import { experienceFactor } from '../src/core/estimate';
-import { autoCapacity } from '../src/core/autocap';
+import { SMALL_LINES, autoCapacity, newLineSize } from '../src/core/autocap';
+import { buildLaunchReport } from '../src/core/feedback';
+import { ledSegments } from '../src/core/rivalMoves';
+import { MAX_SLOTS } from '../src/data/economy';
 import { stationDef } from '../src/data/stations';
 import { appealUtility, exclusivityPenalty } from '../src/core/market';
 import { customerLetters } from '../src/core/letters';
@@ -442,6 +445,12 @@ describe('clock', () => {
     s.modals = [{ kind: 'unlock', title: 'x', body: 'y' }];
     store.step();
     store.setSpeed(0);
+    store.act(A.dismissModal);
+    expect(store.speed).toBe(0);
+    // After a historical event the clock stays stopped too: a year once ran by unnoticed at full speed.
+    store.setSpeed(3);
+    s.modals = [{ kind: 'event', eventId: 'model_h' }];
+    store.step();
     store.act(A.dismissModal);
     expect(store.speed).toBe(0);
     store.quit();
@@ -910,3 +919,77 @@ describe('research staff, focus presets and waiting projects', () => {
 function researchSlotsOf(s: ReturnType<typeof newGame>) {
   return researchSlots(s.company.engineers, s.company.researchers ?? 0);
 }
+
+describe('playtest fixes: capacity, reports, facelifts, parts', () => {
+  it('automatic capacity grows in a few big lines and says which purchase pays back in how many months', () => {
+    // The planner's sum: every car it builds sold, or only the cars buyers want.
+    expect(paybackYears(52_000, 10, 100)).toBeCloseTo(1, 6);
+    expect(paybackYears(52_000, 10, 100, 5)).toBeCloseTo(2, 6);
+    expect(paybackYears(52_000, 10, -5)).toBe(Infinity);
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 12 });
+    runBot(s, 52 * 2, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active')!;
+    A.setModelAutoCapacity(s, m.id, true);
+    s.company.cash = 5e6;
+    const linesOfM = () => s.lines.filter((l) => l.modelId === m.id);
+    const before = linesOfM().map((l) => l.id);
+    m.lastDemand = { usa: 200, europe: 0 };
+    m.demandTrend = 200;
+    autoCapacity(s, () => 100);
+    const built = linesOfM().filter((l) => !before.includes(l.id));
+    expect(built.length).toBeGreaterThan(0);
+    // Small lines only while the model has fewer than three; after that, full-size ones.
+    expect(built.filter((l) => l.slots < MAX_SLOTS).length).toBeLessThanOrEqual(Math.max(0, SMALL_LINES - before.length));
+    expect(newLineSize(s, m, false)).toBe(MAX_SLOTS);
+    // A shortfall of a hundredth of a car: nothing pays within two years, and the reason says why in numbers.
+    const cap = linesOfM().reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
+    m.demandTrend = (cap + 0.01) / 1.05;
+    m.lastDemand = { usa: m.demandTrend, europe: 0 };
+    autoCapacity(s, () => 100);
+    expect(['payback', 'full']).toContain(m.autoHold);
+    if (m.autoHold === 'payback') expect(m.autoWhy).toMatch(/ayda/);
+  });
+
+  it('a facelift’s first-month report counts from the facelift, and "leader" means the same everywhere', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 31 });
+    runBot(s, 52 * 4, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active')!;
+    m.refreshWeek = s.week - 4;
+    const r = buildLaunchReport(s, m);
+    expect(r.weeks).toBe(4);
+    expect(r.leads).toBe(ledSegments(s).includes(m.segment));
+  });
+
+  it('shows what a facelift really brings before it starts, and leaves the market as it was', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 32 });
+    runBot(s, 52 * 5, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active')!;
+    s.projects = [];
+    expect(A.startFacelift(s, m.id).ok).toBe(true);
+    const p = s.projects.find((x) => x.kind === 'facelift')!;
+    const demand = segmentMarket(s, 'usa', m.segment).player.units[m.id];
+    const models = s.models.length;
+    const o = A.faceliftOutlook(s, p)!;
+    expect(o).not.toBeNull();
+    expect(o.ageNow).toBeCloseTo(modelAgeYears(m, s.week), 9);
+    expect(o.ageAfter).toBeLessThan(o.ageNow);
+    expect(o.datedNow).toBe(datedPenalty(o.ageNow));
+    expect(o.datedAfter).toBeGreaterThanOrEqual(o.datedNow);
+    expect(o.demandNow).toBeGreaterThan(0);
+    expect(m.status).toBe('active');
+    expect(s.models.length).toBe(models);
+    expect(segmentMarket(s, 'usa', m.segment).player.units[m.id]).toBeCloseTo(demand, 9);
+  });
+
+  it('says what own-made parts cost in reliability, by the engineers’ skill', () => {
+    const own = { engine: 'inhouse', gearbox: 'inhouse', electrics: 'inhouse' } as const;
+    const green = partsVsQuality(own, 57);
+    expect(green.reliability).toBeLessThan(0);
+    expect(green.failures).toBeGreaterThan(1);
+    const par = inhouseParity();
+    expect(par.reliability).toBeGreaterThan(57);
+    expect(partsVsQuality(own, par.reliability).reliability).toBeGreaterThan(-1e-6);
+    expect(partsVsQuality(own, par.failures).failures).toBeLessThan(1 + 1e-6);
+    expect(partsVsQuality({ engine: 'quality', gearbox: 'quality', electrics: 'quality' }, 40)).toEqual({ reliability: 0, failures: 1 });
+  });
+});

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import * as A from '../../core/actions';
-import { AUTO_HOLD_TEXT } from '../../core/autocap';
+import { autoAllowsBlack, autoHoldText, demandGap, newLineSize } from '../../core/autocap';
 import {
+  LINE_SIZES,
   MILITARY_COMPLEXITY,
   NIGHT_SHIFT_COST,
   NIGHT_SHIFT_OUTPUT,
@@ -11,9 +12,10 @@ import {
   lineReport,
   lineUpkeep,
   modernizeQuote,
-  planBalancedLine,
+  paybackMonths,
+  paybackYears,
   stationPrice,
-  turnkeyLineCost,
+  turnkeyQuote,
   workshopLineCost,
   workshopPlan,
 } from '../../core/factory';
@@ -105,15 +107,17 @@ function CapacityPlanner() {
   const short = active.filter((x) => gapOf(x) >= 0.5).sort((a, b) => gapOf(b) - gapOf(a));
   const suggested = short[0] ?? [...active].sort((a, b) => demandOf(b) - demandOf(a))[0];
   const m = active.find((x) => x.id === pick) ?? suggested;
-  const SIZES = [2, 3, 4, 6, MAX_SLOTS];
-  const outputAt = (b: boolean, k: number) =>
-    lineReport(s, { ...emptyLine('plan', 'plan'), slots: Math.max(3, k), stations: planBalancedLine(yf, b, k) }, m?.stats.complexity ?? 1).throughput;
-  // Without a choice: the smallest hall that covers what buyers are missing.
-  const missing = m ? Math.max(0, demandOf(m) - modelCapacity(s, m)) : 0;
-  const fits = SIZES.find((k) => outputAt(allowBlack, k) >= missing) ?? MAX_SLOTS;
+  // The same quotes and sums automatic capacity uses (core/factory.ts, core/autocap.ts).
+  const quoteAt = (b: boolean, k: number) => (m ? turnkeyQuote(s, m, b, k) : undefined);
+  const outputAt = (b: boolean, k: number) => quoteAt(b, k)?.output ?? 0;
+  // Cars a week buyers lastingly want beyond what the lines build or soon will.
+  const gap = m ? demandGap(s, m) : 0;
+  // Without a choice: the line automatic capacity would build (the smallest that covers the shortfall).
+  const fits = m ? newLineSize(s, m, allowBlack, gap) : MAX_SLOTS;
   const size = sizePick ?? fits;
+  const quote = quoteAt(allowBlack, size);
   const perLine = (b: boolean) => outputAt(b, size);
-  const each = turnkeyLineCost(s.week, allowBlack, size) + (m ? A.retoolCost(s, m) : 0);
+  const each = quote?.cost ?? 0;
   const shopEach = workshopLineCost(s.week) + (m ? A.retoolCost(s, m) : 0);
   const shopCap = lineReport(s, { ...emptyLine('plan', 'plan'), stations: workshopPlan(yf) }, m?.stats.complexity ?? 1).throughput;
   const demand = m ? Object.values(m.lastDemand ?? {}).reduce((a, b) => a + b, 0) : 0;
@@ -122,11 +126,12 @@ function CapacityPlanner() {
     .map((l) => ({ l, q: modernizeQuote(l, s.week, allowBlack) }))
     .filter(({ q }) => q.after > q.before * 1.02);
   const upgradeCost = upgrades.reduce((a, u) => a + Math.max(0, u.q.cost), 0);
-  const affordable = Math.max(0, Math.floor(s.company.cash / each));
-  // What one more line earns if every car it builds is sold: years to pay for itself.
-  const planLine = { ...emptyLine('plan', 'plan'), slots: Math.max(3, size), stations: planBalancedLine(yf, allowBlack, size) };
-  const margin = m ? priceNow(m, s.week) * (1 - DEALER_COMMISSION) - materialUnitCost(s, m) - lineUpkeep(s, planLine, 1) / Math.max(0.1, perLine(allowBlack)) : 0;
-  const payback = margin > 0 ? each / (margin * perLine(allowBlack) * 52) : Infinity;
+  const affordable = each > 0 ? Math.max(0, Math.floor(s.company.cash / each)) : 0;
+  // What each car of one more line earns, and the years it takes to pay for itself: if every car it
+  // builds is sold, and on the cars buyers lastingly want (what automatic capacity counts).
+  const margin = m && quote ? priceNow(m, s.week) * (1 - DEALER_COMMISSION) - materialUnitCost(s, m) - quote.labour : 0;
+  const payback = quote ? paybackYears(each, quote.output, margin) : Infinity;
+  const paybackSold = quote ? paybackYears(each, quote.output, margin, gap) : Infinity;
   const build = lineBuildWeeks(yf);
   return (
     <Panel title={t('Kapasite planlayıcı')} className="planner">
@@ -146,7 +151,7 @@ function CapacityPlanner() {
                     {d > c * 1.1 && d - c >= 0.5 && <span className="small tone-bad">{t('~{n} araç/hf kaçıyor', { n: Math.round(d - c) })}</span>}
                     {x.autoCapacity && x.autoHold && d > c * 1.05 && (
                       <span className="small tone-warn">
-                        {t('otomatik durdu: {reason}', { reason: t(AUTO_HOLD_TEXT[x.autoHold]) })}
+                        {t('otomatik durdu: {reason}', { reason: autoHoldText(x) })}
                         {x.autoHint && <b className="auto-hint">{' '}{t('Çıkış yolu: {hint}.', { hint: x.autoHint })}</b>}
                       </span>
                     )}
@@ -173,14 +178,24 @@ function CapacityPlanner() {
                     {payback < 1
                       ? tx(
                           'Ürettiği her araç satılırsa araç başına ~{margin} kalır: hat kendini <pay>~{n} ayda</pay> öder.',
-                          { margin: money(margin), n: Math.max(1, Math.round(payback * 12)) },
+                          { margin: money(margin), n: paybackMonths(payback) },
                           { pay: (c, k) => <b key={k} className={payback > 3 ? 'tone-warn' : ''}>{c}</b> },
                         )
                       : tx(
                           'Ürettiği her araç satılırsa araç başına ~{margin} kalır: hat kendini <pay>~{years} yılda</pay> öder.',
                           { margin: money(margin), years: dec(payback, 1) },
                           { pay: (c, k) => <b key={k} className={payback > 3 ? 'tone-warn' : ''}>{c}</b> },
-                        )}
+                        )}{' '}
+                    {/* What automatic capacity counts: only the cars buyers lastingly want. */}
+                    {gap <= 0.05
+                      ? t('Kalıcı talep (lansman heyecanı hariç) şimdiki ve inşaattaki hatlarla karşılanıyor: bu fiyatla yeni hat boş kalır.')
+                      : quote && gap < quote.output
+                        ? tx(
+                            'Ama alıcılar kalıcı olarak yalnız ~{gap} araç/hf daha istiyor (lansman heyecanı hariç, inşaattaki hatlar dahil): yalnız bu kadar satılırsa hat <pay>~{n} ayda</pay> öder. Otomatik kapasite de böyle hesaplar ve en çok iki yıl bekler.',
+                            { gap: dec(gap, 1), n: paybackMonths(paybackSold) },
+                            { pay: (c, k) => <b key={k} className={paybackSold > 2 ? 'tone-warn' : ''}>{c}</b> },
+                          )
+                        : null}
                   </>
                 ) : (
                   <span className="tone-bad">{t('Bu fiyatla araç başına para kalmıyor: yeni hat kendini ödemez.')}</span>
@@ -188,7 +203,7 @@ function CapacityPlanner() {
               </p>
               <div className="preset-chips" role="radiogroup" aria-label={t('Hat boyu')}>
                 <span className="small muted">{t('Hat boyu (bölüm başına yer):')}</span>
-                {SIZES.map((k) => (
+                {LINE_SIZES.map((k) => (
                   <button
                     key={k}
                     type="button"
@@ -196,10 +211,10 @@ function CapacityPlanner() {
                     aria-checked={size === k}
                     className={`chip ${size === k ? 'is-on' : ''}`}
                     onClick={() => setSizePick(k)}
-                    title={t('{output} araç/hf · {cost}', { output: dec(outputAt(allowBlack, k), 1), cost: money(turnkeyLineCost(s.week, allowBlack, k) + A.retoolCost(s, m)) })}
+                    title={t('{output} araç/hf · {cost}', { output: dec(outputAt(allowBlack, k), 1), cost: money(quoteAt(allowBlack, k)?.cost ?? 0) })}
                   >
                     {k === fits && sizePick === undefined
-                      ? t('{n} yer · {output}/hf (açığa göre)', { n: k, output: dec(outputAt(allowBlack, k), 0) })
+                      ? t('{n} yer · {output}/hf (önerilen)', { n: k, output: dec(outputAt(allowBlack, k), 0) })
                       : t('{n} yer · {output}/hf', { n: k, output: dec(outputAt(allowBlack, k), 0) })}
                   </button>
                 ))}
@@ -209,7 +224,13 @@ function CapacityPlanner() {
                   checked={black}
                   onChange={setBlack}
                   label={t('Siyah vernik fırını kullan: hat başına {normal} yerine {black} araç/hf', { normal: dec(perLine(false), 1), black: dec(perLine(true), 1) })}
-                  sub={t('Çok daha hızlı kurur ama araç yalnızca siyah olur: prestij −5.')}
+                  sub={
+                    m.autoCapacity && black !== autoAllowsBlack(s, m)
+                      ? black
+                        ? t('Çok daha hızlı kurur ama araç yalnızca siyah olur: prestij −5. Otomatik kapasite {model} için siyah vernik fırını kullanmaz (lüks ve spor arabalar renkli kalır).', { model: m.name })
+                        : t('Çok daha hızlı kurur ama araç yalnızca siyah olur: prestij −5. Otomatik kapasite {model} için bu fırını da kullanır.', { model: m.name })
+                      : t('Çok daha hızlı kurur ama araç yalnızca siyah olur: prestij −5.')
+                  }
                 />
               )}
               {shopEach < each * 0.5 && (
@@ -237,7 +258,7 @@ function CapacityPlanner() {
                 </div>
                 <span className="muted small">
                   {t('Toplam {cost} · +{output} araç/hf', { cost: money(each * count), output: dec(perLine(allowBlack) * count, 0) })}
-                  {demand > cap && ` · ${t('açığı kapatmak için ~{n} hat', { n: Math.ceil((demand - cap) / Math.max(0.1, perLine(allowBlack))) })}`}
+                  {gap > 0.05 && ` · ${t('açığı kapatmak için ~{n} hat', { n: Math.ceil(gap / Math.max(0.1, perLine(allowBlack))) })}`}
                   {` · ${t('kasan {n} hatta yetiyor', { n: affordable })}`}
                 </span>
                 <Button
@@ -267,23 +288,23 @@ function CapacityPlanner() {
                 </Button>
               </div>
               {(() => {
-                // A line that pays for itself soon but the till is short: the bank can bridge it.
+                // A line that pays for itself soon on the cars buyers want, but the till is short: the bank can bridge it.
                 const short = each * count - s.company.cash;
                 const room = credit(s).limit - s.company.loan;
-                if (short <= 0 || payback > 2) return null;
+                if (short <= 0 || paybackSold > 2) return null;
                 return room >= short ? (
                   <p className="note small planner-loan">
-                    {payback < 1
+                    {paybackSold < 1
                       ? t('Kasada {cash} var, eksik {short}. Hat ~{n} ayda kendini ödüyorsa eksiği kredi ile kapatmak mantıklı olabilir (faiz yılda {rate}).', {
                           cash: money(s.company.cash),
                           short: money(short),
-                          n: Math.max(1, Math.round(payback * 12)),
+                          n: paybackMonths(paybackSold),
                           rate: pct(credit(s).rate, 0),
                         })
                       : t('Kasada {cash} var, eksik {short}. Hat ~{years} yılda kendini ödüyorsa eksiği kredi ile kapatmak mantıklı olabilir (faiz yılda {rate}).', {
                           cash: money(s.company.cash),
                           short: money(short),
-                          years: dec(payback, 1),
+                          years: dec(paybackSold, 1),
                           rate: pct(credit(s).rate, 0),
                         })}{' '}
                     <Button small onClick={() => store.try((st) => A.takeLoan(st, Math.ceil(short / 1000) * 1000), t('Kredi alındı'))}>

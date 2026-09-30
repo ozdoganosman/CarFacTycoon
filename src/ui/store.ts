@@ -7,8 +7,12 @@ import { isBlockingModal, recordError } from '../core/util';
 import { t } from '../i18n';
 import type { ModalItem } from '../core/types';
 
-/** After these the player has work to do, so the clock stays stopped once they are closed. */
-const STAY_PAUSED = new Set<ModalItem['kind']>(['phase', 'launch', 'launchReport', 'gameOver', 'insolvency', 'stall']);
+/**
+ * After these the player has work to do, or has just made a big decision, so the clock stays stopped
+ * once they are closed: at full speed a year could otherwise run by unnoticed after a historical event
+ * or a recall. Only the explainer cards and unlock notes let the clock run on as it was.
+ */
+const STAY_PAUSED = new Set<ModalItem['kind']>(['phase', 'launch', 'launchReport', 'gameOver', 'insolvency', 'stall', 'event', 'recall', 'service']);
 import type { GameState } from '../core/types';
 
 // A tiny external store: the simulation mutates GameState in place and bumps a
