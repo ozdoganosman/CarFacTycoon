@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as A from '../src/core/actions';
 import { emptyLine, lineReport, lineUpkeep, planBalancedLine, turnkeyLineCost, workshopLineCost } from '../src/core/factory';
 import { newGame, tick } from '../src/core/game';
-import { priceNow, referencePrice, segmentMarket } from '../src/core/market';
+import { priceNow, referencePrice, rivalReputation, rivalScores, segmentMarket } from '../src/core/market';
 import * as N from '../src/core/network';
 import { ledSegments } from '../src/core/rivalMoves';
 import { researchCost, researchDef } from '../src/core/research';
@@ -149,3 +149,24 @@ describe('the board and the rivals', () => {
   });
 });
 
+
+describe('the share cap', () => {
+  // A rival once took 57% of a class with one car while ours stopped near 35%: rivals meet the same cap.
+  it('a far better, far cheaper rival car stops near its cap; a price over the class still costs it buyers', () => {
+    const s = game(1900);
+    const share = () => {
+      const sm = segmentMarket(s, 'usa', 'family');
+      const o = sm.offers.find((x) => x.id === rm.id)!;
+      return { share: o.weight / sm.totalWeight, cap: N.shareCap(o.reach, rivalReputation(rm.companyId)) };
+    };
+    const lead = segmentMarket(s, 'usa', 'family').offers.filter((o) => o.kind === 'rival').sort((a, b) => b.weight - a.weight)[0];
+    const rm = s.rivalModels.find((r) => r.id === lead.id)!;
+    rivalScores(s, rm).appeal.usa = 100;
+    rm.priceCut = { mult: 0.6, until: s.week + 52 };
+    const cheap = share();
+    expect(cheap.share).toBeLessThan(cheap.cap * 1.1);
+    expect(cheap.share).toBeGreaterThan(cheap.cap * 0.6);
+    rm.priceCut = { mult: 1.4, until: s.week + 52 };
+    expect(share().share).toBeLessThan(cheap.share * 0.6);
+  });
+});
