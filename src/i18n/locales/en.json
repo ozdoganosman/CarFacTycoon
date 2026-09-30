@@ -2261,15 +2261,10 @@
  "b03b2g": "{year} season, {race}: <b>{model}</b> finished in the top three.",
  "9h6c9x": "{year} season, {race}: <b>{model}</b> failed to place.",
  "e2svqw": "Buy a rival",
- "1kssq5s": "Makers smaller than you are up for sale. When you buy one, its models leave the market (their buyers look for a new make), its engineers join you and its dealers sell your cars: you gain new dealers in the most populous states, including ones you don’t sell in yet.",
  "k2nqjf": "Last year",
  "1pywtch": "Engineers",
  "1wzf2zp": "Price",
  "12shofk": "Buy {company}?",
- "ksyms8": {
-  "one": "Price {price} (your cash: {cash}). {n} engineer joins you (salary included), {company}’s models leave the market and its dealers sell your cars. This can’t be undone.",
-  "other": "Price {price} (your cash: {cash}). {n} engineers join you (salaries included), {company}’s models leave the market and its dealers sell your cars. This can’t be undone."
- },
  "2z0gur": "Pay {price} and buy",
  "10ujepk": "{company} acquired",
  "dvsto1": "Buy",
@@ -2651,7 +2646,6 @@
   "one": "No dealer search is under way right now (you sell in {n} state). Expand into a new state from the map.",
   "other": "No dealer search is under way right now (you sell in {n} states). Expand into a new state from the map."
  },
- "gfv765": "Not enough service: {states}. Owners are waiting, and cars are going to the scrapyard early.",
  "n9gm28": "Your dealer and service network costs {share} of sales revenue: consider closing dealers that sell little.",
  "1wqn0xe": "revenue",
  "bbt9lw": "dividend",

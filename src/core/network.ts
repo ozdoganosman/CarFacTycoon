@@ -7,25 +7,29 @@ import { CITY_XY, NEIGHBOURS, STATE_SHAPES } from '../data/usmap';
 import { rand } from './rng';
 import { yearFloat, yearOf } from './time';
 import type { GameState, NetworkState, SegmentId, StateNet } from './types';
-import { clamp, decide, log, money, spend } from './util';
-import { t } from '../i18n';
+import { clamp, decide, log, money, num, spend } from './util';
+import { list, t } from '../i18n';
 
 // The company across the country, state by state. Cars are only sold where the make has
-// a dealer; the network grows into neighbouring states, one dealer search at a time.
-// Every car sold stays on the road there for years and needs service; where there is
-// too little, owners grumble, cars die young and buyers stay away. A bigger network
-// costs more than its size: zone offices, travelling men, parts depots (see networkWeekly).
+// a dealer; the network grows into neighbouring states by dealer searches (one at a time
+// for a young firm, more as the sales department grows). Every car sold stays on the road
+// there for years and needs service; where there is too little, owners grumble, cars die
+// young and buyers stay away. A bigger network costs more than its size: zone offices,
+// travelling men, parts depots (see networkWeekly).
 
 // ---------------- places ----------------
 
 export const homeCity = (s: GameState) => cityDef(s.company.city);
 export const homeState = (s: GameState): StateId => homeCity(s).state;
 
+/** Miles per unit of map distance, with a detour factor for the railway. */
+const RAIL_MILES = 3.05 * 1.2;
+
 /** Rail miles from the factory to a state (its middle), by map distance with a detour factor. */
 export function railMiles(s: GameState, id: StateId): number {
   const [x, y] = CITY_XY[homeCity(s).id];
   const [lx, ly] = STATE_SHAPES[id].label;
-  return Math.hypot(lx - x, ly - y) * 3.05 * 1.2;
+  return Math.hypot(lx - x, ly - y) * RAIL_MILES;
 }
 
 /** Freight per car to a state: nothing at home; trucks and car carriers made it cheaper after 1920. */
@@ -302,15 +306,25 @@ export function frontier(s: GameState): StateId[] {
   return [...out];
 }
 
-/** One search at a time for a young firm; a bigger sales department runs several. */
-export const maxSearches = (s: GameState) => Math.min(6, 1 + Math.floor(totalDealers(s) / 12));
+/** Dealers that give the sales department one more search at a time, and the most it runs. */
+export const DEALERS_PER_SEARCH = 4;
+export const MAX_SEARCHES = 12;
+/** One search at a time for a young firm; every few dealers the sales department runs one more. */
+export const maxSearches = (s: GameState) => Math.min(MAX_SEARCHES, 1 + Math.floor(totalDealers(s) / DEALERS_PER_SEARCH));
 export const activeSearches = (s: GameState) => Object.values(network(s).states).filter((n) => n?.search).length;
 
 export function canSearch(s: GameState, id: StateId): { ok: true } | { ok: false; why: string } {
   const n = peek(s, id);
   if (n?.search) return { ok: false, why: t('Burada zaten bayi aranıyor.') };
   if (!isOpen(s, id) && !frontier(s).includes(id)) return { ok: false, why: t('Önce komşu bir eyalette satış yapmalısın: ağ eyalet eyalet büyür.') };
-  if (activeSearches(s) >= maxSearches(s)) return { ok: false, why: t('Aynı anda en çok {n} eyalette bayi aranabilir.', { n: maxSearches(s) }) };
+  if (activeSearches(s) >= maxSearches(s))
+    return {
+      ok: false,
+      why:
+        maxSearches(s) < MAX_SEARCHES
+          ? t('Aynı anda en çok {n} eyalette bayi aranabilir; her {per} bayi bir arama daha açar.', { n: maxSearches(s), per: DEALERS_PER_SEARCH })
+          : t('Aynı anda en çok {n} eyalette bayi aranabilir.', { n: maxSearches(s) }),
+    };
   return { ok: true };
 }
 
@@ -350,6 +364,32 @@ export function startDealerSearch(s: GameState, id: StateId): { ok: true } | { o
   n.search = { until: s.week + searchWeeks(s, id), chance: searchChance(s, id) };
   decide(s, `dealer:${id}`, `${stateDef(id).name}: bayi aranıyor (${money(cost)})`);
   return { ok: true };
+}
+
+/** Where a search in every free slot would go: the neighbouring states with the most buyers. */
+export function nextSearches(s: GameState, yf = yearFloat(s.week)): StateId[] {
+  const free = maxSearches(s) - activeSearches(s);
+  if (free <= 0) return [];
+  const w = stateWeights(yf);
+  return frontier(s)
+    .filter((id) => canSearch(s, id).ok)
+    .sort((a, b) => w[b] - w[a])
+    .slice(0, free);
+}
+
+/** "Komşularda bayi ara": start a search in every free slot at once (see nextSearches). */
+export function searchNeighbours(s: GameState): { ok: true; states: StateId[] } | { ok: false; error: string } {
+  const yf = yearFloat(s.week);
+  const ids = nextSearches(s, yf);
+  if (!ids.length)
+    return {
+      ok: false,
+      error: activeSearches(s) >= maxSearches(s) ? t('Aynı anda en çok {n} eyalette bayi aranabilir.', { n: maxSearches(s) }) : t('Bayi aranabilecek komşu eyalet kalmadı.'),
+    };
+  const cost = ids.reduce((a, id) => a + searchCost(s, id, yf), 0);
+  if (s.company.cash < cost) return { ok: false, error: t('Bu aramalar {cost} tutar.', { cost: money(cost) }) };
+  for (const id of ids) startDealerSearch(s, id);
+  return { ok: true, states: ids };
 }
 
 const DEALER_SURNAMES = ['Harper', 'Whitcomb', 'Doyle', 'Mercer', 'Lindqvist', 'Sutton', 'Kessler', 'Abbott', 'Brennan', 'Talbot', 'Ashford', 'Novak', 'Pruitt', 'Garrity', 'Holloway', 'Everett', 'Crane', 'Vance', 'Morrow', 'Stroud'];
@@ -395,6 +435,105 @@ export function underServed(s: GameState, yf = yearFloat(s.week), below = 0.8): 
   return STATE_IDS.filter((id) => (peek(s, id)?.parc ?? 0) > 100 && serviceQuality(s, id, yf) < below).sort(
     (a, b) => serviceQuality(s, a, yf) - serviceQuality(s, b, yf),
   );
+}
+
+// ---------------- service in bulk ----------------
+
+/** Room left above today's need when shops open: the cars sold next month need service too. */
+const SERVICE_ROOM = 1.1;
+
+/** Shops a state needs for every car on the road there to be looked after (none where it already is, or where the make does not sell). */
+export function shopsNeeded(s: GameState, id: StateId, yf: number): number {
+  const parc = peek(s, id)?.parc ?? 0;
+  if (parc < 1 || !isOpen(s, id)) return 0;
+  const need = parc * serviceNeed(yf);
+  const cap = serviceCapacity(s, id, yf);
+  return cap >= need ? 0 : Math.ceil((need * SERVICE_ROOM - cap) / shopServiceCap(yf));
+}
+
+export interface ServicePlan {
+  /** Shops to open, state by state, the worst served first. */
+  states: { id: StateId; shops: number }[];
+  count: number;
+  cost: number;
+}
+
+/**
+ * The shops it takes for every car on the road to be looked after. With a budget, as many
+ * as it pays for, each one where owners wait longest.
+ */
+export function servicePlan(s: GameState, yf = yearFloat(s.week), budget = Infinity): ServicePlan {
+  const price = serviceShopCost(yf);
+  const per = shopServiceCap(yf);
+  const want = STATE_IDS.map((id) => ({
+    id,
+    max: shopsNeeded(s, id, yf),
+    shops: 0,
+    have: serviceCapacity(s, id, yf),
+    need: (peek(s, id)?.parc ?? 0) * serviceNeed(yf),
+  })).filter((x) => x.max > 0);
+  const total = want.reduce((a, x) => a + x.max, 0);
+  let left = Math.floor(Math.max(0, budget) / price);
+  if (left >= total) for (const x of want) x.shops = x.max;
+  else
+    for (; left > 0; left--) {
+      let pick: (typeof want)[number] | undefined;
+      for (const x of want) if (x.shops < x.max && (!pick || (x.have + x.shops * per) / x.need < (pick.have + pick.shops * per) / pick.need)) pick = x;
+      if (!pick) break;
+      pick.shops += 1;
+    }
+  const states = want
+    .filter((x) => x.shops > 0)
+    .sort((a, b) => a.have / a.need - b.have / b.need)
+    .map(({ id, shops }) => ({ id, shops }));
+  const count = states.reduce((a, x) => a + x.shops, 0);
+  return { states, count, cost: count * price };
+}
+
+/** A plan's states for a sentence: "New York (60), Ohio (12) ve 5 eyalet daha". */
+export function planStates(items: { id: StateId; shops: number }[], shown = 4): string {
+  const names = items.slice(0, shown).map((x) => `${stateDef(x.id).name} (${num(x.shops)})`);
+  return items.length > shown ? t('{states} ve {n} eyalet daha', { states: names.join(', '), n: items.length - shown }) : list(names);
+}
+
+/** Open a plan's shops (its cost already checked). */
+export function openPlannedShops(s: GameState, plan: ServicePlan) {
+  if (!plan.count) return;
+  spend(s, plan.cost, 'investment');
+  for (const x of plan.states) stateNet(s, x.id).service += x.shops;
+}
+
+/** "Servisi yetir": open every shop the cars on the road need now, as many as the cash pays for, the worst served first. */
+export function coverService(s: GameState): { ok: true; opened: number } | { ok: false; error: string } {
+  const yf = yearFloat(s.week);
+  if (!servicePlan(s, yf).count) return { ok: false, error: t('Servis yetiyor: her eyalette arabalarına bakacak yer var.') };
+  const plan = servicePlan(s, yf, s.company.cash);
+  if (!plan.count) return { ok: false, error: t('Servis atölyesi {cost} tutar.', { cost: money(serviceShopCost(yf)) }) };
+  openPlannedShops(s, plan);
+  decide(s, 'service:all', `Servisi yetir: ${plan.count} atölye (${money(plan.cost)})`);
+  return { ok: true, opened: plan.count };
+}
+
+/**
+ * Shops standing idle where the cars have gone (scrapped, or the dealers' own workshops grew):
+ * closed only when service stays well above the need without them.
+ */
+export function surplusShops(s: GameState, id: StateId, yf: number): number {
+  const n = peek(s, id);
+  if (!n || n.service <= 0) return 0;
+  const need = n.parc * serviceNeed(yf);
+  const cap = serviceCapacity(s, id, yf);
+  const per = shopServiceCap(yf);
+  if (cap - per < need * 1.5) return 0;
+  return Math.min(n.service, Math.floor((cap - need * 1.25) / per));
+}
+
+/** "Otomatik servis": shops open (and idle ones close) by themselves every month (see autoService). */
+export function setAutoService(s: GameState, on: boolean) {
+  const net = network(s);
+  net.autoService = on;
+  net.autoServiceWaiting = undefined;
+  decide(s, 'autoService', `Otomatik servis ${on ? 'açık' : 'kapalı'}`);
 }
 
 // ---------------- the week ----------------
@@ -480,16 +619,45 @@ export function noteStateSales(s: GameState, id: StateId, units: number) {
   n.awareness = clamp(n.awareness + 0.0025 * Math.log1p(units) * 0.4, 0, 1);
 }
 
+/** Carmaking states a rival's factory may stand in, as many times as the trade crowded there. */
+const RIVAL_HOMES: StateId[] = ['MI', 'MI', 'MI', 'MI', 'OH', 'OH', 'OH', 'IN', 'IN', 'NY', 'NY', 'WI', 'PA', 'IL', 'CT', 'MA', 'MO'];
+
+/** Where a rival's factory stands: picked from its id, the same in every game. */
+export function rivalHomeState(rivalId: string): StateId {
+  let h = 0;
+  for (let i = 0; i < rivalId.length; i++) h = (Math.imul(h, 31) + rivalId.charCodeAt(i)) >>> 0;
+  return RIVAL_HOMES[h % RIVAL_HOMES.length];
+}
+
 /**
- * A bought rival's dealers carry our cars from now on: they add showrooms where the
- * buyers are, even in states we did not sell in yet. Returns the states that gained one.
+ * The states a bought rival's dealers would join our network in: its strong states (the busy
+ * ones round its factory) where our own showrooms are thin, and at least half of them states
+ * we do not sell in yet, while there are any.
  */
-export function absorbDealers(s: GameState, count: number, company: string): StateId[] {
-  const yf = yearFloat(s.week);
+export function acquiredDealerStates(s: GameState, count: number, rivalId: string, yf = yearFloat(s.week)): StateId[] {
   const w = stateWeights(yf);
-  const picks = STATE_IDS.filter((id) => coverage(s, id, yf) < 0.6)
-    .sort((a, b) => w[b] - w[a])
-    .slice(0, count);
+  const [hx, hy] = STATE_SHAPES[rivalHomeState(rivalId)].label;
+  const strength = (id: StateId) => {
+    const [x, y] = STATE_SHAPES[id].label;
+    return w[id] * Math.exp((-Math.hypot(x - hx, y - hy) * RAIL_MILES) / 300);
+  };
+  const ranked = STATE_IDS.filter((id) => coverage(s, id, yf) < 0.6).sort((a, b) => strength(b) - strength(a));
+  const picks = ranked.slice(0, count);
+  const fresh = ranked.filter((id) => !isOpen(s, id) && !picks.includes(id));
+  const want = Math.min(Math.ceil(count / 2), picks.length);
+  // Swap its weakest states we already sell in for its strongest ones we do not.
+  for (let i = picks.length - 1; i >= 0 && fresh.length && picks.filter((id) => !isOpen(s, id)).length < want; i--) {
+    if (isOpen(s, picks[i])) picks[i] = fresh.shift()!;
+  }
+  return picks.sort((a, b) => strength(b) - strength(a));
+}
+
+/**
+ * A bought rival's dealers carry our cars from now on: they add showrooms in its strong
+ * states, new ones included (see acquiredDealerStates). Returns the states that gained one.
+ */
+export function absorbDealers(s: GameState, count: number, company: string, rivalId: string): StateId[] {
+  const picks = acquiredDealerStates(s, count, rivalId);
   for (const id of picks) {
     const n = stateNet(s, id);
     if (!isOpen(s, id)) {

@@ -2252,15 +2252,10 @@
  "b03b2g": "Saison {year}, {race}: <b>{model}</b> kam unter die ersten drei.",
  "9h6c9x": "Saison {year}, {race}: <b>{model}</b> blieb ohne Platzierung.",
  "e2svqw": "Konkurrenten kaufen",
- "1kssq5s": "Hersteller, die kleiner sind als du, stehen zum Verkauf. Kaufst du einen, verschwinden seine Modelle vom Markt (ihre Käufer suchen sich eine neue Marke), seine Ingenieure kommen zu dir und seine Händler verkaufen deine Autos: Du bekommst neue Händler in den bevölkerungsreichsten Bundesstaaten, auch in solchen, in denen du noch nicht verkaufst.",
  "k2nqjf": "Vorjahr",
  "1pywtch": "Ingenieure",
  "1wzf2zp": "Preis",
  "12shofk": "{company} kaufen?",
- "ksyms8": {
-  "one": "Preis {price} (deine Kasse: {cash}). {n} Ingenieur kommt zu dir (Gehalt inbegriffen), die Modelle von {company} verschwinden vom Markt, und die Händler der Firma verkaufen deine Autos. Das lässt sich nicht rückgängig machen.",
-  "other": "Preis {price} (deine Kasse: {cash}). {n} Ingenieure kommen zu dir (Gehälter inbegriffen), die Modelle von {company} verschwinden vom Markt, und die Händler der Firma verkaufen deine Autos. Das lässt sich nicht rückgängig machen."
- },
  "2z0gur": "{price} zahlen und kaufen",
  "10ujepk": "{company} übernommen",
  "dvsto1": "Kaufen",
@@ -2642,7 +2637,6 @@
   "one": "Gerade läuft keine Händlersuche (du verkaufst in {n} Bundesstaat). Erschließe über die Karte einen neuen Bundesstaat.",
   "other": "Gerade läuft keine Händlersuche (du verkaufst in {n} Bundesstaaten). Erschließe über die Karte einen neuen Bundesstaat."
  },
- "gfv765": "Zu wenig Werkstätten: {states}. Die Besitzer müssen warten, und die Autos landen früh auf dem Schrottplatz.",
  "n9gm28": "Dein Händler- und Werkstattnetz kostet {share} des Umsatzes: Denk darüber nach, Händler mit wenig Absatz zu schließen.",
  "1wqn0xe": "Umsatz",
  "bbt9lw": "Dividende",

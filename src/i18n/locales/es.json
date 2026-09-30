@@ -2267,15 +2267,10 @@
  "b03b2g": "Temporada {year}, {race}: <b>{model}</b> terminó entre los tres primeros.",
  "9h6c9x": "Temporada {year}, {race}: <b>{model}</b> no logró clasificarse entre los primeros.",
  "e2svqw": "Comprar un rival",
- "1kssq5s": "Los fabricantes más pequeños que tú están a la venta. Al comprar uno, sus modelos salen del mercado (sus clientes buscan otra marca), sus ingenieros se unen a ti y sus concesionarios venden tus autos: ganas concesionarios nuevos en los estados más poblados, incluidos aquellos donde todavía no vendes.",
  "k2nqjf": "Año pasado",
  "1pywtch": "Ingenieros",
  "1wzf2zp": "Precio",
  "12shofk": "¿Comprar {company}?",
- "ksyms8": {
-  "one": "Precio: {price} (tu caja: {cash}). Se te une {n} ingeniero (con su sueldo), los modelos de {company} salen del mercado y sus concesionarios venden tus autos. No se puede deshacer.",
-  "other": "Precio: {price} (tu caja: {cash}). Se te unen {n} ingenieros (con sus sueldos), los modelos de {company} salen del mercado y sus concesionarios venden tus autos. No se puede deshacer."
- },
  "2z0gur": "Pagar {price} y comprar",
  "10ujepk": "Compraste {company}",
  "dvsto1": "Comprar",
@@ -2657,7 +2652,6 @@
   "one": "Ahora mismo no se está buscando concesionario en ningún estado (vendes en {n} estado). Expándete a un estado nuevo desde el mapa.",
   "other": "Ahora mismo no se está buscando concesionario en ningún estado (vendes en {n} estados). Expándete a un estado nuevo desde el mapa."
  },
- "gfv765": "No hay servicio suficiente: {states}. Los dueños esperan y los autos terminan como chatarra antes de tiempo.",
  "n9gm28": "Tu red de concesionarios y talleres de servicio cuesta el {share} de los ingresos por ventas: piensa en cerrar los concesionarios que venden poco.",
  "1wqn0xe": "ingresos",
  "bbt9lw": "dividendo",

@@ -1,5 +1,7 @@
 import * as A from '../../core/actions';
 import { acquisitionTargets } from '../../core/acquisitions';
+import { acquiredDealerStates, isOpen } from '../../core/network';
+import { stateDef } from '../../data/states';
 import { companyValue } from '../../core/game';
 import { RACING_LEVELS, RACING_YEAR, racingBudget, racingOutlook, racingPaused, racingPrestige, setRacingLevel } from '../../core/racing';
 import { yearFloat } from '../../core/time';
@@ -7,7 +9,7 @@ import { MARKETS } from '../../data/markets';
 import { store, useGameState } from '../store';
 import { dec, money, num, pct as fmtPct, pctOf } from '../format';
 import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table } from '../components/ui';
-import { t } from '../../i18n';
+import { list, t } from '../../i18n';
 import { tx } from '../i18n';
 
 /** What the money is for: a racing team, buying rivals, and the company's worth. */
@@ -131,37 +133,51 @@ export function Company() {
         <Panel title={t('Rakip satın al')}>
           <p className="muted small">
             {t(
-              'Senden küçük üreticiler satılık. Satın aldığında modelleri piyasadan çekilir (müşterileri yeni bir marka arar), mühendisleri sana katılır, bayileri senin arabalarını satar: en kalabalık eyaletlerde, henüz satış yapmadıkların dahil, yeni bayilerin olur.',
+              'Senden küçük üreticiler satılık. Satın aldığında modelleri piyasadan çekilir (müşterileri yeni bir marka arar), mühendisleri sana katılır, bayileri senin arabalarını satar: onun güçlü olduğu eyaletlerde, henüz satış yapmadıkların dahil, yeni bayilerin olur.',
             )}
           </p>
           {targets.length ? (
             <Table
-              head={[t('Şirket'), t('Geçen yıl'), t('Mühendis'), t('Bedel'), '']}
-              align={['l', 'r', 'r', 'r', 'r']}
+              head={[t('Şirket'), t('Geçen yıl'), t('Mühendis'), t('Bayi'), t('Bedel'), '']}
+              align={['l', 'r', 'r', 'r', 'r', 'r']}
               rows={targets.slice(0, 10).map((tg) => [
                 <span key="n">
                   {MARKETS.find((m) => m.id === tg.home)!.flag} {tg.name}
                 </span>,
                 t('{count} araç', { count: num(tg.units) }),
                 `+${tg.engineers}`,
+                `+${tg.dealers}`,
                 money(tg.price),
                 <Button
                   key="b"
                   small
                   disabled={s.company.cash < tg.price}
-                  onClick={() =>
+                  onClick={() => {
+                    // Where its dealers would sell our cars, and which of those states are new.
+                    const states = acquiredDealerStates(s, tg.dealers, tg.id);
+                    const fresh = states.filter((id) => !isOpen(s, id));
+                    const p = {
+                      price: money(tg.price),
+                      cash: money(s.company.cash),
+                      n: tg.engineers,
+                      company: tg.name,
+                      states: list(states.map((id) => stateDef(id).name)),
+                      fresh: list(fresh.map((id) => stateDef(id).name)),
+                    };
                     store
                       .ask({
                         title: t('{company} satın alınsın mı?', { company: tg.name }),
-                        body: t(
-                          'Bedel {price} (kasan {cash}). {n} mühendis katılır (maaşları da gelir), {company} modelleri piyasadan çekilir, bayileri senin arabalarını satar. Bu işlem geri alınamaz.',
-                          { price: money(tg.price), cash: money(s.company.cash), n: tg.engineers, company: tg.name },
-                        ),
+                        body: fresh.length
+                          ? t(
+                              'Bedel {price} (kasan {cash}). {n} mühendis katılır (maaşları da gelir), {company} modelleri piyasadan çekilir. Bayileri senin arabalarını satar: {states} (ilk kez satış yapacağın eyaletler: {fresh}). Bu işlem geri alınamaz.',
+                              p,
+                            )
+                          : t('Bedel {price} (kasan {cash}). {n} mühendis katılır (maaşları da gelir), {company} modelleri piyasadan çekilir. Bayileri senin arabalarını satar: {states}. Bu işlem geri alınamaz.', p),
                         confirm: t('{price} öde, satın al', { price: money(tg.price) }),
                         danger: true,
                       })
-                      .then((yes) => yes && store.try((st) => A.acquireRival(st, tg.id), t('{company} satın alındı', { company: tg.name })))
-                  }
+                      .then((yes) => yes && store.try((st) => A.acquireRival(st, tg.id), t('{company} satın alındı', { company: tg.name })));
+                  }}
                 >
                   {t('Satın al')}
                 </Button>,

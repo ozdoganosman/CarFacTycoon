@@ -18,6 +18,7 @@ import { Badge, Button, Empty, Panel, Progress, Stat, Table } from '../component
 import { LineChart } from '../viz/LineChart';
 import { NewsArchive } from '../components/Newspaper';
 import { PHASE_LABEL, projectProgress } from './Projects';
+import { askCoverService, askSearchNeighbours } from './Markets';
 import { TeamPanel } from '../components/TeamPanel';
 import { devWeeksLeft } from '../../core/budget';
 import { t, msg, list } from '../../i18n';
@@ -27,8 +28,15 @@ export function weeklySold(m: CarModel, weeks = 4) {
   return h.length ? h.reduce((a, x) => a + x.sold, 0) / h.length : 0;
 }
 
-function nextSteps(s: GameState): { text: string; go?: () => void }[] {
-  const out: { text: string; go?: () => void }[] = [];
+/** A to-do line: what to look at, and maybe a button that does it at once. */
+interface Step {
+  text: string;
+  go?: () => void;
+  fix?: { label: string; run: () => void };
+}
+
+function nextSteps(s: GameState): Step[] {
+  const out: Step[] = [];
   if (!s.projects.length && !s.models.some((m) => m.status === 'active')) {
     out.push({ text: t('İlk aracını tasarla: yeni bir proje başlat.'), go: () => store.go({ id: 'projects' }) });
   }
@@ -74,17 +82,35 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
     const yf = yearFloat(s.week);
     const toMap = () => store.go({ id: 'markets' });
     const open = N.openStates(s).length;
-    if (N.activeSearches(s) === 0 && open < 48 && N.frontier(s).some((id) => N.canSearch(s, id).ok))
+    const active = N.activeSearches(s);
+    const free = N.maxSearches(s) - active;
+    const next = N.nextSearches(s, yf);
+    // Nudge when no search runs, or when several could run at once and do not.
+    if (next.length && (active === 0 || free >= 2)) {
+      const p = { n: open, max: N.maxSearches(s), active };
       out.push({
         text:
           open === 1
             ? t('Arabaların yalnızca fabrikanın eyaletinde satılıyor. Haritadan komşu bir eyalette bayi ara.')
-            : t('Şu an hiçbir eyalette bayi aranmıyor ({n} eyalette satış var). Haritadan yeni bir eyalete açıl.', { n: open }),
+            : active === 0
+              ? t('Şu an hiçbir eyalette bayi aranmıyor ({n} eyalette satış var). Haritadan yeni bir eyalete açıl.', p)
+              : t('Aynı anda {max} eyalette bayi aranabilir, şu an {active} arama sürüyor ({n} eyalette satış var). Yeni eyaletlere açıl.', p),
         go: toMap,
+        fix: { label: t('Komşularda bayi ara'), run: () => askSearchNeighbours(s) },
       });
+    }
     const poor = N.underServed(s, yf, 0.7).slice(0, 3);
-    if (poor.length)
-      out.push({ text: t('Servis yetmiyor: {states}. Sahipler bekliyor, arabalar erken hurdaya çıkıyor.', { states: poor.map((id) => stateDef(id).name).join(', ') }), go: toMap });
+    if (poor.length) {
+      const plan = N.servicePlan(s, yf);
+      const p = { parc: num(N.totalParc(s)), shops: num(N.totalService(s)), n: plan.count, states: list(poor.map((id) => stateDef(id).name)) };
+      out.push({
+        text: s.network?.autoService
+          ? t('Servis yetmiyor: {parc} araban için {shops} servis atölyesi var, ~{n} tane daha gerekiyor. En kötüleri: {states}. Otomatik servis kasa yettikçe açıyor.', p)
+          : t('Servis yetmiyor: {parc} araban için {shops} servis atölyesi var, ~{n} tane daha gerekiyor. En kötüleri: {states}. Sahipler bekliyor, arabalar erken hurdaya çıkıyor.', p),
+        go: toMap,
+        fix: plan.count ? { label: t('Servisi yetir'), run: () => askCoverService(s) } : undefined,
+      });
+    }
     const revenue = s.finance.slice(-13).reduce((a, f) => a + f.revenue, 0) / 13;
     if (revenue > 0 && N.networkWeekly(s, yf) > revenue * 0.12)
       out.push({
@@ -249,10 +275,19 @@ export function HQ() {
               {steps.map((step, i) => (
                 <li key={i}>
                   <span>{step.text}</span>
-                  {step.go && (
-                    <Button small onClick={step.go}>
-                      {t('Git')}
-                    </Button>
+                  {(step.fix || step.go) && (
+                    <span className="todo-actions">
+                      {step.fix && (
+                        <Button small kind="primary" onClick={step.fix.run}>
+                          {step.fix.label}
+                        </Button>
+                      )}
+                      {step.go && (
+                        <Button small onClick={step.go}>
+                          {t('Git')}
+                        </Button>
+                      )}
+                    </span>
                   )}
                 </li>
               ))}
