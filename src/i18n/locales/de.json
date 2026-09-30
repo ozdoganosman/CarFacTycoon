@@ -78,6 +78,10 @@
   "other": "{n} neue Linien werden gebaut ({cost}); sie starten die Produktion in {weeks} Wochen."
  },
  "1y59zdk": "Diese Firma steht nicht zum Verkauf.",
+ "2amup8": {
+  "one": "{company} hat {name} für {price} gekauft: {n} Ingenieur ist dazugekommen, und deren Händler verkaufen jetzt deine Autos ({states}). Bundesstaaten, in denen du zum ersten Mal verkaufst: {fresh}.",
+  "other": "{company} hat {name} für {price} gekauft: {n} Ingenieure sind dazugekommen, und deren Händler verkaufen jetzt deine Autos ({states}). Bundesstaaten, in denen du zum ersten Mal verkaufst: {fresh}."
+ },
  "1g07lv5": {
   "one": "{company} hat {name} für {price} gekauft: {n} Ingenieur ist dazugekommen, und deren Händler verkaufen jetzt deine Autos ({states}).",
   "other": "{company} hat {name} für {price} gekauft: {n} Ingenieure sind dazugekommen, und deren Händler verkaufen jetzt deine Autos ({states})."
@@ -133,6 +137,7 @@
  "tsc3f5": "solange Krieg herrscht, wird die Fabrik nicht erweitert",
  "1i43374": "selbst auf einer neuen Linie bleibt der Gewinn pro Auto unter 8 %: Wachstum würde nur die Verluste vergrößern, also bring zuerst Preis oder Kosten in Ordnung",
  "dyrsdp": "nicht genug Geld in der Kasse",
+ "1ymkj1p": "gemessen an der dauerhaften Nachfragelücke macht sich die nächste Erweiterung nicht innerhalb von zwei Jahren bezahlt",
  "1c8z6lh": "die neue Generation ist unterwegs: Für ein alterndes Auto wird keine neue Anlage gebaut",
  "roxm5u": "die Linien sind ausgelastet, und die Nachfragelücke ist zu klein für eine neue Linie",
  "6ntr5j": {
@@ -159,10 +164,43 @@
   "one": "{n} neue Linie",
   "other": "{n} neue Linien"
  },
+ "ll2hnq": "{what} für {line}",
+ "1bzw63e": "eine neue Linie mit {n} Plätzen und Schwarzlackierung",
+ "1jj42xe": "eine neue Linie mit {n} Plätzen",
+ "movklg": "die Modernisierung von {line} auf {n} Plätze",
+ "u29k5l": "die beste Option ist {what} ({cost}, +{gain} Autos/Wo.): Würde jedes damit gebaute Auto verkauft, machte sie sich {all} bezahlt, aber die dauerhafte Nachfrage liegt nur ~{gap} Autos/Wo. über der Produktion (Linien im Bau eingerechnet); bei diesem Absatz macht sie sich {time} bezahlt, und die Automatik kauft nur, was sich innerhalb von zwei Jahren bezahlt macht",
+ "121uys3": "die beste Option, {what} ({cost}, +{gain} Autos/Wo.), macht sich bei diesem Preis {time} bezahlt; die Automatik kauft nur, was sich innerhalb von zwei Jahren bezahlt macht",
+ "1a7id9c": "erst in über zehn Jahren",
+ "cmli6o": {
+  "one": "in ~{n} Monat",
+  "other": "in ~{n} Monaten"
+ },
+ "dw16o1": "{what} ({cost}) brächte +{gain} Autos/Wo., aber die dauerhafte Nachfrage liegt nur ~{gap} Autos/Wo. über der Produktion (Linien im Bau eingerechnet): Die Linie stünde die meiste Zeit still",
+ "ixdmyb": {
+  "one": "die nächste Erweiterung ({what}) kostet ~{cost} und macht sich in ~{n} Monat bezahlt; aus der Kasse entbehrlich sind {spare} (ein paar Wochen Ausgaben und Steuern bleiben als Reserve). Nimm einen Bankkredit auf oder lass die Kasse wachsen, dann erweitert die Automatik die Kapazität",
+  "other": "die nächste Erweiterung ({what}) kostet ~{cost} und macht sich in ~{n} Monaten bezahlt; aus der Kasse entbehrlich sind {spare} (ein paar Wochen Ausgaben und Steuern bleiben als Reserve). Nimm einen Bankkredit auf oder lass die Kasse wachsen, dann erweitert die Automatik die Kapazität"
+ },
+ "h0p3qx": "die nächste Erweiterung ({what}) kostet ~{cost} und macht sich in ~{years} Jahren bezahlt; aus der Kasse entbehrlich sind {spare} (ein paar Wochen Ausgaben und Steuern bleiben als Reserve). Nimm einen Bankkredit auf oder lass die Kasse wachsen, dann erweitert die Automatik die Kapazität",
+ "lmaoib": {
+  "one": "Automatik: {what} für {name} gekauft ({cost}; macht sich in ~{n} Monat bezahlt). Kapazität {cap} Autos/Wo., Nachfrage {demand}.",
+  "other": "Automatik: {what} für {name} gekauft ({cost}; macht sich in ~{n} Monaten bezahlt). Kapazität {cap} Autos/Wo., Nachfrage {demand}."
+ },
  "141oegv": "Automatik: Die Nachfrage nach {name} ist gesunken; überzählige Maschinen auf {line} wurden verkauft ({refund}).",
  "i3qpio": {
   "one": "Automatik: Die Nachfrage nach {name} ist gesunken; {n} Linie wurde stillgelegt und ihre Maschinen verkauft ({refund}).",
   "other": "Automatik: Die Nachfrage nach {name} ist gesunken; {n} Linien wurden stillgelegt und ihre Maschinen verkauft ({refund})."
+ },
+ "m6or0y": {
+  "one": "Werkstatt-Automatik: {n} Werkstatt eröffnet ({cost}): {states}.",
+  "other": "Werkstatt-Automatik: {n} Werkstätten eröffnet ({cost}): {states}."
+ },
+ "148kley": {
+  "one": "Werkstatt-Automatik: Eine weitere Werkstatt wird gebraucht ({cost}), aber die Kasse reicht nicht; zwei Wochen Ausgaben hält die Automatik immer als Reserve. Sobald sich Geld angesammelt hat, eröffnet sie die Werkstatt.",
+  "other": "Werkstatt-Automatik: {n} weitere Werkstätten werden gebraucht ({cost}), aber die Kasse reicht nicht; zwei Wochen Ausgaben hält die Automatik immer als Reserve. Sobald sich Geld angesammelt hat, eröffnet sie die Werkstätten."
+ },
+ "f7x842": {
+  "one": "Werkstatt-Automatik: Wo deine Autos weniger geworden sind, wurde eine ungenutzte Werkstatt geschlossen: {states}.",
+  "other": "Werkstatt-Automatik: Wo deine Autos weniger geworden sind, wurden {n} ungenutzte Werkstätten geschlossen: {states}."
  },
  "33n14i": "Fahrleistung",
  "yivho4": "Effizienz",
@@ -456,15 +494,26 @@
  "1ife3gz": "Heutzutage sehe ich neuere, modernere Autos auf der Straße; unserer kommt langsam in die Jahre.",
  "dhpqqe": "Hier wird bereits nach einem Händler gesucht.",
  "1auozi6": "Du musst zuerst in einem benachbarten Bundesstaat verkaufen: Das Netz wächst Bundesstaat für Bundesstaat.",
+ "57a93p": {
+  "one": "Du kannst nur in einem Bundesstaat gleichzeitig nach Händlern suchen; je {per} Händler ermöglichen eine weitere Suche.",
+  "other": "Du kannst in höchstens {n} Bundesstaaten gleichzeitig nach Händlern suchen; je {per} Händler ermöglichen eine weitere Suche."
+ },
  "fgyht7": {
   "one": "Du kannst nur in einem Bundesstaat gleichzeitig nach Händlern suchen.",
   "other": "Du kannst in höchstens {n} Bundesstaaten gleichzeitig nach Händlern suchen."
  },
  "15rbvui": "Eine Händlersuche kostet {cost}.",
+ "1u1kd16": "Es gibt keinen Nachbarstaat mehr, in dem du nach Händlern suchen kannst.",
+ "teqnqy": "Diese Händlersuchen kosten {cost}.",
  "a2m3lm": "Hier gibt es keinen Händler zu schließen.",
  "1m2vzs8": "Eine Werkstatt kann nur in einem Bundesstaat eröffnen, in dem du einen Händler hast.",
  "gdqcwj": "Eine Werkstatt kostet {cost}.",
  "p7acr7": "Hier gibt es keine Werkstatt zu schließen.",
+ "1149f1q": {
+  "one": "{states} und ein weiterer Bundesstaat",
+  "other": "{states} und {n} weitere Bundesstaaten"
+ },
+ "5puw9d": "Genug Service: In jedem Bundesstaat kümmert sich jemand um deine Autos.",
  "1wz018e": "Dein erster Händler in {state} hat eröffnet: {dealer}. Deine Autos werden jetzt auch dort verkauft.",
  "1ltljsz": {
   "one": "In {state} hat ein neuer Händler unterschrieben ({n} Händler).",
@@ -610,8 +659,11 @@
  "1paky53": "Am Markt gibt es keine Aktien mehr zum Zurückkaufen.",
  "rimmls": "Du hast keine {cash} in der Kasse.",
  "168r9yh": "Auch die letzten Aktien wurden zurückgekauft ({cash}): Die Firma gehört wieder ganz dir, der Aufsichtsrat ist aufgelöst.",
+ "1u3iyad": "Aktienrückkauf: {pct} der Firma wurden für {cash} zurückgekauft. Das Dividendenziel des Aufsichtsrats für {year} liegt, umgerechnet auf den verbliebenen Anteil in fremder Hand, jetzt bei {target}.",
+ "kszb3s": "Der Aufsichtsrat hat sein Veto eingelegt (Vertrauen {confidence}/100): keine Rennen, keine Übernahmen von Konkurrenten und keine neuen Linien. Das Veto fällt, sobald das Vertrauen über {limit} steigt.",
  "659tkt": "Aufsichtsrat, {year}: Umsatz {growth} (Ziel {target}), Dividende {dividend} (Ziel {targetDividend}). Ziele erreicht. Vertrauen {before} → {after}.",
  "183aeiz": "Aufsichtsrat, {year}: Umsatz {growth} (Ziel {target}), Dividende {dividend} (Ziel {targetDividend}). Ziele verfehlt. Vertrauen {before} → {after}.",
+ "1po3w2h": "Der Umsatz blieb unter dem Ziel, aber der Gewinn wuchs um {growth}: Der Aufsichtsrat wertet das Wachstumsziel als erreicht.",
  "wwuyn9": "Der Aufsichtsrat ist zufrieden, dass die Ziele erreicht wurden: Die letzte Warnung ist zurückgenommen.",
  "16zj7e5": "Der Aufsichtsrat hat das Rennbudget gestrichen: Das Team wurde aufgelöst.",
  "w6ifi7": "Sponsorgeld: {amount} fließen in deine Kasse.",
@@ -825,6 +877,7 @@
  "10hgv2q": "Suezkrise",
  "yiooo": "Der Suezkanal ist gesperrt; in Europa wird Benzin rationiert. In den kommenden Monaten ist den europäischen Käufern ein sparsamer Verbrauch wichtiger denn je.",
  "d2rk85": "Ein Konkurrent",
+ "1f56w0b": "Ziele für {year}: Umsatz oder Gewinn {growth}, mindestens {dividend} Dividende an die externen Aktionäre.",
  "7eqjmy": "{name} hat es nicht ertragen, dass wir in der Klasse {segment} vorbeigezogen sind: Die Preise wurden um 15 % gesenkt, und sie sollen anderthalb Jahre so bleiben.\n\nDie Zeitungen schreiben: „Die Autopreise fallen.“ Ein Teil der Käufer wird zum billigeren Auto abwandern.",
  "1p7h4e3": "Wir halten unsere Preise",
  "1irr5w8": "Wir verlieren einige Käufer, aber der Gewinn pro Auto bleibt gleich. Ein bekanntes Qualitätsauto übersteht einen Preiskrieg leichter.",
@@ -857,6 +910,8 @@
  "1jv7554": "10 % neue Aktien werden an befreundete Banken verkauft (~{cash} für deine Kasse). Der Konkurrent zieht sich zurück, aber die Aktionäre mögen keine Verwässerung (Vertrauen −8).",
  "tv2h67": "Neue Aktien wurden an befreundete Banken verkauft; der angreifende Konkurrent hat sich zurückgezogen.",
  "18lclar": "Der Aufsichtsrat ist unruhig",
+ "1lyj5bb": "Das Vertrauen des Aufsichtsrats in dich ist auf {confidence}/100 gefallen. Die Aktionäre erwarten Wachstum und Dividenden; in der Sitzung wurde es laut.\n\n{targets}\n\nDer Aufsichtsrat legt jetzt sein Veto gegen das Rennbudget, Übernahmen von Konkurrenten und den Bau neuer Linien ein; das Veto fällt, sobald das Vertrauen über {veto} steigt. Die Ausschüttungsquote kannst du unter „Firma“ einstellen. Sinkt das Vertrauen unter {last}, kommt eine letzte Warnung, und danach wirst du abgesetzt.",
+ "14rzbf4": "Das Vertrauen des Aufsichtsrats in dich ist auf {confidence}/100 gefallen. Die Aktionäre erwarten Wachstum und Dividenden; in der Sitzung wurde es laut.\n\n{targets}\n\nDas ist eine Warnung: Sinkt das Vertrauen unter {veto}, legt der Aufsichtsrat sein Veto gegen das Rennbudget, Übernahmen von Konkurrenten und den Bau neuer Linien ein. Die Ausschüttungsquote kannst du unter „Firma“ einstellen. Sinkt das Vertrauen unter {last}, kommt eine letzte Warnung, und danach wirst du abgesetzt.",
  "yof0ue": "Letzte Warnung vom Aufsichtsrat",
  "dz5ukz": "Vertrauen {confidence}/100. Der Aufsichtsrat hat es unmissverständlich gesagt: Werden auch die Ziele dieses Jahres verfehlt, setzt er dich ab und gibt die Firma in andere Hände.\n\n{targets}\n\nAuswege: die Ziele erreichen oder alle Aktien in fremder Hand zurückkaufen und den Aufsichtsrat loswerden (unter „Firma“).",
  "1ht7xvx": "Wabenkühler",
@@ -1686,10 +1741,12 @@
  "aoc950": "Zu oft gesendet; neuer Versuch in Kürze.",
  "13aqgse": "Der Spielstand ist zu groß zum Senden.",
  "yzcb9b": "Senden fehlgeschlagen; neuer Versuch in Kürze.",
- "1o164q1": "Börse und Aufsichtsrat",
  "12vfseb": "Du beschaffst Kapital, indem du einen Teil der Firma an der Börse verkaufst; die Kontrolle behältst du immer (du kannst höchstens {share} verkaufen).",
  "49kn7j": "Dafür legst du jedes Jahr dem Aufsichtsrat Rechenschaft ab. Der Umsatz muss schneller wachsen als der Markt (nach einem sehr guten Jahr steigen die Erwartungen); die Aktionäre wollen die Hälfte des Gewinns und jedes Jahr etwas mehr Dividende. Die Ausschüttungsquote beginnt bei 20 %: Ob du sie erhöhst, entscheidest du, und das kostet echtes Geld aus deiner Kasse.",
+ "nqtuhq": "Beim Wachstumsziel zählt auch der Gewinn: Bleibt der Umsatz unter dem Ziel, ist der Gewinn aber mindestens so stark gewachsen wie gefordert, wertet der Aufsichtsrat das Jahr als Erfolg. Schrumpft der Markt, senkt der Aufsichtsrat das Umsatzziel und im gleichen Maß auch das Dividendenziel. Kaufst du Aktien zurück oder verkaufst du neue, wird das Dividendenziel des Jahres für den Anteil in fremder Hand neu berechnet.",
+ "e2cex0": "Der Aufsichtsrat hat ein kurzes Gedächtnis: Der Bonus für gute Jahre halbiert sich jedes Jahr. Aber er wird Schritt für Schritt strenger: Solange das Vertrauen über {warn} liegt, bringt ein einzelnes schlechtes Jahr höchstens eine Warnung. Fällt das Vertrauen unter {veto}, legt der Aufsichtsrat sein Veto gegen Rennsport, Übernahmen von Konkurrenten und den Bau neuer Linien ein; unter {last} kommt die letzte Warnung, und verfehlst du die Ziele danach erneut, wirst du abgesetzt und das Spiel ist vorbei.",
  "vefgje": "In der Endwertung zählt nur dein eigener Anteil am Firmenwert. Die Stimmung an der Börse bestimmt den Kurs: 1928 verkaufen, 1932 zurückkaufen, und es wird billig.",
+ "1o164q1": "Börse und Aufsichtsrat",
  "ns0frx": "Verkaufe Aktien für Kapital: Viel Geld fließt in deine Kasse, aber du bekommst jedes Jahr Wachstums- und Dividendenziele. Die Börse ist gerade <b>{mood}</b> (×{x}).",
  "tcyov4": "An die Börse gehen?",
  "1yc16m9": "{share} der Firma werden verkauft, und {cash} fließen in deine Kasse (nach Abzug der Bankprovision). Ab dann legst du jedes Jahr dem Aufsichtsrat Rechenschaft ab. Du kannst die Aktien später zurückkaufen, aber mit Aufschlag.",
@@ -1703,7 +1760,9 @@
  "hpgonm": "Vertrauen des Aufsichtsrats <tone>{v}/100</tone>",
  "1h4m70e": "letzte Warnung: Verfehlst du dieses Jahr die Ziele, wirst du abgesetzt",
  "199iy3v": "Umsatzziel {growth}: mindestens <b>{needed}</b> bis Jahresende (Vorjahr {prev}). Bei diesem Tempo liegt die Prognose zum Jahresende bei <b>{projected}</b>.",
+ "j6e1ic": "Auch der Gewinn zählt: Erreicht der Jahresgewinn mindestens <b>{needed}</b> (Vorjahr {prev}), ist das Wachstumsziel erfüllt. Gewinnprognose: <b>{projected}</b>.",
  "1bjhbiu": "Dividendenziel <b>{target}</b>. Bei dieser Ausschüttungsquote beträgt die erwartete Dividende <b>{dividend}</b> (erwarteter Jahresgewinn {profit}).",
+ "1tisdmv": "Weil der Markt geschrumpft ist, hat der Aufsichtsrat auch das Dividendenziel um so viel gesenkt wie das Umsatzziel ({cut}).",
  "1u5o5b4": "Der Aufsichtsrat prüft dich zum ersten Mal Ende {year}.",
  "1ys3il8": "Ausschüttungsquote (wie viel vom Gewinnanteil der externen Aktionäre ausgezahlt wird). Der Aufsichtsrat erwartet die Hälfte des Gewinns und etwas mehr als im Vorjahr; sitzt ein Konkurrent im Aufsichtsrat, sogar noch mehr:",
  "1t4pse2": "Ausschüttungsquote (wie viel vom Gewinnanteil der externen Aktionäre ausgezahlt wird). Der Aufsichtsrat erwartet die Hälfte des Gewinns und etwas mehr als im Vorjahr:",
@@ -1711,6 +1770,8 @@
  "c04pt2": "{name} hält {share} der Firma.",
  "1es22gz": "Rückkäufe kosten 10 % über dem Börsenkurs und nie weniger als der Preis, zu dem die Aktien verkauft wurden (plus 6 % pro Jahr); unter einer letzten Warnung kommen noch 50 % obendrauf.",
  "gx2reh": "Rückkäufe kosten 10 % über dem Börsenkurs und nie weniger als der Preis, zu dem die Aktien verkauft wurden (plus 6 % pro Jahr).",
+ "1pwg9od": "Rückkäufe treiben den Preis: Mit je 5 %, die du im selben Jahr zurückkaufst, steigt er um etwa 5 %.",
+ "10ntbav": "Das nächste Paket kostet {premium} über dem Börsenkurs.",
  "x43nck": "Aktien zurückgekauft",
  "2d2byu": "{share} zurückkaufen ({cash})",
  "1x12n9w": "Alle Aktien zurückkaufen?",
@@ -1724,6 +1785,7 @@
  "xymkcy": "Umsatz",
  "otzdz8": "Dividende",
  "xuewor": "Vertrauen",
+ "yhi2uz": "Gewinn {growth}",
  "15zdfro": "{name} hat die Preise in der Klasse {seg} um 15 % gesenkt.",
  "1xc4jre": "{name} hat das erste Auto mit {tech} in der Klasse {seg} herausgebracht: {model}.",
  "ntyt3x": "{name} hat die Klasse {seg} mit dem {model} ins Visier genommen.",
@@ -2059,6 +2121,11 @@
  "k4p4sa": "Ab sofort beim nächsten Händler",
  "8jgzsq": "Leserbriefe",
  "s4q2el": "Noch steht nichts in der Zeitung.",
+ "1b3lvob": {
+  "one": "🎉 <b>{name} ist fertig</b> und wartet seit {n} Woche auf den Marktstart: In dieser Zeit zahlst du Gehälter, verkaufst aber keine Autos.",
+  "other": "🎉 <b>{name} ist fertig</b> und wartet seit {n} Wochen auf den Marktstart: In dieser Zeit zahlst du Gehälter, verkaufst aber keine Autos."
+ },
+ "9y6ftf": "🎉 <b>{name} ist fertig:</b> Wähle einen Preis und bring das Auto auf den Markt.",
  "1hoxwfx": "<b>Spiel pausiert.</b> Solange die Zeit stillsteht, arbeiten die Ingenieure nicht, die Tests kommen nicht voran und die Fabrik produziert nichts.",
  "1mp8dv6": "Weiter (Leertaste)",
  "1bttp5n": "F&E abgeschlossen",
@@ -2252,10 +2319,20 @@
  "b03b2g": "Saison {year}, {race}: <b>{model}</b> kam unter die ersten drei.",
  "9h6c9x": "Saison {year}, {race}: <b>{model}</b> blieb ohne Platzierung.",
  "e2svqw": "Konkurrenten kaufen",
+ "hvqtx": "Hersteller, die kleiner sind als du, stehen zum Verkauf. Kaufst du einen, verschwinden seine Modelle vom Markt (ihre Käufer suchen sich eine neue Marke), seine Ingenieure kommen zu dir und seine Händler verkaufen deine Autos: Du bekommst neue Händler in den Bundesstaaten, in denen er stark war, auch in solchen, in denen du noch nicht verkaufst.",
  "k2nqjf": "Vorjahr",
  "1pywtch": "Ingenieure",
+ "19ojzma": "Händler",
  "1wzf2zp": "Preis",
  "12shofk": "{company} kaufen?",
+ "1y15ke1": {
+  "one": "Preis {price} (deine Kasse: {cash}). {n} Ingenieur kommt zu dir, samt Gehalt, und die Modelle von {company} verschwinden vom Markt. Die Händler der Firma verkaufen künftig deine Autos in {states} (Bundesstaaten, in denen du zum ersten Mal verkaufst: {fresh}). Das lässt sich nicht rückgängig machen.",
+  "other": "Preis {price} (deine Kasse: {cash}). {n} Ingenieure kommen zu dir, samt Gehältern, und die Modelle von {company} verschwinden vom Markt. Die Händler der Firma verkaufen künftig deine Autos in {states} (Bundesstaaten, in denen du zum ersten Mal verkaufst: {fresh}). Das lässt sich nicht rückgängig machen."
+ },
+ "3n9pba": {
+  "one": "Preis {price} (deine Kasse: {cash}). {n} Ingenieur kommt zu dir, samt Gehalt, und die Modelle von {company} verschwinden vom Markt. Die Händler der Firma verkaufen künftig deine Autos in {states}. Das lässt sich nicht rückgängig machen.",
+  "other": "Preis {price} (deine Kasse: {cash}). {n} Ingenieure kommen zu dir, samt Gehältern, und die Modelle von {company} verschwinden vom Markt. Die Händler der Firma verkaufen künftig deine Autos in {states}. Das lässt sich nicht rückgängig machen."
+ },
  "2z0gur": "{price} zahlen und kaufen",
  "10ujepk": "{company} übernommen",
  "dvsto1": "Kaufen",
@@ -2482,15 +2559,26 @@
   "other": "Wird jedes gebaute Auto verkauft, bleiben dir ~{margin} pro Auto: Die Linie macht sich in <pay>~{n} Monaten</pay> bezahlt."
  },
  "5rc7fj": "Wird jedes gebaute Auto verkauft, bleiben dir ~{margin} pro Auto: Die Linie macht sich in <pay>~{years} Jahren</pay> bezahlt.",
+ "ezvvj1": "Die dauerhafte Nachfrage (ohne Marktstart-Rummel) decken deine bestehenden Linien und die Linien im Bau bereits: Bei diesem Preis stünde eine neue Linie still.",
+ "2eyeoe": {
+  "one": "Aber die dauerhafte Nachfrage liegt nur ~{gap} Autos/Wo. über deiner Produktion (ohne Marktstart-Rummel, Linien im Bau eingerechnet): Wird nur so viel verkauft, macht sich die Linie in <pay>~{n} Monat</pay> bezahlt. Die Automatik rechnet genauso und kauft nur, was sich innerhalb von zwei Jahren bezahlt macht.",
+  "other": "Aber die dauerhafte Nachfrage liegt nur ~{gap} Autos/Wo. über deiner Produktion (ohne Marktstart-Rummel, Linien im Bau eingerechnet): Wird nur so viel verkauft, macht sich die Linie in <pay>~{n} Monaten</pay> bezahlt. Die Automatik rechnet genauso und kauft nur, was sich innerhalb von zwei Jahren bezahlt macht."
+ },
  "68utlu": "Bei diesem Preis bleibt pro Auto nichts übrig: Eine neue Linie macht sich nicht bezahlt.",
  "1hzpn4f": "Liniengröße",
  "mzwbql": "Liniengröße (Plätze pro Abschnitt):",
  "1xagys4": "{output} Autos/Wo. · {cost}",
+ "2h9ofg": {
+  "one": "{n} Platz · {output}/Wo. (empfohlen)",
+  "other": "{n} Plätze · {output}/Wo. (empfohlen)"
+ },
  "1c3azsw": {
   "one": "{n} Platz · {output}/Wo.",
   "other": "{n} Plätze · {output}/Wo."
  },
  "uxhspv": "Schwarzlack-Öfen nutzen: {black} statt {normal} Autos/Wo. pro Linie",
+ "aiwc6h": "Trocknet viel schneller, aber die Autos gibt es nur in Schwarz: Prestige −5. Für {model} nutzt die Automatik keine Schwarzlack-Öfen (Luxus- und Sportwagen bleiben farbig).",
+ "xxt953": "Trocknet viel schneller, aber die Autos gibt es nur in Schwarz: Prestige −5. Für {model} nutzt die Automatik auch diesen Ofen.",
  "116q2eu": "Trocknet viel schneller, aber die Autos gibt es nur in Schwarz: Prestige −5.",
  "1nxyp9h": "<b>Kleine Werkstattlinie:</b> wie die Werkstatt, mit der du angefangen hast, mit Maschinen für Handarbeit. Langsam, und die Arbeitskosten pro Auto sind hoch, aber sie ist billig: +{output} Autos/Wo., <b>{cost}</b> inklusive Werkzeuge.",
  "5vu13l": "Werkstattlinie gebaut: {model}",
@@ -2637,6 +2725,20 @@
   "one": "Gerade läuft keine Händlersuche (du verkaufst in {n} Bundesstaat). Erschließe über die Karte einen neuen Bundesstaat.",
   "other": "Gerade läuft keine Händlersuche (du verkaufst in {n} Bundesstaaten). Erschließe über die Karte einen neuen Bundesstaat."
  },
+ "1h8u3z2": {
+  "one": "Du kannst in {max} Bundesstaaten gleichzeitig nach Händlern suchen, suchst gerade aber nur in {active} (du verkaufst in {n} Bundesstaat). Erschließe neue Bundesstaaten.",
+  "other": "Du kannst in {max} Bundesstaaten gleichzeitig nach Händlern suchen, suchst gerade aber nur in {active} (du verkaufst in {n} Bundesstaaten). Erschließe neue Bundesstaaten."
+ },
+ "1w2wm13": "Händler in Nachbarstaaten suchen",
+ "umi4n0": {
+  "one": "Zu wenig Service: Für deine {parc} Autos gibt es {shops} Werkstätten, gebraucht wird ~{n} weitere. Am schlechtesten versorgt: {states}. Die Werkstatt-Automatik eröffnet sie, sobald die Kasse es erlaubt.",
+  "other": "Zu wenig Service: Für deine {parc} Autos gibt es {shops} Werkstätten, gebraucht werden ~{n} weitere. Am schlechtesten versorgt: {states}. Die Werkstatt-Automatik eröffnet sie, sobald die Kasse es erlaubt."
+ },
+ "12m6wnz": {
+  "one": "Zu wenig Service: Für deine {parc} Autos gibt es {shops} Werkstätten, gebraucht wird ~{n} weitere. Am schlechtesten versorgt: {states}. Die Besitzer müssen warten, und die Autos landen früh auf dem Schrottplatz.",
+  "other": "Zu wenig Service: Für deine {parc} Autos gibt es {shops} Werkstätten, gebraucht werden ~{n} weitere. Am schlechtesten versorgt: {states}. Die Besitzer müssen warten, und die Autos landen früh auf dem Schrottplatz."
+ },
+ "z01h6p": "Servicelücken schließen",
  "n9gm28": "Dein Händler- und Werkstattnetz kostet {share} des Umsatzes: Denk darüber nach, Händler mit wenig Absatz zu schließen.",
  "1wqn0xe": "Umsatz",
  "bbt9lw": "Dividende",
@@ -2706,16 +2808,59 @@
  "1bnh3zy": "Keine",
  "ax161e": "Händler- und Werkstattkarte",
  "1jy8ci7": "Bundesstaaten mit Verkauf",
- "19ojzma": "Händler",
  "zr421h": "Deine Autos auf der Straße",
  "haqig7": "Verschrottet",
  "1kuxj5d": "Zufriedenheit mit dem Service",
  "1j609d": "Netzkosten",
  "12h6tp3": "{cost}/Jahr",
  "tl6ylm": "Fracht (dieses Jahr)",
+ "1ldrl7u": "Händlersuchen",
  "1h2z4ds": "Kartenansicht",
  "46817k": "VEREINIGTE STAATEN",
  "c7o1xu": "Karte der Händler und Werkstätten",
+ "pbkif6": {
+  "one": "Servicelücken schließen: {n} Werkstatt eröffnen?",
+  "other": "Servicelücken schließen: {n} Werkstätten eröffnen?"
+ },
+ "lsam2n": "Um alle deine Autos zu betreuen, braucht es {all} Werkstätten ({allCost}), aber deine Kasse reicht nur für {n}, zuerst in den Bundesstaaten, in denen die Besitzer am längsten warten. Neue Werkstätten: {states}. Die Eröffnung kostet {cost}; die jährlichen Netzkosten steigen um ~{upkeep} (Bezirksbüros und Ersatzteillager eingerechnet).",
+ "10sdc4c": "Neue Werkstätten: {states}. Die Eröffnung kostet {cost}; die jährlichen Netzkosten steigen um ~{upkeep} (Bezirksbüros und Ersatzteillager eingerechnet). Danach kümmert sich in jedem Bundesstaat jemand um deine Autos.",
+ "1klkjef": "{cost} zahlen und eröffnen",
+ "16xegjs": {
+  "one": "{n} Werkstatt eröffnet",
+  "other": "{n} Werkstätten eröffnet"
+ },
+ "rh8u21": {
+  "one": "{state} ({n} Woche · Chance {chance})",
+  "other": "{state} ({n} Wochen · Chance {chance})"
+ },
+ "ytpgvy": {
+  "one": "In einem Bundesstaat nach Händlern suchen?",
+  "other": "In {n} Bundesstaaten nach Händlern suchen?"
+ },
+ "oge9op": "Gesucht wird in den Nachbarstaaten mit den meisten Käufern: {states}. Die Suchen kosten {cost}; wo kein Händler gefunden wird, fällt der nächste Versuch leichter.",
+ "p0kpjf": "{cost} zahlen und suchen",
+ "1uy3gye": {
+  "one": "Händlersuche in einem Bundesstaat gestartet",
+  "other": "Händlersuche in {n} Bundesstaaten gestartet"
+ },
+ "196shsl": "Werkstatt-Automatik",
+ "kr7p2": "Wenn aktiv, eröffnet sie jeden Monat Werkstätten in Bundesstaaten, in denen deine Autos auf Reparaturen warten (die am schlechtesten versorgten zuerst), und schließt ungenutzte Werkstätten dort, wo deine Autos weniger geworden sind. Zwei Wochen Ausgaben hält sie immer als Reserve in der Kasse.",
+ "ms4tmf": {
+  "one": "{n} Werkstatt ist mangels Geld zurückgestellt.",
+  "other": "{n} Werkstätten sind mangels Geld zurückgestellt."
+ },
+ "1ty6sfo": {
+  "one": "Du hast <b>{parc}</b> Autos auf der Straße und <b>{shops}</b> Werkstätten: Um alle zu betreuen, brauchst du <warn>~{n} weitere Werkstatt</warn>.",
+  "other": "Du hast <b>{parc}</b> Autos auf der Straße und <b>{shops}</b> Werkstätten: Um alle zu betreuen, brauchst du <warn>~{n} weitere Werkstätten</warn>."
+ },
+ "11w7q6r": {
+  "one": "Servicelücken schließen ({n} Werkstatt · {cost})",
+  "other": "Servicelücken schließen ({n} Werkstätten · {cost})"
+ },
+ "vbqfa": {
+  "one": "Händler in Nachbarstaaten suchen ({n} Bundesstaat · {cost})",
+  "other": "Händler in Nachbarstaaten suchen ({n} Bundesstaaten · {cost})"
+ },
  "av6ub0": {
   "one": "Händlersuche · {n} Woche",
   "other": "Händlersuche · {n} Wochen"
@@ -2740,6 +2885,10 @@
  "18672jj": "(+ Fabrik)",
  "wqvqp": "Service: Kapazität für {cap} Autos, {parc} Autos auf der Straße",
  "1veechb": "Service-Abdeckung {q}",
+ "y48ynd": {
+  "one": "Um alle deine Autos hier zu betreuen, braucht es ~{n} weitere Werkstatt.",
+  "other": "Um alle deine Autos hier zu betreuen, braucht es ~{n} weitere Werkstätten."
+ },
  "sihnig": "Erster Händler: {dealer}",
  "1k6jddu": "{state}: Händlersuche gestartet",
  "q4ug58": {
@@ -2852,6 +3001,7 @@
  "1ywdimb": "Preiseffekt",
  "16ko2gj": "Marke",
  "oau2rp": "Marktstart-Rummel",
+ "19siu9l": "Vom Marktstart an altert ein Auto jedes Jahr ein wenig, nach vier Jahren schnell; ein Facelift oder eine neue Generation frischt es auf.",
  "1q293v4": "Alter",
  "1stf8d9": "Luxus- und Sportwagen kauft man, um aufzufallen: Fährt mehr als ein Viertel der Klasse dasselbe Modell, lässt seine Attraktivität nach.",
  "fs1qin": "Hat doch jeder",
@@ -2890,6 +3040,22 @@
  "lsp6eg": "am profitabelsten",
  "bzok9n": "am profitabelsten mit dieser Linie",
  "18hhnsp": "die Presse nennt ihn „ehrgeizig“",
+ "11lwnpe": "Liegt der Preis mehr als {over} über dem Klassenpreis, springen die Käufer viel schneller ab. Die Zeitschriften messen den Preis an der Klasse: Je weiter er über dem Klassenpreis liegt, desto mehr rutscht die Note nach und nach ab, und liegt er in dieser Klasse mehr als {steep} darüber, nennen sie ihn „ehrgeizig“; eine schlechte Note verkleinert auch den Andrang zum Marktstart. Billig anfangen und den Preis später erhöhen funktioniert nicht: Eine Erhöhung um mehr als {hike} in den ersten drei Jahren nach dem Marktstart bringt die Zeitschriften dazu, ihre Tests neu zu schreiben, und kostet dich Ansehen.",
+ "1p535an": "Was das Facelift bringt",
+ "vrbl57": "Alter in den Augen der Käufer",
+ "bih7nd": "{now} → {after} Jahre",
+ "1r59t6n": "Attraktivität (Klassen-Ø 50)",
+ "fzffj5": "Nachfrage pro Woche (zum heutigen Preis)",
+ "1fbgbv5": "{now} → {after} Autos/Wo.",
+ "1qr90eb": "Käme es heute in den Verkauf, würde dieses Facelift die Nachfrage um <good>~{pct}</good> steigern ({now} → {after} Autos/Wo.); der Marktstart-Rummel bringt in den ersten Monaten noch zusätzliche Käufer.",
+ "zdaqj6": "Dieses Facelift steigert die Nachfrage nur um <warn>~{pct}</warn> ({now} → {after} Autos/Wo.). Richte die Entwicklungsschwerpunkte auf das aus, was den Käufern wichtig ist, dann bringt es mehr.",
+ "1wrrqm8": "<bad>Dieses Facelift steigert die Nachfrage nicht</bad> ({now} → {after} Autos/Wo.). Richte die Entwicklungsschwerpunkte auf das aus, was den Käufern wichtig ist, oder denk über eine neue Generation nach.",
+ "1rvm1sw": "Ein Facelift behält die Entwicklungs- und Testabstimmung des Autos bei; sinkt die Attraktivität trotzdem, werfen deine Änderungen am Entwurf das Auto in irgendeiner Hinsicht zurück: Überprüfe Entwurf und Schwerpunkte.",
+ "1tsei44": {
+  "one": "Ein Facelift lässt das Auto jünger wirken: Heute wirkt es {now} Jahre alt, direkt nach dem Facelift {after}. Bis zum Verkaufsstart dauert es ~{n} Woche; ohne Facelift wirkt es dann {later} Jahre alt.",
+  "other": "Ein Facelift lässt das Auto jünger wirken: Heute wirkt es {now} Jahre alt, direkt nach dem Facelift {after}. Bis zum Verkaufsstart dauert es ~{n} Wochen; ohne Facelift wirkt es dann {later} Jahre alt."
+ },
+ "94pj78": "Was deine Ingenieure mit den heutigen Schwerpunkten und dem heutigen Testplan erwarten, ohne Marktstart-Rummel. Das endgültige Urteil fällen die Zeitschriften zum Marktstart.",
  "19siuhf": "<b>Testprogramm abgeschlossen.</b> Als Nächstes: Zulieferer und Fertigungslinie.",
  "1akrla8": "Testprogramm",
  "1js6jm1": "Die Tests laufen jede Woche parallel, und gefundene Mängel werden sofort behoben. Kürzt du die Testwochen, kommt das Auto früher auf den Markt, aber versteckte Mängel brechen dann bei den Kunden auf.",
@@ -2992,6 +3158,10 @@
  "42adsq": "Um die Werkzeuge zu bestellen, wähle zuerst die Linie, die das Auto bauen soll.",
  "u2u6ix": "{tooling}: bestellen ({cost})",
  "1mgf6wd": "{tooling}: bestellen",
+ "11ikr20": "Pro Auto <b>{saving}</b> billiger als beim Qualitätszulieferer. Aber die Qualität deiner eigenen Teile hängt vom Können deiner Ingenieure ab (derzeit {skill}): Die Zuverlässigkeitsnote, die Käufer und Zeitschriften im Alltag sehen, liegt bei ~<tone>{rel}</tone>, gegenüber ~{quality}, wenn alles vom Qualitätszulieferer käme. Versteckte Mängel in diesen Teilen führen {mult}-mal so oft zu Pannen.",
+ "1mm99an": "Pro Auto <b>{saving}</b> billiger als beim Qualitätszulieferer. Aber die Zuverlässigkeitsnote, die Käufer und Zeitschriften im Alltag sehen, liegt bei ~<tone>{rel}</tone>, gegenüber ~{quality}, wenn alles vom Qualitätszulieferer käme. Versteckte Mängel in diesen Teilen führen {mult}-mal so oft zu Pannen.",
+ "jrj3jb": "Deine eigenen Teile sind ab Können {rel} so solide wie die des Qualitätszulieferers und fallen ab {fail} ebenso selten aus.",
+ "19dhs7h": "Deine eigenen Teile sind jetzt so solide wie die des Qualitätszulieferers; ab Können {fail} fallen sie auch ebenso selten aus.",
  "128t4ek": "<b>Warum kannst du nicht bestellen?</b> {tooling} würden {cost} kosten, und du hast {cash} in der Kasse: Dir fehlen {short}.",
  "1b9k335": "{tooling} wählen ({cost}, bezahlbar)",
  "1qlk287": "{amount} geliehen, Werkzeuge bestellt",
