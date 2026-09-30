@@ -198,6 +198,10 @@
   "one": "Servicio automático: hace falta {n} taller más ({cost}), pero no alcanza la caja; siempre deja una reserva equivalente a dos semanas de gastos. Lo abrirá cuando se acumule dinero en caja.",
   "other": "Servicio automático: hacen falta {n} talleres más ({cost}), pero no alcanza la caja; siempre deja una reserva equivalente a dos semanas de gastos. Los abrirá cuando se acumule dinero en caja."
  },
+ "y269e7": {
+  "one": "Servicio automático: se cerró {n} taller de servicio donde ya circulan menos autos tuyos o donde sobraba para el objetivo de servicio del {target}: {states}.",
+  "other": "Servicio automático: se cerraron {n} talleres de servicio donde ya circulan menos autos tuyos o donde sobraban para el objetivo de servicio del {target}: {states}."
+ },
  "f7x842": {
   "one": "Servicio automático: se cerró {n} taller de servicio sin trabajo donde ya circulan menos autos tuyos: {states}.",
   "other": "Servicio automático: se cerraron {n} talleres de servicio sin trabajo donde ya circulan menos autos tuyos: {states}."
@@ -509,11 +513,12 @@
  "1m2vzs8": "Solo puedes abrir un taller de servicio en un estado donde tengas concesionario.",
  "gdqcwj": "Un taller de servicio cuesta {cost}.",
  "p7acr7": "Aquí no hay ningún taller de servicio que cerrar.",
+ "151ta7j": "Se cumple el objetivo de servicio ({target}): en todos los estados hay dónde atender al menos esa parte de tus autos.",
+ "5puw9d": "El servicio alcanza: en todos los estados hay dónde atender tus autos.",
  "1149f1q": {
   "one": "{states} y {n} estado más",
   "other": "{states} y {n} estados más"
  },
- "5puw9d": "El servicio alcanza: en todos los estados hay dónde atender tus autos.",
  "1wz018e": "Abrió tu primer concesionario en {state}: {dealer}. Ahora tus autos también se venden allí.",
  "1ltljsz": {
   "one": "Un nuevo concesionario firmó contrato en {state} ({n} concesionario).",
@@ -617,6 +622,10 @@
  "1bhaz6m": {
   "one": "I+D: comenzó la investigación de {name} ({cost}, {n} semana).",
   "other": "I+D: comenzó la investigación de {name} ({cost}, {n} semanas)."
+ },
+ "iu9sqw": {
+  "one": "{n} cosa más",
+  "other": "{n} cosas más"
  },
  "kl1ew8": "{company} rebajó un {pct} sus precios en el segmento {segment}: comenzó una guerra de precios.",
  "7x5zni": "{company} lanzó el primer auto {first} del segmento {segment}: el {model}.",
@@ -1923,6 +1932,7 @@
  "ktkfng": "Tu puesto en el segmento",
  "1vlrsjg": "Aún no hay grandes rivales",
  "1cu8k07": "Cuota est.",
+ "1nf5eex": "Primer mes <b>~{now}</b>; pasado el entusiasmo, <b>~{lasting}</b>",
  "1d9qu3o": "Volumen del segmento ({market})",
  "10906ym": "{count} autos/año",
  "107rbay": "Modelo",
@@ -1939,6 +1949,7 @@
  "1kyjew7": "Dónde estás por debajo de la media",
  "4aarec": "Ninguna debilidad clara.",
  "afmwxz": "El atractivo se calcula según cuánto les importa cada aspecto a los compradores de este segmento; la cuota depende además del precio, la marca y el alcance de los concesionarios. La cuota se convierte en ventas solo hasta donde puedas fabricar los autos.",
+ "fqhoru": "La cuota de la tabla incluye el entusiasmo del lanzamiento, que se apaga en unos meses. Al construir líneas, guíate por la cuota sostenida.",
  "1dd3cq2": "Producción detenida",
  "vpeeu": "¡Líder de su segmento!",
  "z4twus": "Un comienzo sólido",
@@ -2291,6 +2302,7 @@
  "sl9bhk": "{v} / 100 (50 = media del segmento)",
  "kxl8uk": "Estimación: {lo}–{hi} (50 = media del segmento)",
  "1oucclv": "Detalles",
+ "hz6ql0": "Repuestos y reparaciones",
  "b84y0": "Materiales y piezas",
  "1ign6rh": "Mano de obra de línea",
  "1yg1cn": "Sueldos de ingenieros",
@@ -2364,6 +2376,26 @@
  "6va3gd": "Los avances de ingeniería investigados en I+D (encendido por magneto, amortiguadores, neumáticos balón…) se incorporan automáticamente a todos los diseños nuevos.",
  "6tmyuf": "todavía ninguno",
  "y6dukm": "Las opciones marcadas con “I+D” deben investigarse primero.",
+ "4n8yxr": "fijo en este proyecto",
+ "17cyuau": "Agregar",
+ "1tpuajm": "en cola #{pos}",
+ "6dlutc": "Agregado a la cola: {tech}",
+ "1jzipw3": "+ Cola",
+ "yji5tg": "llega en {year}",
+ "7mdof2": "La mayoría de los rivales lo tiene; tú no",
+ "1yto0ej": "El auto típico del segmento lo tiene; tú no",
+ "1g05j7p": {
+  "one": "El auto rival que se vende en este segmento lo tiene; las revistas comparan tu auto con él.",
+  "other": "Más de la mitad de los {n} autos rivales que se venden en este segmento lo tienen; las revistas comparan tu auto con ellos."
+ },
+ "ifb04m": "Aún no hay rivales en el segmento; las revistas comparan tu auto con un auto nuevo típico del segmento.",
+ "tt2puv": "en {count}/{total} rivales",
+ "q4r9u1": "se aplica sola",
+ "yczf2e": "Mostrar {n} más",
+ "66dlcd": {
+  "one": "Poner en cola el tema de la lista",
+  "other": "Poner en cola los {n} temas de la lista"
+ },
  "14ebxox": "El desarrollo empezó: el diseño está bloqueado. Para hacer cambios se necesita un proyecto de rediseño o de nueva generación.",
  "14ivu57": "En un rediseño, el chasis no cambia.",
  "1kuqxo1": "Estás usando una plataforma existente: el chasis, el tamaño y la suspensión son fijos. El desarrollo y los troqueles cuestan menos.",
@@ -2509,6 +2541,7 @@
  },
  "6we1mr": "El diseño usa tecnología que aún no has investigado: {tech}. Investígala en I+D o quítala del diseño.",
  "1kn5z9h": "Diseña el auto, elige el enfoque de ingeniería y luego empieza. Una vez iniciado, el diseño queda bloqueado; el enfoque lo puedes cambiar cuando quieras.",
+ "1gy4kh7": "A este diseño le falta lo que tiene la mayoría de los autos del segmento: {list}. Agrégalo desde la lista de abajo o investígalo.",
  "157blb2": "<b>Desarrollo terminado.</b> Mientras corra el tiempo, el auto se sigue puliendo (confiabilidad +{v} hasta ahora, hasta un 160 % de avance).",
  "1w12fbg": {
   "one": "<b>Desarrollo {pct}</b> · falta ~{n} semana · {team}",
@@ -2745,9 +2778,21 @@
   "other": "Puedes buscar concesionarios en {max} estados a la vez, pero ahora solo tienes {active} en marcha (vendes en {n} estados). Expándete a estados nuevos."
  },
  "1w2wm13": "Buscar concesionarios en estados vecinos",
+ "x8o3e7": {
+  "one": "Servicio insuficiente: tienes {shops} talleres de servicio para tus {parc} autos y, para el objetivo de servicio del {target}, te falta ~{n}. Los peor atendidos: {states}. El servicio automático los abre a medida que alcanza la caja.",
+  "other": "Servicio insuficiente: tienes {shops} talleres de servicio para tus {parc} autos y, para el objetivo de servicio del {target}, te faltan ~{n}. Los peor atendidos: {states}. El servicio automático los abre a medida que alcanza la caja."
+ },
+ "1wdrfwa": {
+  "one": "Servicio insuficiente: tienes {shops} talleres de servicio para tus {parc} autos y, para el objetivo de servicio del {target}, te falta ~{n}. Los peor atendidos: {states}. Los dueños esperan y los autos terminan como chatarra antes de tiempo.",
+  "other": "Servicio insuficiente: tienes {shops} talleres de servicio para tus {parc} autos y, para el objetivo de servicio del {target}, te faltan ~{n}. Los peor atendidos: {states}. Los dueños esperan y los autos terminan como chatarra antes de tiempo."
+ },
  "umi4n0": "Servicio insuficiente: tienes {shops} talleres de servicio para tus {parc} autos y te faltan ~{n}. Los peor atendidos: {states}. El servicio automático los abre a medida que alcanza la caja.",
  "12m6wnz": "Servicio insuficiente: tienes {shops} talleres de servicio para tus {parc} autos y te faltan ~{n}. Los peor atendidos: {states}. Los dueños esperan y los autos terminan como chatarra antes de tiempo.",
  "z01h6p": "Reforzar el servicio",
+ "w71gis": "La red de concesionarios y talleres cuesta {cost} al año y los repuestos y reparaciones dejan {parts}: su costo neto es el {share} de los ingresos del último año. La empresa no aguantará esta carga mucho tiempo: bajar el objetivo de servicio al {target} reduce los talleres y los gastos generales.",
+ "16xn7c8": "La red de concesionarios y talleres cuesta {cost} al año y los repuestos y reparaciones dejan {parts}: su costo neto es el {share} de los ingresos del último año. El objetivo de servicio ya está en el mínimo ({target}): cierra los concesionarios que venden poco.",
+ "1ixvjjt": "Objetivo de servicio {target}",
+ "1qb5gfl": "La red de concesionarios y talleres cuesta {cost} al año y los repuestos y reparaciones dejan {parts}: su costo neto es el {share} de los ingresos por ventas. Piensa en cerrar los concesionarios que venden poco.",
  "n9gm28": "Tu red de concesionarios y talleres de servicio cuesta el {share} de los ingresos por ventas: piensa en cerrar los concesionarios que venden poco.",
  "1wqn0xe": "ingresos",
  "bbt9lw": "dividendo",
@@ -2822,17 +2867,20 @@
  "1kuxj5d": "Satisfacción con el servicio",
  "1j609d": "Costo de la red",
  "12h6tp3": "{cost}/año",
+ "1a7r2f5": "Costo neto de la red",
  "tl6ylm": "Flete (este año)",
  "1ldrl7u": "Búsquedas de concesionario",
  "1h2z4ds": "Vista del mapa",
  "46817k": "ESTADOS UNIDOS",
  "c7o1xu": "Mapa de Concesionarios y Servicio",
+ "lxi60d": "Llevar el servicio al objetivo del {target} requiere {all} talleres ({allCost}), pero tu caja solo alcanza para {n}: primero van a los estados donde los dueños esperan más. Talleres que se abrirán: {states}. Abrirlos cuesta {cost}; el costo anual de la red sube ~{upkeep} (incluidas oficinas regionales y depósitos de repuestos).",
+ "1ctyhhr": "Talleres que se abrirán: {states}. Abrirlos cuesta {cost}; el costo anual de la red sube ~{upkeep} (incluidas oficinas regionales y depósitos de repuestos). Después, el servicio cumplirá el objetivo del {target} en todos los estados.",
+ "lsam2n": "Atender todos tus autos requiere {all} talleres ({allCost}), pero tu caja solo alcanza para {n}: primero van a los estados donde los dueños esperan más. Talleres que se abrirán: {states}. Abrirlos cuesta {cost}; el costo anual de la red sube ~{upkeep} (incluidas oficinas regionales y depósitos de repuestos).",
+ "10sdc4c": "Talleres que se abrirán: {states}. Abrirlos cuesta {cost}; el costo anual de la red sube ~{upkeep} (incluidas oficinas regionales y depósitos de repuestos). Después, en todos los estados habrá dónde atender tus autos.",
  "pbkif6": {
   "one": "Reforzar el servicio: ¿abrir {n} taller de servicio?",
   "other": "Reforzar el servicio: ¿abrir {n} talleres de servicio?"
  },
- "lsam2n": "Atender todos tus autos requiere {all} talleres ({allCost}), pero tu caja solo alcanza para {n}: primero van a los estados donde los dueños esperan más. Talleres que se abrirán: {states}. Abrirlos cuesta {cost}; el costo anual de la red sube ~{upkeep} (incluidas oficinas regionales y depósitos de repuestos).",
- "10sdc4c": "Talleres que se abrirán: {states}. Abrirlos cuesta {cost}; el costo anual de la red sube ~{upkeep} (incluidas oficinas regionales y depósitos de repuestos). Después, en todos los estados habrá dónde atender tus autos.",
  "1klkjef": "Pagar {cost} y abrir",
  "16xegjs": {
   "one": "{n} taller de servicio abierto",
@@ -2857,6 +2905,12 @@
  "ms4tmf": {
   "one": "{n} taller en espera por falta de caja.",
   "other": "{n} talleres en espera por falta de caja."
+ },
+ "cgge5y": "Objetivo de servicio",
+ "1veja9x": "El servicio automático y “Reforzar el servicio” abren talleres hasta este nivel; el servicio automático cierra los que superan 1,3 veces el objetivo. El 90 % o el 80 % significan menos talleres y menos gastos generales; a cambio, las ventas en esos estados bajan hasta un 4 % o un 8 %, la garantía se encarece en la misma proporción y bajan los ingresos por repuestos y reparaciones. La reputación solo se resiente si la satisfacción baja del 80 %.",
+ "1xvsesf": {
+  "one": "Tienes <b>{parc}</b> autos en circulación y <b>{shops}</b> talleres de servicio: para el objetivo de servicio del {target}, te falta <warn>~{n} taller más</warn>.",
+  "other": "Tienes <b>{parc}</b> autos en circulación y <b>{shops}</b> talleres de servicio: para el objetivo de servicio del {target}, te faltan <warn>~{n} talleres más</warn>."
  },
  "1ty6sfo": {
   "one": "Tienes <b>{parc}</b> autos en circulación y <b>{shops}</b> talleres de servicio: para atenderlos a todos, te falta <warn>~{n} taller más</warn>.",
@@ -2916,6 +2970,7 @@
  "vemeqr": "Cerrar concesionario",
  "1h26w4k": "Cerrar taller de servicio",
  "xzz9hc": "A medida que la red crece, sus gastos generales crecen todavía más rápido (oficinas regionales, depósitos de repuestos): un concesionario más suma ~{dealer} al año; un taller de servicio más, ~{shop}.",
+ "nm81qv": "Un taller con trabajo completo deja ~{income} al año en repuestos y reparaciones; los talleres que tus autos no necesitan no dejan nada.",
  "198gg56": "Estados",
  "12cbrez": "Solo los estados donde vendes y sus vecinos",
  "crxd3u": "Todos los estados",
@@ -3006,6 +3061,7 @@
  "10fn6r5": "Abierto",
  "680zad": "{severity} · defecto de {area}: {defect}",
  "1no87ob": "¿Por qué estas ventas? Mercado: {segment}",
+ "1tr8th6": "Los compradores sopesan cada auto según su atractivo (puntos de diseño × prioridades ocultas del segmento), su precio, la marca y su antigüedad: desde su primer año, el diseño pierde ~{slow} puntos al año por antigüedad, y a partir de los {old} años, ~{fast} puntos al año (como máximo −{max}); un rediseño borra tres cuartas partes de la antigüedad acumulada hasta ese día. Tu red de concesionarios y tu reconocimiento determinan cuántos compradores pueden ver tu auto. Total del segmento: {demand} autos/semana.",
  "1ywdimb": "Efecto del precio",
  "16ko2gj": "Marca",
  "oau2rp": "Entusiasmo del lanzamiento",
@@ -3033,15 +3089,22 @@
  "maoxyd": "El dinero ya gastado en este proyecto no se recupera.",
  "1plq5sq": "Cancelar proyecto",
  "1raixj3": "Aún no se conoce la capacidad de la línea: el beneficio supone que se fabrica toda la demanda.",
+ "384lbr": "Aun pasado el entusiasmo, la demanda es {x} veces lo que produce la línea: puedes subir un poco el precio o ampliar la capacidad.",
+ "xyg0a3": "Pasado el entusiasmo, la línea puede producir {x} veces la demanda: piensa en bajar el precio o en una línea más pequeña.",
+ "atylxt": "En los primeros meses la demanda supera a la línea, pero pasado el entusiasmo, demanda y capacidad quedan equilibradas: no agregues líneas por eso.",
  "1p0feii": "Según la estimación media, la demanda y la capacidad están equilibradas.",
  "2iqqph": "Guía de precios",
  "sdo43h": "Precios de los rivales al comprador: el más barato {low} · mediana {mid} · el más caro {high}.",
+ "1ka43ga": "Demanda estimada a este precio: primer mes <b>{lo}–{hi} autos/semana</b> (~{share} del segmento); pasado el entusiasmo, <b>{llo}–{lhi}</b> (~{lasting}) · línea: {cap} autos/semana.",
+ "1a0r3kx": "Demanda estimada a este precio: primer mes <b>{lo}–{hi} autos/semana</b>; pasado el entusiasmo, <b>{llo}–{lhi}</b> · línea: {cap} autos/semana.",
  "1t5pkho": "Rara vez un solo auto se lleva tanto de su segmento: los concesionarios, la producción y la respuesta de los rivales limitan su cuota, así que toma la estimación como optimista.",
+ "1eadhfg": "<b>La línea es pequeña.</b> El precio “más rentable con esta línea” sale alto porque la línea produce poco. Si agregas líneas, el precio más rentable es {price}: pasado el entusiasmo, la demanda es de ~{demand} autos/sem., y con líneas suficientes para cubrirla quedan ~{profit} de beneficio bruto por semana (con esta línea, lo mejor es {best}). Construye o amplía líneas en la pantalla Fábrica; “Cubrir la demanda automáticamente” también las amplía a medida que alcanza la caja.",
  "l21ho0": "Demanda (media)",
  "1vymacu": "Beneficio bruto semanal",
  "m8tlu2": "precio del segmento",
  "lsp6eg": "más rentable",
  "bzok9n": "más rentable con esta línea",
+ "1q1k1e4": "más rentable si agregas líneas (~{profit}/sem.)",
  "18hhnsp": "las revistas lo llaman “ambicioso”",
  "11lwnpe": "Los compradores se van mucho más rápido cuando el precio supera el del segmento en más del {over}. Las revistas valoran el precio según el segmento: cuanto más por encima del precio del segmento, más baja la nota, poco a poco, y en este segmento, a más del {steep} por encima, lo llaman “ambicioso”; una nota baja también reduce el público del lanzamiento. Empezar barato y subir el precio después no funciona: en los tres años posteriores al lanzamiento, una subida de más del {hike} hace que las revistas reescriban sus reseñas y te cuesta reputación.",
  "1p535an": "Lo que aporta el rediseño",
@@ -3194,11 +3257,13 @@
  "1idvj7p": "Mano de obra / auto (capacidad plena)",
  "z8qnbh": "Beneficio bruto por auto (capacidad plena)",
  "10vhh57": "Ventas esperadas (estimación media)",
+ "dbso0o": "Pasado el entusiasmo",
  "klv60r": "Aporte semanal del auto",
  "55h7oi": "Costos fijos (sueldos, gastos generales, concesionarios)",
  "174u2qc": "Beneficio semanal de la empresa: ahora → con este auto",
  "1if8qiq": "Neto semanal",
  "zxv6i2": "A este precio y con la demanda esperada, la empresa pierde {loss} por semana. La mano de obra de la línea se paga aunque se produzca poco; revisa el precio, la línea o la cantidad de ingenieros.",
+ "12lhfgm": "A este auto le falta lo que tiene la mayoría de los autos del segmento: {list}. Las revistas lo notarán; fija el precio en consecuencia. Casi todo se puede agregar después con un rediseño.",
  "qbbj9d": "En el lanzamiento verás cómo reciben tu auto los compradores: notas de las revistas, comparación con los rivales y, cuatro semanas después, el informe del primer mes.",
  "1mmw5aw": "Lanzar el auto",
  "99ud4t": "Línea: {name}",
@@ -3259,10 +3324,6 @@
  "d6ltrj": "Por uso de los rivales",
  "48htjo": "Por año",
  "11m693g": "Por costo",
- "66dlcd": {
-  "one": "Poner en cola el tema de la lista",
-  "other": "Poner en cola los {n} temas de la lista"
- },
  "130v5vn": "~{cost} en total; cada tema se paga cuando empieza.",
  "4oh81a": "Ningún tema coincide con tu búsqueda.",
  "1pzpict": "Ahora mismo no hay tecnologías sin aprender: todas se conocen o están en la cola.",
@@ -3272,19 +3333,14 @@
  "1s70n5u": "Aún no se ha aprendido nada.",
  "11e31qx": "No se espera nada nuevo en los próximos diez años.",
  "1jxqbru": "nueva",
- "q4r9u1": "se aplica sola",
  "9p42fk": "requiere {techs}",
  "f5g0da": "Proporción de autos rivales que usan esta tecnología",
- "yji5tg": "llega en {year}",
  "1qfmq3b": "{share} de los rivales",
  "1wi832p": "ningún rival la usa",
  "u1th80": "conocida",
- "1tpuajm": "en cola #{pos}",
  "he55d3": "Quitar {tech} de la cola",
  "cruf2z": "Investigación iniciada: {tech}",
  "avqtop": "Investigar",
- "6dlutc": "Agregado a la cola: {tech}",
- "1jzipw3": "+ Cola",
  "lw6l4x": "<b>Efecto:</b> {effects}",
  "1rd3lyf": "Una vez aprendida, entra automáticamente en todos los diseños y rediseños nuevos.",
  "uiwk7h": "Una vez aprendida, puedes elegirla en la pantalla de diseño.",
