@@ -170,12 +170,19 @@ export function SharesPanel({ s }: { s: GameState }) {
           </li>
           <li className={out.dividendOk ? 'tone-good' : 'tone-bad'}>
             {tx('Temettü hedefi <b>{target}</b>. Bu oranla tahmini temettü <b>{dividend}</b> (yıllık kâr tahmini {profit}).', {
-              target: money(sh.target.dividend),
+              target: money(out.targetDividend),
               dividend: money(out.dividend),
               profit: money(out.profit),
             })}
-            {sh.target.growth < 0 && (
-              <span className="muted"> {t('Pazar daraldığı için kurul temettü hedefini de ciro hedefi kadar ({cut}) düşürdü.', { cut: pct(-sh.target.growth, 0) })}</span>
+            {out.targetDividend < sh.target.dividend * 0.98 ? (
+              <span className="muted">
+                {' '}
+                {t('Kurul {set} istiyordu, ama yılın kârının dörtte üçünden fazlasını istemez.', { set: money(sh.target.dividend) })}
+              </span>
+            ) : (
+              sh.target.growth < 0 && (
+                <span className="muted"> {t('Pazar daraldığı için kurul temettü hedefini de ciro hedefi kadar ({cut}) düşürdü.', { cut: pct(-sh.target.growth, 0) })}</span>
+              )
             )}
           </li>
         </ul>

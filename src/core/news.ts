@@ -5,7 +5,7 @@ import { customerLetters } from './letters';
 import { modelScores, segmentMarket, priceNow } from './market';
 import { lineReport } from './factory';
 import type { ResearchDef } from './research';
-import { yearFloat, yearOf } from './time';
+import { monthOf, yearFloat, yearOf } from './time';
 import type { AttrKey, CarModel, GameState, MarketId, NewsIssue, NewsStoryData } from './types';
 import { money, pushModal } from './util';
 import { pctWith } from './turkish';
@@ -29,8 +29,14 @@ export function publish(s: GameState, issue: NewsIssue) {
 
 const fmt = (n: number) => fmtNumber(n);
 
-function worldFor(year: number): NewsStoryData | undefined {
-  const w = WORLD_NEWS.find((x) => x.year === year);
+/**
+ * The "Dünyadan" column of a paper printed in `week`: the year's event once it has happened, or else
+ * an event from late last year (the crash of October 1929 is still news in January 1930).
+ */
+function worldFor(week: number): NewsStoryData | undefined {
+  const year = yearOf(week);
+  const w =
+    WORLD_NEWS.find((x) => x.year === year && (x.month ?? 0) <= monthOf(week)) ?? WORLD_NEWS.find((x) => x.year === year - 1 && (x.month ?? 0) > 0);
   return w ? { headline: t(w.headline), body: t(w.body) } : undefined;
 }
 
@@ -70,7 +76,7 @@ function techStory(d: ResearchDef): Story {
 
 /** New technologies of the year on one front page: the biggest one leads. */
 export function techIssue(s: GameState, fresh: ResearchDef[], year: number): NewsIssue | null {
-  const world = worldFor(year);
+  const world = worldFor(s.week);
   if (!fresh.length && !world) return null;
   const sorted = [...fresh].sort((a, b) => b.cost - a.cost);
   const lead = sorted[0];
@@ -192,7 +198,6 @@ export function boomIssue(s: GameState, m: CarModel, reason: { kind: 'units'; un
         : t('Fabrika {n} hatta haftada {count} otomobil üretebiliyor. Şirket yetkilileri talebi karşılayabildiklerini söylüyor.', factory)
       : '',
   ].filter(Boolean);
-  const year = yearOf(s.week);
   return {
     id: `n${s.nextId++}`,
     week: s.week,
@@ -220,7 +225,7 @@ export function boomIssue(s: GameState, m: CarModel, reason: { kind: 'units'; un
         ),
       },
     ],
-    world: worldFor(year),
+    world: worldFor(s.week),
     ad: {
       modelId: m.id,
       slogan: t(SLOGANS[best[0]]),

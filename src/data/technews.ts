@@ -345,6 +345,8 @@ export const TECH_NEWS: Record<string, Story> = {
 
 export interface WorldNews {
   year: number;
+  /** The month it happened (0 = January), for an event late in its year: no paper reports it before. */
+  month?: number;
   headline: string;
   body: string;
 }
@@ -375,7 +377,7 @@ export const WORLD_NEWS: WorldNews[] = [
   { year: 1926, headline: msg('Televizyon İlk Kez Gösterildi'), body: msg('İskoç bir mucit, hareketli görüntüyü telle ileten cihazını Londra’da tanıttı.') },
   { year: 1927, headline: msg('Okyanusu Tek Başına Uçtu'), body: msg('Genç bir Amerikalı pilot New York’tan Paris’e durmadan ve tek başına uçtu.') },
   { year: 1928, headline: msg('Penisilin Keşfedildi'), body: msg('Londra’da bir bakteriyolog küf mantarının bakterileri öldürdüğünü fark etti.') },
-  { year: 1929, headline: msg('Borsa Çöktü!'), body: msg('New York borsasındaki çöküş servetleri bir günde sildi; ekonomistler zor yıllar bekliyor.') },
+  { year: 1929, month: 9, headline: msg('Borsa Çöktü!'), body: msg('New York borsasındaki çöküş servetleri bir günde sildi; ekonomistler zor yıllar bekliyor.') },
   { year: 1931, headline: msg('Dünyanın En Yüksek Binası Açıldı'), body: msg('New York’ta 102 katlı gökdelen hizmete girdi.') },
   { year: 1933, headline: msg('Yeni Düzen Programı'), body: msg('Amerika’da buhrana karşı büyük kamu yatırımları başladı.') },
   { year: 1936, headline: msg('Berlin Olimpiyatları'), body: msg('Yaz Olimpiyatları’nda Amerikalı bir atlet dört altın madalya kazandı.') },

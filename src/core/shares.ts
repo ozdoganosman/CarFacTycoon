@@ -302,6 +302,18 @@ export function boardVeto(s: GameState): string | undefined {
   });
 }
 
+/**
+ * The dividend the board holds a profitable year to: its target, but never more than three quarters of
+ * the year's own profit for the outside shares. A target set on last year's profit cannot be met when
+ * profit falls faster than the market (1931: even paying everything out fell short). A year of losses
+ * pays its shareholders nothing, and they count it as missed.
+ */
+export function dividendTarget(s: GameState, profit: number): number {
+  const sh = s.shares;
+  if (!sh) return 0;
+  return profit > 0 ? Math.min(sh.target.dividend, sh.float * DIVIDEND_CAP * profit) : sh.target.dividend;
+}
+
 /** The dividend a year's profit pays the outside shareholders at the chosen payout. */
 export function dividendFor(s: GameState, profit: number): number {
   const sh = s.shares;
@@ -336,6 +348,7 @@ export function boardOutlook(s: GameState) {
   // Profit counts too: growing it as much as the target asks meets the growth target (not after a loss year).
   const neededProfit = prevProfit > 0 ? prevProfit * (1 + sh.target.growth) : undefined;
   const dividend = dividendFor(s, projectedProfit);
+  const targetDividend = dividendTarget(s, projectedProfit);
   return {
     judged: sh.target.year === year,
     revenue,
@@ -346,9 +359,11 @@ export function boardOutlook(s: GameState) {
     prevProfit,
     neededProfit,
     dividend,
+    /** The dividend the year will be judged by, at this pace. */
+    targetDividend,
     /** On course, at this pace, for the growth target (by revenue or by profit) and for the dividend. */
     growthOk: projected >= needed || (neededProfit !== undefined && projectedProfit >= neededProfit),
-    dividendOk: dividend >= sh.target.dividend * 0.98,
+    dividendOk: dividend >= targetDividend * 0.98,
   };
 }
 
@@ -379,7 +394,8 @@ export function boardYear(s: GameState, year: number): boolean {
   const best = Math.max(growth, profitGrowth ?? -Infinity);
   const grew = best >= sh.target.growth - 0.01;
   const byProfit = grew && growth < sh.target.growth - 0.01;
-  const paid = dividend >= sh.target.dividend * 0.98;
+  const target = dividendTarget(s, y.profit);
+  const paid = dividend >= target * 0.98;
   const before = sh.confidence;
   // A short memory: the credit of good years fades by half every year ("what have you done lately?"),
   // so a good run forgives one or two bad years, not a decade.
@@ -387,7 +403,7 @@ export function boardYear(s: GameState, year: number): boolean {
   // One bad year after a good run costs about 15 points, the worst about 24.
   let delta = grew ? 5 + Math.min(4, Math.max(0, best - sh.target.growth) * 20) : -(5 + Math.min(7, (sh.target.growth - best) * 30));
   // Shareholders who got far less than they were promised are angrier than those a little short.
-  const short = sh.target.dividend > 0 ? clamp(1 - dividend / sh.target.dividend, 0, 1) : 0;
+  const short = target > 0 ? clamp(1 - dividend / target, 0, 1) : 0;
   delta += paid ? 5 : -(4 + Math.min(8, short * 12));
   if (y.profit < 0) delta -= 4;
   if (sh.seat && delta < 0) delta *= SEAT_ANGER;
@@ -402,7 +418,7 @@ export function boardYear(s: GameState, year: number): boolean {
     profitGrowth,
     targetGrowth: sh.target.growth,
     dividend,
-    targetDividend: sh.target.dividend,
+    targetDividend: target,
     profit: y.profit,
     met,
     confidence: sh.confidence,
@@ -417,7 +433,7 @@ export function boardYear(s: GameState, year: number): boolean {
     growth: pctTxt(growth),
     target: pctTxt(sh.target.growth),
     dividend: money(dividend),
-    targetDividend: money(sh.target.dividend),
+    targetDividend: money(target),
     before: Math.round(before),
     after: Math.round(sh.confidence),
   };

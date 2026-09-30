@@ -166,6 +166,30 @@ describe('the stock exchange and the board', () => {
     expect(sh.target.year).toBe(1913);
   });
 
+  it('never asks for more than three quarters of the year’s profit: paying it all out in a slump meets the target', () => {
+    // The 1931 case: a target set on last year's profit, a year whose profit fell far faster than the market.
+    const s = game(1912);
+    const sh = listed(s, 0.25);
+    sh.payout = 1;
+    sh.target = { year: 1912, growth: -0.4, dividend: 0.25 * 0.6 * 5e5 };
+    s.years.push(summary(1912, 6e5, 1e5));
+    s.week = weekFor(1913);
+    boardYear(s, 1912);
+    const last = sh.history[sh.history.length - 1];
+    expect(last.targetDividend).toBeCloseTo(0.25 * 0.75 * 1e5, 0);
+    expect(last.dividend).toBeGreaterThanOrEqual(last.targetDividend);
+    // Paying only a tenth still falls short.
+    const t = game(1912);
+    const tsh = listed(t, 0.25);
+    tsh.payout = 0.1;
+    tsh.target = { year: 1912, growth: -0.4, dividend: 0.25 * 0.6 * 5e5 };
+    t.years.push(summary(1912, 6e5, 1e5));
+    t.week = weekFor(1913);
+    boardYear(t, 1912);
+    const lt = tsh.history[tsh.history.length - 1];
+    expect(lt.dividend).toBeLessThan(lt.targetDividend);
+  });
+
   it('missed targets wear the board down; after the last warning the founder goes', () => {
     const s = game(1912);
     const sh = listed(s);

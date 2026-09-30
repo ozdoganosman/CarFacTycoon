@@ -13,6 +13,7 @@ import { COST_KEYS } from '../src/core/game';
 import { DEALER_COMMISSION, costIndex } from '../src/data/economy';
 import { eraReference } from '../src/core/scoring';
 import { recentProfit } from '../src/ui/format';
+import { techIssue } from '../src/core/news';
 
 // Fixes from the cf381f6 playtest: a class price that pays, a way for a small maker to grow,
 // prices that follow their class, a board that is no free loan, rivals that answer real sales.
@@ -178,5 +179,19 @@ describe('the weekly profit', () => {
     const week = { ...(Object.fromEntries(COST_KEYS.map((k) => [k, 0])) as Record<(typeof COST_KEYS)[number], number>), week: 1, revenue: 1000 };
     s.finance = [{ ...week, materials: 400, freight: 50, investment: 300, tax: 200 }];
     expect(recentProfit(s, 4)).toBe(550);
+  });
+});
+
+describe('the world column', () => {
+  it('reports the crash from October 1929, not in the January paper of that year', () => {
+    const at = (year: number, month: number) => {
+      const s = game(1900);
+      s.week = weekFor(year, month);
+      // With no new technology the world news leads the page.
+      return techIssue(s, [], year)?.lead.headline;
+    };
+    expect(at(1929, 1)).toBeUndefined();
+    expect(at(1929, 11)).toBe('Borsa Çöktü!');
+    expect(at(1930, 1)).toBe('Borsa Çöktü!');
   });
 });

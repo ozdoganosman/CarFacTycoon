@@ -6,7 +6,7 @@ import { engineersBusy, idleEngineers, idleReason } from '../../core/game';
 import { engineerSalary } from '../../data/economy';
 import { racingOutlook, racingPaused } from '../../core/racing';
 import { lineReport } from '../../core/factory';
-import { weeklyDemand } from '../../core/autocap';
+import { autoHoldText, idleCash, weeklyDemand } from '../../core/autocap';
 import { formatDate, formatShort, weekOfYear, yearFloat, yearOf } from '../../core/time';
 import { boardOutlook, boardVeto } from '../../core/shares';
 import { queueHold, researchDef, researchDefs, rivalAdoption, techState } from '../../core/research';
@@ -69,7 +69,19 @@ function nextSteps(s: GameState): Step[] {
     // In the launch week, before any sales, the market's forecast (not a stock pile nobody wants).
     const demand = weeklyDemand(s, m);
     const cap = lines.reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0) * m.productionRate;
-    if (lines.length && demand > cap * 1.25 && m.inventory < cap) out.push({ text: t('{name} için talep üretimi aşıyor. Darboğazı çöz ya da hat ekle.', { name: m.name }), go: () => store.go({ id: 'factory' }) });
+    if (lines.length && demand > cap * 1.25 && m.inventory < cap)
+      out.push({
+        // With automatic capacity on, say why it is not growing (the payback it waits for, the till…).
+        text:
+          m.autoCapacity && m.autoHold
+            ? t('{name}: alıcılar üretimin {times} katını istiyor ama otomatik kapasite büyütmüyor: {reason}.', {
+                name: m.name,
+                times: dec(demand / Math.max(0.1, cap), demand < 3 * cap ? 1 : 0),
+                reason: autoHoldText(m),
+              })
+            : t('{name} için talep üretimi aşıyor. Darboğazı çöz ya da hat ekle.', { name: m.name }),
+        go: () => store.go({ id: 'factory' }),
+      });
     if (m.inventory > Math.max(8, demand * 12)) out.push({ text: t('{name} stokları birikiyor. Fiyatı ya da üretim hızını düşür.', { name: m.name }), go: () => store.go({ id: 'model', modelId: m.id }) });
     // A price far above its class with buyers staying away (an old index, a hopeful launch price).
     const gap = classGap(priceNow(m, s.week), m.segment, yearFloat(s.week));
@@ -215,6 +227,15 @@ function nextSteps(s: GameState): Step[] {
         pay: money(idle * engineerSalary(yearFloat(s.week))),
       }),
       go: () => store.go({ id: 'research' }),
+    });
+  // Money doing nothing: more than a year of fixed costs spare in the till.
+  const spare = idleCash(s);
+  if (spare > 0 && s.models.some((m) => m.status === 'active'))
+    out.push({
+      text: t('Kasada {cash} boşta duruyor (yedek ve bir yıllık sabit gider dışında). Onu işe koş: talebi karşılamayan arabalara hat kur, yeni bir sınıfa araba çıkar, bayi ağını büyüt ya da bir rakibi satın al.', {
+        cash: money(spare),
+      }),
+      go: () => store.go({ id: 'factory' }),
     });
   if (heavy) out.unshift(heavy);
   if (s.company.cash < 0) out.unshift({ text: t('Kasa ekside! Kredi al ya da masrafları kıs.'), go: () => store.go({ id: 'finance' }) });

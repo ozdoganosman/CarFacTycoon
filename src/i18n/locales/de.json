@@ -137,7 +137,6 @@
  "tsc3f5": "solange Krieg herrscht, wird die Fabrik nicht erweitert",
  "1i43374": "selbst auf einer neuen Linie bleibt der Gewinn pro Auto unter 8 %: Wachstum würde nur die Verluste vergrößern, also bring zuerst Preis oder Kosten in Ordnung",
  "dyrsdp": "nicht genug Geld in der Kasse",
- "1ymkj1p": "gemessen an der dauerhaften Nachfragelücke macht sich die nächste Erweiterung nicht innerhalb von zwei Jahren bezahlt",
  "1c8z6lh": "die neue Generation ist unterwegs: Für ein alterndes Auto wird keine neue Anlage gebaut",
  "roxm5u": "die Linien sind ausgelastet, und die Nachfragelücke ist zu klein für eine neue Linie",
  "6ntr5j": {
@@ -168,8 +167,6 @@
  "1bzw63e": "eine neue Linie mit {n} Plätzen und Schwarzlackierung",
  "1jj42xe": "eine neue Linie mit {n} Plätzen",
  "movklg": "die Modernisierung von {line} auf {n} Plätze",
- "u29k5l": "die beste Option ist {what} ({cost}, +{gain} Autos/Wo.): Würde jedes damit gebaute Auto verkauft, machte sie sich {all} bezahlt, aber die dauerhafte Nachfrage liegt nur ~{gap} Autos/Wo. über der Produktion (Linien im Bau eingerechnet); bei diesem Absatz macht sie sich {time} bezahlt, und die Automatik kauft nur, was sich innerhalb von zwei Jahren bezahlt macht",
- "121uys3": "die beste Option, {what} ({cost}, +{gain} Autos/Wo.), macht sich bei diesem Preis {time} bezahlt; die Automatik kauft nur, was sich innerhalb von zwei Jahren bezahlt macht",
  "1a7id9c": "erst in über zehn Jahren",
  "cmli6o": {
   "one": "in ~{n} Monat",
@@ -2590,10 +2587,6 @@
  },
  "5rc7fj": "Wird jedes gebaute Auto verkauft, bleiben dir ~{margin} pro Auto: Die Linie macht sich in <pay>~{years} Jahren</pay> bezahlt.",
  "ezvvj1": "Die dauerhafte Nachfrage (ohne Marktstart-Rummel) decken deine bestehenden Linien und die Linien im Bau bereits: Bei diesem Preis stünde eine neue Linie still.",
- "2eyeoe": {
-  "one": "Aber die dauerhafte Nachfrage liegt nur ~{gap} Autos/Wo. über deiner Produktion (ohne Marktstart-Rummel, Linien im Bau eingerechnet): Wird nur so viel verkauft, macht sich die Linie in <pay>~{n} Monat</pay> bezahlt. Die Automatik rechnet genauso und kauft nur, was sich innerhalb von zwei Jahren bezahlt macht.",
-  "other": "Aber die dauerhafte Nachfrage liegt nur ~{gap} Autos/Wo. über deiner Produktion (ohne Marktstart-Rummel, Linien im Bau eingerechnet): Wird nur so viel verkauft, macht sich die Linie in <pay>~{n} Monaten</pay> bezahlt. Die Automatik rechnet genauso und kauft nur, was sich innerhalb von zwei Jahren bezahlt macht."
- },
  "68utlu": "Bei diesem Preis bleibt pro Auto nichts übrig: Eine neue Linie macht sich nicht bezahlt.",
  "1hzpn4f": "Liniengröße",
  "mzwbql": "Liniengröße (Plätze pro Abschnitt):",

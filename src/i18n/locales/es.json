@@ -137,7 +137,6 @@
  "tsc3f5": "la fábrica no se amplía mientras dure la guerra",
  "1i43374": "incluso en una línea nueva, el beneficio por auto queda por debajo del 8 %: crecer solo aumentaría las pérdidas; primero corrige el precio o el costo",
  "dyrsdp": "no alcanza la caja",
- "1ymkj1p": "con la demanda sostenida que falta cubrir, la próxima ampliación no se pagaría sola en dos años",
  "1c8z6lh": "su nueva generación está en camino: no se amplía la fábrica para un auto que envejece",
  "roxm5u": "las líneas están llenas y la demanda insatisfecha es demasiado pequeña para una línea nueva",
  "6ntr5j": {
@@ -168,8 +167,6 @@
  "1bzw63e": "una línea nueva de pintura negra de {n} puestos",
  "1jj42xe": "una línea nueva de {n} puestos",
  "movklg": "reconstruir {line} como línea de {n} puestos",
- "u29k5l": "la mejor opción es {what} ({cost}, +{gain} autos/sem.): si se vendieran todos los autos adicionales, se pagaría sola {all}, pero la demanda sostenida supera la producción (incluidas las líneas en construcción) en solo ~{gap} autos/sem.; con esas ventas, se pagaría sola {time}, y la capacidad automática solo invierte en lo que se amortiza en dos años o menos",
- "121uys3": "la mejor opción, {what} ({cost}, +{gain} autos/sem.), se pagaría sola {time} a este precio; la capacidad automática solo invierte en lo que se amortiza en dos años o menos",
  "1a7id9c": "en más de diez años",
  "cmli6o": {
   "one": "en ~{n} mes",
@@ -2608,10 +2605,6 @@
  },
  "5rc7fj": "Si se vende cada auto que fabrica, te quedan ~{margin} por auto: la línea se paga sola en <pay>~{years} años</pay>.",
  "ezvvj1": "La demanda sostenida (sin contar el entusiasmo del lanzamiento) ya está cubierta por tus líneas actuales y las que están en construcción: a este precio, una línea nueva quedaría parada.",
- "2eyeoe": {
-  "one": "Pero la demanda sostenida supera tu producción en solo ~{gap} autos/sem. (sin contar el entusiasmo del lanzamiento e incluidas las líneas en construcción): si solo se vende eso, la línea se paga sola en <pay>~{n} mes</pay>. La capacidad automática hace la misma cuenta y solo invierte en lo que se amortiza en dos años o menos.",
-  "other": "Pero la demanda sostenida supera tu producción en solo ~{gap} autos/sem. (sin contar el entusiasmo del lanzamiento e incluidas las líneas en construcción): si solo se vende eso, la línea se paga sola en <pay>~{n} meses</pay>. La capacidad automática hace la misma cuenta y solo invierte en lo que se amortiza en dos años o menos."
- },
  "68utlu": "A este precio no queda nada por auto: una línea nueva no se pagará sola.",
  "1hzpn4f": "Tamaño de la línea",
  "mzwbql": "Tamaño de la línea (puestos por sección):",

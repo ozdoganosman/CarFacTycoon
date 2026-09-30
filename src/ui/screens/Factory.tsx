@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as A from '../../core/actions';
-import { autoAllowsBlack, autoHoldText, demandGap, newLineSize, weeklyDemand } from '../../core/autocap';
+import { autoAllowsBlack, autoHoldText, autoHorizon, demandGap, newLineSize, weeklyDemand } from '../../core/autocap';
 import {
   LINE_SIZES,
   MILITARY_COMPLEXITY,
@@ -192,9 +192,9 @@ function CapacityPlanner() {
                       ? t('Kalıcı talep (lansman heyecanı hariç) şimdiki ve inşaattaki hatlarla karşılanıyor: bu fiyatla yeni hat boş kalır.')
                       : quote && gap < quote.output
                         ? tx(
-                            'Ama alıcılar kalıcı olarak yalnız ~{gap} araç/hf daha istiyor (lansman heyecanı hariç, inşaattaki hatlar dahil): yalnız bu kadar satılırsa hat <pay>~{n} ayda</pay> öder. Otomatik kapasite de böyle hesaplar ve en çok iki yıl bekler.',
-                            { gap: dec(gap, 1), n: paybackMonths(paybackSold) },
-                            { pay: (c, k) => <b key={k} className={paybackSold > 2 ? 'tone-warn' : ''}>{c}</b> },
+                            'Ama alıcılar kalıcı olarak yalnız ~{gap} araç/hf daha istiyor (lansman heyecanı hariç, inşaattaki hatlar dahil): yalnız bu kadar satılırsa hat <pay>~{n} ayda</pay> öder. Otomatik kapasite de böyle hesaplar ve en çok {limit} yıl bekler.',
+                            { gap: dec(gap, 1), n: paybackMonths(paybackSold), limit: autoHorizon(s) },
+                            { pay: (c, k) => <b key={k} className={paybackSold > autoHorizon(s) ? 'tone-warn' : ''}>{c}</b> },
                           )
                         : null}
                   </>

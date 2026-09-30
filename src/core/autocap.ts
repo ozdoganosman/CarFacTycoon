@@ -101,11 +101,29 @@ export function newLineSize(s: GameState, m: CarModel, allowBlack: boolean, gap 
 export function autoReserve(s: GameState): number {
   const yf = yearFloat(s.week);
   const recent = s.finance.slice(-4);
-  const avg = (f: (w: (typeof recent)[number]) => number) => (recent.length ? recent.reduce((a, w) => a + f(w), 0) / recent.length : 0);
-  const running = avg((f) => f.materials + f.labor + f.salaries + f.other);
-  const fixed = avg((f) => f.labor + f.salaries + f.interest) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, mk) => a + dealerUpkeep(s, mk), 0);
-  const floor = Math.max(4000 * costIndex(yf), 6 * Math.max(fixed, -operatingWeekly(s)));
+  const running = recent.length ? recent.reduce((a, f) => a + f.materials + f.labor + f.salaries + f.other, 0) / recent.length : 0;
+  const floor = Math.max(4000 * costIndex(yf), 6 * Math.max(fixedWeekly(s), -operatingWeekly(s)));
   return Math.max(floor, Math.min(6 * running, s.company.cash / 2)) + (s.company.taxOwed ?? 0);
+}
+
+/** What the company pays a week whether its cars sell or not: line wages, salaries, interest, overheads, the network. */
+function fixedWeekly(s: GameState): number {
+  const recent = s.finance.slice(-4);
+  const paid = recent.length ? recent.reduce((a, f) => a + f.labor + f.salaries + f.interest, 0) / recent.length : 0;
+  return paid + overhead(yearFloat(s.week), s.lines.length) + MARKET_IDS.reduce((a, mk) => a + dealerUpkeep(s, mk), 0);
+}
+
+/** Cash doing nothing: what the till holds beyond the reserve and a year of the company's fixed costs. */
+export function idleCash(s: GameState): number {
+  return Math.max(0, s.company.cash - autoReserve(s) - 52 * fixedWeekly(s));
+}
+
+/**
+ * How many years new plant may take to pay for itself: two, or three while cash sits idle (money doing
+ * nothing earns less than a slow line).
+ */
+export function autoHorizon(s: GameState): number {
+  return idleCash(s) > 0 ? HORIZON_IDLE_CASH : HORIZON;
 }
 
 /** Weekly: build what sells and work a stock pile down. */
@@ -159,8 +177,9 @@ function trimLine(s: GameState, m: CarModel, l: ProductionLine, keep: number): n
 /** Months of far too much capacity before plant is sold. */
 const SHRINK_MONTHS = 6;
 
-/** New plant must pay for itself within this many years of the cars buyers lastingly want. */
+/** New plant must pay for itself within this many years of the cars buyers lastingly want (three with idle cash). */
 const HORIZON = 2;
+const HORIZON_IDLE_CASH = 3;
 
 /** A closed line's hall and conveyors fetch part of today's price. */
 const shellResale = (yf: number, slots: number) => 0.4 * (newLineCost(yf) + expansionCost(yf, emptyLine('x', 'x').slots, slots));
@@ -170,12 +189,12 @@ const shellResale = (yf: number, slots: number) => 0.4 * (newLineCost(yf) + expa
  * which the best purchase (`best`, the one the model's `autoWhy` names) would pay back in time, while
  * buyers want far more than the factory builds.
  */
-function wayOut(s: GameState, m: CarModel, best: Option, gap: number, marginOf: (o: Option) => number, allowBlack: boolean, cap: number, d: number): string | undefined {
+function wayOut(s: GameState, m: CarModel, best: Option, gap: number, marginOf: (o: Option) => number, allowBlack: boolean, cap: number, d: number, horizon: number): string | undefined {
   const yf = yearFloat(s.week);
   const years = (o: Option) => paybackYears(o.cost, o.gain, marginOf(o), gap);
   const hints: string[] = [];
   if (!allowBlack && blackPaintIsFaster(yf)) {
-    const black = options(s, m, linesOf(s, m), true, 0, gap).filter((o) => years(o) <= HORIZON);
+    const black = options(s, m, linesOf(s, m), true, 0, gap).filter((o) => years(o) <= horizon);
     if (black.length) {
       const fastest = black.reduce((a, b) => (years(b) < years(a) ? b : a));
       hints.push(t('siyah boyalı bir hat ~{n} ayda kendini öder (araba yalnız siyah olur, prestij −5); Fabrika’daki planlayıcıdan kurulabilir', { n: paybackMonths(years(fastest)) }));
@@ -183,7 +202,7 @@ function wayOut(s: GameState, m: CarModel, best: Option, gap: number, marginOf: 
   }
   if (d > cap * 1.3) {
     // The margin a car the best purchase needs to pay for itself in time, and the price that gives it.
-    const needed = best.cost / Math.max(0.01, Math.min(best.gain, gap) * 52 * HORIZON);
+    const needed = best.cost / Math.max(0.01, Math.min(best.gain, gap) * 52 * horizon);
     const rise = (needed - marginOf(best)) / (1 - DEALER_COMMISSION) / priceNow(m, s.week);
     if (rise > 0 && rise < 0.6) {
       const young = (s.week - m.launchWeek) / 52 < 3 && rise > HIKE_TOLERANCE;
@@ -208,7 +227,7 @@ export const AUTO_HOLD_TEXT: Record<NonNullable<CarModel['autoHold']>, string> =
   war: msg('savaş sürerken fabrika büyütülmüyor'),
   margin: msg('yeni bir hatta bile araç başına kâr %8’in altında kalıyor: büyümek zararı büyütür, önce fiyatı ya da maliyeti düzelt'),
   cash: msg('kasa yetmiyor'),
-  payback: msg('sıradaki büyütme kalıcı talep açığıyla iki yılda kendini ödemiyor'),
+  payback: msg('sıradaki büyütme kalıcı talep açığıyla yeterince çabuk kendini ödemiyor'),
   successor: msg('yeni kuşağı yolda: eskiyen arabaya fabrika kurulmuyor'),
   full: msg('hatlar dolu ve talep açığı yeni bir hat için küçük'),
 };
@@ -365,14 +384,21 @@ function options(s: GameState, m: CarModel, lines: ProductionLine[], allowBlack:
  * cars buyers lastingly want, and, when that is less than it builds, on every car it builds (what the
  * capacity planner shows first).
  */
-function paybackWhy(o: Option, gap: number, margin: number): string {
-  const p = { what: o.label, cost: money(o.cost), gain: dec(o.gain, 1), gap: dec(Math.max(0, gap), 1), time: paybackTime(paybackYears(o.cost, o.gain, margin, gap)) };
+function paybackWhy(o: Option, gap: number, margin: number, horizon: number): string {
+  const p = {
+    what: o.label,
+    cost: money(o.cost),
+    gain: dec(o.gain, 1),
+    gap: dec(Math.max(0, gap), 1),
+    time: paybackTime(paybackYears(o.cost, o.gain, margin, gap)),
+    limit: horizon,
+  };
   return gap < o.gain
-    ? t('en iyi seçenek {what} ({cost}, +{gain} araç/hf): ürettiği her araç satılsa {all} kendini öderdi, ama kalıcı talep üretimi (inşaattaki hatlar dahil) yalnız ~{gap} araç/hf aşıyor; bu kadar satışla {time} öder, otomatik kapasite en çok iki yıl bekler', {
+    ? t('en iyi seçenek {what} ({cost}, +{gain} araç/hf): ürettiği her araç satılsa {all} kendini öderdi, ama kalıcı talep üretimi (inşaattaki hatlar dahil) yalnız ~{gap} araç/hf aşıyor; bu kadar satışla {time} öder; otomatik kapasite en çok {limit} yıl bekler', {
         ...p,
         all: paybackTime(paybackYears(o.cost, o.gain, margin)),
       })
-    : t('en iyi seçenek {what} ({cost}, +{gain} araç/hf) bu fiyatla {time} kendini öder; otomatik kapasite en çok iki yıl bekler', p);
+    : t('en iyi seçenek {what} ({cost}, +{gain} araç/hf) bu fiyatla {time} kendini öder; otomatik kapasite en çok {limit} yıl bekler', p);
 }
 
 /** "in ~9 months", or "in more than ten years" for plant that would hardly ever pay for itself. */
@@ -418,6 +444,7 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
     if (cap < dGrow * 1.05) m.autoHold = wartime ? 'war' : successor ? 'successor' : undefined;
     for (let i = 0; i < 24 && !wartime && !successor && cap < dGrow * 1.05; i++) {
       const budget = s.company.cash - autoReserve(s);
+      const horizon = autoHorizon(s);
       const gap = dGrow * 1.05 - cap;
       // Judge each option by the cars buyers would actually take: the planner's sum on the shortfall.
       const years = (o: Option) => paybackYears(o.cost, o.gain, marginOf(o), gap);
@@ -426,7 +453,7 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
       const healthyAll = all.filter((o) => marginOf(o) > 0.08 * net);
       // A small shortfall is left rather than a whole line built to stand idle.
       const healthy = healthyAll.filter((o) => !o.newLine || gap >= 0.35 * o.gain);
-      const paying = healthy.filter((o) => years(o) <= HORIZON);
+      const paying = healthy.filter((o) => years(o) <= horizon);
       const opts = paying.filter((o) => o.cost <= budget);
       if (!opts.length) {
         m.autoHold = !all.length ? 'full' : !healthyAll.length ? 'margin' : !healthy.length ? 'full' : !paying.length ? 'payback' : 'cash';
@@ -442,8 +469,8 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
         }
         if (m.autoHold === 'payback') {
           const best = healthy.reduce((a, b) => (years(b) < years(a) ? b : a));
-          m.autoWhy = paybackWhy(best, gap, marginOf(best));
-          m.autoHint = wayOut(s, m, best, gap, marginOf, allowBlack, cap, d);
+          m.autoWhy = paybackWhy(best, gap, marginOf(best), horizon);
+          m.autoHint = wayOut(s, m, best, gap, marginOf, allowBlack, cap, d, horizon);
         }
         if (m.autoHold === 'cash') {
           const best = paying.reduce((a, b) => (b.cost < a.cost ? b : a));

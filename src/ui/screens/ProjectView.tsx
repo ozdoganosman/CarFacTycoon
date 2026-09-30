@@ -197,6 +197,9 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
   const bestShown = nearest(best);
   const openShown = nearest(open);
   const steep = steepPriceRatio(p.segment, s.company.hq, yf);
+  // At the share cap a price under the class brings no more buyers: those left never see the showroom.
+  const atClass = demandAt(base[1]);
+  const nearCap = atClass > 0.05 && demandAt(base[0]) < atClass * 1.1;
   const pct = (pr: number) => {
     const v = Math.round((pr / ref - 1) * 100);
     return v < 0 ? `−${percent(-v / 100, 0)}` : `+${percent(v / 100, 0)}`;
@@ -276,6 +279,13 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
           })}
         </tbody>
       </table>
+      {nearCap && (
+        <p className="note small">
+          {tx(
+            '<b>Tavana yakınsın:</b> araba bayilerinin ulaştığı alıcılardan alabileceği payı zaten alıyor, sınıf fiyatının altına inmek satış getirmez, yalnız kâr götürür. Payı bayi ağı ve itibar büyütür.',
+          )}
+        </p>
+      )}
       <p className="muted small">
         {t(
           'Alıcılar sınıf fiyatının {over} üstünden sonra çok daha hızlı kaçar. Dergiler fiyatı sınıfa göre tartar: sınıf fiyatının üstüne çıktıkça puan azar azar düşer, bu sınıfta {steep} üstünde “iddialı” derler; düşük puan lansman kalabalığını da küçültür. Ucuz başlayıp sonra zam yapmak işe yaramaz: lansmandan sonraki üç yılda {hike}’den büyük bir zam dergilerin yeniden yazmasına ve itibar kaybına yol açar.',

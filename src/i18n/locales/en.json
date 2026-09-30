@@ -137,7 +137,6 @@
  "tsc3f5": "the factory isn’t expanded while the war is on",
  "1i43374": "even on a new line, profit per car stays below 8%: growing would only grow the losses, so fix the price or the cost first",
  "dyrsdp": "not enough cash",
- "1ymkj1p": "on the lasting demand gap, the next expansion wouldn’t pay for itself within two years",
  "1c8z6lh": "its new generation is on the way: no new plant for an aging car",
  "roxm5u": "the lines are full and the demand gap is too small for a new line",
  "6ntr5j": {
@@ -168,8 +167,6 @@
  "1bzw63e": "a new {n}-slot black-paint line",
  "1jj42xe": "a new {n}-slot line",
  "movklg": "rebuilding {line} as a {n}-slot line",
- "u29k5l": "the best option is {what} ({cost}, +{gain} cars/wk): if every car it built sold, it would pay for itself {all}, but lasting demand is only ~{gap} cars/wk above output (lines under construction included); at those sales it pays off {time}, and auto capacity only buys what pays off within two years",
- "121uys3": "the best option, {what} ({cost}, +{gain} cars/wk), pays for itself {time} at this price; auto capacity only buys what pays off within two years",
  "1a7id9c": "in more than ten years",
  "cmli6o": {
   "one": "in ~{n} month",
@@ -2599,10 +2596,6 @@
  },
  "5rc7fj": "If every car it builds sells, you keep ~{margin} per car: the line pays for itself in <pay>~{years} years</pay>.",
  "ezvvj1": "Lasting demand (launch buzz aside) is already covered by your current lines and the ones under construction: at this price a new line would stand idle.",
- "2eyeoe": {
-  "one": "But lasting demand is only ~{gap} cars/wk above your output (launch buzz aside, lines under construction included): if only that many sell, the line pays for itself in <pay>~{n} month</pay>. Auto capacity does the same sum and only buys what pays off within two years.",
-  "other": "But lasting demand is only ~{gap} cars/wk above your output (launch buzz aside, lines under construction included): if only that many sell, the line pays for itself in <pay>~{n} months</pay>. Auto capacity does the same sum and only buys what pays off within two years."
- },
  "68utlu": "At this price nothing is left per car: a new line won’t pay for itself.",
  "1hzpn4f": "Line size",
  "mzwbql": "Line size (slots per section):",
