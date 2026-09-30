@@ -78,6 +78,10 @@
   "other": "Building {n} new lines ({cost}); they start production in {weeks} weeks."
  },
  "1y59zdk": "This company isn’t for sale.",
+ "2amup8": {
+  "one": "{company} bought {name} for {price}: {n} engineer joined, and its dealers now sell your cars ({states}). States where you’re selling for the first time: {fresh}.",
+  "other": "{company} bought {name} for {price}: {n} engineers joined, and its dealers now sell your cars ({states}). States where you’re selling for the first time: {fresh}."
+ },
  "1g07lv5": {
   "one": "{company} bought {name} for {price}: {n} engineer joined, and its dealers now sell your cars ({states}).",
   "other": "{company} bought {name} for {price}: {n} engineers joined, and its dealers now sell your cars ({states})."
@@ -133,6 +137,7 @@
  "tsc3f5": "the factory isn’t expanded while the war is on",
  "1i43374": "even on a new line, profit per car stays below 8%: growing would only grow the losses, so fix the price or the cost first",
  "dyrsdp": "not enough cash",
+ "1ymkj1p": "on the lasting demand gap, the next expansion wouldn’t pay for itself within two years",
  "1c8z6lh": "its new generation is on the way: no new plant for an aging car",
  "roxm5u": "the lines are full and the demand gap is too small for a new line",
  "6ntr5j": {
@@ -159,10 +164,43 @@
   "one": "{n} new line",
   "other": "{n} new lines"
  },
+ "ll2hnq": "{what} on {line}",
+ "1bzw63e": "a new {n}-slot black-paint line",
+ "1jj42xe": "a new {n}-slot line",
+ "movklg": "rebuilding {line} as a {n}-slot line",
+ "u29k5l": "the best option is {what} ({cost}, +{gain} cars/wk): if every car it built sold, it would pay for itself {all}, but lasting demand is only ~{gap} cars/wk above output (lines under construction included); at those sales it pays off {time}, and auto capacity only buys what pays off within two years",
+ "121uys3": "the best option, {what} ({cost}, +{gain} cars/wk), pays for itself {time} at this price; auto capacity only buys what pays off within two years",
+ "1a7id9c": "in more than ten years",
+ "cmli6o": {
+  "one": "in ~{n} month",
+  "other": "in ~{n} months"
+ },
+ "dw16o1": "{what} ({cost}) would add +{gain} cars/wk, but lasting demand is only ~{gap} cars/wk above output (lines under construction included): the line would stand idle much of the time",
+ "ixdmyb": {
+  "one": "the next expansion ({what}) costs ~{cost} and pays for itself in ~{n} month; the cash you can spare is {spare} (a few weeks’ costs and taxes are kept in reserve). Auto capacity will expand once you take out a bank loan or cash builds up",
+  "other": "the next expansion ({what}) costs ~{cost} and pays for itself in ~{n} months; the cash you can spare is {spare} (a few weeks’ costs and taxes are kept in reserve). Auto capacity will expand once you take out a bank loan or cash builds up"
+ },
+ "h0p3qx": "the next expansion ({what}) costs ~{cost} and pays for itself in ~{years} years; the cash you can spare is {spare} (a few weeks’ costs and taxes are kept in reserve). Auto capacity will expand once you take out a bank loan or cash builds up",
+ "lmaoib": {
+  "one": "Auto capacity: {what} for the {name} ({cost}; pays for itself in ~{n} month). Capacity {cap} cars/wk, demand {demand}.",
+  "other": "Auto capacity: {what} for the {name} ({cost}; pays for itself in ~{n} months). Capacity {cap} cars/wk, demand {demand}."
+ },
  "141oegv": "Auto capacity: demand for the {name} fell; surplus machines on {line} were sold ({refund}).",
  "i3qpio": {
   "one": "Auto capacity: demand for the {name} fell; {n} line was closed and its machines sold ({refund}).",
   "other": "Auto capacity: demand for the {name} fell; {n} lines were closed and their machines sold ({refund})."
+ },
+ "m6or0y": {
+  "one": "Automatic service: {n} service shop opened ({cost}): {states}.",
+  "other": "Automatic service: {n} service shops opened ({cost}): {states}."
+ },
+ "148kley": {
+  "one": "Automatic service: {n} more shop is needed ({cost}), but cash is short; it always keeps two weeks’ costs in reserve. It will open it once cash builds up.",
+  "other": "Automatic service: {n} more shops are needed ({cost}), but cash is short; it always keeps two weeks’ costs in reserve. It will open them once cash builds up."
+ },
+ "f7x842": {
+  "one": "Automatic service: {n} idle service shop was closed where your cars have thinned out: {states}.",
+  "other": "Automatic service: {n} idle service shops were closed where your cars have thinned out: {states}."
  },
  "33n14i": "Performance",
  "yivho4": "Efficiency",
@@ -456,15 +494,26 @@
  "1ife3gz": "These days I see newer, more modern cars on the road; ours is getting a bit old.",
  "dhpqqe": "A dealer search is already under way here.",
  "1auozi6": "You need to be selling in a neighboring state first: the network grows state by state.",
+ "57a93p": {
+  "one": "You can search for dealers in only {n} state at a time; you get one more search for every {per} dealers.",
+  "other": "You can search for dealers in at most {n} states at a time; you get one more search for every {per} dealers."
+ },
  "fgyht7": {
   "one": "You can search for dealers in only {n} state at a time.",
   "other": "You can search for dealers in at most {n} states at a time."
  },
  "15rbvui": "A dealer search costs {cost}.",
+ "1u1kd16": "There are no neighboring states left where you can search for dealers.",
+ "teqnqy": "These searches cost {cost}.",
  "a2m3lm": "There’s no dealer to close here.",
  "1m2vzs8": "A service shop can only open in a state where you have a dealer.",
  "gdqcwj": "A service shop costs {cost}.",
  "p7acr7": "There’s no service shop to close here.",
+ "1149f1q": {
+  "one": "{states} and {n} more state",
+  "other": "{states} and {n} more states"
+ },
+ "5puw9d": "Service is keeping up: every state has somewhere to look after your cars.",
  "1wz018e": "Your first dealer in {state} has opened: {dealer}. Your cars are now on sale there too.",
  "1ltljsz": {
   "one": "A new dealer signed a contract in {state} ({n} dealer).",
@@ -610,8 +659,11 @@
  "1paky53": "There are no shares left on the market to buy back.",
  "rimmls": "You don’t have {cash} in cash.",
  "168r9yh": "The last shares have been bought back ({cash}): the company is all yours again, and the board has been dissolved.",
+ "1u3iyad": "Share buyback: {pct} of the company was bought back for {cash}. The board’s {year} dividend target, reworked for the remaining outside stake, is now {target}.",
+ "kszb3s": "Board veto (confidence {confidence}/100): no racing, no buying rivals, no new lines. It lifts once confidence rises above {limit}.",
  "659tkt": "The board, {year}: revenue {growth} (target {target}), dividend {dividend} (target {targetDividend}). Targets met. Confidence {before} → {after}.",
  "183aeiz": "The board, {year}: revenue {growth} (target {target}), dividend {dividend} (target {targetDividend}). Targets missed. Confidence {before} → {after}.",
+ "1po3w2h": "Revenue fell short of the target, but profit grew {growth}: the board counted the growth target as met.",
  "wwuyn9": "The board is pleased the targets were met: the final warning has been withdrawn.",
  "16zj7e5": "The board cut the racing budget: the team has been disbanded.",
  "w6ifi7": "Sponsor money: {amount} added to your cash.",
@@ -825,6 +877,7 @@
  "10hgv2q": "Suez crisis",
  "yiooo": "The Suez Canal is closed; gasoline is rationed in Europe. In the coming months, fuel economy matters more than ever to European buyers.",
  "d2rk85": "A rival",
+ "1f56w0b": "{year} targets: revenue or profit {growth}, and at least {dividend} in dividends to outside shareholders.",
  "7eqjmy": "{name} couldn’t stand us pulling ahead in the {segment} class: it has cut its prices by 15% and announced it will hold them there for a year and a half.\n\nThe papers are writing that “car prices are falling.” Some buyers will drift to the cheaper car.",
  "1p7h4e3": "We hold our prices",
  "1irr5w8": "We’ll lose some buyers, but profit per car stays the same. A well-known quality car rides out a price war more easily.",
@@ -857,6 +910,8 @@
  "1jv7554": "10% new shares are sold to friendly banks (~{cash} into your cash). The rival backs off, but shareholders dislike dilution (confidence −8).",
  "tv2h67": "New shares were sold to friendly banks; the raiding rival has backed off.",
  "18lclar": "The board is restless",
+ "1lyj5bb": "The board’s confidence in you has fallen to {confidence}/100. Shareholders expect growth and dividends; voices were raised at the meeting.\n\n{targets}\n\nThe board now vetoes the racing budget, buying rivals and building new lines; the veto lifts once confidence rises above {veto}. You can set the dividend payout on the Company screen. If confidence drops below {last}, a final warning follows, and after that you’re voted out.",
+ "14rzbf4": "The board’s confidence in you has fallen to {confidence}/100. Shareholders expect growth and dividends; voices were raised at the meeting.\n\n{targets}\n\nThis is a warning: if confidence drops below {veto}, the board will veto the racing budget, buying rivals and building new lines. You can set the dividend payout on the Company screen. If confidence drops below {last}, a final warning follows, and after that you’re voted out.",
  "yof0ue": "Final warning from the board",
  "dz5ukz": "Confidence {confidence}/100. The board has made it plain: if this year’s targets are missed too, it will vote you out and hand the company to someone else.\n\n{targets}\n\nWays out: hit the targets, or buy back every outside share and be rid of the board (Company screen).",
  "1ht7xvx": "Honeycomb radiator",
@@ -1692,10 +1747,12 @@
  "aoc950": "Sent too often; will try again shortly.",
  "13aqgse": "The save is too big to send.",
  "yzcb9b": "Couldn’t send; will try again shortly.",
- "1o164q1": "Stock market and the board",
  "12vfseb": "You raise capital by selling part of the company on the stock market; you always keep control (you can sell at most {share}).",
  "49kn7j": "In return, you answer to the board every year. Revenue has to grow faster than the market (after a very good year, expectations rise); shareholders want half the profit, and a bit more in dividends every year. The dividend payout starts at 20%: raising it is up to you, and it takes real money out of your cash.",
+ "nqtuhq": "Profit counts toward the growth target too: even if revenue falls short, the board counts the year a success if profit grew at least as much as the target. When the market shrinks, the board lowers the revenue target, and the dividend target by the same amount. When you buy back shares or sell new ones, that year’s dividend target is recalculated for the outside stake.",
+ "e2cex0": "The board has a short memory: the credit from good years halves every year. But it gets tougher step by step: while confidence is above {warn}, a single bad year brings a warning at most. If confidence drops below {veto}, the board vetoes racing, buying rivals and building new lines; below {last} comes the final warning, and if the targets are missed again after that, you’re voted out and the game is over.",
  "vefgje": "In the final score, only your own stake in the company’s value counts. The market’s mood sets the price: sell in 1928, buy back in 1932, and it comes cheap.",
+ "1o164q1": "Stock market and the board",
  "ns0frx": "Sell shares for capital: a lot of money comes into your cash, but you get growth and dividend targets every year. The market is <b>{mood}</b> right now (×{x}).",
  "tcyov4": "Go public?",
  "1yc16m9": "{share} of the company is sold and {cash} goes into your cash (after the bankers’ cut). From then on, you answer to the board every year. You can buy the shares back later, but at a premium.",
@@ -1709,7 +1766,9 @@
  "hpgonm": "Board confidence <tone>{v}/100</tone>",
  "1h4m70e": "final warning: miss the targets this year and you’re voted out",
  "199iy3v": "Revenue target {growth}: at least <b>{needed}</b> by year’s end (last year {prev}). At this pace, the year-end forecast is <b>{projected}</b>.",
+ "j6e1ic": "Profit counts too: if the year’s profit reaches at least <b>{needed}</b> (last year {prev}), the growth target is met. Profit forecast: <b>{projected}</b>.",
  "1bjhbiu": "Dividend target <b>{target}</b>. At this payout, the expected dividend is <b>{dividend}</b> (projected annual profit {profit}).",
+ "1tisdmv": "Because the market shrank, the board also cut the dividend target by as much as the revenue target ({cut}).",
  "1u5o5b4": "The board will first review you at the end of {year}.",
  "1ys3il8": "Dividend payout (how much of the outside shareholders’ part of the profit is paid out). The board expects half the profit and a bit more than last year; with a rival on the board, even more:",
  "1t4pse2": "Dividend payout (how much of the outside shareholders’ part of the profit is paid out). The board expects half the profit and a bit more than last year:",
@@ -1717,6 +1776,8 @@
  "c04pt2": "{name} holds {share} of the company.",
  "1es22gz": "Buybacks cost 10% over the market price and never go below the price the shares were sold at (plus 6% a year); under a final warning, 50% more on top of that.",
  "gx2reh": "Buybacks cost 10% over the market price and never go below the price the shares were sold at (plus 6% a year).",
+ "1pwg9od": "Buying pushes the price up: each 5% bought back in the same year raises it by about 5%.",
+ "10ntbav": "The next slice costs {premium} above the market price.",
  "x43nck": "Shares bought back",
  "2d2byu": "Buy back {share} ({cash})",
  "1x12n9w": "Buy back all the shares?",
@@ -1730,6 +1791,7 @@
  "xymkcy": "Revenue",
  "otzdz8": "Dividend",
  "xuewor": "Confidence",
+ "yhi2uz": "profit {growth}",
  "15zdfro": "{name} cut its prices in the {seg} class by 15%.",
  "1xc4jre": "{name} brought out the first {tech} car in the {seg} class: {model}.",
  "ntyt3x": "{name} went after the {seg} class with the {model}.",
@@ -2068,6 +2130,11 @@
  "k4p4sa": "Waiting for you at your nearest dealer",
  "8jgzsq": "Letters to the Editor",
  "s4q2el": "Nothing in the papers yet.",
+ "1b3lvob": {
+  "one": "🎉 <b>{name} is ready</b> and has waited {n} week for its launch: meanwhile you’re paying salaries but selling no cars.",
+  "other": "🎉 <b>{name} is ready</b> and has waited {n} weeks for its launch: meanwhile you’re paying salaries but selling no cars."
+ },
+ "9y6ftf": "🎉 <b>{name} is ready:</b> pick a price and launch it.",
  "1hoxwfx": "<b>Game paused.</b> While time is stopped, engineers don’t work, tests don’t progress and the factory doesn’t build.",
  "1mp8dv6": "Resume (space)",
  "1bttp5n": "R&D complete",
@@ -2261,10 +2328,20 @@
  "b03b2g": "{year} season, {race}: <b>{model}</b> finished in the top three.",
  "9h6c9x": "{year} season, {race}: <b>{model}</b> failed to place.",
  "e2svqw": "Buy a rival",
+ "hvqtx": "Makers smaller than you are up for sale. When you buy one, its models are pulled from the market (their buyers look for a new make), its engineers join you and its dealers sell your cars: you get new dealers in the states where it was strong, including ones where you don’t sell yet.",
  "k2nqjf": "Last year",
  "1pywtch": "Engineers",
+ "19ojzma": "Dealers",
  "1wzf2zp": "Price",
  "12shofk": "Buy {company}?",
+ "1y15ke1": {
+  "one": "Price: {price} (your cash: {cash}). {n} engineer joins you, salary and all, and {company}’s models are pulled from the market. Its dealers will sell your cars: {states} (states where you’ll sell for the first time: {fresh}). This can’t be undone.",
+  "other": "Price: {price} (your cash: {cash}). {n} engineers join you, salaries and all, and {company}’s models are pulled from the market. Its dealers will sell your cars: {states} (states where you’ll sell for the first time: {fresh}). This can’t be undone."
+ },
+ "3n9pba": {
+  "one": "Price: {price} (your cash: {cash}). {n} engineer joins you, salary and all, and {company}’s models are pulled from the market. Its dealers will sell your cars: {states}. This can’t be undone.",
+  "other": "Price: {price} (your cash: {cash}). {n} engineers join you, salaries and all, and {company}’s models are pulled from the market. Its dealers will sell your cars: {states}. This can’t be undone."
+ },
  "2z0gur": "Pay {price} and buy",
  "10ujepk": "{company} acquired",
  "dvsto1": "Buy",
@@ -2491,15 +2568,26 @@
   "other": "If every car it builds sells, you keep ~{margin} per car: the line pays for itself in <pay>~{n} months</pay>."
  },
  "5rc7fj": "If every car it builds sells, you keep ~{margin} per car: the line pays for itself in <pay>~{years} years</pay>.",
+ "ezvvj1": "Lasting demand (launch buzz aside) is already covered by your current lines and the ones under construction: at this price a new line would stand idle.",
+ "2eyeoe": {
+  "one": "But lasting demand is only ~{gap} cars/wk above your output (launch buzz aside, lines under construction included): if only that many sell, the line pays for itself in <pay>~{n} month</pay>. Auto capacity does the same sum and only buys what pays off within two years.",
+  "other": "But lasting demand is only ~{gap} cars/wk above your output (launch buzz aside, lines under construction included): if only that many sell, the line pays for itself in <pay>~{n} months</pay>. Auto capacity does the same sum and only buys what pays off within two years."
+ },
  "68utlu": "At this price nothing is left per car: a new line won’t pay for itself.",
  "1hzpn4f": "Line size",
  "mzwbql": "Line size (slots per section):",
  "1xagys4": "{output} cars/wk · {cost}",
+ "2h9ofg": {
+  "one": "{n} slot · {output}/wk (suggested)",
+  "other": "{n} slots · {output}/wk (suggested)"
+ },
  "1c3azsw": {
   "one": "{n} slot · {output}/wk",
   "other": "{n} slots · {output}/wk"
  },
  "uxhspv": "Use black enamel ovens: {black} cars/wk per line instead of {normal}",
+ "aiwc6h": "Dries much faster, but the cars come only in black: prestige −5. Auto capacity won’t use black-paint ovens for the {model} (luxury and sports cars stay in color).",
+ "xxt953": "Dries much faster, but the cars come only in black: prestige −5. Auto capacity still uses this oven for the {model}.",
  "116q2eu": "Dries much faster, but the cars come only in black: prestige −5.",
  "1nxyp9h": "<b>Small workshop line:</b> like the workshop you started with, with hand-work machines. Slow, and labor per car is high, but it’s cheap: +{output} cars/wk, <b>{cost}</b> dies included.",
  "5vu13l": "Workshop line built: {model}",
@@ -2646,6 +2734,14 @@
   "one": "No dealer search is under way right now (you sell in {n} state). Expand into a new state from the map.",
   "other": "No dealer search is under way right now (you sell in {n} states). Expand into a new state from the map."
  },
+ "1h8u3z2": {
+  "one": "You can search for dealers in {max} states at once, and right now you have just {active} going (you sell in {n} state). Expand into new states.",
+  "other": "You can search for dealers in {max} states at once, and right now you have just {active} going (you sell in {n} states). Expand into new states."
+ },
+ "1w2wm13": "Find dealers next door",
+ "umi4n0": "Not enough service: you have {shops} service shops for your {parc} cars and need ~{n} more. Worst off: {states}. Automatic service opens them as cash allows.",
+ "12m6wnz": "Not enough service: you have {shops} service shops for your {parc} cars and need ~{n} more. Worst off: {states}. Owners are waiting, and cars are going to the scrapyard early.",
+ "z01h6p": "Fill service gaps",
  "n9gm28": "Your dealer and service network costs {share} of sales revenue: consider closing dealers that sell little.",
  "1wqn0xe": "revenue",
  "bbt9lw": "dividend",
@@ -2715,16 +2811,59 @@
  "1bnh3zy": "None",
  "ax161e": "Dealer and service map",
  "1jy8ci7": "States with sales",
- "19ojzma": "Dealers",
  "zr421h": "Your cars on the road",
  "haqig7": "Scrapped",
  "1kuxj5d": "Service satisfaction",
  "1j609d": "Network cost",
  "12h6tp3": "{cost}/yr",
  "tl6ylm": "Freight (this year)",
+ "1ldrl7u": "Dealer searches",
  "1h2z4ds": "Map view",
  "46817k": "UNITED STATES",
  "c7o1xu": "Dealer and Service Map",
+ "pbkif6": {
+  "one": "Fill service gaps: open {n} service shop?",
+  "other": "Fill service gaps: open {n} service shops?"
+ },
+ "lsam2n": "Looking after all your cars takes {all} shops ({allCost}), but your cash covers only {n}: they go first to the states where owners wait longest. Shops to open: {states}. Opening them costs {cost}; the network’s yearly cost rises by ~{upkeep} (regional offices and parts depots included).",
+ "10sdc4c": "Shops to open: {states}. Opening them costs {cost}; the network’s yearly cost rises by ~{upkeep} (regional offices and parts depots included). After that, every state will have somewhere to look after your cars.",
+ "1klkjef": "Pay {cost} and open",
+ "16xegjs": {
+  "one": "{n} service shop opened",
+  "other": "{n} service shops opened"
+ },
+ "rh8u21": {
+  "one": "{state} ({n} week · {chance} chance)",
+  "other": "{state} ({n} weeks · {chance} chance)"
+ },
+ "ytpgvy": {
+  "one": "Search for dealers in {n} state?",
+  "other": "Search for dealers in {n} states?"
+ },
+ "oge9op": "The search goes to the neighboring states with the most buyers: {states}. The searches cost {cost}; where no dealer turns up, trying again gets easier.",
+ "p0kpjf": "Pay {cost} and search",
+ "1uy3gye": {
+  "one": "Searching for dealers in {n} state",
+  "other": "Searching for dealers in {n} states"
+ },
+ "196shsl": "Automatic service",
+ "kr7p2": "When on, every month it opens service shops in states where your cars are waiting for repairs (the worst off first), and closes shops left idle where your cars have thinned out. It always keeps two weeks’ costs in cash as a reserve.",
+ "ms4tmf": {
+  "one": "{n} shop is on hold for lack of cash.",
+  "other": "{n} shops are on hold for lack of cash."
+ },
+ "1ty6sfo": {
+  "one": "You have <b>{parc}</b> cars on the road and <b>{shops}</b> service shops: to look after them all, you need <warn>~{n} more shop</warn>.",
+  "other": "You have <b>{parc}</b> cars on the road and <b>{shops}</b> service shops: to look after them all, you need <warn>~{n} more shops</warn>."
+ },
+ "11w7q6r": {
+  "one": "Fill service gaps ({n} shop · {cost})",
+  "other": "Fill service gaps ({n} shops · {cost})"
+ },
+ "vbqfa": {
+  "one": "Find dealers next door ({n} state · {cost})",
+  "other": "Find dealers next door ({n} states · {cost})"
+ },
  "av6ub0": {
   "one": "Dealer search · {n} week",
   "other": "Dealer search · {n} weeks"
@@ -2749,6 +2888,10 @@
  "18672jj": "(+ factory)",
  "wqvqp": "Service: capacity for {cap} cars, {parc} cars on the road",
  "1veechb": "Service adequacy {q}",
+ "y48ynd": {
+  "one": "Looking after all your cars here takes ~{n} more shop.",
+  "other": "Looking after all your cars here takes ~{n} more shops."
+ },
  "sihnig": "First dealer: {dealer}",
  "1k6jddu": "{state}: dealer search started",
  "q4ug58": {
@@ -2861,6 +3004,7 @@
  "1ywdimb": "Price effect",
  "16ko2gj": "Brand",
  "oau2rp": "Launch buzz",
+ "19siu9l": "From the day it comes out, it ages a little every year, and fast after four years; a facelift or a new generation freshens it up.",
  "1q293v4": "Age",
  "1stf8d9": "People buy luxury and sports cars to stand out: once more than a quarter of the class drives the same model, its appeal fades.",
  "fs1qin": "Everyone has one",
@@ -2899,6 +3043,22 @@
  "lsp6eg": "most profitable",
  "bzok9n": "most profitable with this line",
  "18hhnsp": "magazines call it “ambitious”",
+ "11lwnpe": "Buyers walk away much faster once the price is more than {over} above the class price. Magazines weigh the price against the class: the higher above the class price, the more the score slips, bit by bit, and in this class, at more than {steep} above it, they call it “ambitious”; a low score also shrinks the launch crowd. Starting cheap and raising the price later doesn’t work: in the three years after launch, a hike of more than {hike} makes the magazines rewrite their reviews and costs you reputation.",
+ "1p535an": "What the facelift brings",
+ "vrbl57": "Age in buyers’ eyes",
+ "bih7nd": "{now} → {after} years",
+ "1r59t6n": "Appeal (class avg. 50)",
+ "fzffj5": "Weekly demand (at today’s price)",
+ "1fbgbv5": "{now} → {after} cars/wk",
+ "1qr90eb": "If it went on sale today, this facelift would lift demand by <good>~{pct}</good> ({now} → {after} cars/wk); launch buzz brings extra buyers on top of that in the first months.",
+ "zdaqj6": "This facelift lifts demand by only <warn>~{pct}</warn> ({now} → {after} cars/wk). Shift the development focus to what buyers care about and it will pay off better.",
+ "1wrrqm8": "<bad>This facelift doesn’t lift demand</bad> ({now} → {after} cars/wk). Shift the development focus to what buyers care about, or consider a new generation.",
+ "1rvm1sw": "A facelift keeps the car’s development and test tuning; if appeal still drops, your design changes are setting the car back somewhere: review the design and the focus.",
+ "1tsei44": {
+  "one": "A facelift makes the car look younger: today it looks {now} years old, right after the facelift {after}. It takes ~{n} week to go on sale; without a facelift, by then it will look {later} years old.",
+  "other": "A facelift makes the car look younger: today it looks {now} years old, right after the facelift {after}. It takes ~{n} weeks to go on sale; without a facelift, by then it will look {later} years old."
+ },
+ "94pj78": "What your engineers expect with today’s focus and test plan, launch buzz aside. The magazines give the final verdict at launch.",
  "19siuhf": "<b>Test program complete.</b> Next up: suppliers and the production line.",
  "1akrla8": "Test program",
  "1js6jm1": "Tests run in parallel every week, and the defects they find are fixed right away. Cut test weeks and the car comes out sooner, but hidden defects blow up in the field.",
@@ -3001,6 +3161,10 @@
  "42adsq": "To order the dies, first pick the line that will build the car.",
  "u2u6ix": "{tooling}: place order ({cost})",
  "1mgf6wd": "{tooling}: place order",
+ "11ikr20": "Saves <b>{saving}</b> per car compared with the quality supplier. But the quality of your own parts depends on your engineering skill (now {skill}): the reliability score buyers and magazines will see in the field is ~<tone>{rel}</tone>, against ~{quality} if everything came from the quality supplier. Hidden defects in these parts cause breakdowns {mult} times as often.",
+ "1mm99an": "Saves <b>{saving}</b> per car compared with the quality supplier. But the reliability score buyers and magazines will see in the field is ~<tone>{rel}</tone>, against ~{quality} if everything came from the quality supplier. Hidden defects in these parts cause breakdowns {mult} times as often.",
+ "jrj3jb": "Your own parts become as sound as the quality supplier’s at skill {rel}, and break down as rarely at {fail}.",
+ "19dhs7h": "Your own parts are now as sound as the quality supplier’s; at skill {fail}, they’ll break down as rarely too.",
  "128t4ek": "<b>Why can’t you order?</b> {tooling} would cost {cost} and you have {cash} in cash: you’re {short} short.",
  "1b9k335": "Choose {tooling} ({cost}, you can afford it)",
  "1qlk287": "Borrowed {amount}, dies ordered",
