@@ -198,6 +198,10 @@
   "one": "Werkstatt-Automatik: Eine weitere Werkstatt wird gebraucht ({cost}), aber die Kasse reicht nicht; zwei Wochen Ausgaben hält die Automatik immer als Reserve. Sobald sich Geld angesammelt hat, eröffnet sie die Werkstatt.",
   "other": "Werkstatt-Automatik: {n} weitere Werkstätten werden gebraucht ({cost}), aber die Kasse reicht nicht; zwei Wochen Ausgaben hält die Automatik immer als Reserve. Sobald sich Geld angesammelt hat, eröffnet sie die Werkstätten."
  },
+ "y269e7": {
+  "one": "Werkstatt-Automatik: Wo deine Autos weniger geworden sind oder es mehr Werkstätten gibt, als das Serviceziel von {target} verlangt, wurde eine Werkstatt geschlossen: {states}.",
+  "other": "Werkstatt-Automatik: Wo deine Autos weniger geworden sind oder es mehr Werkstätten gibt, als das Serviceziel von {target} verlangt, wurden {n} Werkstätten geschlossen: {states}."
+ },
  "f7x842": {
   "one": "Werkstatt-Automatik: Wo deine Autos weniger geworden sind, wurde eine ungenutzte Werkstatt geschlossen: {states}.",
   "other": "Werkstatt-Automatik: Wo deine Autos weniger geworden sind, wurden {n} ungenutzte Werkstätten geschlossen: {states}."
@@ -509,11 +513,12 @@
  "1m2vzs8": "Eine Werkstatt kann nur in einem Bundesstaat eröffnen, in dem du einen Händler hast.",
  "gdqcwj": "Eine Werkstatt kostet {cost}.",
  "p7acr7": "Hier gibt es keine Werkstatt zu schließen.",
+ "151ta7j": "Serviceziel ({target}) erreicht: In jedem Bundesstaat wird mindestens dieser Anteil deiner Autos betreut.",
+ "5puw9d": "Genug Service: In jedem Bundesstaat kümmert sich jemand um deine Autos.",
  "1149f1q": {
   "one": "{states} und ein weiterer Bundesstaat",
   "other": "{states} und {n} weitere Bundesstaaten"
  },
- "5puw9d": "Genug Service: In jedem Bundesstaat kümmert sich jemand um deine Autos.",
  "1wz018e": "Dein erster Händler in {state} hat eröffnet: {dealer}. Deine Autos werden jetzt auch dort verkauft.",
  "1ltljsz": {
   "one": "In {state} hat ein neuer Händler unterschrieben ({n} Händler).",
@@ -618,6 +623,7 @@
   "one": "F&E: Die Forschung an {name} hat begonnen ({cost}, {n} Woche).",
   "other": "F&E: Die Forschung an {name} hat begonnen ({cost}, {n} Wochen)."
  },
+ "iu9sqw": "{n} weitere",
  "kl1ew8": "{company} hat die Preise in der Klasse {segment} um {pct} gesenkt: Ein Preiskrieg hat begonnen.",
  "7x5zni": "{company} bringt das erste Auto mit {first} in der Klasse {segment} heraus: {model}.",
  "fxbhhc": "{company} bringt den {model} gegen unsere Führung in der Klasse {segment} heraus: der bisher ehrgeizigste Wurf der dortigen Ingenieure.",
@@ -1911,6 +1917,7 @@
  "ktkfng": "Dein Rang in der Klasse",
  "1vlrsjg": "Noch keine großen Konkurrenten",
  "1cu8k07": "Gesch. Anteil",
+ "1nf5eex": "Erster Monat <b>~{now}</b>, nach dem Rummel <b>~{lasting}</b>",
  "1d9qu3o": "Klassenvolumen ({market})",
  "10906ym": "{count} Autos/Jahr",
  "107rbay": "Modell",
@@ -1927,6 +1934,7 @@
  "1kyjew7": "Wo du unter dem Schnitt liegst",
  "4aarec": "Keine klare Schwäche.",
  "afmwxz": "Die Attraktivität ergibt sich daraus, wie wichtig den Käufern dieser Klasse die einzelnen Punkte sind; der Anteil hängt außerdem von Preis, Marke und Händlernetz ab. Aus dem Anteil werden nur so viele Verkäufe, wie du Autos bauen kannst.",
+ "fqhoru": "Der Anteil in der Tabelle enthält den Marktstart-Rummel, der binnen Monaten verfliegt. Plane deine Linien nach dem dauerhaften Anteil.",
  "1dd3cq2": "Die Produktion stockt",
  "vpeeu": "Spitze in der Klasse!",
  "z4twus": "Ein starker Start",
@@ -2276,6 +2284,7 @@
  "sl9bhk": "{v} / 100 (50 = Klassenschnitt)",
  "kxl8uk": "Schätzung: {lo}–{hi} (50 = Klassenschnitt)",
  "1oucclv": "Details",
+ "hz6ql0": "Teile und Reparaturen",
  "b84y0": "Material und Teile",
  "1ign6rh": "Lohn an der Linie",
  "1yg1cn": "Gehälter der Ingenieure",
@@ -2349,6 +2358,26 @@
  "6va3gd": "In F&E erforschte technische Fortschritte (Magnetzündung, Stoßdämpfer, Ballonreifen …) fließen automatisch in jeden neuen Entwurf ein.",
  "6tmyuf": "noch keine",
  "y6dukm": "Mit „F&E“ markierte Optionen müssen erst erforscht werden.",
+ "4n8yxr": "in diesem Projekt fest",
+ "17cyuau": "Einbauen",
+ "1tpuajm": "{pos}. in der Warteschlange",
+ "6dlutc": "{tech} in die Warteschlange gestellt",
+ "1jzipw3": "+ Einreihen",
+ "yji5tg": "kommt {year}",
+ "7mdof2": "Haben die meisten Konkurrenten, du nicht",
+ "1yto0ej": "Hat das typische Auto der Klasse, du nicht",
+ "1g05j7p": {
+  "one": "Das eine Konkurrenzauto dieser Klasse hat es; die Zeitschriften vergleichen dein Auto damit.",
+  "other": "Mehr als die Hälfte der {n} Konkurrenzautos dieser Klasse hat es; die Zeitschriften vergleichen dein Auto mit ihnen."
+ },
+ "ifb04m": "Noch keine Konkurrenz in der Klasse; die Zeitschriften vergleichen dein Auto mit einem typischen Neuwagen der Klasse.",
+ "tt2puv": "bei {count}/{total} Konkurrenten",
+ "q4r9u1": "wirkt automatisch",
+ "yczf2e": "{n} weitere zeigen",
+ "66dlcd": {
+  "one": "Das eine Thema der Liste einreihen",
+  "other": "Alle {n} Themen der Liste einreihen"
+ },
  "14ebxox": "Die Entwicklung hat begonnen: Der Entwurf ist gesperrt. Änderungen erfordern ein Facelift oder ein Projekt für eine neue Generation.",
  "14ivu57": "Ein Facelift behält das Fahrgestell bei.",
  "1kuqxo1": "Du nutzt eine bestehende Plattform: Fahrgestell, Größe und Federung stehen fest. Entwicklung und Werkzeuge kosten weniger.",
@@ -2494,6 +2523,7 @@
  },
  "6we1mr": "Der Entwurf nutzt Technik, die du noch nicht erforscht hast: {tech}. Erforsche sie in F&E oder nimm sie aus dem Entwurf.",
  "1kn5z9h": "Entwirf das Auto, wähle die Entwicklungsschwerpunkte und starte dann. Nach dem Start ist der Entwurf gesperrt; die Schwerpunkte kannst du jederzeit ändern.",
+ "1gy4kh7": "Die meisten Autos der Klasse haben {list}, dieser Entwurf nicht: in der Liste unten einbauen oder erforschen.",
  "157blb2": "<b>Entwicklung abgeschlossen.</b> Solange die Zeit läuft, wird das Auto weiter verfeinert (Zuverlässigkeit bisher +{v}, bis zu 160 % Fortschritt).",
  "1w12fbg": {
   "one": "<b>Entwicklung {pct}</b> · noch ~{n} Woche · {team}",
@@ -2730,6 +2760,14 @@
   "other": "Du kannst in {max} Bundesstaaten gleichzeitig nach Händlern suchen, suchst gerade aber nur in {active} (du verkaufst in {n} Bundesstaaten). Erschließe neue Bundesstaaten."
  },
  "1w2wm13": "Händler in Nachbarstaaten suchen",
+ "x8o3e7": {
+  "one": "Zu wenig Service: Für deine {parc} Autos gibt es {shops} Werkstätten, für das Serviceziel von {target} wird ~{n} weitere gebraucht. Am schlechtesten versorgt: {states}. Die Werkstatt-Automatik eröffnet sie, sobald die Kasse es erlaubt.",
+  "other": "Zu wenig Service: Für deine {parc} Autos gibt es {shops} Werkstätten, für das Serviceziel von {target} werden ~{n} weitere gebraucht. Am schlechtesten versorgt: {states}. Die Werkstatt-Automatik eröffnet sie, sobald die Kasse es erlaubt."
+ },
+ "1wdrfwa": {
+  "one": "Zu wenig Service: Für deine {parc} Autos gibt es {shops} Werkstätten, für das Serviceziel von {target} wird ~{n} weitere gebraucht. Am schlechtesten versorgt: {states}. Die Besitzer müssen warten, und die Autos landen früh auf dem Schrottplatz.",
+  "other": "Zu wenig Service: Für deine {parc} Autos gibt es {shops} Werkstätten, für das Serviceziel von {target} werden ~{n} weitere gebraucht. Am schlechtesten versorgt: {states}. Die Besitzer müssen warten, und die Autos landen früh auf dem Schrottplatz."
+ },
  "umi4n0": {
   "one": "Zu wenig Service: Für deine {parc} Autos gibt es {shops} Werkstätten, gebraucht wird ~{n} weitere. Am schlechtesten versorgt: {states}. Die Werkstatt-Automatik eröffnet sie, sobald die Kasse es erlaubt.",
   "other": "Zu wenig Service: Für deine {parc} Autos gibt es {shops} Werkstätten, gebraucht werden ~{n} weitere. Am schlechtesten versorgt: {states}. Die Werkstatt-Automatik eröffnet sie, sobald die Kasse es erlaubt."
@@ -2739,6 +2777,10 @@
   "other": "Zu wenig Service: Für deine {parc} Autos gibt es {shops} Werkstätten, gebraucht werden ~{n} weitere. Am schlechtesten versorgt: {states}. Die Besitzer müssen warten, und die Autos landen früh auf dem Schrottplatz."
  },
  "z01h6p": "Servicelücken schließen",
+ "w71gis": "Dein Händler- und Werkstattnetz kostet {cost} im Jahr, Teile und Reparaturen bringen {parts} ein: Die Nettokosten sind {share} des Umsatzes im letzten Jahr. Das hält die Firma nicht lange durch: Ein Serviceziel von {target} heißt weniger Werkstätten und weniger Gemeinkosten.",
+ "16xn7c8": "Dein Händler- und Werkstattnetz kostet {cost} im Jahr, Teile und Reparaturen bringen {parts} ein: Die Nettokosten sind {share} des Umsatzes im letzten Jahr. Das Serviceziel ist schon am niedrigsten ({target}): Schließ Händler mit wenig Absatz.",
+ "1ixvjjt": "Serviceziel {target}",
+ "1qb5gfl": "Dein Händler- und Werkstattnetz kostet {cost} im Jahr, Teile und Reparaturen bringen {parts} ein: Die Nettokosten sind {share} des Umsatzes. Denk darüber nach, Händler mit wenig Absatz zu schließen.",
  "n9gm28": "Dein Händler- und Werkstattnetz kostet {share} des Umsatzes: Denk darüber nach, Händler mit wenig Absatz zu schließen.",
  "1wqn0xe": "Umsatz",
  "bbt9lw": "Dividende",
@@ -2813,17 +2855,20 @@
  "1kuxj5d": "Zufriedenheit mit dem Service",
  "1j609d": "Netzkosten",
  "12h6tp3": "{cost}/Jahr",
+ "1a7r2f5": "Nettokosten des Netzes",
  "tl6ylm": "Fracht (dieses Jahr)",
  "1ldrl7u": "Händlersuchen",
  "1h2z4ds": "Kartenansicht",
  "46817k": "VEREINIGTE STAATEN",
  "c7o1xu": "Karte der Händler und Werkstätten",
+ "lxi60d": "Für das Serviceziel von {target} braucht es {all} Werkstätten ({allCost}), aber deine Kasse reicht nur für {n}, zuerst in den Bundesstaaten, in denen die Besitzer am längsten warten. Neue Werkstätten: {states}. Die Eröffnung kostet {cost}; die jährlichen Netzkosten steigen um ~{upkeep} (Bezirksbüros und Ersatzteillager eingerechnet).",
+ "1ctyhhr": "Neue Werkstätten: {states}. Die Eröffnung kostet {cost}; die jährlichen Netzkosten steigen um ~{upkeep} (Bezirksbüros und Ersatzteillager eingerechnet). Danach erreicht der Service in jedem Bundesstaat das Ziel von {target}.",
+ "lsam2n": "Um alle deine Autos zu betreuen, braucht es {all} Werkstätten ({allCost}), aber deine Kasse reicht nur für {n}, zuerst in den Bundesstaaten, in denen die Besitzer am längsten warten. Neue Werkstätten: {states}. Die Eröffnung kostet {cost}; die jährlichen Netzkosten steigen um ~{upkeep} (Bezirksbüros und Ersatzteillager eingerechnet).",
+ "10sdc4c": "Neue Werkstätten: {states}. Die Eröffnung kostet {cost}; die jährlichen Netzkosten steigen um ~{upkeep} (Bezirksbüros und Ersatzteillager eingerechnet). Danach kümmert sich in jedem Bundesstaat jemand um deine Autos.",
  "pbkif6": {
   "one": "Servicelücken schließen: {n} Werkstatt eröffnen?",
   "other": "Servicelücken schließen: {n} Werkstätten eröffnen?"
  },
- "lsam2n": "Um alle deine Autos zu betreuen, braucht es {all} Werkstätten ({allCost}), aber deine Kasse reicht nur für {n}, zuerst in den Bundesstaaten, in denen die Besitzer am längsten warten. Neue Werkstätten: {states}. Die Eröffnung kostet {cost}; die jährlichen Netzkosten steigen um ~{upkeep} (Bezirksbüros und Ersatzteillager eingerechnet).",
- "10sdc4c": "Neue Werkstätten: {states}. Die Eröffnung kostet {cost}; die jährlichen Netzkosten steigen um ~{upkeep} (Bezirksbüros und Ersatzteillager eingerechnet). Danach kümmert sich in jedem Bundesstaat jemand um deine Autos.",
  "1klkjef": "{cost} zahlen und eröffnen",
  "16xegjs": {
   "one": "{n} Werkstatt eröffnet",
@@ -2848,6 +2893,12 @@
  "ms4tmf": {
   "one": "{n} Werkstatt ist mangels Geld zurückgestellt.",
   "other": "{n} Werkstätten sind mangels Geld zurückgestellt."
+ },
+ "cgge5y": "Serviceziel",
+ "1veja9x": "Die Werkstatt-Automatik und „Servicelücken schließen“ eröffnen Werkstätten bis zu diesem Niveau; die Automatik schließt Werkstätten über dem 1,3-Fachen des Ziels. 90 % oder 80 % heißt weniger Werkstätten und weniger Gemeinkosten; dafür sinkt der Absatz in diesen Bundesstaaten um bis zu 4 % bzw. 8 %, die Garantie wird im gleichen Maß teurer, und die Einnahmen aus Teilen und Reparaturen sinken. Das Ansehen leidet erst, wenn die Zufriedenheit unter 80 % fällt.",
+ "1xvsesf": {
+  "one": "Du hast <b>{parc}</b> Autos auf der Straße und <b>{shops}</b> Werkstätten: Für das Serviceziel von {target} brauchst du <warn>~{n} weitere Werkstatt</warn>.",
+  "other": "Du hast <b>{parc}</b> Autos auf der Straße und <b>{shops}</b> Werkstätten: Für das Serviceziel von {target} brauchst du <warn>~{n} weitere Werkstätten</warn>."
  },
  "1ty6sfo": {
   "one": "Du hast <b>{parc}</b> Autos auf der Straße und <b>{shops}</b> Werkstätten: Um alle zu betreuen, brauchst du <warn>~{n} weitere Werkstatt</warn>.",
@@ -2907,6 +2958,7 @@
  "vemeqr": "Händler schließen",
  "1h26w4k": "Werkstatt schließen",
  "xzz9hc": "Wächst das Netz, wachsen seine Gemeinkosten überproportional (Bezirksbüros, Ersatzteillager): Ein weiterer Händler kostet ~{dealer} pro Jahr zusätzlich, eine weitere Werkstatt ~{shop}.",
+ "nm81qv": "Eine ausgelastete Werkstatt bringt mit Teilen und Reparaturen ~{income} im Jahr ein; Werkstätten über den Bedarf deiner Autos hinaus bringen nichts.",
  "198gg56": "Bundesstaaten",
  "12cbrez": "Nur Bundesstaaten mit Verkauf und ihre Nachbarn",
  "crxd3u": "Alle Bundesstaaten",
@@ -2997,6 +3049,7 @@
  "10fn6r5": "Offen",
  "680zad": "Mangel ({area}, {severity}): {defect}",
  "1no87ob": "Warum diese Verkaufszahlen? Klasse {segment}",
+ "1tr8th6": "Käufer wägen jedes Auto nach Attraktivität (Entwurfsnoten × verborgene Vorlieben der Klasse), Preis, Marke und Alter ab: Ein Entwurf verliert ab dem ersten Verkaufsjahr ~{slow} Punkte pro Jahr, ab einem Alter von {old} Jahren ~{fast} Punkte pro Jahr (höchstens −{max}); ein Facelift löscht drei Viertel des bis dahin angesammelten Alters. Dein Händlernetz und deine Bekanntheit bestimmen, wie viele Käufer dein Auto sehen können. Klasse gesamt: {demand} Autos/Woche.",
  "1ywdimb": "Preiseffekt",
  "16ko2gj": "Marke",
  "oau2rp": "Marktstart-Rummel",
@@ -3024,15 +3077,22 @@
  "maoxyd": "Das bereits in dieses Projekt gesteckte Geld ist verloren.",
  "1plq5sq": "Projekt abbrechen",
  "1raixj3": "Die Kapazität der Linie steht noch nicht fest: Beim Gewinn wird angenommen, dass die gesamte Nachfrage gebaut wird.",
+ "384lbr": "Auch nach dem Rummel ist die Nachfrage das {x}-Fache der Linie: Du könntest den Preis etwas anheben oder die Kapazität ausbauen.",
+ "xyg0a3": "Nach dem Rummel kann die Linie das {x}-Fache der Nachfrage bauen: Denk über einen niedrigeren Preis oder eine kleinere Linie nach.",
+ "atylxt": "In den ersten Monaten übersteigt die Nachfrage die Linie, aber nach dem Rummel sind Nachfrage und Kapazität ausgeglichen: Bau dafür keine Linie dazu.",
  "1p0feii": "Nach der mittleren Schätzung sind Nachfrage und Kapazität ausgeglichen.",
  "2iqqph": "Preisorientierung",
  "sdo43h": "Preise der Konkurrenz für Käufer: niedrigster {low} · Median {mid} · höchster {high}.",
+ "1ka43ga": "Geschätzte Nachfrage bei diesem Preis: erster Monat <b>{lo}–{hi} Autos/Woche</b> (~{share} der Klasse), nach dem Rummel <b>{llo}–{lhi}</b> (~{lasting}) · Linie {cap} Autos/Woche.",
+ "1a0r3kx": "Geschätzte Nachfrage bei diesem Preis: erster Monat <b>{lo}–{hi} Autos/Woche</b>, nach dem Rummel <b>{llo}–{lhi}</b> · Linie {cap} Autos/Woche.",
  "1t5pkho": "Ein einzelnes Auto erreicht selten einen so großen Anteil an seiner Klasse: Händler, Produktion und die Reaktion der Konkurrenz begrenzen ihn, sieh die Schätzung also als optimistisch an.",
+ "1eadhfg": "<b>Die Linie ist klein.</b> Der Preis „am profitabelsten mit dieser Linie“ ist nur hoch, weil die Linie wenig baut. Mit mehr Linien ist {price} am profitabelsten: Nach dem Rummel liegt die Nachfrage bei ~{demand} Autos/Wo., und mit passenden Linien bleiben ~{profit} Bruttogewinn pro Woche (mit dieser Linie bestenfalls {best}). Bau oder erweitere Linien in der Fabrik; auch „Nachfrage automatisch decken“ erweitert, sobald die Kasse es erlaubt.",
  "l21ho0": "Nachfrage (Mitte)",
  "1vymacu": "Bruttogewinn pro Woche",
  "m8tlu2": "Klassenpreis",
  "lsp6eg": "am profitabelsten",
  "bzok9n": "am profitabelsten mit dieser Linie",
+ "1q1k1e4": "am profitabelsten mit mehr Linien (~{profit}/Wo.)",
  "18hhnsp": "die Presse nennt ihn „ehrgeizig“",
  "11lwnpe": "Liegt der Preis mehr als {over} über dem Klassenpreis, springen die Käufer viel schneller ab. Die Zeitschriften messen den Preis an der Klasse: Je weiter er über dem Klassenpreis liegt, desto mehr rutscht die Note nach und nach ab, und liegt er in dieser Klasse mehr als {steep} darüber, nennen sie ihn „ehrgeizig“; eine schlechte Note verkleinert auch den Andrang zum Marktstart. Billig anfangen und den Preis später erhöhen funktioniert nicht: Eine Erhöhung um mehr als {hike} in den ersten drei Jahren nach dem Marktstart bringt die Zeitschriften dazu, ihre Tests neu zu schreiben, und kostet dich Ansehen.",
  "1p535an": "Was das Facelift bringt",
@@ -3185,11 +3245,13 @@
  "1idvj7p": "Lohn / Auto (volle Kapazität)",
  "z8qnbh": "Bruttogewinn pro Auto (volle Kapazität)",
  "10vhh57": "Erwarteter Absatz (mittlere Schätzung)",
+ "dbso0o": "Nach dem Rummel",
  "klv60r": "Wöchentlicher Beitrag des Autos",
  "55h7oi": "Fixkosten (Gehälter, Gemeinkosten, Händler)",
  "174u2qc": "Wochengewinn der Firma: jetzt → mit diesem Auto",
  "1if8qiq": "Wöchentlich netto",
  "zxv6i2": "Bei diesem Preis und der erwarteten Nachfrage verliert die Firma {loss} pro Woche. Der Lohn an der Linie wird auch bei geringer Produktion gezahlt; überdenke den Preis, die Linie oder die Zahl deiner Ingenieure.",
+ "12lhfgm": "Die meisten Autos der Klasse haben {list}, dieses Auto nicht: Die Zeitschriften merken das, setz den Preis entsprechend. Das meiste lässt sich später per Facelift nachrüsten.",
  "qbbj9d": "Wie die Käufer dein Auto aufnehmen, siehst du beim Marktstart: Testnoten, ein Vergleich mit der Konkurrenz und vier Wochen später der Bericht nach dem ersten Monat.",
  "1mmw5aw": "Auf den Markt bringen",
  "99ud4t": "Linie: {name}",
@@ -3250,10 +3312,6 @@
  "d6ltrj": "Nach Konkurrenzanteil",
  "48htjo": "Nach Jahr",
  "11m693g": "Nach Kosten",
- "66dlcd": {
-  "one": "Das eine Thema der Liste einreihen",
-  "other": "Alle {n} Themen der Liste einreihen"
- },
  "130v5vn": "insgesamt ~{cost}; jedes Thema wird bei seinem Start bezahlt.",
  "4oh81a": "Kein Thema passt zu deiner Suche.",
  "1pzpict": "Gerade gibt es keine unerlernte Technologie: Alles ist bekannt oder eingeplant.",
@@ -3263,19 +3321,14 @@
  "1s70n5u": "Noch nichts gelernt.",
  "11e31qx": "In den nächsten zehn Jahren ist nichts Neues zu erwarten.",
  "1jxqbru": "neu",
- "q4r9u1": "wirkt automatisch",
  "9p42fk": "erfordert zuerst {techs}",
  "f5g0da": "Anteil der Konkurrenzautos mit dieser Technologie",
- "yji5tg": "kommt {year}",
  "1qfmq3b": "{share} der Konkurrenz",
  "1wi832p": "von keinem Konkurrenten genutzt",
  "u1th80": "bekannt",
- "1tpuajm": "{pos}. in der Warteschlange",
  "he55d3": "{tech} aus der Warteschlange nehmen",
  "cruf2z": "Forschung an {tech} gestartet",
  "avqtop": "Erforschen",
- "6dlutc": "{tech} in die Warteschlange gestellt",
- "1jzipw3": "+ Einreihen",
  "lw6l4x": "<b>Wirkung:</b> {effects}",
  "1rd3lyf": "Sobald erlernt, fließt es automatisch in jeden neuen Entwurf und jedes Facelift ein.",
  "uiwk7h": "Sobald erlernt, kannst du es im Entwurfsbildschirm auswählen.",
