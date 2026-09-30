@@ -14,7 +14,7 @@ import { stationDef } from '../data/stations';
 import { toolingDef } from '../data/tooling';
 import { SEGMENTS, segmentDef } from '../data/segments';
 import { interp } from '../data/tech';
-import { nationalReach, playerStateDemand } from './network';
+import { cappedOdds, nationalReach, playerStateDemand, shareCap } from './network';
 import { appeal, eraMods, eraReference, scoreStats } from './scoring';
 import { INDUSTRY_RESIDUAL_DEFECTS } from './testing';
 import { yearFloat } from './time';
@@ -314,6 +314,21 @@ export function rivalOffer(state: GameState, rm: RivalModel, market: MarketId): 
   };
 }
 
+/**
+ * A rival's model meets the same share cap as ours, by the rival's reach and name: however good the car,
+ * buyers who never see the make's showrooms or do not trust it stay with others. As with ours a price
+ * over the class works in full on top of the cap.
+ */
+function capRivals(rivals: Offer[], othersWeight: number): void {
+  const all = rivals.reduce((s, o) => s + o.weight, othersWeight);
+  const capped = rivals.map((o) => {
+    const rest = all - o.weight;
+    const priced = Math.exp(Math.min(0, o.priceTerm) / TAU);
+    return rest * cappedOdds(o.weight / priced / rest, shareCap(o.reach, rivalReputation(o.companyId))) * priced;
+  });
+  rivals.forEach((o, i) => (o.weight = capped[i]));
+}
+
 export interface SegmentMarket {
   demand: number; // cars per week, whole segment
   offers: Offer[];
@@ -340,13 +355,15 @@ export function segmentMarket(state: GameState, market: MarketId, segment: Segme
       mine.push(o);
     }
   }
+  const rivals: Offer[] = [];
   for (const rm of state.rivalModels) {
-    if (rm.active && rm.segment === segment && rm.markets.includes(market)) offers.push(rivalOffer(state, rm, market));
+    if (rm.active && rm.segment === segment && rm.markets.includes(market)) rivals.push(rivalOffer(state, rm, market));
   }
+  offers.push(...rivals);
   // Where few named rivals compete, the many small makers fill the gap.
-  const rivalCount = offers.filter((o) => o.kind === 'rival').length;
-  const othersWeight = othersMass(yf) * (1 + 0.35 * Math.max(0, 3 - rivalCount)) * Math.exp(OTHERS_UTILITY / TAU);
-  const rivalsWeight = offers.reduce((s, o) => s + (o.kind === 'rival' ? o.weight : 0), 0);
+  const othersWeight = othersMass(yf) * (1 + 0.35 * Math.max(0, 3 - rivals.length)) * Math.exp(OTHERS_UTILITY / TAU);
+  capRivals(rivals, othersWeight);
+  const rivalsWeight = rivals.reduce((s, o) => s + o.weight, 0);
   const demand = weeklySegmentDemand(market, segment, yf);
   const player: SegmentMarket['player'] = { units: {}, byState: {} };
   if (!mine.length || demand <= 0) return { demand, offers, othersWeight, totalWeight: rivalsWeight + othersWeight, player };

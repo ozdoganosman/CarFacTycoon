@@ -185,11 +185,13 @@ const TAU = 7;
 /**
  * The most of a state's class one model can take, however good it is: buyers who never walk into our
  * showrooms or do not trust the name stay with the makes they know. About 30% with showrooms everywhere
- * and a good name; much less with a thin network or a poor reputation.
+ * and a good name; much less with a thin network or a poor reputation. Rivals meet the same limit.
  */
+export const shareCap = (reach: number, reputation: number) => (0.08 + 0.2 * Math.min(1, reach)) * (0.75 + 0.005 * reputation);
+
+/** The share cap for our models in one state (our showrooms there, our name). */
 export function modelShareCap(s: GameState, id: StateId, yf: number): number {
-  const reach = Math.min(1, stateReach(s, id, yf));
-  return (0.08 + 0.2 * reach) * (0.75 + 0.005 * s.company.reputation);
+  return shareCap(stateReach(s, id, yf), s.company.reputation);
 }
 
 /**
@@ -205,8 +207,9 @@ export const cappedOdds = (odds: number, cap: number) => {
  * Our models' weekly buyers in one class, state by state. `utility` is each model's
  * pull (appeal, price, brand…) and `price` the part of it that is the price; `others` is
  * everyone else's weight (rivals and the small makers), who sell everywhere. The share
- * cap bends what the car itself draws; the price then works in full on top, so pricing
- * over the class still costs buyers even for a car at the cap.
+ * cap bends what the car itself draws, a price under the class included (a cheap car does
+ * not reach buyers who never see the showroom); a price over the class then works in
+ * full on top, so it still costs buyers even for a car at the cap.
  */
 export function playerStateDemand(
   s: GameState,
@@ -230,7 +233,7 @@ export function playerStateDemand(
     const local = localPreference(s, id, yf);
     const cap = modelShareCap(s, id, yf);
     const weights = models.map((m) => {
-      const price = m.price ?? 0;
+      const price = Math.min(0, m.price ?? 0);
       const odds = (pull * Math.exp((m.utility - price + local) / TAU)) / others;
       return others * cappedOdds(odds, cap) * Math.exp(price / TAU);
     });
