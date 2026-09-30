@@ -1,3 +1,4 @@
+import { COST_KEYS } from '../core/game';
 import { money, num, type IncomeCategory } from '../core/util';
 import { pctWith } from '../core/turkish';
 import { isTurkish, langDef, msg, t } from '../i18n';
@@ -17,14 +18,14 @@ export function signedMoney(v: number) {
   return langDef().rtl ? `\u2066${s.replace(/[\u2066\u2069]/g, '')}\u2069` : s;
 }
 
-/** Profit over the last n recorded weeks. */
+/** Every running cost in the books: all but investment and the yearly tax bill. */
+const RUNNING_COSTS = COST_KEYS.filter((k) => k !== 'investment' && k !== 'tax');
+
+/** Profit a week over the last n recorded weeks, before investment and tax. */
 export function recentProfit(s: GameState, weeks = 4): number {
   const f = s.finance.slice(-weeks);
   if (!f.length) return 0;
-  const total = f.reduce(
-    (a, w) => a + w.revenue - w.materials - w.labor - w.salaries - w.dealers - w.marketing - w.rnd - w.warranty - w.interest - w.other,
-    0,
-  );
+  const total = f.reduce((a, w) => a + w.revenue - RUNNING_COSTS.reduce((b, k) => b + (w[k] ?? 0), 0), 0);
   return total / f.length;
 }
 

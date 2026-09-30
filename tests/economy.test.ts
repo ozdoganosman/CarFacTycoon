@@ -12,6 +12,7 @@ import type { YearSummary } from '../src/core/types';
 import { COST_KEYS } from '../src/core/game';
 import { DEALER_COMMISSION, costIndex } from '../src/data/economy';
 import { eraReference } from '../src/core/scoring';
+import { recentProfit } from '../src/ui/format';
 
 // Fixes from the cf381f6 playtest: a class price that pays, a way for a small maker to grow,
 // prices that follow their class, a board that is no free loan, rivals that answer real sales.
@@ -168,5 +169,14 @@ describe('the share cap', () => {
     expect(cheap.share).toBeGreaterThan(cheap.cap * 0.6);
     rm.priceCut = { mult: 1.4, until: s.week + 52 };
     expect(share().share).toBeLessThan(cheap.share * 0.6);
+  });
+});
+
+describe('the weekly profit', () => {
+  it('counts every running cost, freight included, but not investment or the yearly tax', () => {
+    const s = game(1920);
+    const week = { ...(Object.fromEntries(COST_KEYS.map((k) => [k, 0])) as Record<(typeof COST_KEYS)[number], number>), week: 1, revenue: 1000 };
+    s.finance = [{ ...week, materials: 400, freight: 50, investment: 300, tax: 200 }];
+    expect(recentProfit(s, 4)).toBe(550);
   });
 });
