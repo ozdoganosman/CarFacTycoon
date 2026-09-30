@@ -2,6 +2,9 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } f
 import { createPortal } from 'react-dom';
 import { useBackClose } from '../back';
 import { t } from '../../i18n';
+import { segmentDef } from '../../data/segments';
+import type { SegmentId } from '../../core/types';
+import { Icon } from './Icon';
 
 export function Panel(props: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; tight?: boolean }) {
   return (
@@ -162,6 +165,37 @@ export function ScoreBar(props: { value: number; compare?: number; label?: React
 
 export function Badge(props: { children: ReactNode; tone?: 'good' | 'bad' | 'warn' | 'info' | 'muted' }) {
   return <span className={`badge badge-${props.tone ?? 'muted'}`}>{props.children}</span>;
+}
+
+/**
+ * What speaks for and against a choice, one point a line, each marked with a plus or a minus (spans, so it
+ * can sit inside a choice button).
+ */
+export function ProsCons(props: { pros: ReactNode[]; cons: ReactNode[] }) {
+  return (
+    <span className="pros-cons">
+      {props.pros.map((p, i) => (
+        <span key={`p${i}`} className="pc-item is-pro">
+          {p}
+        </span>
+      ))}
+      {props.cons.map((c, i) => (
+        <span key={`c${i}`} className="pc-item is-con">
+          {c}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** A class of car: its pictogram and its name. */
+export function SegmentLabel({ id }: { id: SegmentId }) {
+  const d = segmentDef(id);
+  return (
+    <span className="seg-label">
+      <Icon name={d.icon} /> {t(d.name)}
+    </span>
+  );
 }
 
 export function Empty(props: { children: ReactNode }) {

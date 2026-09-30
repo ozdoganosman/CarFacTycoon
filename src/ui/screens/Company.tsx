@@ -5,7 +5,6 @@ import { stateDef } from '../../data/states';
 import { companyValue } from '../../core/game';
 import { RACING_LEVELS, RACING_YEAR, racingBudget, racingOutlook, racingPaused, racingPrestige, setRacingLevel } from '../../core/racing';
 import { yearFloat } from '../../core/time';
-import { MARKETS } from '../../data/markets';
 import { store, useGameState } from '../store';
 import { dec, money, num, pct as fmtPct, pctOf } from '../format';
 import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table } from '../components/ui';
@@ -121,7 +120,7 @@ export function Company() {
               {r.last && (
                 <p className="small">
                   {r.last.result === 'win'
-                    ? tx('{year} sezonu, {race}: <b>{model}</b> 🏆 birinci oldu.', { year: r.last.year, race: r.last.race, model: r.last.model })
+                    ? tx('{year} sezonu, {race}: <b>{model}</b> birinci oldu.', { year: r.last.year, race: r.last.race, model: r.last.model })
                     : r.last.result === 'podium'
                       ? tx('{year} sezonu, {race}: <b>{model}</b> ilk üçe girdi.', { year: r.last.year, race: r.last.race, model: r.last.model })
                       : tx('{year} sezonu, {race}: <b>{model}</b> dereceye giremedi.', { year: r.last.year, race: r.last.race, model: r.last.model })}
@@ -142,7 +141,7 @@ export function Company() {
               align={['l', 'r', 'r', 'r', 'r', 'r']}
               rows={targets.slice(0, 10).map((tg) => [
                 <span key="n">
-                  {MARKETS.find((m) => m.id === tg.home)!.flag} {tg.name}
+                  {tg.name}
                 </span>,
                 t('{count} araç', { count: num(tg.units) }),
                 `+${tg.engineers}`,

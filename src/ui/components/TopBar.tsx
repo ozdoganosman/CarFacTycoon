@@ -2,13 +2,14 @@ import { formatDate } from '../../core/time';
 import { msg, t } from '../../i18n';
 import { store, useGameState, type Speed } from '../store';
 import { money, recentProfit, signedMoney } from '../format';
+import { Icon, type IconName } from './Icon';
 import { SponsorChip } from './Sponsor';
 
-const SPEEDS: { s: Speed; label: string; title: string }[] = [
-  { s: 0, label: '❚❚', title: msg('Duraklat (boşluk)') },
-  { s: 1, label: '▶', title: msg('Normal hız (1)') },
-  { s: 2, label: '▶▶', title: msg('Hızlı (2)') },
-  { s: 3, label: '▶▶▶', title: msg('Çok hızlı (3)') },
+const SPEEDS: { s: Speed; icon: IconName; title: string }[] = [
+  { s: 0, icon: 'pause', title: msg('Duraklat (boşluk)') },
+  { s: 1, icon: 'play', title: msg('Normal hız (1)') },
+  { s: 2, icon: 'fast', title: msg('Hızlı (2)') },
+  { s: 3, icon: 'fastest', title: msg('Çok hızlı (3)') },
 ];
 
 export function TopBar() {
@@ -18,7 +19,7 @@ export function TopBar() {
     <header className="topbar">
       <div className="brand">
         <span className="brand-mark" aria-hidden>
-          ⚙
+          <Icon name="settings" size={20} />
         </span>
         <span className="brand-name">{s.company.name}</span>
       </div>
@@ -51,7 +52,7 @@ export function TopBar() {
             aria-pressed={store.speed === x.s}
             disabled={!!s.gameOver}
           >
-            {x.label}
+            <Icon name={x.icon} size={x.s === 3 ? 20 : 16} />
           </button>
         ))}
       </div>

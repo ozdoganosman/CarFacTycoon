@@ -31,6 +31,7 @@ import { store } from '../store';
 import { dec, money, pct } from '../format';
 import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table } from './ui';
 import { tx } from '../i18n';
+import { Icon } from './Icon';
 
 const signedPct = (v: number) => {
   const tenths = Math.abs(Math.round(v * 1000));
@@ -262,7 +263,7 @@ export function SharesPanel({ s }: { s: GameState }) {
             .slice(0, 8)
             .map((b) => [
               <span key="y" className={b.met ? 'tone-good' : 'tone-bad'}>
-                {b.met ? '✓' : '✗'} {b.year}
+                <Icon name={b.met ? 'check' : 'cross'} /> {b.year}
               </span>,
               <span key="g">
                 {signedPct(b.growth)} <span className="muted small">/ {signedPct(b.targetGrowth)}</span>

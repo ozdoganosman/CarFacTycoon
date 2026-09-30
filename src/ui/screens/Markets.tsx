@@ -6,12 +6,12 @@ import { yearFloat, yearOf } from '../../core/time';
 import { cityDef } from '../../data/cities';
 import { marketSize, segmentShares } from '../../data/markets';
 import { RIVALS } from '../../data/rivals';
-import { ATTRS, ATTR_NAMES, MARKET_TASTE, SEGMENTS, segmentDef } from '../../data/segments';
+import { ATTRS, ATTR_NAMES, MARKET_TASTE, SEGMENTS } from '../../data/segments';
 import { REGION_NAMES, STATE_IDS, stateDef, statePop, stateWeights, type StateId } from '../../data/states';
 import type { GameState } from '../../core/types';
 import { store, useGameState } from '../store';
 import { INCOME_NAMES, dec, money, num, pct } from '../format';
-import { Badge, Button, NumberInput, Panel, Table, Toggle } from '../components/ui';
+import { Badge, Button, NumberInput, Panel, Table, Toggle, SegmentLabel } from '../components/ui';
 import { Importance } from '../components/StatsPanel';
 import { LineChart } from '../viz/LineChart';
 import { UsMap, type MapMarker, type MapTone, type UsMapProps } from '../viz/UsMap';
@@ -532,7 +532,7 @@ function MarketPanel() {
   const [ad, setAd] = useState(ms.adBudget);
   return (
     <>
-      <Panel title={`🇺🇸 ${t('Amerikan pazarı')}`}>
+      <Panel title={t('Amerikan pazarı')}>
         <div className="stats-row">
           <div className="stat">
             <div className="stat-label">{t('Yıllık pazar ({year})', { year: yearOf(s.week) })}</div>
@@ -569,9 +569,7 @@ function MarketPanel() {
             <h4>{t('Segment payları')}</h4>
             {SEGMENTS.filter((x) => shares[x.id] > 0.001).map((x) => (
               <div key={x.id} className="share-row">
-                <span>
-                  {x.icon} {t(x.name)}
-                </span>
+                <SegmentLabel id={x.id} />
                 <div className="share-bar">
                   <div style={{ width: `${shares[x.id] * 100}%` }} />
                 </div>
@@ -602,7 +600,7 @@ function MarketPanel() {
             className="compact"
             rows={rivals
               .sort((a, b) => a.segment.localeCompare(b.segment))
-              .map((r) => [r.name, RIVALS.find((x) => x.id === r.companyId)?.name ?? '', `${segmentDef(r.segment).icon} ${t(segmentDef(r.segment).name)}`, money(rivalPriceNow(r, s.week))])}
+              .map((r) => [r.name, RIVALS.find((x) => x.id === r.companyId)?.name ?? '', <SegmentLabel key="seg" id={r.segment} />, money(rivalPriceNow(r, s.week))])}
           />
         </Panel>
       </div>
@@ -638,7 +636,7 @@ function Knowledge() {
               return (
                 <tr key={seg.id} className={seg.year > yf ? 'is-future' : ''}>
                   <td>
-                    {seg.icon} {t(seg.name)}
+                    <SegmentLabel id={seg.id} />
                   </td>
                   {ATTRS.map((k) => (
                     <td key={k} className="al-c">

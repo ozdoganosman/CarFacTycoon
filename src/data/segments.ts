@@ -1,3 +1,4 @@
+import type { IconName } from '../ui/components/Icon';
 import type { AttrKey, BodyId, MarketId, SegmentId } from '../core/types';
 import { msg } from '../i18n';
 
@@ -13,7 +14,7 @@ export interface SegmentDef {
   brandSens: number;
   defaultBody: BodyId;
   defaultSize: number;
-  icon: string;
+  icon: IconName;
 }
 
 export const ATTRS: AttrKey[] = [
@@ -52,7 +53,7 @@ export const SEGMENTS: SegmentDef[] = [
     brandSens: 0.6,
     defaultBody: 'roadster',
     defaultSize: 0.1,
-    icon: '🛵',
+    icon: 'segCity',
   },
   {
     id: 'family',
@@ -65,7 +66,7 @@ export const SEGMENTS: SegmentDef[] = [
     brandSens: 1,
     defaultBody: 'phaeton',
     defaultSize: 0.45,
-    icon: '🚗',
+    icon: 'segFamily',
   },
   {
     id: 'sport',
@@ -78,7 +79,7 @@ export const SEGMENTS: SegmentDef[] = [
     brandSens: 1.2,
     defaultBody: 'roadster',
     defaultSize: 0.3,
-    icon: '🏁',
+    icon: 'segSport',
   },
   {
     id: 'pickup',
@@ -91,7 +92,7 @@ export const SEGMENTS: SegmentDef[] = [
     brandSens: 0.7,
     defaultBody: 'pickup',
     defaultSize: 0.5,
-    icon: '🛻',
+    icon: 'segPickup',
   },
   {
     id: 'luxury',
@@ -104,7 +105,7 @@ export const SEGMENTS: SegmentDef[] = [
     brandSens: 2,
     defaultBody: 'phaeton',
     defaultSize: 0.85,
-    icon: '🎩',
+    icon: 'segLuxury',
   },
   {
     id: 'suv',
@@ -117,7 +118,7 @@ export const SEGMENTS: SegmentDef[] = [
     brandSens: 1,
     defaultBody: 'suv',
     defaultSize: 0.45,
-    icon: '⛰️',
+    icon: 'segSuv',
   },
 ];
 

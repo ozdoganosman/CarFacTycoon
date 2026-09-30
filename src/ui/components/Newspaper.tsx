@@ -7,6 +7,7 @@ import { money } from '../format';
 import { CarSVG } from '../viz/CarSVG';
 import { Button } from './ui';
 import { PaperAdSlot } from './Sponsor';
+import { Icon } from './Icon';
 
 // Period front pages. Three mastheads follow the look of the press of their
 // day: blackletter and dense columns before 1920, high-contrast display type
@@ -52,7 +53,7 @@ export function NewsCard() {
     return (
       <aside className={`news-card is-compact ${issue.kind === 'boom' ? 'is-boom' : ''}`}>
         <button type="button" className="news-card-tab" onClick={read} title={issue.lead.headline}>
-          📰 <span className={`mast-${era}`}>{t(MAST[era].name)}</span>
+          <Icon name="newspaper" /> <span className={`mast-${era}`}>{t(MAST[era].name)}</span>
         </button>
         <button type="button" className="year-card-x" aria-label={t('Kapat')} onClick={dismiss}>
           ×
@@ -69,7 +70,7 @@ export function NewsCard() {
       </div>
       <b className="news-card-headline">{issue.lead.headline}</b>
       <Button kind={issue.kind === 'boom' ? 'primary' : 'ghost'} onClick={read}>
-        📰 {t('Gazeteyi oku (oyun durur)')}
+        <Icon name="newspaper" /> {t('Gazeteyi oku (oyun durur)')}
       </Button>
     </aside>
   );
@@ -213,7 +214,7 @@ export function NewsArchive() {
       {list.map((n) => (
         <li key={n.id}>
           <button type="button" className="link-btn" onClick={() => store.openNews(n.id)}>
-            <span className="news-date">{formatDate(n.week)}</span> {n.kind === 'boom' ? '🎉 ' : '📰 '}
+            <span className="news-date">{formatDate(n.week)}</span> <Icon name={n.kind === 'boom' ? 'rosette' : 'newspaper'} />{' '}
             {n.lead.headline}
           </button>
         </li>

@@ -119,7 +119,7 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
               <div className="seg-toggle">
                 {m.markets.map((mk) => (
                   <button key={mk} type="button" className={`chip ${market === mk ? 'is-on' : ''}`} onClick={() => setMarket(mk)}>
-                    {MARKETS.find((x) => x.id === mk)!.flag} {t(MARKETS.find((x) => x.id === mk)!.name)}
+                    {t(MARKETS.find((x) => x.id === mk)!.name)}
                   </button>
                 ))}
               </div>
@@ -337,7 +337,7 @@ export function LaunchReportView({ s, modelId, report: r }: { s: GameState; mode
           </div>
           <div>
             <span>
-              {MARKETS.find((x) => x.id === r.market)!.flag} {t('Segmentteki sıra')}
+              {t('Segmentteki sıra')}
             </span>
             <b>
               {r.rank > 0 ? `${t('{rank}.', { rank: r.rank })} / ${r.offers}` : '—'}

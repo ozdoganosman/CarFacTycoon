@@ -1,18 +1,19 @@
 import { msg, t } from '../../i18n';
 import { store, useGameState, type Screen } from '../store';
+import { Icon, type IconName } from './Icon';
 import { SendToClaude } from './SendToClaude';
 
-const ITEMS: { id: Screen['id']; label: string; icon: string }[] = [
-  { id: 'hq', label: msg('Merkez'), icon: '🏢' },
-  { id: 'projects', label: msg('Projeler'), icon: '📐' },
-  { id: 'research', label: msg('Ar-Ge'), icon: '🔬' },
-  { id: 'models', label: msg('Modeller'), icon: '🚗' },
-  { id: 'factory', label: msg('Fabrika'), icon: '🏭' },
-  { id: 'markets', label: msg('Harita'), icon: '🗺️' },
-  { id: 'finance', label: msg('Finans'), icon: '💰' },
-  { id: 'company', label: msg('Şirket'), icon: '🏁' },
-  { id: 'cards', label: msg('Bilgi kartları'), icon: '💡' },
-  { id: 'settings', label: msg('Ayarlar'), icon: '⚙️' },
+const ITEMS: { id: Screen['id']; label: string; icon: IconName }[] = [
+  { id: 'hq', label: msg('Merkez'), icon: 'hq' },
+  { id: 'projects', label: msg('Projeler'), icon: 'projects' },
+  { id: 'research', label: msg('Ar-Ge'), icon: 'research' },
+  { id: 'models', label: msg('Modeller'), icon: 'models' },
+  { id: 'factory', label: msg('Fabrika'), icon: 'factory' },
+  { id: 'markets', label: msg('Harita'), icon: 'markets' },
+  { id: 'finance', label: msg('Finans'), icon: 'finance' },
+  { id: 'company', label: msg('Şirket'), icon: 'company' },
+  { id: 'cards', label: msg('Bilgi kartları'), icon: 'bulb' },
+  { id: 'settings', label: msg('Ayarlar'), icon: 'settings' },
 ];
 
 export function Nav() {
@@ -34,7 +35,7 @@ export function Nav() {
           aria-current={active(it.id) ? 'page' : undefined}
         >
           <span className="nav-icon" aria-hidden>
-            {it.icon}
+            <Icon name={it.icon} size={20} />
           </span>
           <span className="nav-label">{t(it.label)}</span>
           {!!badges[it.id] && <span className="nav-badge">{badges[it.id]}</span>}

@@ -19,7 +19,7 @@ import { yearFloat } from '../../core/time';
 import { DEALER_COMMISSION, costIndex, engineerSalary, lineBuildWeeks, overhead, shopCost } from '../../data/economy';
 import { MARKETS } from '../../data/markets';
 import * as N from '../../core/network';
-import { ATTRS, ATTR_NAMES, segmentDef } from '../../data/segments';
+import { ATTRS, ATTR_NAMES } from '../../data/segments';
 import { STAGES } from '../../data/stations';
 import { TOOLING, toolingDef } from '../../data/tooling';
 import type { ComponentKey, GameState, MarketId, Project, ProjectPhase, StageId, TestId, ToolingTier } from '../../core/types';
@@ -29,7 +29,7 @@ import { dec, money, num, pct as percent, pctOf, recentProfit } from '../format'
 import { inYear } from '../format';
 import { tx } from '../i18n';
 import { pctWith } from '../../core/turkish';
-import { Badge, Button, Choice, NumberInput, Panel, Progress, Slider, Toggle } from '../components/ui';
+import { Badge, Button, Choice, NumberInput, Panel, Progress, Slider, Toggle, SegmentLabel } from '../components/ui';
 import { newEstimate } from '../../core/estimate';
 import { devWeeksLeft, launchBudget } from '../../core/budget';
 import { classGap, gapNames, researcherSalary } from '../../core/research';
@@ -37,6 +37,7 @@ import { BudgetLine } from '../components/BudgetLine';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { Designer } from './Designer';
 import { DevBar, FocusPanel } from './DevPanel';
+import { Icon } from '../components/Icon';
 
 const STEPS: { label: string; phases: ProjectPhase[] }[] = [
   { label: msg('Tasarım ve geliştirme'), phases: ['design', 'development'] },
@@ -64,7 +65,7 @@ export function ProjectView({ projectId }: { projectId: string }) {
             )}
           </h1>
           <p className="muted">
-            {segmentDef(p.segment).icon} {t(segmentDef(p.segment).name)}
+            <SegmentLabel id={p.segment} />
             {p.kind === 'facelift' ? ` · ${t('makyaj projesi')}` : p.replacesModelId ? ` · ${t('yeni kuşak')}` : ''}
           </p>
         </div>
@@ -1079,7 +1080,7 @@ function Launch({ p }: { p: Project }) {
               else if (r) store.showToast(r.error, 'bad');
             }}
           >
-            🎉 {t('Lansmanı yap')}
+            <Icon name="rosette" /> {t('Lansmanı yap')}
           </Button>
         </div>
         <p className="muted small">{t('Hat: {name}', { name: line?.name ?? '—' })}</p>

@@ -7,6 +7,7 @@ import { t } from '../../i18n';
 import { pct } from '../format';
 import { tx } from '../i18n';
 import { Button, Info } from './ui';
+import { Icon } from './Icon';
 
 // The engine on the test stand: start it, blip the throttle, hear it rev.
 
@@ -187,7 +188,7 @@ export function EngineSound({ spec, onRunning }: { spec: EngineSoundSpec; onRunn
         <div className="engine-sound-controls">
           <div className="engine-sound-buttons">
             <Button kind={running ? 'default' : 'primary'} onClick={() => (running ? engineSound.stop() : void engineSound.start())}>
-              {running ? t('■ Durdur') : spec.electricStart ? t('▶ Marşa bas') : t('▶ Kolla çalıştır')}
+              <Icon name={running ? 'pause' : 'play'} /> {running ? t('Durdur') : spec.electricStart ? t('Marşa bas') : t('Kolla çalıştır')}
             </Button>
             <button
               type="button"

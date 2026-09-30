@@ -1,43 +1,80 @@
-import { formatDate } from '../../core/time';
-import { segmentDef } from '../../data/segments';
+import { formatDate, yearFloat } from '../../core/time';
+import type { CarModel } from '../../core/types';
 import { store, useGameState } from '../store';
 import { dec, money, num } from '../format';
-import { Badge, Empty, Panel, Table } from '../components/ui';
+import { Badge, Empty, SegmentLabel } from '../components/ui';
+import { CarSVG } from '../viz/CarSVG';
 import { weeklySold } from './HQ';
 import { t } from '../../i18n';
 
+/** A model as a page of the maker's catalogue: the car, its name and class, and its figures. */
+function ModelEntry({ m }: { m: CarModel }) {
+  const active = m.status === 'active';
+  const figures: [string, string][] = [
+    [t('Haftalık'), active ? dec(weeklySold(m), 1) : '—'],
+    [t('Toplam satış'), num(m.unitsSold)],
+    [t('Fiyat'), money(m.price)],
+    [t('Dergi'), dec(m.reviewScore, 1)],
+  ];
+  return (
+    <button type="button" className={`model-entry ${active ? '' : 'is-retired'}`} onClick={() => store.go({ id: 'model', modelId: m.id })}>
+      <span className="model-entry-car" aria-hidden>
+        <CarSVG body={m.design.body} size={m.design.size} year={yearFloat(m.refreshWeek)} cylinders={m.design.engine.cylinders} styling={m.design.styling} />
+      </span>
+      <span className="model-entry-head">
+        <span className="model-entry-name">
+          {m.name}
+          {m.generation > 1 && <small> {t('({gen}. kuşak)', { gen: m.generation })}</small>}
+        </span>
+        <span className="model-entry-meta">
+          <SegmentLabel id={m.segment} /> · {formatDate(m.launchWeek)}
+        </span>
+      </span>
+      <span className="model-entry-stamp">{active ? <Badge tone="good">{t('Satışta')}</Badge> : <Badge>{t('Üretimden kalktı')}</Badge>}</span>
+      {active && (
+        <span className="model-entry-figures">
+          {figures.map(([label, value]) => (
+            <span key={label}>
+              <small>{label}</small>
+              <b>{value}</b>
+            </span>
+          ))}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export function Models() {
   const s = useGameState();
-  const list = [...s.models].sort((a, b) => (a.status === b.status ? b.launchWeek - a.launchWeek : a.status === 'active' ? -1 : 1));
+  const active = s.models.filter((m) => m.status === 'active').sort((a, b) => b.launchWeek - a.launchWeek);
+  const retired = s.models.filter((m) => m.status !== 'active').sort((a, b) => b.launchWeek - a.launchWeek);
   return (
     <div className="screen">
       <div className="screen-head">
         <h1>{t('Modeller')}</h1>
       </div>
-      <Panel>
-        {list.length ? (
-          <Table
-            head={[t('Model'), t('Segment'), t('Çıkış'), t('Durum'), t('Haftalık'), t('Toplam satış'), t('Stok'), t('Fiyat'), t('Dergi')]}
-            align={['l', 'l', 'l', 'l', 'r', 'r', 'r', 'r', 'r']}
-            rows={list.map((m) => [
-              <button key="n" type="button" className="link" onClick={() => store.go({ id: 'model', modelId: m.id })}>
-                {m.name}
-                {m.generation > 1 ? ` ${t('({gen}. kuşak)', { gen: m.generation })}` : ''}
-              </button>,
-              `${segmentDef(m.segment).icon} ${t(segmentDef(m.segment).name)}`,
-              formatDate(m.launchWeek),
-              m.status === 'active' ? <Badge key="b" tone="good">{t('Satışta')}</Badge> : <Badge key="b">{t('Üretimden kalktı')}</Badge>,
-              m.status === 'active' ? dec(weeklySold(m), 1) : '—',
-              num(m.unitsSold),
-              num(m.inventory),
-              money(m.price),
-              dec(m.reviewScore, 1),
-            ])}
-          />
-        ) : (
-          <Empty>{t('Henüz piyasaya çıkmış bir modelin yok. Projeler ekranından ilk aracını tasarla.')}</Empty>
-        )}
-      </Panel>
+      {s.models.length ? (
+        <>
+          <div className="model-list">
+            {active.map((m) => (
+              <ModelEntry key={m.id} m={m} />
+            ))}
+          </div>
+          {retired.length > 0 && (
+            <>
+              <h4 className="model-list-title">{t('Üretimden kalktı')}</h4>
+              <div className="model-list is-retired">
+                {retired.map((m) => (
+                  <ModelEntry key={m.id} m={m} />
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <Empty>{t('Henüz piyasaya çıkmış bir modelin yok. Projeler ekranından ilk aracını tasarla.')}</Empty>
+      )}
     </div>
   );
 }

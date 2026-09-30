@@ -131,19 +131,19 @@ export function raceSeason(s: GameState) {
     r.wins = (r.wins ?? 0) + 1;
     (r.winYears ??= []).push(year);
     s.company.reputation = clamp(s.company.reputation + [0, 0.5, 1.5, 3][r.level], 0, 100);
-    log(s, t('🏁 {company} {model} ile {race}’i kazandı! Marka ünü arttı.', { company: s.company.name, model: car.m.name, race }), 'good');
+    log(s, t('{company} {model} ile {race}’i kazandı! Marka ünü arttı.', { company: s.company.name, model: car.m.name, race }), 'good');
     if (r.level >= 2) publishWin(s, car.m, race);
   } else if (result === 'podium') {
     r.fame += FAME.podium[r.level];
-    log(s, t('🏁 {race}: {model} ilk üçe girdi.', { race, model: car.m.name }), 'good');
+    log(s, t('{race}: {model} ilk üçe girdi.', { race, model: car.m.name }), 'good');
   } else {
     r.fame += 0.2;
     const age = (s.week - car.m.refreshWeek) / 52;
     log(
       s,
       age > 5
-        ? t('🏁 {race}: {model} dereceye giremedi. Araba {n} yaşında; yeni ve güçlü bir araba olmadan takım para yakıyor.', { race, model: car.m.name, n: Math.floor(age) })
-        : t('🏁 {race}: {model} dereceye giremedi. Daha güçlü bir araba ya da daha büyük bir takım gerekiyor.', { race, model: car.m.name }),
+        ? t('{race}: {model} dereceye giremedi. Araba {n} yaşında; yeni ve güçlü bir araba olmadan takım para yakıyor.', { race, model: car.m.name, n: Math.floor(age) })
+        : t('{race}: {model} dereceye giremedi. Daha güçlü bir araba ya da daha büyük bir takım gerekiyor.', { race, model: car.m.name }),
       (r.dry ?? 0) >= 2 ? 'warn' : 'info',
     );
   }

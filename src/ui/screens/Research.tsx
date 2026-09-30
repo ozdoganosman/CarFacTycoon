@@ -24,9 +24,10 @@ import { inYear } from '../format';
 import { Button, Info, Panel, Progress, Stat } from '../components/ui';
 import { locale, msg, t } from '../../i18n';
 import { tx } from '../i18n';
+import { Icon, type IconName } from '../components/Icon';
 
 const CATEGORIES: ResearchDef['category'][] = [msg('Motor'), msg('Şanzıman'), msg('Şasi ve süspansiyon'), msg('Donanım'), msg('Güvenlik')];
-const ICON: Record<ResearchDef['category'], string> = { Motor: '⚙️', Şanzıman: '🔩', 'Şasi ve süspansiyon': '🛞', Donanım: '💡', Güvenlik: '🛡️' };
+const ICON: Record<ResearchDef['category'], IconName> = { Motor: 'engine', Şanzıman: 'gears', 'Şasi ve süspansiyon': 'wheel', Donanım: 'bulb', Güvenlik: 'shield' };
 
 type Filter = 'open' | 'rivals' | 'new' | 'queued' | 'known' | 'future';
 type Sort = 'rivals' | 'year' | 'cost';
@@ -150,7 +151,7 @@ export function Research() {
               </button>
               {CATEGORIES.map((c) => (
                 <button key={c} type="button" className={`rcat ${cat === c ? 'is-on' : ''}`} onClick={() => setCat(c)} title={t(c)}>
-                  {ICON[c]} {c === 'Şasi ve süspansiyon' ? t('Şasi') : t(c)}
+                  <Icon name={ICON[c]} /> {c === 'Şasi ve süspansiyon' ? t('Şasi') : t(c)}
                 </button>
               ))}
             </div>
@@ -223,7 +224,7 @@ function ResearchRow({ d, expanded, onToggle, share }: { d: ResearchDef; expande
     <div className={`rrow is-${st}`} role="listitem">
       <button type="button" className="rrow-main" onClick={onToggle} aria-expanded={expanded}>
         <span className="rrow-icon" aria-hidden>
-          {ICON[d.category]}
+          <Icon name={ICON[d.category]} />
         </span>
         <span className="rrow-name">
           <b>{t(d.name)}</b>
@@ -249,7 +250,9 @@ function ResearchRow({ d, expanded, onToggle, share }: { d: ResearchDef; expande
       </span>
       <span className="rrow-cost small">
         {st === 'known' ? (
-          <span className="tone-good">✓ {t('biliniyor')}</span>
+          <span className="tone-good">
+            <Icon name="check" /> {t('biliniyor')}
+          </span>
         ) : active ? (
           <Progress value={active.weeks - active.weeksLeft} max={active.weeks} label={t('{n} hf', { n: Math.ceil(active.weeksLeft) })} />
         ) : st === 'future' ? (

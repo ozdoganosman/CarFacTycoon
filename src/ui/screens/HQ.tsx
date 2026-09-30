@@ -23,6 +23,7 @@ import { askCoverService, askSearchNeighbours } from './Markets';
 import { TeamPanel } from '../components/TeamPanel';
 import { devWeeksLeft } from '../../core/budget';
 import { t, msg, list } from '../../i18n';
+import { Icon } from '../components/Icon';
 
 export function weeklySold(m: CarModel, weeks = 4) {
   const h = m.history.slice(-weeks);
@@ -269,7 +270,9 @@ function NewsFeed() {
       <ul className="news">
         {pinned.map((l, i) => (
           <li key={`p${i}`} className="news-bad is-pinned">
-            <span className="news-date">📌 {formatDate(l.week)}</span>
+            <span className="news-date">
+              <Icon name="pin" /> {formatDate(l.week)}
+            </span>
             <span>{l.text}</span>
           </li>
         ))}

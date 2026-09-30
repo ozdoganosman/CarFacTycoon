@@ -19,8 +19,9 @@ import { CardAnimation } from './CardAnimation';
 import { LaunchReportView, LaunchShow } from './LaunchShow';
 import { SponsorButton, YearOffer } from './Sponsor';
 import { tx } from '../i18n';
+import { Icon, type IconName } from './Icon';
 
-function Modal(props: { title: ReactNode; icon?: string; children: ReactNode; actions: ReactNode; wide?: boolean }) {
+function Modal(props: { title: ReactNode; icon?: IconName; children: ReactNode; actions: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.querySelector<HTMLElement>('button')?.focus();
@@ -29,7 +30,11 @@ function Modal(props: { title: ReactNode; icon?: string; children: ReactNode; ac
     <div className="modal-backdrop">
       <div className={`modal ${props.wide ? 'modal-wide' : ''}`} role="dialog" aria-modal="true" aria-labelledby="modal-title" ref={ref}>
         <h2 id="modal-title">
-          {props.icon && <span className="modal-icon" aria-hidden>{props.icon}</span>}
+          {props.icon && (
+            <span className="modal-icon" aria-hidden>
+              <Icon name={props.icon} size={26} />
+            </span>
+          )}
           {props.title}
         </h2>
         <div className="modal-body">{props.children}</div>
@@ -102,7 +107,7 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
       return (
         <Modal
           title={t('Neden böyle çalışıyor? {title}', { title: t(c.title) })}
-          icon="💡"
+          icon="bulb"
           wide
           actions={
             <Button kind="primary" onClick={close}>
@@ -132,7 +137,7 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
       return (
         <Modal
           title={critical ? t('Kritik kusur: {name}', { name: model.name }) : t('Servis şikâyetleri: {name}', { name: model.name })}
-          icon={critical ? '🚨' : '🔧'}
+          icon={critical ? 'alert' : 'wrench'}
           actions={
             <>
               <button type="button" className="choice-btn" onClick={() => store.act((st) => A.recallDecision(st, model.id, d.id, 'recall'))}>
@@ -175,7 +180,7 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
       return (
         <Modal
           title={t('Dergiler {name} için ne diyor?', { name: model.name })}
-          icon="📰"
+          icon="newspaper"
           wide
           actions={
             <Button kind="primary" onClick={close}>
@@ -215,7 +220,7 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
       return (
         <Modal
           title={p.name}
-          icon={m.phase === 'production' ? '🎉' : '📐'}
+          icon={m.phase === 'production' ? 'rosette' : 'projects'}
           actions={
             <>
               {m.phase === 'development' && (
@@ -263,7 +268,7 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
       return (
         <Modal
           title={m.title}
-          icon="🔓"
+          icon="unlock"
           actions={
             <Button kind="primary" onClick={close}>
               {t('Harika')}
@@ -394,7 +399,7 @@ function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idl
     return (
       <Modal
         title={what.title}
-        icon="⏳"
+        icon="clock"
         actions={
           <>
             {p && (
@@ -420,7 +425,7 @@ function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idl
     return (
       <Modal
         title={t('Cilalama sınıra ulaştı')}
-        icon="✨"
+        icon="sparkle"
         actions={
           <>
             {p && (
@@ -449,7 +454,7 @@ function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idl
     return (
       <Modal
         title={t('Proje tasarım masasında bekliyor')}
-        icon="📐"
+        icon="projects"
         actions={
           <>
             {p && (
@@ -477,7 +482,7 @@ function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idl
   return (
     <Modal
       title={t('Yolda yeni bir araba yok')}
-      icon="🕰️"
+      icon="clock"
       actions={
         <>
           <Button kind="primary" onClick={() => go({ id: 'projects' })}>
@@ -525,7 +530,7 @@ function Insolvency({ s, stage }: { s: GameState; stage: 'first' | 'last' }) {
   return (
     <Modal
       title={stage === 'first' ? t('Kasa eksiye düştü') : t('Son uyarı: iflasa {n} hafta', { n: r.weeksLeft })}
-      icon={stage === 'first' ? '⚠️' : '🚨'}
+      icon="alert"
       actions={
         <>
           {loan > 0 && (
@@ -593,7 +598,7 @@ function GameOver({ s }: { s: GameState }) {
   return (
     <Modal
       title={bankrupt ? t('Şirket iflas etti') : ousted ? t('Görevden alındın: {year}', { year: yearOfWeek(s.week) }) : t('Kampanya tamamlandı: 1960')}
-      icon={bankrupt ? '💀' : ousted ? '🎩' : '🏆'}
+      icon={bankrupt ? 'grave' : ousted ? 'tophat' : 'trophy'}
       wide
       actions={
         <>
@@ -684,7 +689,7 @@ function GameOver({ s }: { s: GameState }) {
                 );
               }}
             >
-              📋 {t('Sonucu kopyala')}
+              <Icon name="clipboard" /> {t('Sonucu kopyala')}
             </Button>
           </p>
           <h4>{t('Tüm zamanların satış sıralaması')}</h4>
@@ -741,7 +746,7 @@ export function YearReportBody({ s, year }: { s: GameState; year: number }) {
       {MARKETS.filter((mk) => mk.id === 'usa').map((mk) => (
         <div key={mk.id}>
           <span>
-            {mk.flag} {t('{market} payı', { market: t(mk.name) })}
+            {t('{market} payı', { market: t(mk.name) })}
           </span>
           <b>{pct(y.shareByMarket[mk.id], 2)}</b>
         </div>
@@ -749,7 +754,7 @@ export function YearReportBody({ s, year }: { s: GameState; year: number }) {
     </div>
     {board && (
       <p className={board.met ? 'tone-good' : 'tone-bad'}>
-        🎩{' '}
+        <Icon name="tophat" />{' '}
         {t('Yönetim kurulu: ciro {growth} (hedef {targetGrowth}), temettü {dividend} (hedef {targetDividend}).', {
           growth: pct(board.growth, 1),
           targetGrowth: pct(board.targetGrowth, 1),
@@ -808,7 +813,7 @@ export function YearCard() {
     return (
       <Modal
         title={t('{year} yılı raporu', { year })}
-        icon="📊"
+        icon="chart"
         actions={
           <Button kind="primary" onClick={close}>
             {t('Kapat')}
@@ -823,7 +828,9 @@ export function YearCard() {
   return (
     <aside className="year-card" aria-live="polite">
       <div className="year-card-head">
-        <b>📊 {t('{year} yılı kapandı', { year })}</b>
+        <b>
+          <Icon name="chart" /> {t('{year} yılı kapandı', { year })}
+        </b>
         <button type="button" className="year-card-x" aria-label={t('Kapat')} onClick={close}>
           ×
         </button>

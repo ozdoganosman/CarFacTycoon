@@ -28,7 +28,7 @@ import type { CarModel, MarketId } from '../../core/types';
 import { store, useGameState } from '../store';
 import { customerLetters } from '../../core/letters';
 import { dec, money, num, pct } from '../format';
-import { Badge, Button, Empty, NumberInput, Panel, Slider, Stat, Table, Toggle, ScoreBar, Info } from '../components/ui';
+import { Badge, Button, Empty, NumberInput, Panel, Slider, Stat, Table, Toggle, ScoreBar, Info, SegmentLabel } from '../components/ui';
 import { StatsPanel } from '../components/StatsPanel';
 import { CarSVG } from '../viz/CarSVG';
 import { LineChart } from '../viz/LineChart';
@@ -63,7 +63,7 @@ export function ModelView({ modelId }: { modelId: string }) {
             {m.name} {m.generation > 1 && <span className="muted">{t('({gen}. kuşak)', { gen: m.generation })}</span>}
           </h1>
           <p className="muted">
-            {segmentDef(m.segment).icon} {t(segmentDef(m.segment).name)} · {t('çıkış {date}', { date: formatDate(m.launchWeek) })}
+            <SegmentLabel id={m.segment} /> · {t('çıkış {date}', { date: formatDate(m.launchWeek) })}
             {m.faceliftCount ? ` · ${t('{n} makyaj', { n: m.faceliftCount })}` : ''} · {active ? t('{age} yaşında', { age: dec(age, 1) }) : t('üretimden kalktı')}
           </p>
         </div>
@@ -336,7 +336,7 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
         <div className="seg-toggle">
           {m.markets.map((mk) => (
             <button key={mk} type="button" className={`chip ${market === mk ? 'is-on' : ''}`} onClick={() => setMarket(mk)}>
-              {MARKETS.find((x) => x.id === mk)!.flag} {t(MARKETS.find((x) => x.id === mk)!.name)}
+              {t(MARKETS.find((x) => x.id === mk)!.name)}
             </button>
           ))}
         </div>

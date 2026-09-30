@@ -590,13 +590,6 @@
  "1guz2fa": "Großer Preis von Frankreich",
  "15t1o47": "Wegen des Krieges finden keine Rennen statt: Das Team wartet ab, und das Rennbudget wird nicht ausgegeben.",
  "10bg7n1": "Der Krieg ist vorbei, die Rennen gehen weiter: Das Team bereitet sich auf die Saison vor.",
- "gr0v98": "🏁 {race}: {company} siegt mit dem {model}! Der Ruhm der Marke wächst.",
- "165z9m7": "🏁 {race}: {model} kommt unter die ersten drei.",
- "a5wp4f": {
-  "one": "🏁 {race}: {model} geht leer aus. Das Auto ist ein Jahr alt; ohne ein neues, starkes Auto verbrennt das Team nur Geld.",
-  "other": "🏁 {race}: {model} geht leer aus. Das Auto ist {n} Jahre alt; ohne ein neues, starkes Auto verbrennt das Team nur Geld."
- },
- "4pj8x": "🏁 {race}: {model} geht leer aus. Du brauchst ein stärkeres Auto oder ein größeres Team.",
  "2hl950": "{race}: Sieg für den {model}!",
  "9ipk4s": "Das Team von {company} lässt die Konkurrenz im Staub; Rennbegeisterte stehen bei den Händlern Schlange",
  "aztqhq": "{race}: Das Werksteam von {company} hat mit dem {model} den ersten Platz belegt. Der erste große Sieg des Teams fand in der {market}-Presse breite Beachtung.",
@@ -1505,7 +1498,7 @@
  "15z4kwm": "Zündung aus",
  "1efkiir": "Motor: {rpm} U/min",
  "10gmpvt": "Links kurbelt jemand den Motor von Hand an, samt der Gefahr des Rückschlags; rechts der elektrische Anlasser: Batterie, Anlassermotor und ein Ritzel, das in den Zahnkranz des Schwungrads greift.",
- "1ytcznx": "Anlasser drücken",
+ "1ytcznx": "Anlasser betätigen",
  "1u2k6j0": "Ketterings Anlasser dreht die Kurbelwelle mit einem kleinen Elektromotor; das Ritzel (Bendix) greift nur beim Starten in den Zahnkranz des Schwungrads und schnellt zurück, sobald der Motor läuft. Mühe und Gefahr des Ankurbelns waren vorbei, und das Auto stand nun auch Frauen und älteren Fahrern offen.",
  "8mky4k": "Sehr unruhig",
  "34wyj3": "Kein anderer Kolben gleicht diesen aus: Der Motor ruckt bei jeder Umdrehung.",
@@ -1888,9 +1881,6 @@
  "1uuma35": "Je höher die Verdichtung, desto härter die Verbrennung und desto schärfer der Klang. Ist die Verdichtung zu hoch für das Benzin der Zeit, klopft der Motor: unter Last ein metallisches Klingeln bei 5–10 kHz, je nach Zylinderbohrung.",
  "y4j0kj": "Motoren dieser Zeit haben keinen Drehzahlbegrenzer. Überschreitet ein Benzinmotor den roten Bereich, kommen die Ventilfedern nicht mehr mit und die Ventile flattern: Die Leistung fällt ab, der Motor setzt aus, klappert, knallt in den Auspuff und dreht nicht höher. Beim Diesel nimmt der Regler in der Einspritzpumpe Kraftstoff weg, um die Drehzahl zu halten.",
  "b96nmg": "Ändere die Einstellungen, während der Motor läuft: Der Klang ändert sich sofort.",
- "1v1nsmr": "■ Stopp",
- "7tfii7": "▶ Anlasser betätigen",
- "1v8fhcf": "▶ Ankurbeln",
  "1cmaoi5": "Gas geben <hint>(halten)</hint>",
  "17ojv3y": "Konstantes Gas",
  "cof9mq": "Lautstärke",
@@ -2130,11 +2120,6 @@
  "k4p4sa": "Ab sofort beim nächsten Händler",
  "8jgzsq": "Leserbriefe",
  "s4q2el": "Noch steht nichts in der Zeitung.",
- "1b3lvob": {
-  "one": "🎉 <b>{name} ist fertig</b> und wartet seit {n} Woche auf den Marktstart: In dieser Zeit zahlst du Gehälter, verkaufst aber keine Autos.",
-  "other": "🎉 <b>{name} ist fertig</b> und wartet seit {n} Wochen auf den Marktstart: In dieser Zeit zahlst du Gehälter, verkaufst aber keine Autos."
- },
- "9y6ftf": "🎉 <b>{name} ist fertig:</b> Wähle einen Preis und bring das Auto auf den Markt.",
  "1hoxwfx": "<b>Spiel pausiert.</b> Solange die Zeit stillsteht, arbeiten die Ingenieure nicht, die Tests kommen nicht voran und die Fabrik produziert nichts.",
  "1mp8dv6": "Weiter (Leertaste)",
  "1bttp5n": "F&E abgeschlossen",
@@ -2325,7 +2310,6 @@
  "arkc1j": "~{budget} pro Jahr ({share} vom Umsatz, mindestens {floor}).",
  "r4vbsf": "Ruhm",
  "1o59oqf": "{v} / 8 (voll)",
- "s750mt": "Saison {year}, {race}: <b>{model}</b> 🏆 hat den ersten Platz geholt.",
  "b03b2g": "Saison {year}, {race}: <b>{model}</b> kam unter die ersten drei.",
  "9h6c9x": "Saison {year}, {race}: <b>{model}</b> blieb ohne Platzierung.",
  "e2svqw": "Konkurrenten kaufen",
@@ -2545,7 +2529,6 @@
  "11qytd4": "Trotzdem starten",
  "19zapm2": "Entwicklung gestartet",
  "50huix": "Entwicklung starten",
- "11ffnmw": "▶ Zeit starten",
  "u8xvid": "Leistung +{pct}",
  "1bk1n3y": "Verbrauch −{pct}",
  "sj9qrx": "Komfort +{v}",
@@ -3066,7 +3049,6 @@
   "other": "{n} Sterne"
  },
  "111muzt": "Jeden Monat kommen neue Briefe; sie zeigen, was den Käufern auffällt.",
- "52kle2": "Marktstart",
  "1wj2gq0": "Im Verkauf",
  "1tas5xr": "Eingestellt",
  "s7gk8c": "Du hast noch kein Modell auf dem Markt. Entwirf dein erstes Auto im Bildschirm Projekte.",
@@ -3403,5 +3385,21 @@
  "1ern1en": "K A N A D A",
  "1l658y2": "N",
  "1khau7x": "Meilen",
- "v48e9x": "M E X I K O"
+ "v48e9x": "M E X I K O",
+ "e9fxwo": {
+  "one": "<b>{name} ist fertig</b> und wartet seit {n} Woche auf den Marktstart: In dieser Zeit zahlst du Gehälter, verkaufst aber keine Autos.",
+  "other": "<b>{name} ist fertig</b> und wartet seit {n} Wochen auf den Marktstart: In dieser Zeit zahlst du Gehälter, verkaufst aber keine Autos."
+ },
+ "1vgbwm6": "<b>{name} ist fertig:</b> Wähle einen Preis und bring das Auto auf den Markt.",
+ "11q0spp": "Saison {year}, {race}: <b>{model}</b> hat den ersten Platz geholt.",
+ "1hjmy2r": "{race}: {company} siegt mit dem {model}! Der Ruhm der Marke wächst.",
+ "cg3cr4": "{race}: {model} kommt unter die ersten drei.",
+ "29em8y": {
+  "one": "{race}: {model} geht leer aus. Das Auto ist ein Jahr alt; ohne ein neues, starkes Auto verbrennt das Team nur Geld.",
+  "other": "{race}: {model} geht leer aus. Das Auto ist {n} Jahre alt; ohne ein neues, starkes Auto verbrennt das Team nur Geld."
+ },
+ "9cq00c": "{race}: {model} geht leer aus. Du brauchst ein stärkeres Auto oder ein größeres Team.",
+ "rpaw8b": "Stopp",
+ "fug6jx": "Ankurbeln",
+ "1nkx2fq": "Zeit starten"
 }

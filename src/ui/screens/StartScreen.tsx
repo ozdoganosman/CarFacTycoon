@@ -3,7 +3,7 @@ import { deserialize, hasLocalSave } from '../../core/save';
 import { CITIES, type CityId } from '../../data/cities';
 import { DIFFICULTIES, type DifficultyId } from '../../data/difficulty';
 import { store } from '../store';
-import { Button, Choice } from '../components/ui';
+import { Button, Choice, ProsCons } from '../components/ui';
 import { CarSVG } from '../viz/CarSVG';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { t } from '../../i18n';
@@ -57,7 +57,12 @@ export function StartScreen() {
               options={CITIES.map((c) => ({
                 value: c.id,
                 label: `${c.name}, ${c.state}`,
-                sub: `${t(c.blurb)} ${c.pros.map((p) => `✓ ${t(p)}`).join(' · ')} · ${c.cons.map((x) => `✗ ${t(x)}`).join(' · ')}`,
+                sub: (
+                  <>
+                    {t(c.blurb)}
+                    <ProsCons pros={c.pros.map((p) => t(p))} cons={c.cons.map((x) => t(x))} />
+                  </>
+                ),
               }))}
             />
           </div>

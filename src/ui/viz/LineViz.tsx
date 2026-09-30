@@ -162,7 +162,7 @@ export function LineViz(props: {
         });
         // label
         ctx.fillStyle = isB ? colors.bad : colors.ink;
-        ctx.font = "600 12px Inter, 'Noto Sans Devanagari', 'Noto Sans Arabic', system-ui, sans-serif";
+        ctx.font = "600 12px 'Libre Franklin', 'Noto Sans Devanagari', 'Noto Sans Arabic', system-ui, sans-serif";
         ctx.textAlign = 'center';
         ctx.fillText(t(st.name).split(' ')[0], x, top + 13);
         ctx.fillStyle = colors.muted;
@@ -196,7 +196,7 @@ export function LineViz(props: {
       }
       if (!running) {
         ctx.fillStyle = colors.muted;
-        ctx.font = "12px Inter, 'Noto Sans Devanagari', 'Noto Sans Arabic', system-ui, sans-serif";
+        ctx.font = "12px 'Libre Franklin', 'Noto Sans Devanagari', 'Noto Sans Arabic', system-ui, sans-serif";
         ctx.textAlign = 'left';
         ctx.fillText(dataRef.current.label ?? t('Hat boşta'), 10, h - 8);
       }

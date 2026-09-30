@@ -1,3 +1,4 @@
+import type { IconName } from '../ui/components/Icon';
 import { cityDef } from './cities';
 import { segmentDef } from './segments';
 import { stateDef } from './states';
@@ -26,7 +27,7 @@ export interface GameEventDef {
   year: number;
   month: number; // 0-11
   title: string;
-  icon: string;
+  icon: IconName;
   body: (s: GameState) => string;
   choices?: EventChoice[];
   apply?: (s: GameState) => void;
@@ -53,7 +54,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1900,
     month: 0,
     title: msg('Atölyen açıldı'),
-    icon: '🔧',
+    icon: 'wrench',
     body: (s) =>
       t(
         '1900 yılı. {city}’da küçük bir atölyen, {n} mühendisin ve biraz paran var. Amacın 1960’a kadar Amerika’nın büyük otomobil markalarından biri olmak.\n\nİlk adım: Projeler ekranında yeni bir araç projesi başlat. Segmentini seç, aracı modüllerden tasarla, geliştir, test et, üret ve sat.\n\nArabaların önce yalnızca {state} eyaletinde satılır. Harita ekranından komşu eyaletlerde bayi arayarak büyürsün; eyalet dışına giden her araba için nakliye ödersin.\n\nİpucu: Hangi alıcının neye önem verdiği gizli. Satış raporları ve dergi yorumları zamanla bunu sana öğretecek.',
@@ -65,7 +66,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1908,
     month: 9,
     title: msg('Herkes için bir otomobil'),
-    icon: '📰',
+    icon: 'newspaper',
     body: () =>
       t(
         'Hartwell Motor Co. “Model H”yi tanıttı: basit, dayanıklı, tamiri kolay ve ucuz. Çiftçiler bile alabiliyor.\n\nAile arabası pazarında fiyat rekabeti sertleşecek. Maliyetini düşürmenin yollarını düşün: basit tasarım, verimli fabrika, maliyet odaklı geliştirme.',
@@ -76,7 +77,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1913,
     month: 9,
     title: msg('Hareketli montaj hattı'),
-    icon: '⚙️',
+    icon: 'settings',
     body: () =>
       t(
         'Hartwell, Highland Park fabrikasında şasiyi zincirle işçilerin önünden geçirmeye başladı. Bir şasinin montajı 12,5 saatten 93 dakikaya indi.\n\nFabrika ekranında artık “Hareketli montaj hattı” istasyonu var. Ama dikkat: montaj hızlanınca darboğaz başka istasyona kayar. En yavaş istasyon bütün hattın hızını belirler.',
@@ -87,7 +88,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1914,
     month: 0,
     title: msg('Günde beş dolar'),
-    icon: '💵',
+    icon: 'banknote',
     body: () =>
       t(
         'Monoton hat işi yüzünden işçiler birkaç ayda bir işi bırakıyor; sürekli yeni işçi eğitiyorsun. Hartwell yevmiyeyi iki katına, günde 5 dolara çıkardı ve kapısında kuyruk var.\n\nSen ne yapacaksın?',
@@ -110,7 +111,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1914,
     month: 7,
     title: msg('Avrupa’da savaş'),
-    icon: '⚔️',
+    icon: 'swords',
     body: (s) =>
       t('Büyük Savaş başladı. Avrupa’da sivil otomobil satışları çöktü, çelik fiyatları yükseliyor (malzeme maliyeti +%25).') +
       '\n\n' +
@@ -135,7 +136,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1918,
     month: 10,
     title: msg('Ateşkes'),
-    icon: '🕊️',
+    icon: 'truce',
     body: () => t('Savaş bitti. Avrupa pazarı yavaş yavaş toparlanacak; ABD’de ise talep patlaması bekleniyor.'),
     apply: endContract,
   },
@@ -144,7 +145,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1920,
     month: 6,
     title: msg('Savaş sonrası durgunluk'),
-    icon: '📉',
+    icon: 'chartDown',
     body: () => t('Savaş sonrası enflasyon ve ardından gelen durgunluk satışları vuruyor. Stoklarını şişirme, fiyatlarını gözden geçir.'),
   },
   {
@@ -152,7 +153,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1923,
     month: 1,
     title: msg('Kurşunlu benzin'),
-    icon: '⛽',
+    icon: 'pump',
     body: () =>
       t(
         'Yeni bir katkı maddesi (tetraetil kurşun) benzinin vuruntuya direncini artırdı. Motorlar artık daha yüksek sıkıştırma oranıyla çalışabilir: daha fazla güç, daha az yakıt.\n\nYıllar sonra bunun ciddi bir sağlık bedeli olduğu anlaşılacak.',
@@ -163,7 +164,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1929,
     month: 9,
     title: msg('Kara Perşembe'),
-    icon: '🏦',
+    icon: 'bank',
     body: () =>
       t(
         'New York borsası çöktü. Önümüzdeki yıllarda satışlar dörtte birine inebilir. Lüks araç alıcıları ortadan kayboluyor, ucuz araçlar ayakta kalıyor. Bankalar krediyi kısıyor.\n\nMaliyetleri nasıl yöneteceksin?',
@@ -193,7 +194,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1934,
     month: 0,
     title: msg('Toparlanma'),
-    icon: '📈',
+    icon: 'chartUp',
     body: () =>
       t('Ekonomi yavaşça toparlanıyor. Bu yıl iki büyük yenilik var: monokok gövde ve bağımsız ön süspansiyon. Mühendisler ayrıca ilk çarpışma testlerini yapmaya başladı.'),
     apply: (s) => {
@@ -205,7 +206,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1939,
     month: 8,
     title: msg('İkinci Dünya Savaşı'),
-    icon: '⚔️',
+    icon: 'swords',
     body: (s) =>
       t('Avrupa yeniden savaşta. Avrupa’da sivil araç satışı neredeyse duracak.') +
       '\n\n' +
@@ -225,7 +226,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1942,
     month: 1,
     title: msg('Sivil üretim durdu'),
-    icon: '🏭',
+    icon: 'factory',
     body: () =>
       t(
         'ABD savaşa girdi ve sivil otomobil üretimi yasaklandı. Fabrikalar tank, uçak motoru ve cip üretiyor.\n\nAskeri sözleşmeyi kabul edersen hatların savaş boyunca garantili kâr getirir ve mühendislerin arazi aracı tecrübesi kazanır.',
@@ -248,7 +249,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1945,
     month: 7,
     title: msg('Barış'),
-    icon: '🕊️',
+    icon: 'truce',
     body: (s) =>
       t('Savaş bitti. Yıllardır araba alamayan insanlar bayilerin kapısında. Önümüzdeki yıllarda satabildiğin her şeyi satarsın.') +
       (s.flags.jeep
@@ -265,7 +266,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1948,
     month: 0,
     title: msg('Vergi beygiri kalktı'),
-    icon: '📜',
+    icon: 'scroll',
     body: () =>
       t(
         'İngiltere silindir çapına göre alınan “vergi beygiri”ni kaldırıp motor hacmine göre vergiye geçti. Artık kısa stroklu, geniş çaplı motorlar Avrupa’da cezalandırılmıyor; ama büyük hacim hâlâ pahalı.',
@@ -276,7 +277,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1950,
     month: 0,
     title: msg('Beygir gücü yarışı'),
-    icon: '🏁',
+    icon: 'company',
     body: () =>
       t(
         'ABD’de ekonomi patlıyor, benzin ucuz. Alıcılar artık kaputun altındaki V8’i ve 0-100 süresini soruyor. Amerikan pazarında hızlanma, son hız ve prestijin önemi arttı.',
@@ -287,7 +288,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1955,
     month: 3,
     title: msg('Küçük ithal arabalar'),
-    icon: '🚙',
+    icon: 'segSuv',
     body: () =>
       t('Volkswerk’in küçük, dayanıklı ve ucuz arabası Amerika’da beklenmedik bir başarı yakaladı. ABD’de şehir arabası pazarı büyüyor.'),
   },
@@ -296,7 +297,7 @@ export const EVENTS: GameEventDef[] = [
     year: 1956,
     month: 10,
     title: msg('Süveyş krizi'),
-    icon: '🛢️',
+    icon: 'drum',
     body: () =>
       t('Süveyş Kanalı kapandı; Avrupa’da benzin karneye bağlandı. Önümüzdeki aylarda Avrupalı alıcılar için yakıt ekonomisi her zamankinden önemli.'),
   },
@@ -332,7 +333,7 @@ export const DYNAMIC_EVENTS: GameEventDef[] = [
     year: 9999,
     month: 0,
     title: msg('Fiyat savaşı'),
-    icon: '🏷️',
+    icon: 'tag',
     body: (s) =>
       t(
         '{name}, {segment} sınıfında önümüze geçmemize dayanamadı: fiyatlarını %15 indirdi ve bu fiyatları bir buçuk yıl koruyacağını ilan etti.\n\nGazeteler "otomobil fiyatları düşüyor" diye yazıyor. Alıcıların bir kısmı ucuz arabaya kayacak.',
@@ -365,7 +366,7 @@ export const DYNAMIC_EVENTS: GameEventDef[] = [
     year: 9999,
     month: 0,
     title: msg('Rakipten teknoloji atağı'),
-    icon: '⚙️',
+    icon: 'settings',
     body: (s) => {
       const first = lastMove(s)?.first;
       const params = { name: moveName(s), segment: moveClass(s), model: lastMove(s)?.model ?? t('yeni modeli') };
@@ -386,7 +387,7 @@ export const DYNAMIC_EVENTS: GameEventDef[] = [
     year: 9999,
     month: 0,
     title: msg('Büyük birleşme'),
-    icon: '🤝',
+    icon: 'contract',
     body: (s) => {
       const m = lastMove(s);
       const a = m ? rivalDef(m.company).name : t('İki rakip');
@@ -402,7 +403,7 @@ export const DYNAMIC_EVENTS: GameEventDef[] = [
     year: 9999,
     month: 0,
     title: msg('Hisse teklifi'),
-    icon: '💼',
+    icon: 'briefcase',
     body: (s) => {
       const b = rivalMoves(s).bid;
       const name = b ? rivalDef(b.company).name : t('Bir rakip');
@@ -434,7 +435,7 @@ export const DYNAMIC_EVENTS: GameEventDef[] = [
     year: 9999,
     month: 0,
     title: msg('Hisse baskını'),
-    icon: '🦈',
+    icon: 'fin',
     body: (s) => {
       const r = s.shares?.raider;
       const name = r ? rivalDef(r.company).name : t('Bir rakip');
@@ -484,7 +485,7 @@ export const DYNAMIC_EVENTS: GameEventDef[] = [
     year: 9999,
     month: 0,
     title: msg('Yönetim kurulu huzursuz'),
-    icon: '🎩',
+    icon: 'tophat',
     // First a warning; the veto only after another bad year.
     body: (s) => {
       const p = { confidence: Math.round(s.shares?.confidence ?? 0), targets: targetsText(s), veto: VETO_AT, last: ULTIMATUM_AT };
@@ -504,7 +505,7 @@ export const DYNAMIC_EVENTS: GameEventDef[] = [
     year: 9999,
     month: 0,
     title: msg('Yönetim kurulundan son uyarı'),
-    icon: '⚠️',
+    icon: 'alert',
     body: (s) =>
       t(
         'Güven {confidence}/100. Yönetim kurulu açık konuştu: bu yılın hedefleri de tutmazsa seni görevden alacak ve şirketi başka birine verecek.\n\n{targets}\n\nÇıkış yolları: hedefleri tutturmak ya da dışarıdaki bütün hisseleri geri alıp yönetim kurulundan kurtulmak (Şirket ekranı).',

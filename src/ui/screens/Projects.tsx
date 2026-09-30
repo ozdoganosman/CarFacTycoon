@@ -7,14 +7,14 @@ import { FOCUS_PRESETS, presetFocus } from '../../core/development';
 import { availableSegments, gates } from '../../core/game';
 import { referencePrice, weeklySegmentDemand } from '../../core/market';
 import { yearFloat } from '../../core/time';
-import { SEGMENTS, segmentDef } from '../../data/segments';
+import { SEGMENTS } from '../../data/segments';
 import type { GameState, Project, ProjectPhase, SegmentId } from '../../core/types';
 import { msg, t } from '../../i18n';
 import { store, useGameState } from '../store';
 import { money, num } from '../format';
 import { inYear } from '../format';
 import { tx } from '../i18n';
-import { Badge, Button, Choice, Empty, Panel, Progress } from '../components/ui';
+import { Badge, Button, Choice, Empty, Panel, Progress, SegmentLabel } from '../components/ui';
 
 /** Marked with msg(): show with t(PHASE_LABEL[phase]). */
 export const PHASE_LABEL: Record<ProjectPhase, string> = {
@@ -88,9 +88,7 @@ function NewProject({ onDone }: { onDone: () => void }) {
               value: seg.id,
               disabled: !open,
               label: (
-                <>
-                  {seg.icon} {t(seg.name)}
-                </>
+                <SegmentLabel id={seg.id} />
               ),
               sub: open ? (
                 <>
@@ -219,7 +217,7 @@ export function Projects() {
                   <Badge tone={p.phase === 'ready' ? 'good' : 'info'}>{t(PHASE_LABEL[p.phase])}</Badge>
                 </div>
                 <div className="muted small">
-                  {segmentDef(p.segment).icon} {t(segmentDef(p.segment).name)}
+                  <SegmentLabel id={p.segment} />
                   {p.kind === 'facelift' ? ` · ${t('makyaj')}` : p.replacesModelId ? ` · ${t('yeni kuşak')}` : ''}
                 </div>
                 <Progress value={projectProgress(s, p)} />

@@ -6,6 +6,7 @@ import { store, useGameState } from '../store';
 import { useBackClose } from '../back';
 import { Button } from './ui';
 import { tx } from '../i18n';
+import { Icon } from './Icon';
 
 type Phase = 'idle' | 'sending' | 'sent' | 'error';
 
@@ -192,7 +193,7 @@ export function SendToClaude() {
     <>
       <button type="button" className="nav-item nav-claude" onClick={() => setOpen(true)} title={statusText(st, kind)}>
         <span className="nav-icon" aria-hidden>
-          📨
+          <Icon name="envelope" size={20} />
         </span>
         <span className="nav-label">{dev ? t('Geri bildirim') : t('Claude’a gönder')}</span>
         {dot !== 'off' && <span className={`sync-dot sync-${dot}`} aria-label={statusText(st, kind)} />}
@@ -202,7 +203,7 @@ export function SendToClaude() {
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="send-title">
             <h2 id="send-title">
               <span className="modal-icon" aria-hidden>
-                📨
+                <Icon name="envelope" size={26} />
               </span>
               {dev ? t('Oyununu geliştiriciye gönder') : t('Oyununu Claude’a gönder')}
             </h2>

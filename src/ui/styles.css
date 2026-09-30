@@ -17,14 +17,20 @@
   --bp-ink: #e6f1fb;
   --metal: #8c8a84;
   --fire: #e8762d;
-  --shadow: 0 1px 2px rgba(40, 30, 10, 0.08), 0 4px 14px rgba(40, 30, 10, 0.06);
-  --radius: 10px;
+  --shadow: 0 1px 0 rgba(40, 30, 10, 0.06);
+  --radius: 3px;
+  /* Ink rules of a printed form, and the brass of an instrument panel. */
+  --rule: color-mix(in srgb, var(--ink) 22%, transparent);
+  --rule-strong: color-mix(in srgb, var(--ink) 70%, transparent);
+  --brass: #a07a32;
   /* Hindi and Arabic letters fall through to the Noto families (the game's Latin fonts have none). */
   --font-scripts: 'Noto Sans Devanagari', 'Noto Sans Arabic';
-  --font-ui: 'Inter', var(--font-scripts), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Bitter', var(--font-scripts), Georgia, 'Times New Roman', serif;
-  --font-mono: 'JetBrains Mono', var(--font-scripts), ui-monospace, SFMono-Regular, Menlo, monospace;
-  --topbar-bg: #26241f;
+  /* The type of the period: Franklin Gothic (1902) for reading, Alternate Gothic (1903) for headings,
+     labels and figures, as on the trade catalogues, price lists and factory signs of the day. */
+  --font-ui: 'Libre Franklin', var(--font-scripts), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Oswald', var(--font-scripts), 'Arial Narrow', sans-serif-condensed, sans-serif;
+  --font-mono: 'Oswald', var(--font-scripts), 'Arial Narrow', sans-serif-condensed, sans-serif;
+  --topbar-bg: #1d1b17;
   --topbar-ink: #efe8da;
   color-scheme: light;
 }
@@ -48,7 +54,8 @@
     --bp-ink: #d7e8f7;
     --metal: #9c9a94;
     --fire: #f28b42;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+    --shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+    --brass: #c9a45a;
     --topbar-bg: #0c0b09;
     --topbar-ink: #ede5d6;
     color-scheme: dark;
@@ -73,7 +80,8 @@
   --bp-ink: #d7e8f7;
   --metal: #9c9a94;
   --fire: #f28b42;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+  --brass: #c9a45a;
   --topbar-bg: #0c0b09;
   --topbar-ink: #ede5d6;
   color-scheme: dark;
@@ -155,29 +163,37 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font: 14px/1.45 var(--font-ui);
+  font: 14px/1.5 var(--font-ui);
   -webkit-font-smoothing: antialiased;
+  font-variant-numeric: lining-nums;
 }
 h1,
 h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 h1 {
-  font-size: 1.6rem;
+  font-size: 1.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 h2 {
-  font-size: 1.25rem;
+  font-size: 1.3rem;
+  letter-spacing: 0.01em;
 }
 h3 {
-  font-size: 1.02rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 h4 {
-  font-size: 0.95rem;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
   margin: 14px 0 6px;
 }
 p {
@@ -194,8 +210,8 @@ input:not([type]),
 input[type='number'],
 select {
   background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
   padding: 7px 10px;
   min-height: 36px;
   max-width: 100%;
@@ -260,9 +276,10 @@ fieldset {
   margin-top: 10px;
 }
 .note {
-  background: color-mix(in srgb, var(--warn) 12%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--line));
-  border-radius: 8px;
+  background: color-mix(in srgb, var(--warn) 9%, var(--panel));
+  border: 0;
+  border-inline-start: 3px solid var(--warn);
+  border-radius: 0;
   padding: 8px 12px;
   font-size: 0.9rem;
 }
@@ -281,24 +298,30 @@ fieldset {
   background: var(--topbar-bg);
   color: var(--topbar-ink);
   flex-wrap: wrap;
+  /* A brass strip under the instrument panel. */
+  border-bottom: 3px solid var(--brass);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.5);
 }
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.05rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   min-width: 0;
 }
 .brand-mark {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--accent);
-  color: var(--accent-ink);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--brass);
+  color: var(--topbar-bg);
+  box-shadow: inset 0 0 0 2px var(--topbar-bg), 0 0 0 1px var(--brass);
 }
 .brand-name {
   white-space: nowrap;
@@ -309,9 +332,12 @@ fieldset {
 .topbar-date {
   font-family: var(--font-display);
   font-size: 1.05rem;
+  letter-spacing: 0.04em;
   padding: 2px 10px;
-  border: 1px solid color-mix(in srgb, var(--topbar-ink) 30%, transparent);
-  border-radius: 6px;
+  background: var(--topbar-ink);
+  color: var(--topbar-bg);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px var(--topbar-bg), inset 0 0 0 2px var(--topbar-ink);
 }
 .topbar-kpis {
   display: flex;
@@ -324,12 +350,18 @@ fieldset {
   line-height: 1.1;
 }
 .kpi span {
-  font-size: 0.72rem;
-  opacity: 0.7;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.65;
 }
 .kpi b {
   font-family: var(--font-mono);
-  font-size: 0.95rem;
+  font-weight: 500;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
 }
 .topbar .tone-good {
   color: #8fd49a;
@@ -339,24 +371,28 @@ fieldset {
 }
 .speed {
   display: flex;
-  border: 1px solid color-mix(in srgb, var(--topbar-ink) 30%, transparent);
-  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--brass) 70%, transparent);
+  border-radius: 2px;
   overflow: hidden;
 }
 .speed-btn {
+  display: grid;
+  place-items: center;
   background: transparent;
   border: 0;
+  border-inline-start: 1px solid color-mix(in srgb, var(--brass) 35%, transparent);
   color: var(--topbar-ink);
   padding: 6px 10px;
-  min-width: 40px;
+  min-width: 42px;
   min-height: 34px;
   cursor: pointer;
-  font-size: 0.8rem;
-  letter-spacing: -2px;
+}
+.speed-btn:first-child {
+  border-inline-start: 0;
 }
 .speed-btn.is-on {
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: var(--brass);
+  color: var(--topbar-bg);
 }
 .speed-btn:disabled {
   opacity: 0.4;
@@ -369,44 +405,56 @@ fieldset {
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 12px 8px;
-  border-inline-end: 1px solid var(--line);
+  gap: 1px;
+  padding: 12px 0;
+  border-inline-end: 1px solid var(--rule);
   background: var(--panel-2);
   overflow-y: auto;
 }
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
+  gap: 11px;
+  padding: 9px 16px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 0;
   background: transparent;
   cursor: pointer;
   text-align: start;
   position: relative;
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
 }
 .nav-item:hover {
-  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
 }
 .nav-item.is-on {
+  color: var(--ink);
   background: var(--panel);
-  box-shadow: var(--shadow);
   font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.nav-item.is-on .nav-icon {
+  color: var(--accent);
 }
 .nav-icon {
+  display: grid;
+  place-items: center;
   width: 22px;
-  text-align: center;
 }
 .nav-badge {
   margin-inline-start: auto;
   background: var(--accent);
   color: var(--accent-ink);
-  border-radius: 10px;
-  font-size: 0.72rem;
-  padding: 0 7px;
-  line-height: 18px;
+  border-radius: 2px;
+  font-size: 0.7rem;
+  padding: 0 6px;
+  line-height: 17px;
+  letter-spacing: 0;
 }
 .main {
   overflow-y: auto;
@@ -424,8 +472,15 @@ fieldset {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 12px;
+  gap: 4px 12px;
   flex-wrap: wrap;
+  /* The double rule under a printed page's heading. */
+  padding-bottom: 8px;
+  border-bottom: 3px double var(--rule-strong);
+}
+.screen-head > p {
+  margin: 0;
+  font-size: 0.86rem;
 }
 .head-actions {
   display: flex;
@@ -436,8 +491,8 @@ fieldset {
   font: inherit;
   font-family: var(--font-display);
   font-size: 1.5rem;
-  font-weight: 700;
-  border: 1px dashed var(--line);
+  font-weight: 600;
+  border: 1px dashed var(--rule);
   background: transparent;
   padding: 2px 8px;
   max-width: 100%;
@@ -446,9 +501,9 @@ fieldset {
 /* ---------- Panels & primitives ---------- */
 .panel {
   background: var(--panel);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 14px 16px 16px;
   box-shadow: var(--shadow);
   min-width: 0;
 }
@@ -464,6 +519,8 @@ fieldset {
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--rule-strong);
   flex-wrap: wrap;
 }
 .panel-actions {
@@ -490,14 +547,19 @@ fieldset {
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
 }
 .btn {
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule-strong);
   background: var(--panel);
-  border-radius: 8px;
-  padding: 8px 14px;
+  border-radius: var(--radius);
+  padding: 7px 14px;
   min-height: 38px;
   cursor: pointer;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
   transition: transform 0.05s, background 0.15s;
+  box-shadow: 0 1px 0 var(--rule);
 }
 .btn:hover:not(:disabled) {
   background: var(--panel-2);
@@ -511,8 +573,10 @@ fieldset {
 }
 .btn-primary {
   background: var(--accent);
-  border-color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 70%, #000);
   color: var(--accent-ink);
+  /* An enamelled plate: a light edge on top, a dark one below. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 1px 0 color-mix(in srgb, var(--accent) 60%, #000);
 }
 .btn-primary:hover:not(:disabled) {
   background: color-mix(in srgb, var(--accent) 88%, var(--ink));
@@ -525,11 +589,12 @@ fieldset {
   background: transparent;
   border-color: transparent;
   color: var(--accent2);
+  box-shadow: none;
 }
 .btn-sm {
-  padding: 4px 10px;
+  padding: 3px 10px;
   min-height: 30px;
-  font-size: 0.85rem;
+  font-size: 0.86rem;
 }
 .icon-btn {
   border: 0;
@@ -539,43 +604,43 @@ fieldset {
   font-size: 1.1rem;
   line-height: 1;
   padding: 2px 6px;
-  border-radius: 6px;
+  border-radius: 2px;
 }
 .icon-btn:hover {
   color: var(--bad);
   background: color-mix(in srgb, var(--bad) 10%, transparent);
 }
+/* A rubber stamp: inked capitals in a double frame. */
 .badge {
   display: inline-block;
-  font-size: 0.74rem;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
   font-weight: 600;
-  padding: 1px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  padding: 1px 6px;
+  border-radius: 2px;
+  border: 1.5px solid currentColor;
+  box-shadow: inset 0 0 0 1px var(--panel), inset 0 0 0 2px color-mix(in srgb, currentColor 35%, transparent);
   white-space: nowrap;
+  color: var(--muted);
 }
 .badge-good {
   color: var(--good);
-  border-color: color-mix(in srgb, var(--good) 40%, var(--line));
-  background: color-mix(in srgb, var(--good) 10%, transparent);
 }
 .badge-bad {
   color: var(--bad);
-  border-color: color-mix(in srgb, var(--bad) 40%, var(--line));
-  background: color-mix(in srgb, var(--bad) 10%, transparent);
 }
 .badge-warn {
   color: var(--warn);
-  border-color: color-mix(in srgb, var(--warn) 40%, var(--line));
-  background: color-mix(in srgb, var(--warn) 10%, transparent);
 }
 .badge-info {
   color: var(--accent2);
-  border-color: color-mix(in srgb, var(--accent2) 40%, var(--line));
-  background: color-mix(in srgb, var(--accent2) 8%, transparent);
 }
 .badge-muted {
   color: var(--muted);
+  border-color: color-mix(in srgb, var(--muted) 60%, transparent);
 }
 .empty {
   color: var(--muted);
@@ -589,43 +654,58 @@ fieldset {
   min-width: 0;
 }
 .field > span {
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
 }
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
 }
+/* Key figures as one ruled strip, like the totals line of a ledger. */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 .stat {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 10px 14px;
+  padding: 9px 14px 10px;
   min-width: 0;
+  /* Each cell rules its right and lower edge; the outer ones slip under the strip's own border. */
+  border-inline-end: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  margin-inline-end: -1px;
+  margin-bottom: -1px;
 }
 .stat-label {
-  font-size: 0.78rem;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--muted);
 }
 .stat-value {
   font-family: var(--font-mono);
-  font-size: 1.3rem;
-  font-weight: 600;
+  font-size: 1.6rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .stat-value.is-long {
-  font-size: 1.1rem;
+  font-size: 1.35rem;
 }
 .stat-value.is-longer {
-  font-size: 0.95rem;
+  font-size: 1.15rem;
 }
 .stat-value.small {
   font-family: var(--font-ui);
@@ -652,6 +732,8 @@ fieldset {
 }
 .slider-top output {
   font-family: var(--font-mono);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
   color: var(--accent);
   white-space: nowrap;
 }
@@ -687,20 +769,20 @@ fieldset {
   flex-direction: column;
   gap: 2px;
   text-align: start;
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   background: var(--panel);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 8px 10px;
   cursor: pointer;
   min-height: 40px;
 }
 .choice-item:hover:not(:disabled) {
-  border-color: var(--accent2);
+  border-color: var(--rule-strong);
 }
 .choice-item.is-on {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 9%, var(--panel));
-  box-shadow: inset 0 0 0 1px var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+  box-shadow: inset 4px 0 0 var(--accent);
 }
 .choice-item:disabled {
   opacity: 0.45;
@@ -708,6 +790,9 @@ fieldset {
 }
 .choice-label {
   font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  letter-spacing: 0.02em;
 }
 .choice-sub {
   font-size: 0.78rem;
@@ -747,10 +832,11 @@ fieldset {
 }
 .toggle-box {
   flex: none;
-  width: 38px;
+  width: 40px;
   height: 22px;
-  border-radius: 11px;
-  background: var(--line);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ink) 18%, var(--panel-2));
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
   position: relative;
   transition: background 0.15s;
   margin-top: 1px;
@@ -760,12 +846,12 @@ fieldset {
   position: absolute;
   width: 16px;
   height: 16px;
-  border-radius: 50%;
+  border-radius: 1px;
   top: 3px;
   inset-inline-start: 3px;
   background: var(--panel);
-  transition: left 0.15s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: inset-inline-start 0.15s;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.35), inset 0 0 0 1px var(--rule);
 }
 .toggle input:checked + .toggle-box {
   background: var(--accent);
@@ -794,15 +880,15 @@ fieldset {
 .progress {
   position: relative;
   height: 14px;
-  border-radius: 7px;
+  border-radius: 2px;
   background: var(--panel-2);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   overflow: hidden;
   margin: 6px 0;
 }
 .progress-fill {
   height: 100%;
-  border-radius: 7px;
+  border-radius: 0;
   transition: width 0.3s;
 }
 .tone-bg-accent {
@@ -832,14 +918,14 @@ fieldset {
 .scorebar {
   position: relative;
   height: 10px;
-  border-radius: 5px;
+  border-radius: 1px;
   background: var(--panel-2);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   min-width: 60px;
 }
 .scorebar-fill {
   height: 100%;
-  border-radius: 5px;
+  border-radius: 0;
 }
 .sb-good {
   background: var(--good);
@@ -879,16 +965,19 @@ fieldset {
 }
 .table th {
   text-align: start;
-  font-size: 0.76rem;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--muted);
-  font-weight: 600;
-  border-bottom: 1px solid var(--line);
+  font-weight: 500;
+  border-bottom: 1.5px solid var(--rule-strong);
   padding: 6px 8px;
   white-space: nowrap;
 }
 .table td {
   padding: 7px 8px;
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+  border-bottom: 1px solid var(--rule);
   vertical-align: middle;
 }
 .table.compact td {
@@ -900,6 +989,46 @@ fieldset {
 .al-r {
   text-align: right !important;
   font-variant-numeric: tabular-nums;
+}
+/* For and against: one point a line, a plus or a minus in a small inked square (the engine's lists too). */
+.pros-cons {
+  display: grid;
+  gap: 2px;
+  margin-top: 5px;
+}
+.pc-item {
+  display: block;
+  position: relative;
+  padding-inline-start: 19px;
+  color: var(--ink);
+}
+.pc-item::before,
+.pc li::before {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.22em;
+  width: 13px;
+  height: 13px;
+  display: grid;
+  place-items: center;
+  font: 700 12px/1 var(--font-display);
+  color: var(--panel);
+  border-radius: 1px;
+}
+.pc-item.is-pro::before {
+  content: '+';
+  background: var(--good);
+}
+.pc-item.is-con::before {
+  content: '\2212';
+  background: var(--bad);
+}
+
+/* An icon in running text sits on the baseline of the words beside it. */
+.icon {
+  display: inline-block;
+  vertical-align: -0.18em;
+  flex: none;
 }
 .al-c {
   text-align: center !important;
@@ -971,7 +1100,7 @@ fieldset {
 .card-item {
   border: 1px solid var(--line);
   background: var(--panel);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 10px 12px;
   text-align: start;
   cursor: pointer;
@@ -1039,7 +1168,7 @@ fieldset {
   text-align: center;
   font-size: 0.82rem;
   padding: 6px 8px;
-  border-radius: 6px;
+  border-radius: 2px;
   background: var(--panel-2);
   color: var(--muted);
   border: 1px solid var(--line);
@@ -1356,23 +1485,19 @@ fieldset {
 }
 .pc li {
   position: relative;
-  padding-inline-start: 16px;
-}
-.pc li::before {
-  position: absolute;
-  inset-inline-start: 0;
-  font-weight: 700;
+  padding-inline-start: 19px;
 }
 .pc-pro li::before {
   content: '+';
-  color: var(--good);
+  background: var(--good);
 }
 .pc-con li::before {
-  content: '−';
-  color: var(--bad);
+  content: '\2212';
+  background: var(--bad);
 }
 .pc li.muted::before {
   content: '';
+  background: none;
 }
 .updown {
   font-size: 0.8rem;
@@ -1496,7 +1621,7 @@ fieldset {
   gap: 10px;
   align-items: flex-start;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 8px 10px;
   cursor: pointer;
 }
@@ -1514,7 +1639,7 @@ fieldset {
 .chip {
   border: 1px solid var(--line);
   background: var(--panel);
-  border-radius: 999px;
+  border-radius: 2px;
   padding: 5px 12px;
   cursor: pointer;
   font-weight: 600;
@@ -1537,7 +1662,7 @@ fieldset {
 }
 .review {
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 10px 12px;
   background: var(--panel-2);
 }
@@ -1568,7 +1693,7 @@ fieldset {
   height: 170px;
   display: block;
   background: var(--panel-2);
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1px solid var(--line);
 }
 .line-actions {
@@ -1589,7 +1714,7 @@ fieldset {
 }
 .stage {
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 8px;
   display: flex;
   flex-direction: column;
@@ -1624,7 +1749,7 @@ fieldset {
   gap: 4px;
   font-size: 0.8rem;
   background: var(--panel-2);
-  border-radius: 6px;
+  border-radius: 2px;
   padding: 4px 6px;
 }
 .stations li.slot-empty {
@@ -1683,7 +1808,7 @@ fieldset {
   align-items: center;
   gap: 8px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 8px 10px;
 }
 
@@ -1702,13 +1827,13 @@ fieldset {
 .share-bar {
   height: 10px;
   background: var(--panel-2);
-  border-radius: 5px;
+  border-radius: 2px;
   overflow: hidden;
 }
 .share-bar div {
   height: 100%;
   background: var(--series-1);
-  border-radius: 5px;
+  border-radius: 2px;
 }
 .knowledge td,
 .knowledge th {
@@ -1775,7 +1900,7 @@ fieldset {
   color: var(--muted);
   font-size: 0.88rem;
   border: 1px dashed var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 .chart-legend {
   display: flex;
@@ -1809,7 +1934,7 @@ fieldset {
   pointer-events: none;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 6px 10px;
   font-size: 0.8rem;
@@ -1842,7 +1967,7 @@ fieldset {
   gap: 4px;
   border: 1px solid var(--line);
   background: var(--panel);
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 12px;
   text-align: start;
   cursor: pointer;
@@ -1888,13 +2013,15 @@ fieldset {
 }
 .modal {
   background: var(--panel);
-  border-radius: 14px;
+  border-radius: var(--radius);
   width: min(580px, 100%);
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
   padding: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule-strong);
+  /* The top edge of a telegram form. */
+  border-top: 4px solid var(--accent);
 }
 .modal-wide {
   width: min(860px, 100%);
@@ -1902,11 +2029,22 @@ fieldset {
 .modal h2 {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
 }
+/* The event's pictogram in a stamped medallion. */
 .modal-icon {
-  font-size: 1.6rem;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--accent);
+  border: 2px solid currentColor;
+  box-shadow: inset 0 0 0 3px var(--panel), inset 0 0 0 4px color-mix(in srgb, currentColor 45%, transparent);
 }
 .modal-body p {
   line-height: 1.55;
@@ -1925,7 +2063,7 @@ fieldset {
   gap: 2px;
   text-align: start;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 10px 12px;
   background: var(--panel-2);
   cursor: pointer;
@@ -1958,7 +2096,7 @@ fieldset {
   background: var(--ink);
   color: var(--bg);
   padding: 10px 16px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   box-shadow: var(--shadow);
   z-index: 60;
   max-width: calc(100vw - 32px);
@@ -2058,17 +2196,36 @@ fieldset {
     order: 2;
     flex-direction: row;
     border-inline-end: 0;
-    border-top: 1px solid var(--line);
-    padding: 4px;
+    border-top: 3px solid var(--brass);
+    background: var(--topbar-bg);
+    padding: 0;
     overflow-x: auto;
+    gap: 0;
   }
   .nav-item {
     flex-direction: column;
-    gap: 2px;
-    padding: 6px 8px;
+    gap: 3px;
+    padding: 8px 8px 7px;
     min-width: 64px;
-    font-size: 0.7rem;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
     align-items: center;
+    color: color-mix(in srgb, var(--topbar-ink) 62%, transparent);
+  }
+  .nav-item:hover {
+    color: var(--topbar-ink);
+    background: transparent;
+  }
+  .nav-item.is-on {
+    color: var(--topbar-ink);
+    background: color-mix(in srgb, var(--topbar-ink) 8%, transparent);
+    box-shadow: inset 0 3px 0 var(--brass);
+  }
+  .nav-item.is-on .nav-icon {
+    color: var(--brass);
+  }
+  .nav-icon {
+    width: auto;
   }
   /* An item is never narrower than its longest word (German "Wissenskarten"): the bar scrolls instead
      of the words running into each other. Labels of several words wrap. */
@@ -2146,7 +2303,7 @@ fieldset {
   font-size: 0.78rem;
   background: var(--panel-2);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 8px;
   resize: vertical;
   color: var(--ink);
@@ -2172,8 +2329,15 @@ fieldset {
 /* A finished car waiting for its launch: stays in the page (the pause banner keeps the sticky place). */
 .pause-banner.launch-ready {
   position: static;
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
   border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  flex-wrap: nowrap;
+}
+.pause-banner .banner-icon {
+  color: var(--accent);
+}
+.pause-banner.launch-ready > span {
+  flex: 1;
 }
 .howto {
   display: flex;
@@ -2183,7 +2347,7 @@ fieldset {
   gap: 8px 12px;
   background: var(--panel-2);
   border: 1px dashed var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 10px 12px;
   margin-bottom: 10px;
 }
@@ -2200,7 +2364,7 @@ fieldset {
   position: absolute;
   top: 0;
   bottom: 0;
-  border-radius: 5px;
+  border-radius: 2px;
   opacity: 0.85;
   transition: left 0.4s, width 0.4s;
 }
@@ -2224,7 +2388,7 @@ fieldset {
   gap: 10px 16px;
   padding: 12px 16px;
   margin-bottom: 16px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--panel);
   box-shadow: var(--shadow);
@@ -2272,7 +2436,7 @@ fieldset {
 .focus-bar {
   display: flex;
   height: 10px;
-  border-radius: 999px;
+  border-radius: 2px;
   overflow: hidden;
   background: var(--panel-2);
   margin: 12px 0;
@@ -2316,7 +2480,7 @@ fieldset {
 .focus-card {
   border: 1px solid var(--line);
   border-top: 3px solid var(--fc);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 8px 10px;
   background: var(--panel-2);
   min-width: 0;
@@ -2367,7 +2531,7 @@ fieldset {
   font-weight: 700;
   font-size: 0.85rem;
   padding: 1px 7px;
-  border-radius: 999px;
+  border-radius: 2px;
   color: #fff;
   white-space: nowrap;
   animation: bubble-up 1.3s ease-out forwards;
@@ -2415,7 +2579,7 @@ fieldset {
 .launch-stage {
   position: relative;
   height: 230px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   overflow: hidden;
   background: radial-gradient(ellipse at 50% 110%, #3a2f22 0%, #120f0b 70%);
   display: grid;
@@ -2502,7 +2666,7 @@ fieldset {
   gap: 14px;
   margin-top: 14px;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--panel-2);
   opacity: 0;
@@ -2590,7 +2754,7 @@ fieldset {
   background: var(--panel);
   border: 1px solid var(--line);
   border-inline-start: 4px solid var(--accent);
-  border-radius: 12px;
+  border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 12px 14px;
   display: grid;
@@ -2611,7 +2775,7 @@ fieldset {
   line-height: 1;
   cursor: pointer;
   padding: 2px 6px;
-  border-radius: 6px;
+  border-radius: 2px;
 }
 .year-card-x:hover {
   background: var(--line);
@@ -2658,7 +2822,7 @@ fieldset {
   gap: 2px;
   text-align: start;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--panel-2);
   color: var(--ink);
@@ -2727,7 +2891,7 @@ fieldset {
   resize: vertical;
   font: inherit;
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--bg);
   color: var(--ink);
@@ -2736,7 +2900,7 @@ fieldset {
   .nav-claude {
     margin-top: 0;
     border-top: 0;
-    border-radius: 8px;
+    border-radius: var(--radius);
     padding-top: 6px;
   }
 }
@@ -2747,7 +2911,7 @@ fieldset {
   padding: 24px;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius);
   text-align: center;
 }
 
@@ -2774,7 +2938,7 @@ fieldset {
 .sync-line {
   font-size: 0.85rem;
   padding: 6px 10px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--panel-2);
 }
 .sync-line-on {
@@ -2791,7 +2955,7 @@ fieldset {
   gap: 10px 16px;
   padding: 10px 14px;
   margin-bottom: 14px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, var(--panel));
 }
@@ -2831,7 +2995,7 @@ fieldset {
   gap: 10px 16px;
   padding: 12px 16px;
   margin-bottom: 16px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--good);
   background: color-mix(in srgb, var(--good) 10%, var(--panel));
 }
@@ -2875,7 +3039,7 @@ fieldset {
   z-index: 200;
   background: var(--ink);
   color: var(--bg);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 10px 12px;
   font-size: 0.8rem;
   line-height: 1.45;
@@ -2960,7 +3124,7 @@ fieldset {
   align-items: center;
   gap: 6px;
   padding: 5px 10px;
-  border-radius: 999px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: var(--panel);
   color: var(--ink);
@@ -2980,7 +3144,7 @@ fieldset {
 .rchip-n {
   min-width: 20px;
   padding: 0 6px;
-  border-radius: 999px;
+  border-radius: 2px;
   background: color-mix(in srgb, currentColor 14%, transparent);
   font-size: 0.74rem;
   line-height: 18px;
@@ -3000,7 +3164,7 @@ fieldset {
 }
 .rcat {
   padding: 3px 9px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1px solid transparent;
   background: var(--panel-2);
   color: var(--ink);
@@ -3018,7 +3182,7 @@ fieldset {
   font: inherit;
   font-size: 0.85rem;
   padding: 5px 9px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--panel);
   color: var(--ink);
@@ -3033,7 +3197,7 @@ fieldset {
 .rlist {
   display: grid;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--panel);
   overflow: hidden;
 }
@@ -3082,7 +3246,7 @@ fieldset {
   height: 30px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--panel-2);
   font-size: 1rem;
 }
@@ -3104,7 +3268,7 @@ fieldset {
   font-size: 0.7rem;
   font-weight: 700;
   padding: 0 7px;
-  border-radius: 999px;
+  border-radius: 2px;
   background: color-mix(in srgb, var(--accent2) 16%, var(--panel));
   color: var(--accent2);
   white-space: nowrap;
@@ -3126,7 +3290,7 @@ fieldset {
 .rbar {
   display: block;
   height: 6px;
-  border-radius: 999px;
+  border-radius: 2px;
   background: var(--panel-2);
   overflow: hidden;
 }
@@ -3134,7 +3298,7 @@ fieldset {
   display: block;
   height: 100%;
   background: var(--accent);
-  border-radius: 999px;
+  border-radius: 2px;
 }
 .rrow-cost {
   grid-area: cost;
@@ -3185,7 +3349,7 @@ fieldset {
 .kh-chip {
   font-size: 0.74rem;
   padding: 1px 8px;
-  border-radius: 999px;
+  border-radius: 2px;
   border: 1px solid color-mix(in srgb, var(--accent2) 45%, var(--line));
   background: color-mix(in srgb, var(--accent2) 10%, var(--panel));
 }
@@ -3193,7 +3357,7 @@ fieldset {
 .class-gap {
   margin: 10px 16px 0;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--warn) 10%, var(--panel));
   border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--line));
 }
@@ -3250,7 +3414,7 @@ fieldset {
   color: #1f1a14;
   border: 1px solid #b9ab8a;
   border-top: 4px double #1f1a14;
-  border-radius: 6px;
+  border-radius: 2px;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
   padding: 10px 14px 12px;
   display: grid;
@@ -3716,7 +3880,7 @@ fieldset {
 .letter {
   margin: 0;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--panel-2);
   border-inline-start: 4px solid var(--line);
   font-family: 'Old Standard TT', Georgia, var(--font-scripts), serif;
@@ -3785,7 +3949,7 @@ fieldset {
   background: var(--panel);
   border: 1px solid var(--line);
   border-inline-start: 4px solid var(--accent2);
-  border-radius: 12px;
+  border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 12px 14px;
   display: grid;
@@ -3847,7 +4011,7 @@ fieldset {
 }
 .news li.is-pinned {
   background: color-mix(in srgb, var(--bad) 8%, transparent);
-  border-radius: 6px;
+  border-radius: 2px;
 }
 
 /* ---------- project budget ---------- */
@@ -3857,7 +4021,7 @@ fieldset {
   gap: 4px 12px;
   align-items: baseline;
   padding: 6px 10px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border-inline-start: 3px solid var(--line);
   background: color-mix(in srgb, var(--line) 25%, transparent);
   margin: 6px 0;
@@ -3886,7 +4050,7 @@ fieldset {
   position: relative;
   display: flex;
   margin: 6px 0 12px;
-  border-radius: 6px;
+  border-radius: 2px;
   overflow: hidden;
   border: 1px solid var(--line);
   font-size: 0.75rem;
@@ -3953,14 +4117,14 @@ fieldset {
 }
 .cost-bd-bar {
   height: 6px;
-  border-radius: 999px;
+  border-radius: 2px;
   background: var(--panel-2);
   overflow: hidden;
 }
 .cost-bd-bar i {
   display: block;
   height: 100%;
-  border-radius: 999px;
+  border-radius: 2px;
   background: var(--accent);
 }
 .cost-bd-labour .cost-bd-bar i {
@@ -3997,7 +4161,7 @@ fieldset {
   justify-content: space-between;
   gap: 6px 12px;
   padding: 6px 10px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--accent2) 10%, var(--panel));
   border: 1px solid color-mix(in srgb, var(--accent2) 30%, var(--line));
 }
@@ -4058,7 +4222,7 @@ fieldset {
   gap: 8px 16px;
   padding: 10px 14px;
   border: 1px solid color-mix(in srgb, var(--accent2) 35%, var(--line));
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--accent2) 7%, var(--panel));
 }
 .lab-staff-text {
@@ -4084,7 +4248,7 @@ fieldset {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: 6px;
+  border-radius: 2px;
   background: #f1e8d2;
   box-shadow: 0 2px 10px rgba(60, 40, 15, 0.25);
   font-family: 'Old Standard TT', Georgia, 'Times New Roman', var(--font-scripts), serif;
@@ -4158,7 +4322,7 @@ fieldset {
   text-anchor: middle;
 }
 .usmap-count {
-  font-family: 'Inter', system-ui, var(--font-scripts), sans-serif;
+  font-family: var(--font-ui);
   font-size: 6.5px;
   font-weight: 700;
   fill: #fbf5e6 !important;
@@ -4214,7 +4378,7 @@ fieldset {
   margin: 0 0 10px;
   padding: 2px 12px 8px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 .net-controls-row {
   display: flex;
@@ -4301,7 +4465,7 @@ fieldset {
   color: var(--topbar-ink);
   font: 600 0.8rem/1 var(--font-mono);
   padding: 6px 9px;
-  border-radius: 999px;
+  border-radius: 2px;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -4314,7 +4478,7 @@ fieldset {
   font-size: 0.88rem;
   padding: 8px 10px;
   border: 1px dashed var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 .year-offer-actions {
@@ -4382,7 +4546,7 @@ fieldset {
   color: var(--ink);
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 6px 10px;
   min-height: 36px;
 }
@@ -4395,4 +4559,124 @@ fieldset {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 4px;
+}
+
+/* ---------- Models: the maker's catalogue ---------- */
+.model-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+.model-list-title {
+  color: var(--muted);
+  margin: 8px 0 -4px;
+}
+.model-entry {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  grid-template-areas:
+    'car head stamp'
+    'figs figs figs';
+  align-items: center;
+  gap: 6px 12px;
+  text-align: start;
+  padding: 12px 14px;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+.model-entry:hover {
+  border-color: var(--rule-strong);
+}
+.model-entry-car {
+  grid-area: car;
+  display: block;
+  line-height: 0;
+}
+.model-entry-car svg {
+  width: 100%;
+  height: auto;
+}
+.model-entry-head {
+  grid-area: head;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.model-entry-name {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--accent2);
+  line-height: 1.15;
+}
+.model-entry-name small {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+.model-entry-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.model-entry-stamp {
+  grid-area: stamp;
+  align-self: start;
+}
+.model-entry-figures {
+  grid-area: figs;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--rule);
+  padding-top: 7px;
+  margin-top: 2px;
+}
+.model-entry-figures > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-inline-start: 8px;
+  border-inline-start: 1px solid var(--rule);
+}
+.model-entry-figures > span:first-child {
+  padding-inline-start: 0;
+  border-inline-start: 0;
+}
+.model-entry-figures small {
+  font-family: var(--font-display);
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.model-entry-figures b {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+/* Retired models: a smaller, faded catalogue page, no figures. */
+.model-list.is-retired .model-entry {
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  grid-template-areas: 'car head stamp';
+  padding: 8px 12px;
+  box-shadow: none;
+  background: var(--panel-2);
+}
+.model-list.is-retired .model-entry-car {
+  opacity: 0.75;
+  filter: grayscale(0.6);
+}
+.model-list.is-retired .model-entry-name {
+  font-size: 1rem;
+  color: var(--ink);
 }

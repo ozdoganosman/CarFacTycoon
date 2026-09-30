@@ -7,6 +7,7 @@ import { money } from '../format';
 import { store, useGameState } from '../store';
 import { Button } from './ui';
 import { tx } from '../i18n';
+import { Icon } from './Icon';
 
 // The advertisements the player sees in the app: a sponsor who pays for a short advertisement
 // (asked for, or offered at the year's end), and a classified advertisement in the newspaper.
@@ -35,7 +36,7 @@ export function SponsorChip() {
   if (!open) return null;
   return (
     <button type="button" className="sponsor-chip" onClick={() => void watchFor()} title={t('Kısa bir reklam izle, sponsor kasaya para koysun')}>
-      📺 +{money(amount)}
+      <Icon name="screen" /> +{money(amount)}
     </button>
   );
 }
@@ -44,7 +45,7 @@ export function SponsorChip() {
 export function SponsorButton() {
   const { open, amount } = useSponsor();
   if (!open) return null;
-  return <Button onClick={() => void watchFor()}>📺 {t('Reklam izle, sponsor {cash} versin', { cash: money(amount) })}</Button>;
+  return <Button onClick={() => void watchFor()}><Icon name="screen" /> {t('Reklam izle, sponsor {cash} versin', { cash: money(amount) })}</Button>;
 }
 
 /**
@@ -85,7 +86,7 @@ export function YearOffer({ year }: { year: number }) {
   return (
     <div className="year-offer">
       <div>
-        🎁{' '}
+        <Icon name="gift" />{' '}
         {bill > 0 && amount >= bill * 0.5
           ? tx('<b>Yıl sonu primi</b>: kısa bir reklam izle, sponsor kasaya <b>{cash}</b> koysun (bu yılın vergisinin yarısı).', { cash: money(amount) })
           : tx('<b>Yıl sonu primi</b>: kısa bir reklam izle, sponsor kasaya <b>{cash}</b> koysun.', { cash: money(amount) })}
@@ -95,7 +96,7 @@ export function YearOffer({ year }: { year: number }) {
           <span className="muted small">{t('Reklam {n} sn içinde başlıyor', { n: count })}</span>
         ) : (
           <Button small kind="primary" onClick={() => void watchFor(year)}>
-            📺 {t('İzle')}
+            <Icon name="screen" /> {t('İzle')}
           </Button>
         )}
         <Button
@@ -176,7 +177,7 @@ export function AdSettings() {
   return (
     <>
       {ads.noAds ? (
-        <p className="tone-good">✓ {t('Reklamlar kaldırıldı. Desteğin için teşekkürler!')}</p>
+        <p className="tone-good"><Icon name="check" /> {t('Reklamlar kaldırıldı. Desteğin için teşekkürler!')}</p>
       ) : (
         <p>
           <Button kind="primary" disabled={busy} onClick={() => void buy()}>

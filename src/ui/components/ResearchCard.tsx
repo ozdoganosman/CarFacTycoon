@@ -4,6 +4,7 @@ import { t } from '../../i18n';
 import { store, useGameState } from '../store';
 import { Button } from './ui';
 import { tx } from '../i18n';
+import { Icon } from './Icon';
 
 const dismiss = () => store.act((st) => void (st.modals = st.modals.filter((m) => m.kind !== 'research')));
 
@@ -24,7 +25,8 @@ export function ResearchCard() {
   return (
     <aside className="research-card" aria-live="polite">
       <div className="year-card-head">
-        <b>🔬 {done.length ? t('Ar-Ge tamamlandı') : t('Ar-Ge sırası ilerledi')}</b>
+        <b>
+          <Icon name="research" /> {done.length ? t('Ar-Ge tamamlandı') : t('Ar-Ge sırası ilerledi')}</b>
         <button type="button" className="year-card-x" aria-label={t('Kapat')} onClick={dismiss}>
           ×
         </button>

@@ -12,6 +12,7 @@ import { BudgetLine } from '../components/BudgetLine';
 import type { FocusKey, Project } from '../../core/types';
 import { store, useGameState } from '../store';
 import { Button, Progress, Slider } from '../components/ui';
+import { Icon } from '../components/Icon';
 
 interface Bubble {
   id: number;
@@ -146,7 +147,7 @@ export function DevBar({ project: p }: { project: Project }) {
           </Button>
         ) : paused ? (
           <Button kind="primary" onClick={() => store.setSpeed(store.lastSpeed)}>
-            {t('▶ Zamanı başlat')}
+            <Icon name="play" /> {t('Zamanı başlat')}
           </Button>
         ) : null}
       </div>
@@ -243,7 +244,7 @@ export function FocusPanel({ project: p }: { project: Project }) {
                     title={locked.includes(k) ? t('Kilidi aç') : t('Bu yüzdeyi kilitle: diğer kaydırıcılar onu değiştirmez')}
                     onClick={() => store.act((st) => A.toggleFocusLock(st, p.id, k))}
                   >
-                    {locked.includes(k) ? '🔒' : '🔓'}
+                    <Icon name={locked.includes(k) ? 'lock' : 'unlock'} />
                   </button>
                 </>
               }

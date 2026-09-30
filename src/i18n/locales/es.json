@@ -590,13 +590,6 @@
  "1guz2fa": "Gran Premio de Francia",
  "15t1o47": "No se celebran carreras por la guerra: el equipo espera y no se gasta el presupuesto de carreras.",
  "10bg7n1": "Terminó la guerra y vuelven las carreras: el equipo se prepara para la temporada.",
- "gr0v98": "🏁 ¡{company} ganó la carrera {race} con el {model}! Crece la fama de la marca.",
- "165z9m7": "🏁 {race}: el {model} terminó entre los tres primeros.",
- "a5wp4f": {
-  "one": "🏁 {race}: el {model} no logró subir al podio. El auto tiene un año; sin un auto nuevo y potente, el equipo solo quema dinero.",
-  "other": "🏁 {race}: el {model} no logró subir al podio. El auto tiene {n} años; sin un auto nuevo y potente, el equipo solo quema dinero."
- },
- "4pj8x": "🏁 {race}: el {model} no logró subir al podio. Hace falta un auto más potente o un equipo más grande.",
  "2hl950": "¡El {model} gana la carrera {race}!",
  "9ipk4s": "El equipo {company} deja atrás a sus rivales; los aficionados que vieron la carrera hacen fila en los concesionarios",
  "aztqhq": "El equipo de fábrica de {company} ganó la carrera {race} con el {model}. Esta primera gran victoria del equipo tuvo amplia cobertura en la prensa de {market}.",
@@ -1511,7 +1504,7 @@
  "15z4kwm": "Encendido apagado",
  "1efkiir": "Motor: {rpm} rpm",
  "10gmpvt": "A la izquierda, alguien arranca el motor a manivela y el peligro del contragolpe; a la derecha, el arranque eléctrico: batería, motor de arranque y un piñón que engrana con la corona del volante.",
- "1ytcznx": "Pulsa el arranque",
+ "1ytcznx": "Arrancar",
  "1u2k6j0": "El arranque de Kettering hace girar el cigüeñal con un pequeño motor eléctrico; el piñón (Bendix) engrana con la corona del volante solo durante el arranque y salta hacia atrás cuando el motor ya funciona. Se acabaron el esfuerzo y el peligro de la manivela, y el auto se abrió también a las mujeres y a los conductores mayores.",
  "8mky4k": "Muy brusco",
  "34wyj3": "Ningún otro pistón equilibra a este: el motor salta en cada vuelta.",
@@ -1903,9 +1896,6 @@
  "1uuma35": "Cuanto más alta es la compresión, más dura es la combustión y más agudo el sonido. Si la compresión es demasiado alta para la gasolina de la época, el motor pica: con carga, un tintineo metálico que resuena a 5–10 kHz según el diámetro del cilindro.",
  "y4j0kj": "Los motores de la época no tienen limitador de revoluciones. Cuando un motor de gasolina pasa la línea roja, los resortes de válvula no dan abasto y las válvulas flotan: la potencia cae, el motor falla, traquetea, petardea por el escape y no sube más de vueltas. En el diésel, en cambio, el regulador de la bomba de inyección corta el combustible para contener el régimen.",
  "b96nmg": "Cambia los ajustes con el motor en marcha: el sonido cambia al instante.",
- "1v1nsmr": "■ Parar",
- "7tfii7": "▶ Arrancar",
- "1v8fhcf": "▶ Arrancar a manivela",
  "1cmaoi5": "Acelera <hint>(mantén pulsado)</hint>",
  "17ojv3y": "Acelerador fijo",
  "cof9mq": "Volumen",
@@ -2145,11 +2135,6 @@
  "k4p4sa": "Lo espera en nuestro concesionario más cercano",
  "8jgzsq": "Cartas de los lectores",
  "s4q2el": "Todavía no salió nada en los periódicos.",
- "1b3lvob": {
-  "one": "🎉 <b>{name} está listo</b> y lleva {n} semana esperando el lanzamiento: mientras tanto pagas sueldos, pero no vendes autos.",
-  "other": "🎉 <b>{name} está listo</b> y lleva {n} semanas esperando el lanzamiento: mientras tanto pagas sueldos, pero no vendes autos."
- },
- "9y6ftf": "🎉 <b>{name} está listo:</b> elige el precio y lánzalo.",
  "1hoxwfx": "<b>Juego en pausa.</b> Con el tiempo detenido, los ingenieros no trabajan, las pruebas no avanzan y la fábrica no produce.",
  "1mp8dv6": "Continuar (espacio)",
  "1bttp5n": "I+D terminada",
@@ -2343,7 +2328,6 @@
  "arkc1j": "~{budget} al año ({share} de los ingresos, mínimo {floor}).",
  "r4vbsf": "Fama",
  "1o59oqf": "{v} / 8 (al máximo)",
- "s750mt": "Temporada {year}, {race}: <b>{model}</b> 🏆 ganó la carrera.",
  "b03b2g": "Temporada {year}, {race}: <b>{model}</b> terminó entre los tres primeros.",
  "9h6c9x": "Temporada {year}, {race}: <b>{model}</b> no logró clasificarse entre los primeros.",
  "e2svqw": "Comprar un rival",
@@ -2563,7 +2547,6 @@
  "11qytd4": "Iniciar igual",
  "19zapm2": "Desarrollo iniciado",
  "50huix": "Iniciar desarrollo",
- "11ffnmw": "▶ Iniciar el tiempo",
  "u8xvid": "Potencia +{pct}",
  "1bk1n3y": "Consumo −{pct}",
  "sj9qrx": "Confort +{v}",
@@ -3078,7 +3061,6 @@
   "other": "{n} estrellas"
  },
  "111muzt": "Cada mes llegan cartas nuevas; muestran lo que notan los compradores.",
- "52kle2": "Lanzamiento",
  "1wj2gq0": "A la venta",
  "1tas5xr": "Descontinuado",
  "s7gk8c": "Todavía no tienes modelos en el mercado. Diseña tu primer auto desde la pantalla Proyectos.",
@@ -3418,5 +3400,21 @@
  "1ern1en": "C A N A D Á",
  "1l658y2": "N",
  "1khau7x": "millas",
- "v48e9x": "M É X I C O"
+ "v48e9x": "M É X I C O",
+ "e9fxwo": {
+  "one": "<b>{name} está listo</b> y lleva {n} semana esperando el lanzamiento: mientras tanto pagas sueldos, pero no vendes autos.",
+  "other": "<b>{name} está listo</b> y lleva {n} semanas esperando el lanzamiento: mientras tanto pagas sueldos, pero no vendes autos."
+ },
+ "1vgbwm6": "<b>{name} está listo:</b> elige el precio y lánzalo.",
+ "11q0spp": "Temporada {year}, {race}: <b>{model}</b> ganó la carrera.",
+ "1hjmy2r": "¡{company} ganó la carrera {race} con el {model}! Crece la fama de la marca.",
+ "cg3cr4": "{race}: el {model} terminó entre los tres primeros.",
+ "29em8y": {
+  "one": "{race}: el {model} no logró subir al podio. El auto tiene un año; sin un auto nuevo y potente, el equipo solo quema dinero.",
+  "other": "{race}: el {model} no logró subir al podio. El auto tiene {n} años; sin un auto nuevo y potente, el equipo solo quema dinero."
+ },
+ "9cq00c": "{race}: el {model} no logró subir al podio. Hace falta un auto más potente o un equipo más grande.",
+ "rpaw8b": "Parar",
+ "fug6jx": "Arrancar a manivela",
+ "1nkx2fq": "Iniciar el tiempo"
 }

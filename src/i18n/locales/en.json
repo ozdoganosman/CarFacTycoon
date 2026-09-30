@@ -590,13 +590,6 @@
  "1guz2fa": "French Grand Prix",
  "15t1o47": "No races are being held because of the war: the team is standing by, and the racing budget isn’t being spent.",
  "10bg7n1": "The war is over and racing is back: the team is getting ready for the season.",
- "gr0v98": "🏁 {company} won the {race} with the {model}! The make’s fame has grown.",
- "165z9m7": "🏁 {race}: the {model} finished in the top three.",
- "a5wp4f": {
-  "one": "🏁 {race}: the {model} failed to place. The car is {n} year old; without a new, powerful car the team is just burning money.",
-  "other": "🏁 {race}: the {model} failed to place. The car is {n} years old; without a new, powerful car the team is just burning money."
- },
- "4pj8x": "🏁 {race}: the {model} failed to place. You need a more powerful car or a bigger team.",
  "2hl950": "{model} wins the {race}!",
  "9ipk4s": "The {company} team leaves its rivals in the dust; race fans line up at the dealers",
  "aztqhq": "The {company} factory team took first place in the {race} with the {model}. The team’s first major victory got wide coverage in the {market} press.",
@@ -1508,7 +1501,7 @@
  "15z4kwm": "Ignition off",
  "1efkiir": "Engine: {rpm} rpm",
  "10gmpvt": "On the left, someone cranking the engine by hand and the danger of kickback; on the right, the electric starter: battery, starter motor, and a pinion meshing with the flywheel ring gear.",
- "1ytcznx": "Press starter",
+ "1ytcznx": "Hit the starter",
  "1u2k6j0": "Kettering’s starter turns the crank with a small electric motor; the pinion (Bendix) meshes with the flywheel ring gear only while starting and snaps back once the engine runs. The toil and danger of hand cranking were over, and the car opened up to women and older drivers too.",
  "8mky4k": "Very rough",
  "34wyj3": "No other piston balances this one: the engine jumps every turn.",
@@ -1897,9 +1890,6 @@
  "1uuma35": "The higher the compression, the harder the combustion and the sharper the sound. If the compression is too high for the gasoline of the day, the engine knocks: under load, a metallic pinging that rings at 5–10 kHz depending on the cylinder bore.",
  "y4j0kj": "Engines of the period have no rev limiter. When a gasoline engine passes the redline, the valve springs can’t keep up and the valves float: power drops, the engine misfires, clatters, backfires through the exhaust and won’t rev any higher. On a diesel, the governor in the injection pump cuts the fuel to hold the revs.",
  "b96nmg": "Change the settings while the engine runs: the sound changes instantly.",
- "1v1nsmr": "■ Stop",
- "7tfii7": "▶ Hit the starter",
- "1v8fhcf": "▶ Hand-crank it",
  "1cmaoi5": "Hit the gas <hint>(hold)</hint>",
  "17ojv3y": "Steady throttle",
  "cof9mq": "Volume",
@@ -2139,11 +2129,6 @@
  "k4p4sa": "Waiting for you at your nearest dealer",
  "8jgzsq": "Letters to the Editor",
  "s4q2el": "Nothing in the papers yet.",
- "1b3lvob": {
-  "one": "🎉 <b>{name} is ready</b> and has waited {n} week for its launch: meanwhile you’re paying salaries but selling no cars.",
-  "other": "🎉 <b>{name} is ready</b> and has waited {n} weeks for its launch: meanwhile you’re paying salaries but selling no cars."
- },
- "9y6ftf": "🎉 <b>{name} is ready:</b> pick a price and launch it.",
  "1hoxwfx": "<b>Game paused.</b> While time is stopped, engineers don’t work, tests don’t progress and the factory doesn’t build.",
  "1mp8dv6": "Resume (space)",
  "1bttp5n": "R&D complete",
@@ -2334,7 +2319,6 @@
  "arkc1j": "~{budget} a year ({share} of revenue, at least {floor}).",
  "r4vbsf": "Fame",
  "1o59oqf": "{v} / 8 (full)",
- "s750mt": "{year} season, {race}: <b>{model}</b> 🏆 took first place.",
  "b03b2g": "{year} season, {race}: <b>{model}</b> finished in the top three.",
  "9h6c9x": "{year} season, {race}: <b>{model}</b> failed to place.",
  "e2svqw": "Buy a rival",
@@ -2554,7 +2538,6 @@
  "11qytd4": "Start anyway",
  "19zapm2": "Development started",
  "50huix": "Start development",
- "11ffnmw": "▶ Start time",
  "u8xvid": "Power +{pct}",
  "1bk1n3y": "Fuel use −{pct}",
  "sj9qrx": "Comfort +{v}",
@@ -3063,7 +3046,6 @@
   "other": "{n} stars"
  },
  "111muzt": "New letters arrive each month; they show what buyers notice.",
- "52kle2": "Launched",
  "1wj2gq0": "On sale",
  "1tas5xr": "Discontinued",
  "s7gk8c": "You don’t have any models on the market yet. Design your first car from the Projects screen.",
@@ -3403,5 +3385,21 @@
  "1ern1en": "C A N A D A",
  "1l658y2": "N",
  "1khau7x": "miles",
- "v48e9x": "M E X I C O"
+ "v48e9x": "M E X I C O",
+ "e9fxwo": {
+  "one": "<b>{name} is ready</b> and has waited {n} week for its launch: meanwhile you’re paying salaries but selling no cars.",
+  "other": "<b>{name} is ready</b> and has waited {n} weeks for its launch: meanwhile you’re paying salaries but selling no cars."
+ },
+ "1vgbwm6": "<b>{name} is ready:</b> pick a price and launch it.",
+ "11q0spp": "{year} season, {race}: <b>{model}</b> took first place.",
+ "1hjmy2r": "{company} won the {race} with the {model}! The make’s fame has grown.",
+ "cg3cr4": "{race}: the {model} finished in the top three.",
+ "29em8y": {
+  "one": "{race}: the {model} failed to place. The car is {n} year old; without a new, powerful car the team is just burning money.",
+  "other": "{race}: the {model} failed to place. The car is {n} years old; without a new, powerful car the team is just burning money."
+ },
+ "9cq00c": "{race}: the {model} failed to place. You need a more powerful car or a bigger team.",
+ "rpaw8b": "Stop",
+ "fug6jx": "Hand-crank it",
+ "1nkx2fq": "Start time"
 }
