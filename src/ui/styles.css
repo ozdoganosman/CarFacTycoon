@@ -2161,6 +2161,12 @@ fieldset {
   border: 1px solid color-mix(in srgb, var(--accent2) 45%, var(--line));
   box-shadow: var(--shadow);
 }
+/* A finished car waiting for its launch: stays in the page (the pause banner keeps the sticky place). */
+.pause-banner.launch-ready {
+  position: static;
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
 .howto {
   display: flex;
   flex-wrap: wrap;

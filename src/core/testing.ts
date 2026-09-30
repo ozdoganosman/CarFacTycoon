@@ -212,6 +212,32 @@ export function supplierFailureMult(choice: SupplierChoice, skill: number): numb
   return 1.4 - skill / 100;
 }
 
+/**
+ * The chosen part makers against buying every part from the quality supplier: reliability points they
+ * add or take (the design's scale, as actualReliability counts them) and how many times as often a hidden
+ * flaw in their parts breaks down (1 when every part comes from the quality supplier).
+ */
+export function partsVsQuality(suppliers: Record<ComponentKey, SupplierChoice>, skill: number): { reliability: number; failures: number } {
+  const keys = Object.keys(suppliers) as ComponentKey[];
+  const other = keys.filter((k) => suppliers[k] !== 'quality');
+  return {
+    reliability: keys.reduce((a, k) => a + supplierReliability(suppliers[k], skill) - supplierReliability('quality', skill), 0),
+    failures: other.length ? other.reduce((a, k) => a + supplierFailureMult(suppliers[k], skill), 0) / other.length / supplierFailureMult('quality', skill) : 1,
+  };
+}
+
+/** The engineering skill at which parts made in-house match the quality supplier's: as sound, and as seldom broken down. */
+export function inhouseParity(): { reliability: number; failures: number } {
+  const first = (ok: (skill: number) => boolean) => {
+    for (let k = 0; k <= 100; k++) if (ok(k)) return k;
+    return 100;
+  };
+  return {
+    reliability: first((k) => supplierReliability('inhouse', k) >= supplierReliability('quality', k) - 1e-9),
+    failures: first((k) => supplierFailureMult('inhouse', k) <= supplierFailureMult('quality', k) + 1e-9),
+  };
+}
+
 /** Real reliability once hidden defects and part quality are counted. */
 export function actualReliability(
   designReliability: number,

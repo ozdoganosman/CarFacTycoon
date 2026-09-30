@@ -133,7 +133,6 @@
  "tsc3f5": "solange Krieg herrscht, wird die Fabrik nicht erweitert",
  "1i43374": "selbst auf einer neuen Linie bleibt der Gewinn pro Auto unter 8 %: Wachstum würde nur die Verluste vergrößern, also bring zuerst Preis oder Kosten in Ordnung",
  "dyrsdp": "nicht genug Geld in der Kasse",
- "x4mms0": "bei diesem Preis macht sich die nächste Erweiterung nicht innerhalb von zwei Jahren bezahlt",
  "1c8z6lh": "die neue Generation ist unterwegs: Für ein alterndes Auto wird keine neue Anlage gebaut",
  "roxm5u": "die Linien sind ausgelastet, und die Nachfragelücke ist zu klein für eine neue Linie",
  "6ntr5j": {
@@ -160,12 +159,6 @@
   "one": "{n} neue Linie",
   "other": "{n} neue Linien"
  },
- "lltxcc": {
-  "one": "die nächste Erweiterung kostet ~{cost} und macht sich in ~{n} Monat bezahlt; aus der Kasse entbehrlich sind {spare} (ein paar Wochen Ausgaben und Steuern bleiben als Reserve). Nimm einen Bankkredit auf oder lass die Kasse wachsen, dann erweitert die Automatik die Kapazität",
-  "other": "die nächste Erweiterung kostet ~{cost} und macht sich in ~{n} Monaten bezahlt; aus der Kasse entbehrlich sind {spare} (ein paar Wochen Ausgaben und Steuern bleiben als Reserve). Nimm einen Bankkredit auf oder lass die Kasse wachsen, dann erweitert die Automatik die Kapazität"
- },
- "1vzx854": "die nächste Erweiterung kostet ~{cost} und macht sich in ~{years} Jahren bezahlt; aus der Kasse entbehrlich sind {spare} (ein paar Wochen Ausgaben und Steuern bleiben als Reserve). Nimm einen Bankkredit auf oder lass die Kasse wachsen, dann erweitert die Automatik die Kapazität",
- "1040d4g": "Automatik: {what} für {name} gekauft ({cost}). Kapazität {cap} Autos/Wo., Nachfrage {demand}.",
  "141oegv": "Automatik: Die Nachfrage nach {name} ist gesunken; überzählige Maschinen auf {line} wurden verkauft ({refund}).",
  "i3qpio": {
   "one": "Automatik: Die Nachfrage nach {name} ist gesunken; {n} Linie wurde stillgelegt und ihre Maschinen verkauft ({refund}).",
@@ -2498,10 +2491,6 @@
  "1hzpn4f": "Liniengröße",
  "mzwbql": "Liniengröße (Plätze pro Abschnitt):",
  "1xagys4": "{output} Autos/Wo. · {cost}",
- "ak2cs4": {
-  "one": "{n} Platz · {output}/Wo. (passt zur Lücke)",
-  "other": "{n} Plätze · {output}/Wo. (passt zur Lücke)"
- },
  "1c3azsw": {
   "one": "{n} Platz · {output}/Wo.",
   "other": "{n} Plätze · {output}/Wo."

@@ -133,7 +133,6 @@
  "tsc3f5": "la fábrica no se amplía mientras dure la guerra",
  "1i43374": "incluso en una línea nueva, el beneficio por auto queda por debajo del 8 %: crecer solo aumentaría las pérdidas; primero corrige el precio o el costo",
  "dyrsdp": "no alcanza la caja",
- "x4mms0": "a este precio, la próxima ampliación no se paga sola en dos años",
  "1c8z6lh": "su nueva generación está en camino: no se amplía la fábrica para un auto que envejece",
  "roxm5u": "las líneas están llenas y la demanda insatisfecha es demasiado pequeña para una línea nueva",
  "6ntr5j": {
@@ -160,12 +159,6 @@
   "one": "{n} línea nueva",
   "other": "{n} líneas nuevas"
  },
- "lltxcc": {
-  "one": "la próxima ampliación cuesta ~{cost} y se paga sola en ~{n} mes; de la caja puedes destinar {spare} (se reservan unas semanas de gastos e impuestos). Pide un préstamo al banco o deja que la caja crezca, y la capacidad automática ampliará la fábrica",
-  "other": "la próxima ampliación cuesta ~{cost} y se paga sola en ~{n} meses; de la caja puedes destinar {spare} (se reservan unas semanas de gastos e impuestos). Pide un préstamo al banco o deja que la caja crezca, y la capacidad automática ampliará la fábrica"
- },
- "1vzx854": "la próxima ampliación cuesta ~{cost} y se paga sola en ~{years} años; de la caja puedes destinar {spare} (se reservan unas semanas de gastos e impuestos). Pide un préstamo al banco o deja que la caja crezca, y la capacidad automática ampliará la fábrica",
- "1040d4g": "Capacidad automática, compras para el {name}: {what} ({cost}). Capacidad {cap} autos/sem., demanda {demand}.",
  "141oegv": "Capacidad automática: bajó la demanda del {name}; se vendieron las máquinas sobrantes de {line} ({refund}).",
  "i3qpio": {
   "one": "Capacidad automática: bajó la demanda del {name}; se cerró una línea y se vendieron sus máquinas ({refund}).",
@@ -2513,10 +2506,6 @@
  "1hzpn4f": "Tamaño de la línea",
  "mzwbql": "Tamaño de la línea (puestos por sección):",
  "1xagys4": "{output} autos/sem. · {cost}",
- "ak2cs4": {
-  "one": "{n} puesto · {output}/sem. (según el déficit)",
-  "other": "{n} puestos · {output}/sem. (según el déficit)"
- },
  "1c3azsw": {
   "one": "{n} puesto · {output}/sem.",
   "other": "{n} puestos · {output}/sem."

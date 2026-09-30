@@ -133,7 +133,6 @@
  "tsc3f5": "the factory isn’t expanded while the war is on",
  "1i43374": "even on a new line, profit per car stays below 8%: growing would only grow the losses, so fix the price or the cost first",
  "dyrsdp": "not enough cash",
- "x4mms0": "at this price the next expansion won’t pay for itself within two years",
  "1c8z6lh": "its new generation is on the way: no new plant for an aging car",
  "roxm5u": "the lines are full and the demand gap is too small for a new line",
  "6ntr5j": {
@@ -160,12 +159,6 @@
   "one": "{n} new line",
   "other": "{n} new lines"
  },
- "lltxcc": {
-  "one": "the next expansion costs ~{cost} and pays for itself in ~{n} month; you can spare {spare} of your cash (a few weeks of expenses and taxes held back). Take a bank loan or let cash build up, and automatic capacity will expand",
-  "other": "the next expansion costs ~{cost} and pays for itself in ~{n} months; you can spare {spare} of your cash (a few weeks of expenses and taxes held back). Take a bank loan or let cash build up, and automatic capacity will expand"
- },
- "1vzx854": "the next expansion costs ~{cost} and pays for itself in ~{years} years; you can spare {spare} of your cash (a few weeks of expenses and taxes held back). Take a bank loan or let cash build up, and automatic capacity will expand",
- "1040d4g": "Auto capacity: bought {what} for the {name} ({cost}). Capacity {cap} cars/wk, demand {demand}.",
  "141oegv": "Auto capacity: demand for the {name} fell; surplus machines on {line} were sold ({refund}).",
  "i3qpio": {
   "one": "Auto capacity: demand for the {name} fell; {n} line was closed and its machines sold ({refund}).",
@@ -2507,10 +2500,6 @@
  "1hzpn4f": "Line size",
  "mzwbql": "Line size (slots per section):",
  "1xagys4": "{output} cars/wk · {cost}",
- "ak2cs4": {
-  "one": "{n} slot · {output}/wk (fits the gap)",
-  "other": "{n} slots · {output}/wk (fits the gap)"
- },
  "1c3azsw": {
   "one": "{n} slot · {output}/wk",
   "other": "{n} slots · {output}/wk"

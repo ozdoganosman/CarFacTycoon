@@ -206,6 +206,8 @@ export interface LaunchReport {
   rank: number;
   offers: number;
   share: number;
+  /** The company leads the car's class (rivalMoves.ts leadsClass: the Company screen's test). Older saves: judged by rank. */
+  leads?: boolean;
   praise: AttrKey[];
   complaints: AttrKey[];
   price: 'high' | 'low' | 'fair';
@@ -304,6 +306,8 @@ export interface CarModel {
   autoSpent?: number;
   /** Why automatic capacity is not growing although buyers wait (last month). */
   autoHold?: 'war' | 'margin' | 'cash' | 'payback' | 'full' | 'successor';
+  /** The same reason in numbers (the best purchase and how many months it takes to pay for itself), in words. */
+  autoWhy?: string;
   /** What would make growth pay (set with autoHold 'payback'). */
   autoHint?: string;
   /** Buyers' demand smoothed over the last months (for building). */

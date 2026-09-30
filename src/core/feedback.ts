@@ -3,6 +3,7 @@ import { stateDef } from '../data/states';
 import { ATTRS, ATTR_NAMES, segmentDef } from '../data/segments';
 import { PRICE_REMARK, modelScores, playerOffer, rivalScores, segmentMarket } from './market';
 import { lineReport } from './factory';
+import { leadsClass } from './rivalMoves';
 import type { Rng } from './rng';
 import { segmentWeights } from './scoring';
 import { yearFloat } from './time';
@@ -175,7 +176,8 @@ export function customerFeedback(state: GameState, model: CarModel, rng: Rng): F
 export function buildLaunchReport(state: GameState, model: CarModel): LaunchReport {
   const market = mainMarket(state, model);
   const yf = yearFloat(state.week);
-  const since = model.history.filter((h) => h.week > model.launchWeek);
+  // Counted from this launch: a facelift's report starts at the facelift, not at the car's first launch.
+  const since = model.history.filter((h) => h.week > Math.max(model.launchWeek, model.refreshWeek ?? model.launchWeek));
   const sold = since.reduce((a, h) => a + h.sold, 0);
   const built = since.reduce((a, h) => a + h.built, 0);
   const demand = Object.values(model.lastDemand ?? {}).reduce((a, b) => a + b, 0);
@@ -217,6 +219,7 @@ export function buildLaunchReport(state: GameState, model: CarModel): LaunchRepo
     rank: mine + 1,
     offers: ranked.length,
     share: offer ? offer.weight / sm.totalWeight : 0,
+    leads: leadsClass(state, model.segment),
     praise,
     complaints,
     price,

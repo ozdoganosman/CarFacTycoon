@@ -292,10 +292,12 @@ export function LaunchReportView({ s, modelId, report: r }: { s: GameState; mode
     store.act(A.dismissModal);
     void ads.breakpoint();
   };
+  // "Leader" is judged as on the Company screen (rivalMoves.ts leadsClass); older reports by rank.
+  const leads = r.leads ?? r.rank === 1;
   const headline =
     r.capacity < 0.05
       ? t('Üretim durmuş')
-      : r.rank === 1
+      : leads
         ? t('Segmentinin lideri!')
         : r.rank <= 3 && r.rank > 0
           ? t('Güçlü bir başlangıç')

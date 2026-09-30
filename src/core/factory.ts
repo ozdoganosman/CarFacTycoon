@@ -190,6 +190,53 @@ export function turnkeyLineCost(week: number, allowBlack: boolean, slots = MAX_S
   return newLineCost(yf) + expansionCost(yf, emptyLine('x', 'x').slots, Math.max(emptyLine('x', 'x').slots, slots)) + stations;
 }
 
+/** Line sizes (places a section) the capacity planner and automatic capacity choose from. */
+export const LINE_SIZES = [2, 3, 4, 6, MAX_SLOTS];
+
+/** A new turnkey line for one model: its machines, its price with the model's dies, cars a week, wages a car at full pace. */
+export interface LineQuote {
+  slots: number;
+  black: boolean;
+  plan: Record<StageId, string[]>;
+  cost: number;
+  output: number;
+  labour: number;
+}
+
+export function turnkeyQuote(s: GameState, m: CarModel, allowBlack: boolean, slots = MAX_SLOTS): LineQuote {
+  const yf = yearFloat(s.week);
+  const plan = planBalancedLine(yf, allowBlack, slots);
+  const line = { ...emptyLine('plan', 'plan'), stations: plan };
+  line.slots = Math.max(line.slots, slots);
+  const output = lineReport(s, line, m.stats.complexity).throughput;
+  return {
+    slots,
+    black: allowBlack,
+    plan,
+    cost: turnkeyLineCost(s.week, allowBlack, slots) + retoolCost(s, m),
+    output,
+    labour: output > 0 ? lineUpkeep(s, line, 1) / output : 0,
+  };
+}
+
+/** The smallest turnkey line that builds `gap` cars a week (the biggest when none does). */
+export function lineSizeFor(s: GameState, m: CarModel, allowBlack: boolean, gap: number): number {
+  return LINE_SIZES.find((k) => turnkeyQuote(s, m, allowBlack, k).output >= gap) ?? MAX_SLOTS;
+}
+
+/**
+ * Years a purchase takes to pay for itself: its price against what the cars it adds earn in a year at
+ * `margin` a car. Only cars buyers take count: `sold` of the `added` a week (all of them when not given).
+ * The capacity planner and automatic capacity both judge plant with this one sum.
+ */
+export function paybackYears(cost: number, added: number, margin: number, sold = added): number {
+  const cars = Math.min(added, Math.max(0, sold));
+  return margin > 0 && cars > 0.01 ? Math.max(0, cost) / (margin * cars * 52) : Infinity;
+}
+
+/** A payback time in whole months (at least one), for the texts. */
+export const paybackMonths = (years: number) => Math.max(1, Math.round(years * 12));
+
 export interface ModernizeQuote {
   plan: Record<StageId, string[]>;
   buy: number;

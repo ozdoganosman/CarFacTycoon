@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import * as A from '../../core/actions';
 import { credit, dealerUpkeep, gates, materialUnitCost, protoUnitCost } from '../../core/game';
 import { lineReport, lineUpkeep, reservedLines, suggestedLine, turnkeyLineCost, workshopLineCost } from '../../core/factory';
-import { MARKET_IDS, PRICE_OVER_FROM, demandAtPrice, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
-import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, defectRange, defectText, expectedRemaining, riskLabel, testTuning, testWeekCost, type Tuning } from '../../core/testing';
+import { MARKET_IDS, PRICE_OVER_FROM, demandAtPrice, modelAgeYears, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
+import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, defectRange, defectText, expectedRemaining, inhouseParity, partsVsQuality, riskLabel, testTuning, testWeekCost, type Tuning } from '../../core/testing';
+import { scoreStats } from '../../core/scoring';
 import { yearFloat } from '../../core/time';
 import { DEALER_COMMISSION, costIndex, engineerSalary, lineBuildWeeks, overhead, shopCost } from '../../data/economy';
 import { MARKETS } from '../../data/markets';
@@ -20,7 +21,7 @@ import { tx } from '../i18n';
 import { pctWith } from '../../core/turkish';
 import { Badge, Button, Choice, NumberInput, Panel, Progress, Slider, Toggle } from '../components/ui';
 import { newEstimate } from '../../core/estimate';
-import { launchBudget } from '../../core/budget';
+import { devWeeksLeft, launchBudget } from '../../core/budget';
 import { researcherSalary } from '../../core/research';
 import { BudgetLine } from '../components/BudgetLine';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
@@ -89,10 +90,12 @@ export function ProjectView({ projectId }: { projectId: string }) {
           <DevBar project={p} />
           {/* The brief first: what the engineers should work on, then the car itself. */}
           <FocusPanel project={p} />
+          {p.kind === 'facelift' && <FaceliftGain p={p} />}
           <Designer project={p} readOnly={p.phase === 'development'} />
         </>
       )}
       {p.phase === 'testing' && <Testing p={p} />}
+      {p.phase === 'testing' && p.kind === 'facelift' && <FaceliftGain p={p} />}
       {p.phase === 'production' && <Production key={p.id} p={p} />}
       {p.phase === 'ready' && (s.lines.some((l) => l.id === p.lineId) ? <Launch key={p.id} p={p} /> : <NoLine p={p} />)}
     </div>
@@ -233,6 +236,59 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
         )}
       </p>
     </div>
+  );
+}
+
+/**
+ * What a facelift really brings, before it is started: buyers a week now and after it (as if it were on
+ * sale today, with the current brief), and how old the car looks to buyers.
+ */
+function FaceliftGain({ p }: { p: Project }) {
+  const s = useGameState();
+  const o = A.faceliftOutlook(s, p);
+  const m = s.models.find((x) => x.id === p.replacesModelId);
+  if (!o || !m) return null;
+  // Development, the planned tests and the three-week changeover.
+  const testsLeft = Math.max(0, ...TESTS.map((x) => p.tests[x.id].planned - p.tests[x.id].done));
+  const weeks = devWeeksLeft(s, p) + testsLeft + 3;
+  const later = modelAgeYears(m, s.week + weeks);
+  const change = o.demandNow > 0.05 ? o.demandAfter / o.demandNow - 1 : 0;
+  const d = { now: dec(o.demandNow, 1), after: dec(o.demandAfter, 1), pct: percent(Math.abs(change), 0) };
+  return (
+    <Panel title={t('Makyajın getirisi')}>
+      <div className="quote">
+        <div>
+          <span>{t('Alıcı gözünde yaşı')}</span>
+          <b>{t('{now} → {after} yıl', { now: dec(o.ageNow, 1), after: dec(o.ageAfter, 1) })}</b>
+        </div>
+        <div>
+          <span>{t('Çekicilik (sınıf ort. 50)')}</span>
+          <b>
+            {dec(o.appealNow, 0)} → {dec(o.appealAfter, 0)}
+          </b>
+        </div>
+        <div>
+          <span>{t('Haftalık talep (bugünkü fiyatla)')}</span>
+          <b className={change >= 0.1 ? 'tone-good' : change < 0.03 ? 'tone-bad' : 'tone-warn'}>{t('{now} → {after} araç/hf', d)}</b>
+        </div>
+      </div>
+      <p className="small">
+        {change >= 0.1
+          ? tx('Bugün satışa çıksa bu makyaj talebi <good>~{pct}</good> artırır ({now} → {after} araç/hf); lansman heyecanı ilk aylarda bunun üstüne alıcı getirir.', d)
+          : change >= 0.03
+            ? tx('Bu makyaj talebi yalnız <warn>~{pct}</warn> artırır ({now} → {after} araç/hf). Geliştirme odağını alıcıların önem verdiği özelliklere çevirirsen getirisi artar.', d)
+            : tx('<bad>Bu makyaj talebi artırmıyor</bad> ({now} → {after} araç/hf). Geliştirme odağını alıcıların önem verdiği özelliklere çevir ya da yeni kuşak düşün.', d)}{' '}
+        {o.appealAfter < o.appealNow &&
+          `${t('Makyaj, arabanın eski geliştirme ve test ayarlarının yerine geçer: test aşamasında dinamometre ve dayanıklılık haftaları planlamazsan eskisinin kazandırdığı güç, tüketim ve güvenilirlik ayarı kaybolur.')} `}
+        {t('Makyaj arabayı genç gösterir: bugün {now} yaşında görünüyor, makyajdan hemen sonra {after}. Satışa çıkması ~{n} hafta sürer; makyajsız o gün {later} yaşında görünecek.', {
+          now: dec(o.ageNow, 1),
+          after: dec(o.ageAfter, 1),
+          n: weeks,
+          later: dec(later, 1),
+        })}
+      </p>
+      <p className="muted small">{t('Mühendislerin bugünkü odak ve test planıyla beklediği sonuç; lansman heyecanı hariç. Kesin tepkiyi dergiler lansmanda verir.')}</p>
+    </Panel>
   );
 }
 
@@ -501,6 +557,7 @@ function Production({ p }: { p: Project }) {
             ))
           )}
           <p>{tx('Birim malzeme maliyeti: <b>{cost}</b>', { cost: money(unitNow) })}</p>
+          {g.suppliers && <PartsReliability p={p} tier={tier} />}
         </Panel>
         <Panel title={t('2 · Hangi hat üretecek?')}>
           <p className="muted small">
@@ -653,6 +710,55 @@ function Production({ p }: { p: Project }) {
         </div>
       </Panel>
     </>
+  );
+}
+
+/**
+ * What the parts choice saves and what it costs in reliability, next to each other: parts made in-house
+ * (or bought cheap) are cheaper, but how sound they are depends on the engineers' skill, and buyers and
+ * magazines find it out once the cars are on the road.
+ */
+function PartsReliability({ p, tier }: { p: Project; tier: ToolingTier }) {
+  const s = useGameState();
+  const yf = yearFloat(s.week);
+  const st = useCarStats(p.design, yf, p.bonus);
+  const quality = { engine: 'quality', gearbox: 'quality', electrics: 'quality' } as const;
+  if ((Object.keys(p.suppliers) as ComponentKey[]).every((k) => p.suppliers[k] === 'quality')) return null;
+  const skill = Math.round(s.company.skill);
+  const unit = (suppliers: Project['suppliers']) => materialUnitCost(s, { stats: st, suppliers, unitsBuilt: 0, tooling: tier });
+  const saving = unit(quality) - unit(p.suppliers);
+  const vs = partsVsQuality(p.suppliers, s.company.skill);
+  // On the 0–100 scale magazines and buyers use (hidden defects left out).
+  const score = (extra: number) => scoreStats(st, yf, p.segment, st.reliability + extra).reliability;
+  const withQuality = score(partsVsQuality(quality, s.company.skill).reliability);
+  const chosen = score(vs.reliability);
+  const loss = withQuality - chosen;
+  const tone = { tone: (c: ReactNode, k: number) => <b key={k} className={loss >= 3 ? 'tone-bad' : loss >= 1 ? 'tone-warn' : 'tone-good'}>{c}</b> };
+  const inhouse = (Object.keys(p.suppliers) as ComponentKey[]).some((k) => p.suppliers[k] === 'inhouse');
+  const par = inhouseParity();
+  const v = { saving: money(saving), skill, rel: dec(chosen, 0), quality: dec(withQuality, 0), mult: dec(vs.failures, 1) };
+  return (
+    <p className="small">
+      {inhouse
+        ? tx(
+            'Kaliteli tedarikçiye göre araç başına <b>{saving}</b> ucuz. Ama kendi parçalarının kalitesi mühendislik becerisine bağlı (şimdi {skill}): alıcıların ve dergilerin sahada göreceği güvenilirlik puanı ~<tone>{rel}</tone>, hepsi kaliteli tedarikçiden olsa ~{quality}. Bu parçalardaki gizli kusurlar {mult} kat sık arıza çıkarır.',
+            v,
+            tone,
+          )
+        : tx(
+            'Kaliteli tedarikçiye göre araç başına <b>{saving}</b> ucuz. Ama alıcıların ve dergilerin sahada göreceği güvenilirlik puanı ~<tone>{rel}</tone>, hepsi kaliteli tedarikçiden olsa ~{quality}. Bu parçalardaki gizli kusurlar {mult} kat sık arıza çıkarır.',
+            v,
+            tone,
+          )}
+      {inhouse && skill < par.failures && (
+        <span className="muted">
+          {' '}
+          {skill < par.reliability
+            ? t('Kendi parçaların beceri {rel} olunca kaliteli tedarikçininki kadar sağlam, {fail} olunca o kadar az arızalı olur.', { rel: par.reliability, fail: par.failures })
+            : t('Kendi parçaların artık kaliteli tedarikçininki kadar sağlam; beceri {fail} olunca o kadar az arızalı da olur.', { fail: par.failures })}
+        </span>
+      )}
+    </p>
   );
 }
 

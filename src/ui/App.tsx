@@ -9,7 +9,7 @@ import { ModalHost, YearCard } from './components/ModalHost';
 import { NewsCard, NewspaperHost } from './components/Newspaper';
 import { ResearchCard } from './components/ResearchCard';
 import { ConfirmHost } from './components/ConfirmHost';
-import { PauseBanner } from './components/PauseBanner';
+import { LaunchReadyBanner, PauseBanner } from './components/PauseBanner';
 import { HQ } from './screens/HQ';
 import { Projects } from './screens/Projects';
 import { Research } from './screens/Research';
@@ -115,6 +115,7 @@ export function App() {
         <main className="main" ref={mainRef}>
           <ShareBar />
           <PauseBanner />
+          <LaunchReadyBanner />
           {body}
         </main>
       </div>
