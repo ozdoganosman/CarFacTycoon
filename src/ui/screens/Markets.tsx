@@ -11,11 +11,12 @@ import { REGION_NAMES, STATE_IDS, stateDef, statePop, stateWeights, type StateId
 import type { GameState } from '../../core/types';
 import { store, useGameState } from '../store';
 import { dec, money, num, pct } from '../format';
-import { Badge, Button, NumberInput, Panel, Table } from '../components/ui';
+import { Badge, Button, NumberInput, Panel, Table, Toggle } from '../components/ui';
 import { Importance } from '../components/StatsPanel';
 import { LineChart } from '../viz/LineChart';
 import { UsMap, type MapMarker, type MapTone, type UsMapProps } from '../viz/UsMap';
 import { lower, msg, t } from '../../i18n';
+import { tx } from '../i18n';
 
 export function Markets() {
   return (
@@ -160,7 +161,14 @@ function NetworkPanel() {
           <span className="muted small">{t('Nakliye (bu yıl)')}</span>
           <b>{money(freightYear)}</b>
         </div>
+        <div>
+          <span className="muted small">{t('Bayi araması')}</span>
+          <b>
+            {N.activeSearches(s)} / {N.maxSearches(s)}
+          </b>
+        </div>
       </div>
+      <NetworkControls />
       <div className="seg-toggle" role="group" aria-label={t('Harita görünümü')}>
         {OVERLAYS.map((o) => (
           <button key={o.id} type="button" className={`chip ${overlay === o.id ? 'is-on' : ''}`} onClick={() => setOverlay(o.id)}>
@@ -185,6 +193,111 @@ function NetworkPanel() {
       </div>
       <StateList onPick={setSel} />
     </Panel>
+  );
+}
+
+/** "Servisi yetir": say how many shops, where and what they cost, then open them (as many as the cash pays for). */
+export async function askCoverService(s: GameState) {
+  const yf = yearFloat(s.week);
+  const all = N.servicePlan(s, yf);
+  const plan = N.servicePlan(s, yf, s.company.cash);
+  if (!all.count || !plan.count) {
+    store.try((st) => N.coverService(st));
+    return;
+  }
+  const p = {
+    n: plan.count,
+    all: all.count,
+    allCost: money(all.cost),
+    states: N.planStates(plan.states),
+    cost: money(plan.cost),
+    upkeep: money(N.marginalWeekly(s, 0, plan.count, yf) * 52),
+  };
+  const ok = await store.ask({
+    title: t('Servisi yetir: {n} servis atölyesi açılsın mı?', p),
+    body:
+      plan.count < all.count
+        ? t(
+            'Bütün arabalarına bakmak için {all} atölye gerekiyor ({allCost}) ama kasan {n} tanesine yetiyor: önce sahiplerin en çok beklediği eyaletlere. Açılacak atölyeler: {states}. Açılışları {cost}; ağın yıllık gideri ~{upkeep} artar (bölge müdürlükleri ve parça depoları dahil).',
+            p,
+          )
+        : t('Açılacak atölyeler: {states}. Açılışları {cost}; ağın yıllık gideri ~{upkeep} artar (bölge müdürlükleri ve parça depoları dahil). Sonra her eyalette arabalarına bakacak yer olur.', p),
+    confirm: t('{cost} öde, aç', p),
+  });
+  if (ok) store.try((st) => N.coverService(st), t('{n} servis atölyesi açıldı', p));
+}
+
+/** "Komşularda bayi ara": a search in every free slot, the neighbouring states with the most buyers first. */
+export async function askSearchNeighbours(s: GameState) {
+  const yf = yearFloat(s.week);
+  const ids = N.nextSearches(s, yf);
+  if (!ids.length) {
+    store.try((st) => N.searchNeighbours(st));
+    return;
+  }
+  const cost = money(ids.reduce((a, id) => a + N.searchCost(s, id, yf), 0));
+  const states = ids.map((id) => t('{state} ({n} hafta · şans {chance})', { state: stateDef(id).name, n: N.searchWeeks(s, id), chance: pct(N.searchChance(s, id), 0) })).join(', ');
+  const ok = await store.ask({
+    title: t('{n} eyalette bayi aransın mı?', { n: ids.length }),
+    body: t('Alıcısı en çok olan komşu eyaletlerde bayi aranır: {states}. Aramalar {cost} tutar; bulunamayan yerde yeniden denemek kolaylaşır.', { states, cost }),
+    confirm: t('{cost} öde, ara', { cost }),
+  });
+  if (ok) store.try((st) => N.searchNeighbours(st), t('{n} eyalette bayi aranıyor', { n: ids.length }));
+}
+
+/** Service and dealer searches for the whole network at once. */
+function NetworkControls() {
+  const s = useGameState();
+  const yf = yearFloat(s.week);
+  const plan = N.servicePlan(s, yf);
+  const auto = !!s.network?.autoService;
+  const waiting = s.network?.autoServiceWaiting ?? 0;
+  const next = N.nextSearches(s, yf);
+  const max = N.maxSearches(s);
+  return (
+    <div className="net-controls">
+      <Toggle
+        checked={auto}
+        onChange={(v) => store.act((st) => N.setAutoService(st, v))}
+        label={t('Otomatik servis')}
+        sub={
+          <>
+            {t(
+              'Açıkken her ay, arabaların tamir beklediği eyaletlerde servis atölyesi açar (en kötü durumdakiler önce); arabaları azalan yerlerde boş kalanları kapatır. Kasada her zaman iki haftalık gider kadar yedek bırakır.',
+            )}
+            {auto && waiting > 0 && <span className="tone-warn"> {t('Kasa yetmediği için {n} atölye bekliyor.', { n: waiting })}</span>}
+          </>
+        }
+      />
+      <div className="net-controls-row">
+        <span className="small">
+          {plan.count
+            ? tx('Yolda <b>{parc}</b> araban var, <b>{shops}</b> servis atölyen var: hepsine bakmak için <warn>~{n} atölye daha</warn> gerekiyor.', {
+                parc: num(N.totalParc(s)),
+                shops: num(N.totalService(s)),
+                n: plan.count,
+              })
+            : t('Servis yetiyor: her eyalette arabalarına bakacak yer var.')}
+        </span>
+        {plan.count > 0 && (
+          <Button small kind="primary" onClick={() => askCoverService(s)}>
+            {t('Servisi yetir ({n} atölye · {cost})', { n: plan.count, cost: money(plan.cost) })}
+          </Button>
+        )}
+      </div>
+      <div className="net-controls-row">
+        <span className="small">
+          {max < N.MAX_SEARCHES
+            ? t('Aynı anda en çok {n} eyalette bayi aranabilir; her {per} bayi bir arama daha açar.', { n: max, per: N.DEALERS_PER_SEARCH })
+            : t('Aynı anda en çok {n} eyalette bayi aranabilir.', { n: max })}
+        </span>
+        {next.length > 0 && (
+          <Button small onClick={() => askSearchNeighbours(s)}>
+            {t('Komşularda bayi ara ({n} eyalet · {cost})', { n: next.length, cost: money(next.reduce((a, id) => a + N.searchCost(s, id, yf), 0)) })}
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -257,6 +370,7 @@ function StateCard({ id }: { id: StateId }) {
           <div className="svc-bar" aria-label={t('Servis yeterliliği {q}', { q: pct(q, 0) })}>
             <div style={{ width: `${Math.max(4, q * 100)}%`, background: serviceColor(q) }} />
           </div>
+          {N.shopsNeeded(s, id, yf) > 0 && <div className="muted small">{t('Buradaki arabaların hepsine bakmak için ~{n} atölye daha gerekiyor.', { n: N.shopsNeeded(s, id, yf) })}</div>}
         </>
       )}
       {n?.firstDealer && <p className="muted small">{t('İlk bayi: {dealer}', { dealer: n.firstDealer })}</p>}
@@ -276,7 +390,7 @@ function StateCard({ id }: { id: StateId }) {
                 })}
           </Button>
         ) : (
-          !open && <span className="muted small">{can.why}</span>
+          <span className="muted small">{can.why}</span>
         )}
         {open && (
           <Button small onClick={() => store.try((st) => N.openServiceShop(st, id), t('{state}: servis atölyesi açıldı', { state: def.name }))}>

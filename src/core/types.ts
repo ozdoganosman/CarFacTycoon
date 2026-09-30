@@ -416,8 +416,11 @@ export interface NetworkState {
   states: Partial<Record<StateId, StateNet>>;
   /** The year the "this year" counters belong to. */
   year: number;
-  /** Open a service shop by itself where cars wait too long for repairs. */
+  /** "Otomatik servis": open service shops by itself every month where cars wait for repairs (new games start with it on). */
   autoService?: boolean;
+  /** Shops automatic service could not open last month for the cash reserve, and when it last said so. */
+  autoServiceWaiting?: number;
+  autoServiceWarned?: number;
 }
 
 export interface RivalCompany {

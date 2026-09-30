@@ -6,6 +6,8 @@ import { yearFloat } from '../src/core/time';
 import { STATE_IDS, stateWeights } from '../src/data/states';
 import { NEIGHBOURS, STATE_SHAPES } from '../src/data/usmap';
 import { runBot } from '../scripts/bot';
+import { autoService } from '../src/core/autoservice';
+import { costIndex } from '../src/data/economy';
 import type { GameState } from '../src/core/types';
 
 // The American market, state by state: sell at home first, grow into neighbouring
@@ -151,5 +153,102 @@ describe('state network', () => {
     expect(N.openStates(loaded).length).toBeGreaterThan(5);
     expect(N.totalParc(loaded)).toBeGreaterThan(0);
     for (let i = 0; i < 20; i++) tick(loaded);
+  });
+});
+
+describe('network in bulk', () => {
+  /** Cars on the road in a few open states, far more than the dealers can look after. */
+  const crowded = () => {
+    const s = game();
+    const yf = yearFloat(s.week);
+    for (const id of ['OH', 'IN'] as const) N.stateNet(s, id).dealers = 1;
+    N.recordStateSales(s, 'MI', 20000, yf);
+    N.recordStateSales(s, 'OH', 8000, yf);
+    N.recordStateSales(s, 'IN', 3000, yf);
+    return s;
+  };
+
+  it('runs more dealer searches at once as the network grows', () => {
+    const s = game();
+    expect(N.maxSearches(s)).toBe(1);
+    N.stateNet(s, 'MI').dealers = 4;
+    expect(N.maxSearches(s)).toBe(2);
+    N.stateNet(s, 'MI').dealers = 8;
+    expect(N.maxSearches(s)).toBe(3);
+    // A search in every free slot, in the neighbouring states with the most buyers.
+    const r = N.searchNeighbours(s);
+    expect(r.ok).toBe(true);
+    expect(N.activeSearches(s)).toBe(3);
+    expect(N.nextSearches(s)).toEqual([]);
+    expect(N.searchNeighbours(s).ok).toBe(false);
+    N.stateNet(s, 'MI').dealers = 1000;
+    expect(N.maxSearches(s)).toBe(N.MAX_SEARCHES);
+  });
+
+  it('"Servisi yetir" opens every shop the cars need, the worst served first when cash is short', () => {
+    const s = crowded();
+    const yf = yearFloat(s.week);
+    const plan = N.servicePlan(s, yf);
+    expect(plan.count).toBeGreaterThan(5);
+    expect(plan.cost).toBeCloseTo(plan.count * N.serviceShopCost(yf), 6);
+    // Short of cash: as many as it pays for, where owners wait longest.
+    s.company.cash = N.serviceShopCost(yf) * 2.5;
+    const worst = N.underServed(s, yf, 1)[0];
+    const r = N.coverService(s);
+    expect(r.ok && r.opened).toBe(2);
+    expect(N.stateNet(s, worst).service).toBeGreaterThan(0);
+    // With the money, all of them: every state's cars looked after.
+    s.company.cash = 1e7;
+    expect(N.coverService(s).ok).toBe(true);
+    for (const id of ['MI', 'OH', 'IN'] as const) expect(N.serviceQuality(s, id, yf)).toBe(1);
+    expect(N.servicePlan(s, yf).count).toBe(0);
+    expect(N.coverService(s).ok).toBe(false);
+  });
+
+  it('automatic service opens shops monthly above a cash reserve, and closes idle ones', () => {
+    const s = crowded();
+    const yf = yearFloat(s.week);
+    // New games start with it on; older saves (no setting) keep it off.
+    expect(s.network!.autoService).toBe(true);
+    const old = JSON.parse(serialize(s)) as GameState;
+    delete old.network!.autoService;
+    expect(deserialize(JSON.stringify(old)).network!.autoService).toBeFalsy();
+    N.setAutoService(s, false);
+    autoService(s);
+    expect(N.totalService(s)).toBe(0);
+    N.setAutoService(s, true);
+    // Only a little above the reserve: a few shops now, the rest wait for the cash.
+    const need = N.servicePlan(s, yf).count;
+    s.company.cash = 4000 * costIndex(yf) + N.serviceShopCost(yf) * 3.5;
+    autoService(s);
+    expect(N.totalService(s)).toBe(3);
+    expect(s.network!.autoServiceWaiting).toBe(need - 3);
+    expect(s.company.cash).toBeGreaterThan(4000 * costIndex(yf));
+    s.company.cash = 1e7;
+    autoService(s);
+    expect(s.network!.autoServiceWaiting).toBeUndefined();
+    expect(N.serviceSatisfaction(s, yf)).toBe(1);
+    expect(s.log.some((l) => l.text.startsWith('Otomatik servis'))).toBe(true);
+    // The cars go to the scrapyard: the idle shops close, enough stay for those left.
+    N.stateNet(s, 'MI').parc = 2000;
+    const before = N.stateNet(s, 'MI').service;
+    autoService(s);
+    expect(N.stateNet(s, 'MI').service).toBeLessThan(before);
+    expect(N.serviceQuality(s, 'MI', yf)).toBe(1);
+  });
+
+  it("a bought rival's dealers open states the make did not sell in yet", () => {
+    const s = game();
+    for (const id of ['OH', 'IN', 'IL', 'PA', 'NY', 'WI'] as const) N.stateNet(s, id).dealers = 1;
+    const before = new Set(N.openStates(s));
+    const picks = N.acquiredDealerStates(s, 4, 'kirkland');
+    expect(picks).toHaveLength(4);
+    expect(picks.filter((id) => !before.has(id)).length).toBeGreaterThanOrEqual(2);
+    // Its strong states are round its own factory, not across the country.
+    expect(picks).not.toContain('CA');
+    const gained = N.absorbDealers(s, 4, 'Kirkland', 'kirkland');
+    expect(gained).toEqual(picks);
+    for (const id of gained) expect(N.isOpen(s, id)).toBe(true);
+    expect(N.openStates(s).length).toBe(before.size + picks.filter((id) => !before.has(id)).length);
   });
 });

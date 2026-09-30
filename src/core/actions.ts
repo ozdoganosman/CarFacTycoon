@@ -1,4 +1,4 @@
-import { absorbDealers, homeState } from './network';
+import { absorbDealers, homeState, openStates } from './network';
 import { stateDef } from '../data/states';
 import { costIndex, lineBuildWeeks, newLineCost, priceLevel, shopCost, slotCost, toolingMultiple, MAX_SLOTS } from '../data/economy';
 import { eventDef } from '../data/events';
@@ -47,7 +47,7 @@ import type {
 } from './types';
 import { NO_BONUS, computeCarStats } from './vehicle';
 import { clamp, decide, earn, log, money, newId, shiftModal, spend } from './util';
-import { t } from '../i18n';
+import { list, t } from '../i18n';
 import { dec, fmtPercent } from '../i18n/format';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -856,18 +856,24 @@ export function acquireRival(s: GameState, id: string): ActionResult {
   for (const rm of s.rivalModels) if (rm.companyId === id) rm.active = false;
   s.company.engineers += target.engineers;
   shareEngineers(s);
-  // Its dealers carry our cars now: showrooms where the buyers are, new states included.
-  const gained = absorbDealers(s, Math.max(1, Math.min(12, Math.round(1 + target.units / 2500))), target.name);
+  // Its dealers carry our cars now: showrooms in its strong states, new ones included.
+  const wasOpen = new Set(openStates(s));
+  const gained = absorbDealers(s, target.dealers, target.name, target.id);
+  const fresh = gained.filter((id) => !wasOpen.has(id));
   s.company.reputation = clamp(s.company.reputation + 1, 0, 100);
+  const p = {
+    company: s.company.name,
+    name: target.name,
+    price: money(target.price),
+    n: target.engineers,
+    states: gained.map((id) => stateDef(id).name).join(', '),
+    fresh: list(fresh.map((id) => stateDef(id).name)),
+  };
   log(
     s,
-    t('{company}, {name} şirketini {price} karşılığında satın aldı: {n} mühendis katıldı; bayileri artık senin arabalarını satıyor ({states}).', {
-      company: s.company.name,
-      name: target.name,
-      price: money(target.price),
-      n: target.engineers,
-      states: gained.map((id) => stateDef(id).name).join(', '),
-    }),
+    fresh.length
+      ? t('{company}, {name} şirketini {price} karşılığında satın aldı: {n} mühendis katıldı; bayileri artık senin arabalarını satıyor ({states}). İlk kez satış yaptığın eyaletler: {fresh}.', p)
+      : t('{company}, {name} şirketini {price} karşılığında satın aldı: {n} mühendis katıldı; bayileri artık senin arabalarını satıyor ({states}).', p),
     'good',
   );
   decide(s, 'acquire:' + id, `${target.name} satın alındı (${money(target.price)}, ${target.units} araç/yıl)`);

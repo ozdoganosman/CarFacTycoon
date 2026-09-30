@@ -260,10 +260,12 @@ function smartFactoryAndPrices(s: GameState) {
 
 /**
  * The bot's network: once a car is on sale, look for dealers in the neighbouring state
- * with the most buyers per dollar of freight, add dealers where a busy state is thinly
- * covered, and open service where owners wait. Keeps a cash reserve.
+ * with the most buyers per dollar of freight, and add dealers where a busy state is thinly
+ * covered. Keeps a cash reserve. Service is left to "Otomatik servis", as a player would,
+ * so that the balance runs pay what looking after every car on the road really costs.
  */
 function growNetwork(s: GameState) {
+  N.network(s).autoService = true;
   if (s.week % 4 !== 0 || !s.models.some((m) => m.status === 'active')) return;
   const yf = yearFloat(s.week);
   shrinkNetwork(s, yf);
@@ -274,32 +276,31 @@ function growNetwork(s: GameState) {
   const recent = s.finance.slice(-13);
   const weeklyNet = recent.length ? recent.reduce((a, f) => a + f.revenue - COST_KEYS.filter((k) => k !== 'investment').reduce((b, k) => b + (f[k] ?? 0), 0), 0) / recent.length : 0;
   // (The first few states are cheap and the home state alone does not pay: those come first.)
-  if (N.openStates(s).length >= 6 && weeklyNet < N.marginalWeekly(s, 1, 0, yf) * 2) return serviceOnly(s, yf, reserve);
+  if (N.openStates(s).length >= 6 && weeklyNet < N.marginalWeekly(s, 1, 0, yf) * 2) return;
   const value = (id: (typeof N.STATE_LIST)[number]) => w[id] * Math.max(0, 1 - N.freightPerCar(s, id, yf) / price);
-  for (let tries = 0; tries < 3 && N.activeSearches(s) < N.maxSearches(s); tries++) {
+  // The bot keeps a careful pace (one search more per dozen dealers) although the game allows more at
+  // once: a scripted player that searched everywhere it could would outgrow its sales and go broke.
+  const searches = Math.min(N.maxSearches(s), 1 + Math.floor(N.totalDealers(s) / 12));
+  for (let tries = 0; tries < 3 && N.activeSearches(s) < searches; tries++) {
     const frontier = N.frontier(s).filter((id) => N.canSearch(s, id).ok);
     const thin = N.openStates(s).filter((id) => N.canSearch(s, id).ok && N.coverage(s, id, yf) < 0.45 && w[id] > 0.015);
     const best = [...frontier.map((id) => ({ id, v: value(id) })), ...thin.map((id) => ({ id, v: value(id) * 0.8 * (1 - N.coverage(s, id, yf)) }))].sort((a, b) => b.v - a.v)[0];
     if (!best || s.company.cash - (s.company.taxOwed ?? 0) < reserve + N.searchCost(s, best.id, yf) * 3) break;
     N.startDealerSearch(s, best.id);
   }
-  serviceOnly(s, yf, reserve);
-}
-
-function serviceOnly(s: GameState, yf: number, reserve: number) {
-  for (const id of N.underServed(s, yf, 0.75).slice(0, 2)) {
-    if (s.company.cash - (s.company.taxOwed ?? 0) > reserve + N.serviceShopCost(yf) * 4) N.openServiceShop(s, id);
-  }
 }
 
 /**
- * When the network costs more than a sixth of what the cars bring in, close the dealers
- * that sell least (a state keeps its last one while it sells at all).
+ * When the dealer network costs more than a sixth of what the cars bring in, close the dealers
+ * that sell least (a state keeps its last one while it sells at all). The service shops' part of
+ * the bill does not count: closing dealers does not save it.
  */
 function shrinkNetwork(s: GameState, yf: number) {
   const revenue = s.finance.slice(-26).reduce((a, f) => a + f.revenue, 0) / 26;
   if (revenue <= 0 || s.week < 52 * 3) return;
-  for (let i = 0; i < 6 && N.networkWeekly(s, yf) > revenue / 6; i++) {
+  // The network as if it had no service shops (their upkeep and the overhead they add).
+  const dealerBill = () => N.networkWeekly(s, yf) + N.marginalWeekly(s, 0, -N.totalService(s), yf);
+  for (let i = 0; i < 6 && dealerBill() > revenue / 6; i++) {
     const worst = N.openStates(s)
       .filter((id) => (s.network!.states[id]?.dealers ?? 0) > 0)
       .map((id) => ({ id, per: (s.network!.states[id]!.soldLastYear + 1) / s.network!.states[id]!.dealers }))

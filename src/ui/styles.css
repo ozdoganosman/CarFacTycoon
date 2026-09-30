@@ -951,6 +951,14 @@ fieldset {
 .todo li:last-child {
   border-bottom: 0;
 }
+.todo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  flex: none;
+  max-width: 50%;
+}
 .mini-list,
 .card-list {
   display: grid;
@@ -4144,6 +4152,21 @@ fieldset {
 .net-summary b {
   font-family: var(--font-mono);
   font-size: 1.05rem;
+}
+.net-controls {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 2px 12px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.net-controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
 }
 .net-layout {
   display: grid;

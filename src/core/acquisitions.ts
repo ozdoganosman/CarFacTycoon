@@ -17,6 +17,8 @@ export interface AcquisitionTarget {
   units: number;
   price: number;
   engineers: number;
+  /** Its dealers who take on our cars (one showroom in each of that many states). */
+  dealers: number;
 }
 
 /** Last full year's sales of the player's company. */
@@ -41,7 +43,15 @@ export function acquisitionTargets(s: GameState): AcquisitionTarget[] {
     const avg = models.reduce((a, m) => a + rivalPriceNow(m, s.week), 0) / models.length;
     // About half a year's turnover: the factory, the dealers and the name.
     const price = Math.max(20000 * costIndex(yf), units * avg * 0.5);
-    out.push({ id: def.id, name: def.name, home: def.home, units, price, engineers: Math.round(Math.min(40, 3 + units / 800)) });
+    out.push({
+      id: def.id,
+      name: def.name,
+      home: def.home,
+      units,
+      price,
+      engineers: Math.round(Math.min(40, 3 + units / 800)),
+      dealers: Math.max(1, Math.min(12, Math.round(1 + units / 2500))),
+    });
   }
   return out.sort((a, b) => b.units - a.units);
 }
