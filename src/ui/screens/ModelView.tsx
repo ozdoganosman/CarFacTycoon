@@ -1,9 +1,21 @@
 import { useState } from 'react';
 import * as A from '../../core/actions';
-import { autoHoldText } from '../../core/autocap';
+import { autoHoldText, weeklyDemand } from '../../core/autocap';
 import { materialUnitCost } from '../../core/game';
 import { lineReport } from '../../core/factory';
-import { CLASS_GAP_WARN, classGap, demandAtPrice, modelScores, priceNow, referencePrice, segmentMarket } from '../../core/market';
+import {
+  CLASS_GAP_WARN,
+  DATED_MAX,
+  DATED_OLD_FROM,
+  DATED_PER_OLD_YEAR,
+  DATED_PER_YEAR,
+  classGap,
+  demandAtPrice,
+  modelScores,
+  priceNow,
+  referencePrice,
+  segmentMarket,
+} from '../../core/market';
 import { scoreStats } from '../../core/scoring';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { formatDate, formatShort, yearFloat } from '../../core/time';
@@ -33,7 +45,8 @@ export function ModelView({ modelId }: { modelId: string }) {
   const [draftPrice, setDraftPrice] = useState(Math.round(priceNow(m, s.week)));
   const lines = s.lines.filter((l) => l.modelId === m.id);
   const cap = lines.reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
-  const demand = Object.values(m.lastDemand ?? {}).reduce((a, b) => a + b, 0);
+  // In the launch week, before any sales, the market's forecast.
+  const demand = weeklyDemand(s, m);
   const history = m.history.slice(-104);
   const age = (s.week - m.refreshWeek) / 52;
   const hasFacelift = s.projects.some((p) => p.replacesModelId === m.id);
@@ -331,8 +344,14 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
     >
       <p className="muted small">
         {t(
-          'Alıcılar her aracı çekiciliğine (tasarım puanları × segmentin gizli önceliklerine), fiyatına, markaya ve yaşına göre tartar: iki yıldan sonra her araç eskir. Bayi ağın ve bilinirliğin, aracını kaç alıcının görebileceğini belirler. Segment toplamı: {demand} araç/hafta.',
-          { demand: dec(sm.demand, 0) },
+          'Alıcılar her aracı çekiciliğine (tasarım puanları × segmentin gizli önceliklerine), fiyatına, markaya ve yaşına göre tartar: tasarım çıktığı ilk yıldan başlayarak yılda ~{slow} puan, {old} yaşından sonra yılda ~{fast} puan eskir (en çok −{max}); makyaj o güne kadarki yaşın dörtte üçünü siler. Bayi ağın ve bilinirliğin, aracını kaç alıcının görebileceğini belirler. Segment toplamı: {demand} araç/hafta.',
+          {
+            slow: dec(DATED_PER_YEAR, 0),
+            old: DATED_OLD_FROM,
+            fast: dec(DATED_PER_YEAR + DATED_PER_OLD_YEAR, 1),
+            max: DATED_MAX,
+            demand: dec(sm.demand, 0),
+          },
         )}
       </p>
       {mine && (

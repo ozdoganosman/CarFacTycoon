@@ -6,6 +6,7 @@ import { engineersBusy, idleEngineers, idleReason } from '../../core/game';
 import { engineerSalary } from '../../data/economy';
 import { racingOutlook, racingPaused } from '../../core/racing';
 import { lineReport } from '../../core/factory';
+import { weeklyDemand } from '../../core/autocap';
 import { formatDate, formatShort, weekOfYear, yearFloat, yearOf } from '../../core/time';
 import { boardOutlook, boardVeto } from '../../core/shares';
 import { queueHold, researchDef, researchDefs, rivalAdoption, techState } from '../../core/research';
@@ -65,7 +66,8 @@ function nextSteps(s: GameState): Step[] {
     if (!lines.length && m.inventory < 1)
       out.push({ text: t('{name} artık üretilmiyor ve stoku bitti. Üretimden kaldır ya da bir hatta ata.', { name: m.name }), go: () => store.go({ id: 'model', modelId: m.id }) });
     else if (!lines.length) out.push({ text: t('{name} hiçbir hatta üretilmiyor; stoktan satılıyor.', { name: m.name }), go: () => store.go({ id: 'factory' }) });
-    const demand = Object.values(m.lastDemand ?? {}).reduce((a, b) => a + b, 0);
+    // In the launch week, before any sales, the market's forecast (not a stock pile nobody wants).
+    const demand = weeklyDemand(s, m);
     const cap = lines.reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0) * m.productionRate;
     if (lines.length && demand > cap * 1.25 && m.inventory < cap) out.push({ text: t('{name} için talep üretimi aşıyor. Darboğazı çöz ya da hat ekle.', { name: m.name }), go: () => store.go({ id: 'factory' }) });
     if (m.inventory > Math.max(8, demand * 12)) out.push({ text: t('{name} stokları birikiyor. Fiyatı ya da üretim hızını düşür.', { name: m.name }), go: () => store.go({ id: 'model', modelId: m.id }) });

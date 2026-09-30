@@ -213,11 +213,12 @@ export function rivalPriceNow(rm: RivalModel, week: number): number {
  * year), and faster once it is past four years old, whatever its specification.
  */
 export const DATED_PER_YEAR = 1;
-const DATED_OLD_FROM = 4;
-const DATED_PER_OLD_YEAR = 2.5;
+export const DATED_OLD_FROM = 4;
+export const DATED_PER_OLD_YEAR = 2.5;
+export const DATED_MAX = 20;
 export function datedPenalty(ageYears: number): number {
   const a = Math.max(0, ageYears);
-  return -Math.min(20, a * DATED_PER_YEAR + Math.max(0, a - DATED_OLD_FROM) * DATED_PER_OLD_YEAR);
+  return -Math.min(DATED_MAX, a * DATED_PER_YEAR + Math.max(0, a - DATED_OLD_FROM) * DATED_PER_OLD_YEAR);
 }
 
 /** How old a model looks: a facelift takes about three quarters of the years off. */
@@ -400,6 +401,36 @@ export function demandAtPrice(state: GameState, model: CarModel, market: MarketI
     model.status = status;
     if (!listed) state.models.splice(state.models.indexOf(model), 1);
   }
+}
+
+/**
+ * The market as it will be once the model's launch buzz has faded: `f` runs with the model's hype at 0,
+ * given back afterwards. Rivals keep theirs, as new rival launches keep coming.
+ */
+export function withoutHype<T>(model: CarModel, f: () => T): T {
+  const hype = model.hype;
+  model.hype = 0;
+  try {
+    return f();
+  } finally {
+    model.hype = hype;
+  }
+}
+
+/** A model's share of its class in a market this week (0–1). */
+export function classShare(state: GameState, model: CarModel, market: MarketId): number {
+  const sm = segmentMarket(state, market, model.segment);
+  return sm.demand > 0 ? (sm.player.units[model.id] ?? 0) / sm.demand : 0;
+}
+
+/** Buyers a week a car on sale finds in all its markets now (what this week's sales will count). */
+export function modelDemand(state: GameState, model: CarModel): number {
+  return model.markets.reduce((a, mk) => a + (segmentMarket(state, mk, model.segment).player.units[model.id] ?? 0), 0);
+}
+
+/** demandAtPrice once the launch buzz has faded: what capacity is built for. */
+export function lastingDemandAtPrice(state: GameState, model: CarModel, market: MarketId, basePrice: number): number {
+  return withoutHype(model, () => demandAtPrice(state, model, market, basePrice));
 }
 
 export const SEGMENT_IDS: SegmentId[] = SEGMENTS.map((s) => s.id);

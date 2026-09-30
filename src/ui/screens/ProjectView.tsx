@@ -2,7 +2,17 @@ import { useState, type ReactNode } from 'react';
 import * as A from '../../core/actions';
 import { credit, dealerUpkeep, gates, materialUnitCost, protoUnitCost } from '../../core/game';
 import { lineReport, lineUpkeep, reservedLines, suggestedLine, turnkeyLineCost, workshopLineCost } from '../../core/factory';
-import { MARKET_IDS, PRICE_OVER_FROM, demandAtPrice, modelAgeYears, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
+import {
+  MARKET_IDS,
+  PRICE_OVER_FROM,
+  demandAtPrice,
+  lastingDemandAtPrice,
+  modelAgeYears,
+  referencePrice,
+  segmentMarket,
+  steepPriceRatio,
+  weeklySegmentDemand,
+} from '../../core/market';
 import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, defectRange, defectText, expectedRemaining, inhouseParity, partsVsQuality, riskLabel, testTuning, testWeekCost, type Tuning } from '../../core/testing';
 import { scoreStats } from '../../core/scoring';
 import { yearFloat } from '../../core/time';
@@ -119,6 +129,12 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
     const pm = A.previewModel(s, p, pr, markets);
     return markets.reduce((a, mk) => a + demandAtPrice(s, pm, mk, pr), 0);
   };
+  // Once the launch buzz has faded (about half of it goes in half a year): what lines are built for, as the
+  // capacity planner and automatic capacity count.
+  const lastingAt = (pr: number) => {
+    const pm = A.previewModel(s, p, pr, markets);
+    return markets.reduce((a, mk) => a + lastingDemandAtPrice(s, pm, mk, pr), 0);
+  };
   // What a car brings once the dealer's cut and the average freight are paid.
   const net = 1 - DEALER_COMMISSION - N.avgFreightPerCar(s, yf) / Math.max(1, price);
   const rivalPrices = segmentMarket(s, s.company.hq, p.segment)
@@ -131,14 +147,18 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
   const d = demandAt(price);
   const lo = d / spread;
   const hi = d * spread;
-  // Judged on the middle estimate: the range is wide enough to cover almost any line.
+  const dl = lastingAt(price);
+  // Judged on the middle estimate (the range is wide enough to cover almost any line) of the demand that
+  // lasts: a line built for the launch buzz stands half empty once it has passed.
   const verdict = noLine
     ? t('Hattın kapasitesi henüz belli değil: kâr, talebin tamamı üretilir diye hesaplandı.')
-    : d > cap * 1.2
-      ? t('Orta tahmin hattın {x} katı: fiyatı biraz yükseltebilir ya da kapasite ekleyebilirsin.', { x: dec(d / Math.max(0.1, cap), 1) })
-      : d < cap * 0.8
-        ? t('Hat orta tahminin {x} katını üretebilir: fiyatı düşürmeyi ya da daha küçük bir hattı düşün.', { x: dec(cap / Math.max(0.1, d), 1) })
-        : t('Orta tahmine göre talep ve kapasite dengeli.');
+    : dl > cap * 1.2
+      ? t('Heyecan geçince de talep hattın {x} katı: fiyatı biraz yükseltebilir ya da kapasite ekleyebilirsin.', { x: dec(dl / Math.max(0.1, cap), 1) })
+      : dl < cap * 0.8
+        ? t('Heyecan geçince hat talebin {x} katını üretebilir: fiyatı düşürmeyi ya da daha küçük bir hattı düşün.', { x: dec(cap / Math.max(0.1, dl), 1) })
+        : d > cap * 1.2
+          ? t('İlk aylarda talep hattı aşar, ama heyecan geçince talep ve kapasite dengeli: bunun için hat ekleme.')
+          : t('Orta tahmine göre talep ve kapasite dengeli.');
   const weeklyProfit = (pr: number) => (noLine ? demandAt(pr) : Math.min(demandAt(pr), cap)) * (pr * net - unit - labour);
   // The price that earns most per week with this line (demand beyond the line's output is not sold).
   let best = ref;
@@ -151,14 +171,31 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
       bestProfit = pf;
     }
   }
-  // A small line pushes the best price up and sales down: what a line big enough would earn instead.
-  const refRound = Math.round(ref / 10) * 10;
-  const demandAtRef = demandAt(refRound);
-  const bigLineProfit = demandAtRef * (refRound * net - unit - labour);
-  const lineTooSmall = !noLine && demandAtRef > cap * 2 && bigLineProfit > bestProfit * 1.5;
+  // A small line pushes the best price up and sales down, and a car that dear cannot grow. With lines
+  // enough for every buyer (the factory can add them): the price that earns most on the demand that lasts.
+  let open = ref;
+  let openProfit = -Infinity;
+  let openDemand = 0;
+  for (let f = 0.7; f <= 2.21; f += 0.05) {
+    const pr = Math.round((ref * f) / 10) * 10;
+    const dm = lastingAt(pr);
+    const pf = dm * (pr * net - unit - labour);
+    if (pf > openProfit) {
+      open = pr;
+      openProfit = pf;
+      openDemand = dm;
+    }
+  }
+  // Shown when the line is what holds the best price up: at that price buyers want more than it builds.
+  const lineBinds = !noLine && openProfit > 0 && openDemand > cap * 1.05 && Math.abs(open - best) / best >= 0.03;
+  const lineTooSmall = lineBinds && openDemand > cap * 1.5 && openProfit > bestProfit * 1.3;
   const base = [0.85, 1, 1.15, 1.3, 1.5].map((f) => Math.round((ref * f) / 10) * 10);
-  const options = [...base, ...(base.some((x) => Math.abs(x - best) / best < 0.03) ? [] : [best])].sort((a, b) => a - b);
-  const bestShown = options.reduce((a, b) => (Math.abs(b - best) < Math.abs(a - best) ? b : a));
+  const options = [...base];
+  for (const x of lineBinds ? [best, open] : [best]) if (!options.some((y) => Math.abs(y - x) / x < 0.03)) options.push(x);
+  options.sort((a, b) => a - b);
+  const nearest = (x: number) => options.reduce((a, b) => (Math.abs(b - x) < Math.abs(a - x) ? b : a));
+  const bestShown = nearest(best);
+  const openShown = nearest(open);
   const steep = steepPriceRatio(p.segment, s.company.hq, yf);
   const pct = (pr: number) => {
     const v = Math.round((pr / ref - 1) * 100);
@@ -178,13 +215,22 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
       )}
       <p className="small">
         {segWeekly > 0
-          ? tx('Bu fiyatta tahmini talep: <b>{lo}–{hi} araç/hafta</b> (sınıfın ~{share}) · hat {cap} araç/hafta.', {
+          ? tx('Bu fiyatta tahmini talep: ilk ay <b>{lo}–{hi} araç/hafta</b> (sınıfın ~{share}), heyecan geçince <b>{llo}–{lhi}</b> (~{lasting}) · hat {cap} araç/hafta.', {
               lo: dec(lo, 1),
               hi: dec(hi, 1),
               share: pctWith(d / segWeekly, 'poss'),
+              llo: dec(dl / spread, 1),
+              lhi: dec(dl * spread, 1),
+              lasting: percent(dl / segWeekly, dl / segWeekly < 0.05 ? 1 : 0),
               cap: dec(cap, 1),
             })
-          : tx('Bu fiyatta tahmini talep: <b>{lo}–{hi} araç/hafta</b> · hat {cap} araç/hafta.', { lo: dec(lo, 1), hi: dec(hi, 1), cap: dec(cap, 1) })}{' '}
+          : tx('Bu fiyatta tahmini talep: ilk ay <b>{lo}–{hi} araç/hafta</b>, heyecan geçince <b>{llo}–{lhi}</b> · hat {cap} araç/hafta.', {
+              lo: dec(lo, 1),
+              hi: dec(hi, 1),
+              llo: dec(dl / spread, 1),
+              lhi: dec(dl * spread, 1),
+              cap: dec(cap, 1),
+            })}{' '}
         {verdict}
         {segWeekly > 0 &&
           d / segWeekly > 0.4 &&
@@ -193,8 +239,8 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
       {lineTooSmall && (
         <p className="note small">
           {tx(
-            '<b>Hat küçük.</b> “En kârlı” fiyat bu hattın az üretmesinden yüksek çıkıyor. Sınıf fiyatında ({price}) talep ~{demand} araç/hf: ona yetecek bir hatla haftada ~{profit} brüt kâr kalır (bu hatla en iyisi {best}). Fabrika’dan hat kur ya da büyüt; “talebi otomatik karşıla” da kasa yettikçe büyütür.',
-            { price: money(refRound), demand: dec(demandAtRef, 0), profit: money(bigLineProfit), best: money(bestProfit) },
+            '<b>Hat küçük.</b> “Bu hatla en kârlı” fiyat hattın az üretmesinden yüksek çıkıyor. Hat eklersen en kârlı fiyat {price}: heyecan geçince talep ~{demand} araç/hf, ona yetecek hatlarla haftada ~{profit} brüt kâr kalır (bu hatla en iyisi {best}). Fabrika’dan hat kur ya da büyüt; “talebi otomatik karşıla” da kasa yettikçe büyütür.',
+            { price: money(open), demand: dec(openDemand, 0), profit: money(openProfit), best: money(bestProfit) },
           )}
         </p>
       )}
@@ -219,6 +265,7 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
                   <span className="muted small">
                     {pr === Math.round(ref / 10) * 10 ? t('sınıf fiyatı') : pct(pr)}
                     {pr === bestShown && bestProfit > 0 && <b className="tone-good"> · {noLine ? t('en kârlı') : t('bu hatla en kârlı')}</b>}
+                    {lineBinds && pr === openShown && <b className="tone-good"> · {t('hat eklersen en kârlı (~{profit}/hf)', { profit: money(openProfit) })}</b>}
                     {pr > ref * steep && ` · ${t('dergiler “iddialı” der')}`}
                   </span>
                 </td>
@@ -892,6 +939,8 @@ function Launch({ p }: { p: Project }) {
   // A week at the middle demand estimate: what the car brings in against what the firm costs to run.
   const demand = markets.reduce((a, mk) => a + demandAtPrice(s, preview, mk, price), 0);
   const sold = Math.min(demand, cap);
+  // Once the launch buzz has faded: the sales to build lines for.
+  const lastingSold = Math.min(cap, markets.reduce((a, mk) => a + lastingDemandAtPrice(s, preview, mk, price), 0));
   const labourWeek = line ? lineUpkeep(s, line, cap > 0 ? sold / cap : 0) : 0;
   const contribution = sold * (net - unit) - labourWeek;
   const fixedCost = s.company.engineers * engineerSalary(yf) + (s.company.researchers ?? 0) * researcherSalary(yf) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, m) => a + dealerUpkeep(s, m), 0);
@@ -964,6 +1013,12 @@ function Launch({ p }: { p: Project }) {
             <span>{t('Beklenen satış (orta tahmin)')}</span>
             <b>{t('{v} araç/hafta', { v: dec(sold, 1) })}</b>
           </div>
+          {dec(lastingSold, 1) !== dec(sold, 1) && (
+            <div>
+              <span>{t('Heyecan geçince')}</span>
+              <b>{t('{v} araç/hafta', { v: dec(lastingSold, 1) })}</b>
+            </div>
+          )}
           <div>
             <span>{t('Aracın haftalık katkısı')}</span>
             <b className={contribution < 0 ? 'tone-bad' : ''}>{money(contribution)}</b>

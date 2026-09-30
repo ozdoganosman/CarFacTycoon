@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as A from '../../core/actions';
 import { mainMarket } from '../../core/feedback';
-import { modelScores, referencePrice, rivalScores, segmentMarket } from '../../core/market';
+import { classShare, modelScores, referencePrice, rivalScores, segmentMarket, withoutHype } from '../../core/market';
 import { accelMetric, eraReference } from '../../core/scoring';
 import { yearFloat } from '../../core/time';
 import { MARKETS } from '../../data/markets';
@@ -9,6 +9,7 @@ import { RIVALS } from '../../data/rivals';
 import { ATTRS, ATTR_NAMES, segmentDef } from '../../data/segments';
 import type { AttrKey, CarStats, GameState, LaunchReport, MarketId } from '../../core/types';
 import { t } from '../../i18n';
+import { tx } from '../i18n';
 import { ads } from '../ads';
 import { store } from '../store';
 import { dec, kmh, litres, money, num, pct, secs } from '../format';
@@ -158,6 +159,11 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
   const rows = [...sm.offers].sort((a, b) => b.weight - a.weight);
   const rank = rows.findIndex((o) => o.id === m.id) + 1;
   const mine = rows.find((o) => o.id === m.id);
+  // The launch buzz fades within months: the share that lasts is the one to build lines for.
+  const share = mine ? mine.weight / sm.totalWeight : 0;
+  const lasting = mine ? withoutHype(m, () => classShare(s, m, market)) : 0;
+  const approx = (v: number) => pct(v, v < 0.05 ? 1 : 0);
+  const fades = !!mine && lasting < share && approx(lasting) !== approx(share);
   const myScores = modelScores(s, m).scores;
   const rivals = s.rivalModels.filter((r) => r.active && r.segment === m.segment && r.markets.includes(market));
   const avg = (k: AttrKey) => (rivals.length ? rivals.reduce((a, r) => a + rivalScores(s, r).scores[k], 0) / rivals.length : 50);
@@ -180,7 +186,11 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
         </div>
         <div>
           <span className="muted small">{t('Tahmini pay')}</span>
-          <b>{mine ? pct(mine.weight / sm.totalWeight) : '—'}</b>
+          {fades ? (
+            <span>{tx('İlk ay <b>~{now}</b>, heyecan geçince <b>~{lasting}</b>', { now: approx(share), lasting: approx(lasting) })}</span>
+          ) : (
+            <b>{mine ? pct(share) : '—'}</b>
+          )}
         </div>
         <div>
           <span className="muted small">{t('Segment büyüklüğü ({market})', { market: t(MARKETS.find((x) => x.id === market)!.name) })}</span>
@@ -279,6 +289,7 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
         {t(
           'Çekicilik, alıcıların bu segmentte neye ne kadar önem verdiğine göre hesaplanır; pay ise fiyat, marka ve bayi erişimiyle birlikte belirlenir. Pay, üretebildiğin kadar satışa dönüşür.',
         )}
+        {fades && ` ${t('Tablodaki pay lansman heyecanıyla birlikte; heyecan aylar içinde söner. Hat kurarken kalıcı payı esas al.')}`}
       </p>
     </div>
   );

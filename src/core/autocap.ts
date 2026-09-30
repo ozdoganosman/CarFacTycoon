@@ -1,4 +1,4 @@
-import { MAX_SLOTS, costIndex, lineBuildWeeks, newLineCost } from '../data/economy';
+import { MAX_SLOTS, costIndex, lineBuildWeeks, newLineCost, overhead } from '../data/economy';
 import { STAGES, STATIONS, stationDef } from '../data/stations';
 import {
   LINE_SIZES,
@@ -19,9 +19,11 @@ import {
   turnkeyQuote,
 } from './factory';
 import { DEALER_COMMISSION, slotCost } from '../data/economy';
-import { priceNow, weeklySegmentDemand } from './market';
+import { MARKET_IDS, modelDemand, priceNow, weeklySegmentDemand } from './market';
 import { boardVeto } from './shares';
 import { HIKE_TOLERANCE } from './actions';
+import { operatingWeekly } from './budget';
+import { dealerUpkeep } from './game';
 import { yearFloat } from './time';
 import type { CarModel, GameState, ProductionLine, StageId } from './types';
 import { earn, financeNow, log, money, spend } from './util';
@@ -43,10 +45,21 @@ function capacity(s: GameState, m: CarModel, lines: ProductionLine[], working: b
   return lines.filter((l) => !working || !isRetooling(s, l)).reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
 }
 
-/** What buyers want a week once the launch buzz has faded (a lasting hit stays). */
-export function lastingDemand(m: CarModel): number {
-  const d = demandOf(m);
-  return Math.min(d, m.demandTrend ?? d);
+/** Buyers a week: last week's, or in the launch week (no sales yet) what the market forecasts. */
+export function weeklyDemand(s: GameState, m: CarModel): number {
+  return m.lastDemand ? demandOf(m) : modelDemand(s, m);
+}
+
+/** A new car's lasting demand starts at this share of its first week's buyers, the launch buzz still on. */
+const TREND_START = 0.6;
+
+/**
+ * What buyers want a week once the launch buzz has faded (a lasting hit stays). In the launch week, with
+ * no sales yet, it starts from the market's forecast.
+ */
+export function lastingDemand(s: GameState, m: CarModel): number {
+  const d = weeklyDemand(s, m);
+  return Math.min(d, m.demandTrend ?? (m.lastDemand ? d : TREND_START * d));
 }
 
 /**
@@ -55,7 +68,7 @@ export function lastingDemand(m: CarModel): number {
  * planner shows the same figure.
  */
 export function demandGap(s: GameState, m: CarModel): number {
-  return lastingDemand(m) * 1.05 - capacity(s, m, linesOf(s, m), false);
+  return lastingDemand(s, m) * 1.05 - capacity(s, m, linesOf(s, m), false);
 }
 
 const PRESTIGE_SEGMENTS: CarModel['segment'][] = ['luxury', 'sport'];
@@ -78,11 +91,21 @@ export function newLineSize(s: GameState, m: CarModel, allowBlack: boolean, gap 
   return linesOf(s, m).length >= SMALL_LINES ? MAX_SLOTS : lineSizeFor(s, m, allowBlack, gap);
 }
 
-/** Cash the automation never touches: about six weeks of running costs. */
-function reserve(s: GameState): number {
+/**
+ * Cash the automation never touches, and the tax owed. About six weeks of running costs, parts included,
+ * but never more than half the till: a big maker's parts bill is paid by the cars it becomes, so a rich
+ * company can still invest. And never less than six weeks of what the company pays whether its cars sell
+ * or not (line wages, salaries, overheads, the dealer and service network, interest), or of its losses
+ * when it loses more than that.
+ */
+export function autoReserve(s: GameState): number {
+  const yf = yearFloat(s.week);
   const recent = s.finance.slice(-4);
-  const weekly = recent.length ? recent.reduce((a, f) => a + f.materials + f.labor + f.salaries + f.other, 0) / recent.length : 0;
-  return Math.max(4000 * costIndex(yearFloat(s.week)), 6 * weekly) + (s.company.taxOwed ?? 0);
+  const avg = (f: (w: (typeof recent)[number]) => number) => (recent.length ? recent.reduce((a, w) => a + f(w), 0) / recent.length : 0);
+  const running = avg((f) => f.materials + f.labor + f.salaries + f.other);
+  const fixed = avg((f) => f.labor + f.salaries + f.interest) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, mk) => a + dealerUpkeep(s, mk), 0);
+  const floor = Math.max(4000 * costIndex(yf), 6 * Math.max(fixed, -operatingWeekly(s)));
+  return Math.max(floor, Math.min(6 * running, s.company.cash / 2)) + (s.company.taxOwed ?? 0);
 }
 
 /** Weekly: build what sells and work a stock pile down. */
@@ -94,11 +117,12 @@ export function autoProductionRates(s: GameState) {
     const d = demandOf(m);
     m.productionRate = Math.min(1, Math.max(0, (d - (m.inventory - 2 * d) / 4) / cap));
   }
-  // What buyers want over the last months, for building (launch buzz fades; a lasting hit stays).
+  // What buyers want over the last months, for building (launch buzz fades; a lasting hit stays). A car
+  // launched this week has no sales yet: its trend starts from the market's forecast.
   for (const m of s.models) {
     if (m.status !== 'active') continue;
     const d = demandOf(m);
-    m.demandTrend = m.demandTrend === undefined ? 0.6 * d : m.demandTrend + (d - m.demandTrend) / 10;
+    m.demandTrend = m.demandTrend === undefined ? TREND_START * weeklyDemand(s, m) : m.demandTrend + (d - m.demandTrend) / 10;
     const yf = yearFloat(s.week);
     const seg = m.markets.reduce((a, mk) => a + weeklySegmentDemand(mk, m.segment, yf), 0);
     const share = seg > 0 ? Math.min(1, d / seg) : 0;
@@ -367,9 +391,9 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
   const wartime = (s.flags.militaryUntil ?? 0) > yf;
   for (const m of s.models) {
     if (m.status !== 'active' || !m.autoCapacity) continue;
-    const d = demandOf(m);
+    const d = weeklyDemand(s, m);
     // Build for the demand that lasts, not the launch buzz.
-    const dGrow = lastingDemand(m);
+    const dGrow = lastingDemand(s, m);
     const allowBlack = autoAllowsBlack(s, m);
     let cap = capacity(s, m, linesOf(s, m), false);
     const labourPerCar = () => {
@@ -393,7 +417,7 @@ export function autoCapacity(s: GameState, materialCost: (m: CarModel) => number
     m.autoHint = undefined;
     if (cap < dGrow * 1.05) m.autoHold = wartime ? 'war' : successor ? 'successor' : undefined;
     for (let i = 0; i < 24 && !wartime && !successor && cap < dGrow * 1.05; i++) {
-      const budget = s.company.cash - reserve(s);
+      const budget = s.company.cash - autoReserve(s);
       const gap = dGrow * 1.05 - cap;
       // Judge each option by the cars buyers would actually take: the planner's sum on the shortfall.
       const years = (o: Option) => paybackYears(o.cost, o.gain, marginOf(o), gap);
