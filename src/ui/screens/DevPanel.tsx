@@ -3,7 +3,7 @@ import * as A from '../../core/actions';
 import { FOCUS_HINTS, FOCUS_KEYS, FOCUS_NAMES, FOCUS_PRESETS, devRate, matchingPreset, presetFocus } from '../../core/development';
 import { costIndex, engineerSalary } from '../../data/economy';
 import { yearFloat } from '../../core/time';
-import { unknownTech } from '../../core/research';
+import { classGap, gapNames, knownKnowhow, unknownTech } from '../../core/research';
 import { budgetVerdict, launchBudget } from '../../core/budget';
 import { t } from '../../i18n';
 import { dec, money, pct } from '../format';
@@ -41,6 +41,8 @@ export function DevBar({ project: p }: { project: Project }) {
   const polish = bonus.reliability - (s.company.skill - 50) * 0.08;
   const paused = store.speed === 0;
   const missing = developing ? [] : unknownTech(s, p.design);
+  // Said next to the button that locks the design: what most of the class has and this car would not.
+  const behind = developing ? [] : classGap(s, { ...p.design, knowhow: knownKnowhow(s) }, p.segment, yf).items;
   const team = others
     ? t('{n} mühendis {projects} projeye bölünüyor (bu projede ~{share})', { n: s.company.engineers, projects: others + 1, share: dec(eng, 1) })
     : t('{n} mühendisin hepsi bu projede', { n: s.company.engineers });
@@ -57,6 +59,9 @@ export function DevBar({ project: p }: { project: Project }) {
               </span>
             ) : (
               <span className="muted small">{t('Aracı tasarla, mühendislik odağını seç, sonra başlat. Başlayınca tasarım kilitlenir; odak her zaman değişebilir.')}</span>
+            )}
+            {behind.length > 0 && (
+              <span className="small tone-warn">{t('Sınıftaki arabaların çoğunda olan {list} bu tasarımda yok: aşağıdaki listeden ekle ya da araştır.', { list: gapNames(behind) })}</span>
             )}
           </>
         ) : done ? (

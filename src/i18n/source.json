@@ -5,7 +5,7 @@
  },
  "1693539": {
   "tr": "Her ayarı ayrı ayrı yapmak için Ayarlar’dan “Mühendis modu”nu aç.",
-  "at": "src/ui/screens/Designer.tsx:452"
+  "at": "src/ui/screens/Designer.tsx:562"
  },
  "bv08ei": {
   "tr": "Yeterli para yok.",
@@ -2045,51 +2045,55 @@
  },
  "17jh05u": {
   "tr": "Motor",
-  "at": "src/core/research.ts:110"
+  "at": "src/core/research.ts:111"
  },
  "1l2jv0c": {
   "tr": "Dizel motor",
-  "at": "src/core/research.ts:113"
+  "at": "src/core/research.ts:114"
  },
  "ufhdns": {
   "tr": "Yakıtı sıkıştırmanın ısısı tutuşturur: çok az yakar, uzun ömürlüdür; ağır, gürültülü ve pahalıdır.",
-  "at": "src/core/research.ts:113"
+  "at": "src/core/research.ts:114"
  },
  "1uh19j1": {
   "tr": "Şanzıman",
-  "at": "src/core/research.ts:115"
+  "at": "src/core/research.ts:116"
  },
  "s5yfgl": {
   "tr": "4 ileri vites",
-  "at": "src/core/research.ts:116"
+  "at": "src/core/research.ts:117"
  },
  "78234v": {
   "tr": "Vitesler birbirine yaklaşır; motor güçlü olduğu devirde kalır.",
-  "at": "src/core/research.ts:116"
+  "at": "src/core/research.ts:117"
  },
  "1ik8t4m": {
   "tr": "5 ileri vites",
-  "at": "src/core/research.ts:117"
+  "at": "src/core/research.ts:118"
  },
  "19tq7ka": {
   "tr": "Uzun bir son vitesle yolda az yakar, kısa ilk vitesle çevik kalkar.",
-  "at": "src/core/research.ts:117"
+  "at": "src/core/research.ts:118"
  },
  "1bggsbi": {
   "tr": "Şasi ve süspansiyon",
-  "at": "src/core/research.ts:118"
+  "at": "src/core/research.ts:119"
  },
  "1x6v4kf": {
   "tr": "Donanım",
-  "at": "src/core/research.ts:121"
+  "at": "src/core/research.ts:122"
  },
  "j8ufpn": {
   "tr": "araç başına ~{cost}",
-  "at": "src/core/research.ts:123"
+  "at": "src/core/research.ts:124"
  },
  "1bhaz6m": {
   "tr": "Ar-Ge: {name} araştırması başladı ({cost}, {n} hafta).",
-  "at": "src/core/research.ts:228"
+  "at": "src/core/research.ts:229"
+ },
+ "iu9sqw": {
+  "tr": "{n} şey daha",
+  "at": "src/core/research.ts:436"
  },
  "kl1ew8": {
   "tr": "{company}, {segment} sınıfında fiyatlarını {pct} indirdi: fiyat savaşı başladı.",
@@ -8583,638 +8587,698 @@
   "tr": "“Ar-Ge” yazan seçenekler önce araştırılmalı.",
   "at": "src/ui/screens/Designer.tsx:130"
  },
+ "4n8yxr": {
+  "tr": "bu projede değişmez",
+  "at": "src/ui/screens/Designer.tsx:172"
+ },
+ "17cyuau": {
+  "tr": "Ekle",
+  "at": "src/ui/screens/Designer.tsx:175"
+ },
+ "1tpuajm": {
+  "tr": "sırada #{pos}",
+  "at": "src/ui/screens/Designer.tsx:185"
+ },
+ "6dlutc": {
+  "tr": "{tech} sıraya eklendi",
+  "at": "src/ui/screens/Designer.tsx:192"
+ },
+ "1jzipw3": {
+  "tr": "+ Sıra",
+  "at": "src/ui/screens/Designer.tsx:193"
+ },
+ "yji5tg": {
+  "tr": "{year} çıkar",
+  "at": "src/ui/screens/Designer.tsx:198"
+ },
+ "7mdof2": {
+  "tr": "Rakiplerin çoğunda var, sende yok",
+  "at": "src/ui/screens/Designer.tsx:203"
+ },
+ "1yto0ej": {
+  "tr": "Sınıfın tipik arabasında var, sende yok",
+  "at": "src/ui/screens/Designer.tsx:203"
+ },
+ "1g05j7p": {
+  "tr": "Bu sınıfta satılan {n} rakip arabanın yarısından çoğunda var; dergiler arabanı onlarla karşılaştırır.",
+  "at": "src/ui/screens/Designer.tsx:206"
+ },
+ "ifb04m": {
+  "tr": "Sınıfta henüz rakip yok; dergiler arabanı sınıfın tipik yeni arabasıyla karşılaştırır.",
+  "at": "src/ui/screens/Designer.tsx:207"
+ },
+ "tt2puv": {
+  "tr": "{count}/{total} rakipte",
+  "at": "src/ui/screens/Designer.tsx:216"
+ },
+ "q4r9u1": {
+  "tr": "otomatik uygulanır",
+  "at": "src/ui/screens/Designer.tsx:217"
+ },
+ "yczf2e": {
+  "tr": "{n} tane daha göster",
+  "at": "src/ui/screens/Designer.tsx:228"
+ },
+ "66dlcd": {
+  "tr": "Listedeki {n} konunun hepsini sıraya ekle",
+  "at": "src/ui/screens/Designer.tsx:233"
+ },
  "14ebxox": {
   "tr": "Geliştirme başladı: tasarım kilitli. Değişiklik için makyaj ya da yeni kuşak projesi gerekir.",
-  "at": "src/ui/screens/Designer.tsx:172"
+  "at": "src/ui/screens/Designer.tsx:282"
  },
  "14ivu57": {
   "tr": "Makyajda şasi değişmez.",
-  "at": "src/ui/screens/Designer.tsx:178"
+  "at": "src/ui/screens/Designer.tsx:288"
  },
  "1kuqxo1": {
   "tr": "Mevcut bir platformu kullanıyorsun: şasi, boyut ve süspansiyon sabit. Geliştirme ve kalıp maliyeti düşük.",
-  "at": "src/ui/screens/Designer.tsx:178"
+  "at": "src/ui/screens/Designer.tsx:288"
  },
  "151l8gd": {
   "tr": "Yeni platform tasarla",
-  "at": "src/ui/screens/Designer.tsx:183"
+  "at": "src/ui/screens/Designer.tsx:293"
  },
  "1n77aqp": {
   "tr": "Yeni bir platform: şasi, boyut ve süspansiyon serbest, ama geliştirme ve kalıplar daha pahalı.",
-  "at": "src/ui/screens/Designer.tsx:191"
+  "at": "src/ui/screens/Designer.tsx:301"
  },
  "v0frtu": {
   "tr": "{name} ile devam et",
-  "at": "src/ui/screens/Designer.tsx:193"
+  "at": "src/ui/screens/Designer.tsx:303"
  },
  "11woi6k": {
   "tr": "Boyut",
-  "at": "src/ui/screens/Designer.tsx:207"
+  "at": "src/ui/screens/Designer.tsx:317"
  },
  "1pr33ut": {
   "tr": "Küçük",
   "ctx": "boyut",
-  "at": "src/ui/screens/Designer.tsx:213"
+  "at": "src/ui/screens/Designer.tsx:323"
  },
  "kayw7z": {
   "tr": "Büyük",
-  "at": "src/ui/screens/Designer.tsx:214"
+  "at": "src/ui/screens/Designer.tsx:324"
  },
  "jvlbhf": {
   "tr": "Büyük araç: konfor, pratiklik ve prestij ↑; ağırlık, maliyet ve üretim zorluğu ↑.",
-  "at": "src/ui/screens/Designer.tsx:217"
+  "at": "src/ui/screens/Designer.tsx:327"
  },
  "tu15v": {
   "tr": "Tasarım ve karoser işçiliği",
-  "at": "src/ui/screens/Designer.tsx:234"
+  "at": "src/ui/screens/Designer.tsx:344"
  },
  "98qi5i": {
   "tr": "Sade",
-  "at": "src/ui/screens/Designer.tsx:240"
+  "at": "src/ui/screens/Designer.tsx:350"
  },
  "8aqoev": {
   "tr": "Gösterişli",
-  "at": "src/ui/screens/Designer.tsx:241"
+  "at": "src/ui/screens/Designer.tsx:351"
  },
  "51a32b": {
   "tr": "Prestiji ve biraz da aerodinamiği artırır; maliyet ve üretim zorluğu artar.",
-  "at": "src/ui/screens/Designer.tsx:243"
+  "at": "src/ui/screens/Designer.tsx:353"
  },
  "1544j3h": {
   "tr": "İç mekân kalitesi",
-  "at": "src/ui/screens/Designer.tsx:255"
+  "at": "src/ui/screens/Designer.tsx:365"
  },
  "1p8a952": {
   "tr": "Tahta sıra",
-  "at": "src/ui/screens/Designer.tsx:261"
+  "at": "src/ui/screens/Designer.tsx:371"
  },
  "w22uad": {
   "tr": "Deri ve ceviz",
-  "at": "src/ui/screens/Designer.tsx:262"
+  "at": "src/ui/screens/Designer.tsx:372"
  },
  "1fwbvyy": {
   "tr": "Konfor ve prestij ↑, maliyet ↑ (hızla artar).",
-  "at": "src/ui/screens/Designer.tsx:264"
+  "at": "src/ui/screens/Designer.tsx:374"
  },
  "vavk71": {
   "tr": "Geliştirme mevcut odak dağılımıyla biterse.",
-  "at": "src/ui/screens/Designer.tsx:280"
+  "at": "src/ui/screens/Designer.tsx:390"
  },
  "ypsqk": {
   "tr": "{cost}’dan",
-  "at": "src/ui/screens/Designer.tsx:309"
+  "at": "src/ui/screens/Designer.tsx:419"
  },
  "acwg7n": {
   "tr": "Önce: {list}",
-  "at": "src/ui/screens/Designer.tsx:312"
+  "at": "src/ui/screens/Designer.tsx:422"
  },
  "1jl7w64": {
   "tr": "Makyajda motor değişmez.",
-  "at": "src/ui/screens/Designer.tsx:358"
+  "at": "src/ui/screens/Designer.tsx:468"
  },
  "19iy25p": {
   "tr": "Kütüphanedeki bir motoru kullanıyorsun: geliştirme işi %25 azalır ve motor daha az kusurlu çıkar.",
-  "at": "src/ui/screens/Designer.tsx:358"
+  "at": "src/ui/screens/Designer.tsx:468"
  },
  "1fl2au7": {
   "tr": "Yeni motor tasarla",
-  "at": "src/ui/screens/Designer.tsx:361"
+  "at": "src/ui/screens/Designer.tsx:471"
  },
  "1xcjb0c": {
   "tr": "<b>Benzin:</b> hafif, sessiz ve yüksek devirli.",
-  "at": "src/ui/screens/Designer.tsx:372"
+  "at": "src/ui/screens/Designer.tsx:482"
  },
  "vy2s42": {
   "tr": "<b>Dizel:</b> yakıtı sıkıştırmanın ısısı tutuşturur. Çok az yakar ve uzun ömürlüdür; ama ağır, gürültülü, düşük devirli ve pahalıdır, alıcılar prestijli bulmaz.",
-  "at": "src/ui/screens/Designer.tsx:374"
+  "at": "src/ui/screens/Designer.tsx:484"
  },
  "1eedu33": {
   "tr": "Benzin",
-  "at": "src/ui/screens/Designer.tsx:391"
+  "at": "src/ui/screens/Designer.tsx:501"
  },
  "1ygq0jh": {
   "tr": "Hazır motorlar",
-  "at": "src/ui/screens/Designer.tsx:401"
+  "at": "src/ui/screens/Designer.tsx:511"
  },
  "vo9swf": {
   "tr": "Karakter (strok / çap)",
-  "at": "src/ui/screens/Designer.tsx:432"
+  "at": "src/ui/screens/Designer.tsx:542"
  },
  "rop84o": {
   "tr": "↑ Uzun strok: düşük devirde güçlü çeker, az yakar, Avrupa’da vergisi düşük (vergi yalnızca çapa bakar).",
-  "at": "src/ui/screens/Designer.tsx:436"
+  "at": "src/ui/screens/Designer.tsx:546"
  },
  "1e1s6zr": {
   "tr": "↑ Uzun strok: düşük devirde güçlü çeker, az yakar.",
-  "at": "src/ui/screens/Designer.tsx:437"
+  "at": "src/ui/screens/Designer.tsx:547"
  },
  "e4qoia": {
   "tr": "↓ Kısa strok: yüksek devre çıkar ve daha çok güç verir, ama düşük devirde zayıftır.",
-  "at": "src/ui/screens/Designer.tsx:439"
+  "at": "src/ui/screens/Designer.tsx:549"
  },
  "1g6qqpc": {
   "tr": "Kısa strok",
-  "at": "src/ui/screens/Designer.tsx:448"
+  "at": "src/ui/screens/Designer.tsx:558"
  },
  "9cxovc": {
   "tr": "Uzun strok",
-  "at": "src/ui/screens/Designer.tsx:449"
+  "at": "src/ui/screens/Designer.tsx:559"
  },
  "mrx859": {
   "tr": "Silindir düzeni",
-  "at": "src/ui/screens/Designer.tsx:458"
+  "at": "src/ui/screens/Designer.tsx:568"
  },
  "por0v3": {
   "tr": "Aynı hacmi kaç silindire böleceğin. Değiştirince hacim korunur.",
-  "at": "src/ui/screens/Designer.tsx:460"
+  "at": "src/ui/screens/Designer.tsx:570"
  },
  "1ca5qio": {
   "tr": "↑ Daha çok silindir: motor yumuşar ve sessizleşir, küçülen pistonlar daha yüksek devre çıkar, prestij artar.",
-  "at": "src/ui/screens/Designer.tsx:461"
+  "at": "src/ui/screens/Designer.tsx:571"
  },
  "14m6dfu": {
   "tr": "↓ Ama motor pahalanır, ağırlaşır, arızalanacak parça çoğalır.",
-  "at": "src/ui/screens/Designer.tsx:462"
+  "at": "src/ui/screens/Designer.tsx:572"
  },
  "bz57o6": {
   "tr": "Silindir çapı",
-  "at": "src/ui/screens/Designer.tsx:499"
+  "at": "src/ui/screens/Designer.tsx:609"
  },
  "p4pg9p": {
   "tr": "Silindirin genişliği.",
-  "at": "src/ui/screens/Designer.tsx:501"
+  "at": "src/ui/screens/Designer.tsx:611"
  },
  "1rm5tlc": {
   "tr": "↑ Artırınca: hacim ve güç artar.",
-  "at": "src/ui/screens/Designer.tsx:503"
+  "at": "src/ui/screens/Designer.tsx:613"
  },
  "1649pqv": {
   "tr": "↑ Artırınca: hacim ve güç artar, büyük supaplar nefesi iyileştirir.",
-  "at": "src/ui/screens/Designer.tsx:503"
+  "at": "src/ui/screens/Designer.tsx:613"
  },
  "1hzi9mj": {
   "tr": "Ama alev yolu uzar, vuruntu sınırı düşer; motor ağırlaşır; Avrupa’da vergi çapın karesiyle artar.",
-  "at": "src/ui/screens/Designer.tsx:504"
+  "at": "src/ui/screens/Designer.tsx:614"
  },
  "1rg28h8": {
   "tr": "Ama alev yolu uzar, vuruntu sınırı düşer; motor ağırlaşır.",
-  "at": "src/ui/screens/Designer.tsx:504"
+  "at": "src/ui/screens/Designer.tsx:614"
  },
  "1dkogy2": {
   "tr": "↓ Azaltınca: vuruntuya dayanıklı ve hafif, vergisi düşük.",
-  "at": "src/ui/screens/Designer.tsx:507"
+  "at": "src/ui/screens/Designer.tsx:617"
  },
  "anwy9f": {
   "tr": "↓ Azaltınca: vuruntuya dayanıklı ve hafif.",
-  "at": "src/ui/screens/Designer.tsx:507"
+  "at": "src/ui/screens/Designer.tsx:617"
  },
  "f04v4b": {
   "tr": "Ama hacim ve güç düşer.",
-  "at": "src/ui/screens/Designer.tsx:507"
+  "at": "src/ui/screens/Designer.tsx:617"
  },
  "1xt94vq": {
   "tr": "Pistonun bir turda aldığı yol.",
-  "at": "src/ui/screens/Designer.tsx:524"
+  "at": "src/ui/screens/Designer.tsx:634"
  },
  "1qambl7": {
   "tr": "↑ Artırınca: hacim ve tork artar, tork düşük devre iner, vergi değişmez.",
-  "at": "src/ui/screens/Designer.tsx:527"
+  "at": "src/ui/screens/Designer.tsx:637"
  },
  "1tmsdmu": {
   "tr": "↑ Artırınca: hacim ve tork artar, tork düşük devre iner.",
-  "at": "src/ui/screens/Designer.tsx:528"
+  "at": "src/ui/screens/Designer.tsx:638"
  },
  "oawy4l": {
   "tr": "Ama piston çok hızlanır: devir sınırı düşer (şu an {rpm} d/d).",
-  "at": "src/ui/screens/Designer.tsx:529"
+  "at": "src/ui/screens/Designer.tsx:639"
  },
  "17m4j8b": {
   "tr": "↓ Azaltınca: motor yüksek devre çıkar, güç tepesi geç gelir. Ama düşük devirde zayıflar, hacim düşer.",
-  "at": "src/ui/screens/Designer.tsx:531"
+  "at": "src/ui/screens/Designer.tsx:641"
  },
  "11nka5": {
   "tr": "Dönemin supap yayları ve yatakları da devri sınırlar: bu yıl bu supap düzeniyle en fazla {rpm} d/d. Bu sınıra dayanan bir motorda stroku kısaltmak gücü artırmaz.",
-  "at": "src/ui/screens/Designer.tsx:533"
+  "at": "src/ui/screens/Designer.tsx:643"
  },
  "nxn0pe": {
   "tr": "Sıkıştırma oranı",
-  "at": "src/ui/screens/Designer.tsx:552"
+  "at": "src/ui/screens/Designer.tsx:662"
  },
  "oxt93g": {
   "tr": "Dizelde yakıtı sıkıştırmanın ısısı tutuşturur: vuruntu sınırı yok.",
-  "at": "src/ui/screens/Designer.tsx:556"
+  "at": "src/ui/screens/Designer.tsx:666"
  },
  "g3wptt": {
   "tr": "↑ Artırınca: verim ve güç artar.",
-  "at": "src/ui/screens/Designer.tsx:557"
+  "at": "src/ui/screens/Designer.tsx:667"
  },
  "1u5cbz1": {
   "tr": "↓ Azaltınca: güç ve verim düşer.",
-  "at": "src/ui/screens/Designer.tsx:558"
+  "at": "src/ui/screens/Designer.tsx:668"
  },
  "tabul4": {
   "tr": "Piston karışımı ne kadar sıkıştırıyor.",
-  "at": "src/ui/screens/Designer.tsx:562"
+  "at": "src/ui/screens/Designer.tsx:672"
  },
  "1yt667x": {
   "tr": "↑ Artırınca: yakıt daha iyi değerlendirilir, verim ve güç artar.",
-  "at": "src/ui/screens/Designer.tsx:563"
+  "at": "src/ui/screens/Designer.tsx:673"
  },
  "2g52p1": {
   "tr": "↓ Sınırı aşarsa karışım erken patlar (vuruntu): güç ve motor ömrü çöker. Sınır çap büyüdükçe düşer, dönemin benzini iyileştikçe yükselir.",
-  "at": "src/ui/screens/Designer.tsx:565"
+  "at": "src/ui/screens/Designer.tsx:675"
  },
  "1hx8cre": {
   "tr": "Vuruntu sınırı <b>{limit}</b>.",
-  "at": "src/ui/screens/Designer.tsx:581"
+  "at": "src/ui/screens/Designer.tsx:691"
  },
  "15w3e55": {
   "tr": "Motor vuruntu yapıyor!",
-  "at": "src/ui/screens/Designer.tsx:582"
+  "at": "src/ui/screens/Designer.tsx:692"
  },
  "1wmrfgu": {
   "tr": "Güvenli.",
-  "at": "src/ui/screens/Designer.tsx:582"
+  "at": "src/ui/screens/Designer.tsx:692"
  },
  "1ela8yu": {
   "tr": "Supap düzeni",
-  "at": "src/ui/screens/Designer.tsx:589"
+  "at": "src/ui/screens/Designer.tsx:699"
  },
  "1s56aox": {
   "tr": "Supaplar yukarı çıktıkça motor daha rahat nefes alır.",
-  "at": "src/ui/screens/Designer.tsx:591"
+  "at": "src/ui/screens/Designer.tsx:701"
  },
  "64dlid": {
   "tr": "↑ Gelişmiş düzen: daha yüksek devir, daha çok güç, biraz daha verim.",
-  "at": "src/ui/screens/Designer.tsx:592"
+  "at": "src/ui/screens/Designer.tsx:702"
  },
  "gssmwm": {
   "tr": "↓ Ama pahalı ve hassas; yeni teknoloji ilk yıllarında arıza çıkarır.",
-  "at": "src/ui/screens/Designer.tsx:593"
+  "at": "src/ui/screens/Designer.tsx:703"
  },
  "5qe7u9": {
   "tr": "Yakıt sistemi",
-  "at": "src/ui/screens/Designer.tsx:617"
+  "at": "src/ui/screens/Designer.tsx:727"
  },
  "l8qqey": {
   "tr": "Dizelin kendi yüksek basınçlı enjeksiyon pompası var.",
-  "at": "src/ui/screens/Designer.tsx:618"
+  "at": "src/ui/screens/Designer.tsx:728"
  },
  "1pawxeq": {
   "tr": "Aşırı besleme",
-  "at": "src/ui/screens/Designer.tsx:648"
+  "at": "src/ui/screens/Designer.tsx:758"
  },
  "1iig5l6": {
   "tr": "Çizim üzerindeki hesap; gerçek motor geliştirme ve işçilikle bundan sapar:",
-  "at": "src/ui/screens/Designer.tsx:683"
+  "at": "src/ui/screens/Designer.tsx:793"
  },
  "1x7766x": {
   "tr": "Hacim",
-  "at": "src/ui/screens/Designer.tsx:686"
+  "at": "src/ui/screens/Designer.tsx:796"
  },
  "2mgzfp": {
   "tr": "{hp} bg @ {rpm}",
-  "at": "src/ui/screens/Designer.tsx:691"
+  "at": "src/ui/screens/Designer.tsx:801"
  },
  "1chessr": {
   "tr": "Tork",
-  "at": "src/ui/screens/Designer.tsx:694"
+  "at": "src/ui/screens/Designer.tsx:804"
  },
  "zsp3zi": {
   "tr": "{nm} Nm @ {rpm}",
-  "at": "src/ui/screens/Designer.tsx:695"
+  "at": "src/ui/screens/Designer.tsx:805"
  },
  "sbaox": {
   "tr": "Devir sınırı",
-  "at": "src/ui/screens/Designer.tsx:699"
+  "at": "src/ui/screens/Designer.tsx:809"
  },
  "11y38zx": {
   "tr": "Motorun güvenle dönebildiği en yüksek devir. Piston hızı sınırı belirler: uzun strok ve basit supaplar devri düşürür.",
-  "at": "src/ui/screens/Designer.tsx:701"
+  "at": "src/ui/screens/Designer.tsx:811"
  },
  "14kknlj": {
   "tr": "Çap × strok",
-  "at": "src/ui/screens/Designer.tsx:707"
+  "at": "src/ui/screens/Designer.tsx:817"
  },
  "1778w5o": {
   "tr": "{bore} × {stroke} mm",
-  "at": "src/ui/screens/Designer.tsx:708"
+  "at": "src/ui/screens/Designer.tsx:818"
  },
  "1ns1wqf": {
   "tr": "Vergi beygiri",
-  "at": "src/ui/screens/Designer.tsx:712"
+  "at": "src/ui/screens/Designer.tsx:822"
  },
  "1jyj66d": {
   "tr": "İngiliz usulü vergi beygiri: çap² × silindir sayısı / 2,5 (inç). Stroka hiç bakmaz.",
-  "at": "src/ui/screens/Designer.tsx:714"
+  "at": "src/ui/screens/Designer.tsx:824"
  },
  "ecxf37": {
   "tr": "1910-1947 arası Avrupa’da araç vergisi buna göre alınır: düşük vergi beygiri alıcının cebinde kalan paradır.",
-  "at": "src/ui/screens/Designer.tsx:715"
+  "at": "src/ui/screens/Designer.tsx:825"
  },
  "1qx3qcu": {
   "tr": "Motor ağırlığı",
-  "at": "src/ui/screens/Designer.tsx:721"
+  "at": "src/ui/screens/Designer.tsx:831"
  },
  "x3ksva": {
   "tr": "Motor maliyeti",
-  "at": "src/ui/screens/Designer.tsx:725"
+  "at": "src/ui/screens/Designer.tsx:835"
  },
  "whtkmf": {
   "tr": "Güç (bg)",
-  "at": "src/ui/screens/Designer.tsx:749"
+  "at": "src/ui/screens/Designer.tsx:859"
  },
  "aggiup": {
   "tr": "Devir (d/d)",
-  "at": "src/ui/screens/Designer.tsx:754"
+  "at": "src/ui/screens/Designer.tsx:864"
  },
  "asr7kn": {
   "tr": "Motor güç eğrisi",
-  "at": "src/ui/screens/Designer.tsx:755"
+  "at": "src/ui/screens/Designer.tsx:865"
  },
  "odvchp": {
   "tr": "Tork (Nm)",
-  "at": "src/ui/screens/Designer.tsx:758"
+  "at": "src/ui/screens/Designer.tsx:868"
  },
  "onhl7d": {
   "tr": "Motor tork eğrisi",
-  "at": "src/ui/screens/Designer.tsx:764"
+  "at": "src/ui/screens/Designer.tsx:874"
  },
  "1t7f4z6": {
   "tr": "Sınıfın tipik motoruna göre ({engine}):",
-  "at": "src/ui/screens/Designer.tsx:777"
+  "at": "src/ui/screens/Designer.tsx:887"
  },
  "1sg8tf7": {
   "tr": "Artıları",
-  "at": "src/ui/screens/Designer.tsx:786"
+  "at": "src/ui/screens/Designer.tsx:896"
  },
  "ii5x5v": {
   "tr": "Belirgin bir artısı yok.",
-  "at": "src/ui/screens/Designer.tsx:787"
+  "at": "src/ui/screens/Designer.tsx:897"
  },
  "1wxuob": {
   "tr": "Eksileri",
-  "at": "src/ui/screens/Designer.tsx:790"
+  "at": "src/ui/screens/Designer.tsx:900"
  },
  "tfbba7": {
   "tr": "Belirgin bir eksisi yok.",
-  "at": "src/ui/screens/Designer.tsx:791"
+  "at": "src/ui/screens/Designer.tsx:901"
  },
  "1kg1ni3": {
   "tr": "Şanzıman tipi",
-  "at": "src/ui/screens/Designer.tsx:833"
+  "at": "src/ui/screens/Designer.tsx:943"
  },
  "slrj0m": {
   "tr": "Vites değiştirmenin ne kadar kolay olduğunu belirler.",
-  "at": "src/ui/screens/Designer.tsx:835"
+  "at": "src/ui/screens/Designer.tsx:945"
  },
  "offt6n": {
   "tr": "↑ Kolay şanzıman: konfor ve pratiklik artar, vites değişimi hızlanır.",
-  "at": "src/ui/screens/Designer.tsx:844"
+  "at": "src/ui/screens/Designer.tsx:954"
  },
  "1gkxvo": {
   "tr": "↓ Ama pahalı ve ağırdır; otomatik biraz güç yutar. Yeni teknoloji ilk yıllarında arıza çıkarır.",
-  "at": "src/ui/screens/Designer.tsx:845"
+  "at": "src/ui/screens/Designer.tsx:955"
  },
  "82gb0w": {
   "tr": "İleri vites sayısı",
-  "at": "src/ui/screens/Designer.tsx:862"
+  "at": "src/ui/screens/Designer.tsx:972"
  },
  "1xa6ow2": {
   "tr": "↑ Daha çok vites: vitesler birbirine yaklaşır, motor güçlü olduğu devirde kalır. Hızlanma iyileşir; uzun son vites az yakar.",
-  "at": "src/ui/screens/Designer.tsx:864"
+  "at": "src/ui/screens/Designer.tsx:974"
  },
  "5u4u7z": {
   "tr": "↓ Daha az vites: ucuz ve hafif; ama vitesler arası boşluk büyük, motor her geçişte güçsüz devre düşer.",
-  "at": "src/ui/screens/Designer.tsx:865"
+  "at": "src/ui/screens/Designer.tsx:975"
  },
  "1irljy8": {
   "tr": "Dönemin teknolojisi en fazla {n} vitese izin veriyor.",
-  "at": "src/ui/screens/Designer.tsx:866"
+  "at": "src/ui/screens/Designer.tsx:976"
  },
  "hfrcx4": {
   "tr": "↑ Uzun oranlar: motor yolda düşük devirde döner; az yakar ve sessizdir, son hız artabilir. Ama kalkış ve hızlanma yavaşlar, güçsüz motor son viteste zorlanır.",
-  "at": "src/ui/screens/Designer.tsx:887"
+  "at": "src/ui/screens/Designer.tsx:997"
  },
  "9sgo7d": {
   "tr": "↓ Kısa oranlar: çevik kalkış ve güçlü çekiş. Ama motor hep yüksek devirde döner: çok yakar, son hız devir sınırına takılabilir.",
-  "at": "src/ui/screens/Designer.tsx:889"
+  "at": "src/ui/screens/Designer.tsx:999"
  },
  "1w6nde8": {
   "tr": "Aşağıdaki grafikte eğrilerin yol direncini kestiği yer son hızdır.",
-  "at": "src/ui/screens/Designer.tsx:890"
+  "at": "src/ui/screens/Designer.tsx:1000"
  },
  "p0ffuf": {
   "tr": "Kısa: çevik",
-  "at": "src/ui/screens/Designer.tsx:899"
+  "at": "src/ui/screens/Designer.tsx:1009"
  },
  "17pqubs": {
   "tr": "Uzun: az yakar",
-  "at": "src/ui/screens/Designer.tsx:900"
+  "at": "src/ui/screens/Designer.tsx:1010"
  },
  "293np1": {
   "tr": "Çizim üzerindeki hesap:",
-  "at": "src/ui/screens/Designer.tsx:904"
+  "at": "src/ui/screens/Designer.tsx:1014"
  },
  "2n4gvn": {
   "tr": "Vites başına hız",
-  "at": "src/ui/screens/Designer.tsx:923"
+  "at": "src/ui/screens/Designer.tsx:1033"
  },
  "1c9du1y": {
   "tr": "Tekerlekteki çekiş kuvveti: her vites bir eğri, kesikli çizgi yol direnci",
-  "at": "src/ui/screens/Designer.tsx:928"
+  "at": "src/ui/screens/Designer.tsx:1038"
  },
  "1a5y6go": {
   "tr": "{n}. vites",
-  "at": "src/ui/screens/Designer.tsx:932"
+  "at": "src/ui/screens/Designer.tsx:1042"
  },
  "18hup7x": {
   "tr": "Hız (km/s)",
-  "at": "src/ui/screens/Designer.tsx:943"
+  "at": "src/ui/screens/Designer.tsx:1053"
  },
  "1ue53f9": {
   "tr": "Kuvvet (N)",
-  "at": "src/ui/screens/Designer.tsx:944"
+  "at": "src/ui/screens/Designer.tsx:1054"
  },
  "77k1dq": {
   "tr": "Viteslere göre çekiş kuvveti grafiği",
-  "at": "src/ui/screens/Designer.tsx:945"
+  "at": "src/ui/screens/Designer.tsx:1055"
  },
  "15v1y1d": {
   "tr": "Eğrilerin yol direncini kestiği yer son hızdır. Vites sayısı arttıkça eğriler birbirine yaklaşır ve motor güçlü olduğu devirde kalır.",
-  "at": "src/ui/screens/Designer.tsx:947"
+  "at": "src/ui/screens/Designer.tsx:1057"
  },
  "h39orj": {
   "tr": "Aynı arabaya sınıfın tipik şanzımanı takılsaydı:",
-  "at": "src/ui/screens/Designer.tsx:948"
+  "at": "src/ui/screens/Designer.tsx:1058"
  },
  "s6uof8": {
   "tr": "Süspansiyon tipi",
-  "at": "src/ui/screens/Designer.tsx:975"
+  "at": "src/ui/screens/Designer.tsx:1085"
  },
  "1qv2n5": {
   "tr": "Tekerleklerin yoldaki darbeleri gövdeye nasıl ilettiğini belirler.",
-  "at": "src/ui/screens/Designer.tsx:977"
+  "at": "src/ui/screens/Designer.tsx:1087"
  },
  "wfrlho": {
   "tr": "↑ Gelişmiş sistem: hem konfor hem yol tutuş artar.",
-  "at": "src/ui/screens/Designer.tsx:986"
+  "at": "src/ui/screens/Designer.tsx:1096"
  },
  "1cd4k6o": {
   "tr": "↓ Ama pahalı ve ağır; yeni teknoloji ilk yıllarında arıza çıkarır.",
-  "at": "src/ui/screens/Designer.tsx:987"
+  "at": "src/ui/screens/Designer.tsx:1097"
  },
  "mdyx60": {
   "tr": "Ayar",
-  "at": "src/ui/screens/Designer.tsx:1004"
+  "at": "src/ui/screens/Designer.tsx:1114"
  },
  "1ft0asi": {
   "tr": "↑ Sert (yol tutuş): araç virajda yatmaz, direksiyon isabetli; ama bozuk yolda yolcular sarsılır.",
-  "at": "src/ui/screens/Designer.tsx:1006"
+  "at": "src/ui/screens/Designer.tsx:1116"
  },
  "139snvj": {
   "tr": "↓ Yumuşak (konfor): darbeleri yutar; ama virajda yatar, hızlıyken yüzer gibi gider.",
-  "at": "src/ui/screens/Designer.tsx:1007"
+  "at": "src/ui/screens/Designer.tsx:1117"
  },
  "gl8gek": {
   "tr": "Dengeyi kimin için yaptığına göre seç.",
-  "at": "src/ui/screens/Designer.tsx:1008"
+  "at": "src/ui/screens/Designer.tsx:1118"
  },
  "3sjnon": {
   "tr": "Sınıfın olağan ayarı",
-  "at": "src/ui/screens/Designer.tsx:1019"
+  "at": "src/ui/screens/Designer.tsx:1129"
  },
  "1f0lssh": {
   "tr": "Olağandan yumuşak",
-  "at": "src/ui/screens/Designer.tsx:1019"
+  "at": "src/ui/screens/Designer.tsx:1129"
  },
  "1t3tlta": {
   "tr": "Olağandan sert",
-  "at": "src/ui/screens/Designer.tsx:1019"
+  "at": "src/ui/screens/Designer.tsx:1129"
  },
  "n7y30x": {
   "tr": "Aynı arabaya sınıfın tipik süspansiyonu takılsaydı:",
-  "at": "src/ui/screens/Designer.tsx:1022"
+  "at": "src/ui/screens/Designer.tsx:1132"
  },
  "1e30sv5": {
   "tr": "{n} mühendis {projects} projeye bölünüyor (bu projede ~{share})",
-  "at": "src/ui/screens/DevPanel.tsx:45"
+  "at": "src/ui/screens/DevPanel.tsx:47"
  },
  "1gp21vd": {
   "tr": "{n} mühendisin hepsi bu projede",
-  "at": "src/ui/screens/DevPanel.tsx:46"
+  "at": "src/ui/screens/DevPanel.tsx:48"
  },
  "upv6oc": {
   "tr": "<b>Geliştirme:</b> tahmini <b>~{n} hafta</b> · {team}",
-  "at": "src/ui/screens/DevPanel.tsx:53"
+  "at": "src/ui/screens/DevPanel.tsx:55"
  },
  "6we1mr": {
   "tr": "Tasarımda henüz araştırılmamış teknoloji var: {tech}. Ar-Ge’de araştır ya da tasarımdan çıkar.",
-  "at": "src/ui/screens/DevPanel.tsx:56"
+  "at": "src/ui/screens/DevPanel.tsx:58"
  },
  "1kn5z9h": {
   "tr": "Aracı tasarla, mühendislik odağını seç, sonra başlat. Başlayınca tasarım kilitlenir; odak her zaman değişebilir.",
-  "at": "src/ui/screens/DevPanel.tsx:59"
+  "at": "src/ui/screens/DevPanel.tsx:61"
+ },
+ "1gy4kh7": {
+  "tr": "Sınıftaki arabaların çoğunda olan {list} bu tasarımda yok: aşağıdaki listeden ekle ya da araştır.",
+  "at": "src/ui/screens/DevPanel.tsx:64"
  },
  "157blb2": {
   "tr": "<b>Geliştirme bitti.</b> Zaman akarsa araç cilalanmaya devam eder (güvenilirlik şu an +{v}, en fazla %160’a kadar).",
-  "at": "src/ui/screens/DevPanel.tsx:64"
+  "at": "src/ui/screens/DevPanel.tsx:69"
  },
  "1w12fbg": {
   "tr": "<b>Geliştirme {pct}</b> · kalan ~{n} hafta · {team}",
-  "at": "src/ui/screens/DevPanel.tsx:70"
+  "at": "src/ui/screens/DevPanel.tsx:75"
  },
  "ehpyzo": {
   "tr": "Her hafta odak alanlarına puan birikir.",
-  "at": "src/ui/screens/DevPanel.tsx:71"
+  "at": "src/ui/screens/DevPanel.tsx:76"
  },
  "ytc024": {
   "tr": "Ekip: {n} mühendis.",
-  "at": "src/ui/screens/DevPanel.tsx:78"
+  "at": "src/ui/screens/DevPanel.tsx:83"
  },
  "ijvj6l": {
   "tr": "+{n} mühendisle ~{weeks} hafta ({now} yerine); maaşları yılda ~{salaries}.",
-  "at": "src/ui/screens/DevPanel.tsx:81"
+  "at": "src/ui/screens/DevPanel.tsx:86"
  },
  "1fje00u": {
   "tr": "Daha çok mühendis geliştirmeyi hızlandırır; bir arabada bir düzineden fazlası orantılı hızlandırmaz.",
-  "at": "src/ui/screens/DevPanel.tsx:89"
+  "at": "src/ui/screens/DevPanel.tsx:94"
  },
  "1n1rgmj": {
   "tr": "Bu proje kasayı aşıyor",
-  "at": "src/ui/screens/DevPanel.tsx:123"
+  "at": "src/ui/screens/DevPanel.tsx:128"
  },
  "d4rvzq": {
   "tr": "Lansmana kadar ~{need} gerekiyor; kasa {cash} ve banka kredisi {credit} birlikte yetmiyor. Kalıp parası bittiğinde araba satışa çıkamaz. Daha küçük ya da ucuz bir tasarım, kısa bir test planı ya da önce satıştaki arabalardan para kazanmak daha güvenli.",
-  "at": "src/ui/screens/DevPanel.tsx:124"
+  "at": "src/ui/screens/DevPanel.tsx:129"
  },
  "11qytd4": {
   "tr": "Yine de başlat",
-  "at": "src/ui/screens/DevPanel.tsx:128"
+  "at": "src/ui/screens/DevPanel.tsx:133"
  },
  "19zapm2": {
   "tr": "Geliştirme başladı",
-  "at": "src/ui/screens/DevPanel.tsx:133"
+  "at": "src/ui/screens/DevPanel.tsx:138"
  },
  "50huix": {
   "tr": "Geliştirmeyi başlat",
-  "at": "src/ui/screens/DevPanel.tsx:136"
+  "at": "src/ui/screens/DevPanel.tsx:141"
  },
  "11ffnmw": {
   "tr": "▶ Zamanı başlat",
-  "at": "src/ui/screens/DevPanel.tsx:144"
+  "at": "src/ui/screens/DevPanel.tsx:149"
  },
  "u8xvid": {
   "tr": "Güç +{pct}",
-  "at": "src/ui/screens/DevPanel.tsx:182"
+  "at": "src/ui/screens/DevPanel.tsx:187"
  },
  "1bk1n3y": {
   "tr": "Tüketim −{pct}",
-  "at": "src/ui/screens/DevPanel.tsx:183"
+  "at": "src/ui/screens/DevPanel.tsx:188"
  },
  "sj9qrx": {
   "tr": "Konfor +{v}",
-  "at": "src/ui/screens/DevPanel.tsx:184"
+  "at": "src/ui/screens/DevPanel.tsx:189"
  },
  "2frd3p": {
   "tr": "Yol tutuş +{v}",
-  "at": "src/ui/screens/DevPanel.tsx:185"
+  "at": "src/ui/screens/DevPanel.tsx:190"
  },
  "zbkmro": {
   "tr": "Güvenlik +{v}",
-  "at": "src/ui/screens/DevPanel.tsx:186"
+  "at": "src/ui/screens/DevPanel.tsx:191"
  },
  "i5p3ep": {
   "tr": "Pratiklik +{v}",
-  "at": "src/ui/screens/DevPanel.tsx:187"
+  "at": "src/ui/screens/DevPanel.tsx:192"
  },
  "u2ujar": {
   "tr": "Maliyet −{pct}",
-  "at": "src/ui/screens/DevPanel.tsx:188"
+  "at": "src/ui/screens/DevPanel.tsx:193"
  },
  "shy8l1": {
   "tr": "Gizli kusur −{pct}",
-  "at": "src/ui/screens/DevPanel.tsx:189"
+  "at": "src/ui/screens/DevPanel.tsx:194"
  },
  "c7pt15": {
   "tr": "Mühendislik odağı",
-  "at": "src/ui/screens/DevPanel.tsx:193"
+  "at": "src/ui/screens/DevPanel.tsx:198"
  },
  "85z6tt": {
   "tr": "Mühendislerin zamanını alanlara böl (toplam %100). Her kartın altındaki değer, geliştirme bu dağılımla biterse aracın kazanacağı iyileştirme; sağdaki tahmin de buna göre. Neye ağırlık vereceğin senin fikrin: bu araba kimin için?",
-  "at": "src/ui/screens/DevPanel.tsx:198"
+  "at": "src/ui/screens/DevPanel.tsx:203"
  },
  "suo2sl": {
   "tr": "Hazır odaklar",
-  "at": "src/ui/screens/DevPanel.tsx:204"
+  "at": "src/ui/screens/DevPanel.tsx:209"
  },
  "ikutqr": {
   "tr": "Kilidi aç",
-  "at": "src/ui/screens/DevPanel.tsx:238"
+  "at": "src/ui/screens/DevPanel.tsx:243"
  },
  "1jrloho": {
   "tr": "Bu yüzdeyi kilitle: diğer kaydırıcılar onu değiştirmez",
-  "at": "src/ui/screens/DevPanel.tsx:238"
+  "at": "src/ui/screens/DevPanel.tsx:243"
  },
  "w5xjxj": {
   "tr": "Motor atölyesi",
@@ -11190,79 +11254,83 @@
  },
  "1sh6qx2": {
   "tr": "Sınıfın tipik fiyatı: {price}. Fiyat enflasyona göre otomatik güncellenir; istersen Modeller ekranından değiştirirsin.",
-  "at": "src/ui/screens/ProjectView.tsx:909"
+  "at": "src/ui/screens/ProjectView.tsx:911"
  },
  "1i2y3ml": {
   "tr": "Satış yapılan {n} eyalette sunulur · segment {count} araç/yıl (bütün ülke) · araç başına ortalama nakliye {freight}.",
-  "at": "src/ui/screens/ProjectView.tsx:914"
+  "at": "src/ui/screens/ProjectView.tsx:916"
  },
  "mirk0e": {
   "tr": "Otomobil fuarında tanıt",
-  "at": "src/ui/screens/ProjectView.tsx:923"
+  "at": "src/ui/screens/ProjectView.tsx:925"
  },
  "1uw3qqr": {
   "tr": "{cost} · <share>kasanın {pct}</share> · bilinirlik ve lansman heyecanı artar",
-  "at": "src/ui/screens/ProjectView.tsx:924"
+  "at": "src/ui/screens/ProjectView.tsx:926"
  },
  "1d25bcn": {
   "tr": "Lansman özeti",
-  "at": "src/ui/screens/ProjectView.tsx:937"
+  "at": "src/ui/screens/ProjectView.tsx:939"
  },
  "ilt3ab": {
   "tr": "Seçili pazarlarda segment ({markets})",
-  "at": "src/ui/screens/ProjectView.tsx:940"
+  "at": "src/ui/screens/ProjectView.tsx:942"
  },
  "1rvz0l": {
   "tr": "(haftada {v})",
-  "at": "src/ui/screens/ProjectView.tsx:942"
+  "at": "src/ui/screens/ProjectView.tsx:944"
  },
  "1ryuv0a": {
   "tr": "Malzeme / araç",
-  "at": "src/ui/screens/ProjectView.tsx:950"
+  "at": "src/ui/screens/ProjectView.tsx:952"
  },
  "1idvj7p": {
   "tr": "İşçilik / araç (tam kapasite)",
-  "at": "src/ui/screens/ProjectView.tsx:954"
+  "at": "src/ui/screens/ProjectView.tsx:956"
  },
  "z8qnbh": {
   "tr": "Araç başı brüt kâr (tam kapasite)",
-  "at": "src/ui/screens/ProjectView.tsx:958"
+  "at": "src/ui/screens/ProjectView.tsx:960"
  },
  "10vhh57": {
   "tr": "Beklenen satış (orta tahmin)",
-  "at": "src/ui/screens/ProjectView.tsx:962"
+  "at": "src/ui/screens/ProjectView.tsx:964"
  },
  "klv60r": {
   "tr": "Aracın haftalık katkısı",
-  "at": "src/ui/screens/ProjectView.tsx:966"
+  "at": "src/ui/screens/ProjectView.tsx:968"
  },
  "55h7oi": {
   "tr": "Sabit giderler (maaş, genel gider, bayi)",
-  "at": "src/ui/screens/ProjectView.tsx:970"
+  "at": "src/ui/screens/ProjectView.tsx:972"
  },
  "174u2qc": {
   "tr": "Şirketin haftalık kârı: şimdi → bu araçla",
-  "at": "src/ui/screens/ProjectView.tsx:975"
+  "at": "src/ui/screens/ProjectView.tsx:977"
  },
  "1if8qiq": {
   "tr": "Haftalık net",
-  "at": "src/ui/screens/ProjectView.tsx:982"
+  "at": "src/ui/screens/ProjectView.tsx:984"
  },
  "zxv6i2": {
   "tr": "Bu fiyatta ve beklenen talepte şirket haftada {loss} kaybeder. Hat işçiliği az üretimde de ödenir; fiyatı, hattı ya da mühendis sayısını gözden geçir.",
-  "at": "src/ui/screens/ProjectView.tsx:989"
+  "at": "src/ui/screens/ProjectView.tsx:991"
+ },
+ "12lhfgm": {
+  "tr": "Sınıftaki arabaların çoğunda olan {list} bu arabada yok: dergiler bunu fark eder, fiyatı buna göre koy. Çoğu makyajla sonradan eklenebilir.",
+  "at": "src/ui/screens/ProjectView.tsx:998"
  },
  "qbbj9d": {
   "tr": "Alıcıların aracını nasıl karşılayacağını lansmanda göreceksin: dergi puanları, rakiplerle karşılaştırma ve dört hafta sonra ilk ay raporu.",
-  "at": "src/ui/screens/ProjectView.tsx:996"
+  "at": "src/ui/screens/ProjectView.tsx:1005"
  },
  "1mmw5aw": {
   "tr": "Lansmanı yap",
-  "at": "src/ui/screens/ProjectView.tsx:1008"
+  "at": "src/ui/screens/ProjectView.tsx:1017"
  },
  "99ud4t": {
   "tr": "Hat: {name}",
-  "at": "src/ui/screens/ProjectView.tsx:1011"
+  "at": "src/ui/screens/ProjectView.tsx:1020"
  },
  "1ajzw1u": {
   "tr": "Tasarım",
@@ -11480,10 +11548,6 @@
   "tr": "Bedele göre",
   "at": "src/ui/screens/Research.tsx:162"
  },
- "66dlcd": {
-  "tr": "Listedeki {n} konunun hepsini sıraya ekle",
-  "at": "src/ui/screens/Research.tsx:169"
- },
  "130v5vn": {
   "tr": "toplam ~{cost}; bedeller konu başladığında ödenir.",
   "at": "src/ui/screens/Research.tsx:173"
@@ -11520,10 +11584,6 @@
   "tr": "yeni",
   "at": "src/ui/screens/Research.tsx:232"
  },
- "q4r9u1": {
-  "tr": "otomatik uygulanır",
-  "at": "src/ui/screens/Research.tsx:233"
- },
  "9p42fk": {
   "tr": "önce {techs}",
   "at": "src/ui/screens/Research.tsx:234"
@@ -11531,10 +11591,6 @@
  "f5g0da": {
   "tr": "Bu teknolojiyi kullanan rakip araçların payı",
   "at": "src/ui/screens/Research.tsx:238"
- },
- "yji5tg": {
-  "tr": "{year} çıkar",
-  "at": "src/ui/screens/Research.tsx:240"
  },
  "1qfmq3b": {
   "tr": "rakiplerin {share}",
@@ -11548,10 +11604,6 @@
   "tr": "biliniyor",
   "at": "src/ui/screens/Research.tsx:252"
  },
- "1tpuajm": {
-  "tr": "sırada #{pos}",
-  "at": "src/ui/screens/Research.tsx:266"
- },
  "he55d3": {
   "tr": "{tech} sıradan çıkar",
   "at": "src/ui/screens/Research.tsx:267"
@@ -11563,14 +11615,6 @@
  "avqtop": {
   "tr": "Araştır",
   "at": "src/ui/screens/Research.tsx:276"
- },
- "6dlutc": {
-  "tr": "{tech} sıraya eklendi",
-  "at": "src/ui/screens/Research.tsx:279"
- },
- "1jzipw3": {
-  "tr": "+ Sıra",
-  "at": "src/ui/screens/Research.tsx:280"
  },
  "lw6l4x": {
   "tr": "<b>Etkisi:</b> {effects}",

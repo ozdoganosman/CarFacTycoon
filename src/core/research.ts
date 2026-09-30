@@ -1,10 +1,11 @@
 import { costIndex, engineerSalary, overhead } from '../data/economy';
 import { KNOWHOW, effectsText } from '../data/knowhow';
 import { ASPIRATIONS, CHASSIS, CYLINDER_OPTIONS, FEATURES, FUEL_SYSTEMS, GEARBOX_TYPES, SUSPENSIONS, VALVETRAINS } from '../data/tech';
+import { referenceDesigns } from './ai';
 import { DIESEL_YEAR, boreStrokeFor, displacementCc } from './engine';
-import type { CarDesign, GameState } from './types';
+import type { CarDesign, GameState, SegmentId } from './types';
 import { decide, log, money, pushModal, spend } from './util';
-import { lang, msg, t } from '../i18n';
+import { lang, list, msg, t } from '../i18n';
 
 // Research: a technology that has appeared in the world still has to be
 // learned before a company can build it. Being first is expensive and slow
@@ -365,4 +366,73 @@ export function rivalAdoption(s: GameState): Record<string, number> {
   const out: Record<string, number> = {};
   for (const [id, n] of Object.entries(counts)) out[id] = n / Math.max(1, active.length);
   return out;
+}
+
+/** Steps where a later one also counts as the earlier ones (an automatic shifts as easily as a synchromesh box). */
+const LADDERS: { prefix: string; steps: string[]; of: (d: CarDesign) => string }[] = [
+  { prefix: 'gb', steps: GEARBOX_TYPES.map((x) => x.id), of: (d) => d.gearbox.type },
+  { prefix: 'susp', steps: SUSPENSIONS.map((x) => x.id), of: (d) => d.suspension },
+];
+
+/**
+ * What a car has that its class can be ahead of it in: its equipment, the gearbox and suspension steps
+ * it has reached and its know-how (research ids). Engine and chassis are choices, not things a car lacks.
+ */
+function equipment(d: CarDesign): Set<string> {
+  const out = new Set(d.features.map((f) => `feat:${f}`));
+  for (const l of LADDERS) for (const x of l.steps.slice(1, l.steps.indexOf(l.of(d)) + 1)) out.add(`${l.prefix}:${x}`);
+  for (const k of d.knowhow ?? []) out.add(k);
+  return out;
+}
+
+/** 'fit': the company knows it and the designer can put it in now; the rest say how its research stands. */
+export type GapState = 'fit' | 'researching' | 'queued' | 'available' | 'future';
+
+export interface ClassGapItem {
+  /** Research id: feat:…, gb:…, susp:… or kh:… */
+  id: string;
+  /** How many of the compared cars have it. */
+  count: number;
+  state: GapState;
+}
+
+export interface ClassGap {
+  items: ClassGapItem[];
+  /** How many cars were compared. */
+  cars: number;
+  /** The class's rival cars on sale at home, or (with none) the class's typical new cars the scores are measured against. */
+  basis: 'rivals' | 'typical';
+}
+
+const GAP_ORDER: GapState[] = ['fit', 'researching', 'queued', 'available', 'future'];
+
+/**
+ * What most cars of the class already have and this design lacks. The cars are the rivals on sale in
+ * the home market, the ones magazines and buyers weigh the car against; "most" is more than half. What
+ * can go in at once comes first, then what the engineers are learning, then what is still to research.
+ */
+export function classGap(s: GameState, design: CarDesign, segment: SegmentId, yf: number): ClassGap {
+  const rivals = s.rivalModels.filter((m) => m.active && m.segment === segment && m.markets.includes(s.company.hq)).map((m) => m.design);
+  const cars = rivals.length ? rivals : referenceDesigns(Math.floor(yf), segment);
+  const counts = new Map<string, number>();
+  for (const d of cars) for (const id of equipment(d)) counts.set(id, (counts.get(id) ?? 0) + 1);
+  const mine = equipment(design);
+  const queue = s.research?.queue ?? [];
+  const items: ClassGapItem[] = [];
+  for (const [id, count] of counts) {
+    if (count * 2 <= cars.length || mine.has(id)) continue;
+    const st = techState(s, id, yf);
+    items.push({ id, count, state: st === 'known' ? 'fit' : st === 'available' && queue.includes(id) ? 'queued' : st });
+  }
+  const year = (id: string) => researchDef(id)?.year ?? 0;
+  items.sort((a, b) => GAP_ORDER.indexOf(a.state) - GAP_ORDER.indexOf(b.state) || b.count - a.count || year(a.id) - year(b.id));
+  return { items, cars: cars.length, basis: rivals.length ? 'rivals' : 'typical' };
+}
+
+/** The first few things a design lacks, in the player's language: "a, b, c ve 2 şey daha". */
+export function gapNames(items: ClassGapItem[], max = 3): string {
+  const shown = items.length > max + 1 ? max : items.length;
+  const names = items.slice(0, shown).map((x) => t(researchDef(x.id)?.name ?? x.id));
+  if (items.length > shown) names.push(t('{n} şey daha', { n: items.length - shown }));
+  return list(names);
 }
