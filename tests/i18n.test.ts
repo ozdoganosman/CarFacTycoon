@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'fs';
 import { afterEach, describe, expect, it } from 'vitest';
 import { LANGS, keyOf, list, setLanguage, t, tc, type Catalog, type Plural } from '../src/i18n';
-import { fmtMoney, fmtNumber, fmtPercent } from '../src/i18n/format';
+import { dec, fmtMoney, fmtNumber, fmtPercent } from '../src/i18n/format';
 import { formatDate } from '../src/core/time';
 import { money } from '../src/core/util';
 import { pctWith } from '../src/core/turkish';
@@ -48,11 +48,13 @@ describe('catalogs', () => {
 });
 
 describe('the language helpers', () => {
-  it('Turkish stays exactly as the game always wrote it', () => {
-    expect(money(1_234_567)).toBe('$1.23 mn');
+  it('Turkish: the short money forms with the Turkish decimal comma', () => {
+    expect(money(1_234_567)).toBe('$1,23 mn');
+    expect(money(1_630_000_000)).toBe('$1,63 mr');
     expect(money(41_000)).toBe('$41 bin');
     expect(money(2600)).toBe('$2.600');
-    expect(fmtPercent(0.125)).toBe('%12.5');
+    expect(fmtPercent(0.125)).toBe('%12,5');
+    expect(dec(89)).toBe('89,0');
     expect(pctWith(0.06, 'poss')).toBe('%6’sı');
     expect(formatDate(0)).toBe('Ocak 1900');
     expect(t('{n} araç', { n: 3 })).toBe('3 araç');

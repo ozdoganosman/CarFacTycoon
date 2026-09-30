@@ -179,13 +179,34 @@ const REACH_EXP = 0.6;
 const TAU = 7;
 
 /**
+ * The most of a state's class one model can take, however good it is: buyers who never walk into our
+ * showrooms or do not trust the name stay with the makes they know. About 30% with showrooms everywhere
+ * and a good name; much less with a thin network or a poor reputation.
+ */
+export function modelShareCap(s: GameState, id: StateId, yf: number): number {
+  const reach = Math.min(1, stateReach(s, id, yf));
+  return (0.08 + 0.2 * reach) * (0.75 + 0.005 * s.company.reputation);
+}
+
+/**
+ * A model's odds against everyone else in a state, bent softly toward the cap: well under it nothing
+ * changes, far over it the model takes about the cap.
+ */
+export const cappedOdds = (odds: number, cap: number) => {
+  const k = cap / (1 - cap);
+  return odds / Math.cbrt(1 + (odds / k) ** 3);
+};
+
+/**
  * Our models' weekly buyers in one class, state by state. `utility` is each model's
- * pull (appeal, price, brand…); `others` is everyone else's weight (rivals and the small
- * makers), who sell everywhere.
+ * pull (appeal, price, brand…) and `price` the part of it that is the price; `others` is
+ * everyone else's weight (rivals and the small makers), who sell everywhere. The share
+ * cap bends what the car itself draws; the price then works in full on top, so pricing
+ * over the class still costs buyers even for a car at the cap.
  */
 export function playerStateDemand(
   s: GameState,
-  models: { id: string; utility: number }[],
+  models: { id: string; utility: number; price?: number }[],
   demand: number,
   others: number,
   segment: SegmentId,
@@ -203,7 +224,12 @@ export function playerStateDemand(
     if (reach <= 0) continue;
     const pull = Math.pow(reach, REACH_EXP) * serviceFactor(s, id, yf);
     const local = localPreference(s, id, yf);
-    const weights = models.map((m) => pull * Math.exp((m.utility + local) / TAU));
+    const cap = modelShareCap(s, id, yf);
+    const weights = models.map((m) => {
+      const price = m.price ?? 0;
+      const odds = (pull * Math.exp((m.utility - price + local) / TAU)) / others;
+      return others * cappedOdds(odds, cap) * Math.exp(price / TAU);
+    });
     const total = weights.reduce((a, x) => a + x, 0) + others;
     const d = demand * w[id];
     models.forEach((m, i) => {

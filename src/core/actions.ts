@@ -22,7 +22,7 @@ import {
   materialUnitCost,
   rescueLoan,
 } from './game';
-import { modelScores, priceNow, referencePrice } from './market';
+import { modelScores, priceNow, priceTerm, referencePrice } from './market';
 import { stateRng } from './rng';
 import { acquisitionTargets } from './acquisitions';
 import { boardVeto } from './shares';
@@ -1164,6 +1164,9 @@ export function modelSummary(s: GameState, id: string) {
 /** A throw-away CarModel for a project, used to preview demand before launch. */
 export function previewModel(s: GameState, p: Project, price: number, markets: MarketId[]): CarModel {
   const stats = computeCarStats(p.design, yearFloat(s.week), p.bonus ?? NO_BONUS);
+  // Magazines mark a car down for a steep price (writeReviews: priceTerm / 9), and a lower mark draws
+  // a smaller launch crowd (launchModel: 1.2 buzz a point): the preview's buzz follows its price.
+  const reviewShift = priceTerm(p.segment, s.company.hq, price, yearFloat(s.week)) / 9;
   return {
     id: `preview-${p.id}`,
     name: p.name,
@@ -1195,7 +1198,7 @@ export function previewModel(s: GameState, p: Project, price: number, markets: M
     history: [],
     reviews: [],
     reviewScore: 6,
-    hype: 3,
+    hype: Math.max(0, 3 + 1.2 * reviewShift),
     perceivedReliability: stats.reliability,
     fieldFailures: 0,
     warrantyCost: 0,

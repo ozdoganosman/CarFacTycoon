@@ -1633,51 +1633,51 @@
  },
  "dhpqqe": {
   "tr": "Burada zaten bayi aranıyor.",
-  "at": "src/core/network.ts:285"
+  "at": "src/core/network.ts:311"
  },
  "1auozi6": {
   "tr": "Önce komşu bir eyalette satış yapmalısın: ağ eyalet eyalet büyür.",
-  "at": "src/core/network.ts:286"
+  "at": "src/core/network.ts:312"
  },
  "fgyht7": {
   "tr": "Aynı anda en çok {n} eyalette bayi aranabilir.",
-  "at": "src/core/network.ts:287"
+  "at": "src/core/network.ts:313"
  },
  "15rbvui": {
   "tr": "Bayi aramak {cost} tutar.",
-  "at": "src/core/network.ts:321"
+  "at": "src/core/network.ts:347"
  },
  "a2m3lm": {
   "tr": "Burada kapatılacak bayi yok.",
-  "at": "src/core/network.ts:340"
+  "at": "src/core/network.ts:366"
  },
  "1m2vzs8": {
   "tr": "Servis ancak bayisi olan bir eyalette açılabilir.",
-  "at": "src/core/network.ts:349"
+  "at": "src/core/network.ts:375"
  },
  "gdqcwj": {
   "tr": "Servis atölyesi {cost} tutar.",
-  "at": "src/core/network.ts:351"
+  "at": "src/core/network.ts:377"
  },
  "p7acr7": {
   "tr": "Burada kapatılacak servis yok.",
-  "at": "src/core/network.ts:361"
+  "at": "src/core/network.ts:387"
  },
  "1wz018e": {
   "tr": "{state}’da ilk bayin açıldı: {dealer}. Arabaların artık orada da satılıyor.",
-  "at": "src/core/network.ts:412"
+  "at": "src/core/network.ts:438"
  },
  "1ltljsz": {
   "tr": "{state}’da yeni bir bayi sözleşme imzaladı ({n} bayi).",
-  "at": "src/core/network.ts:413"
+  "at": "src/core/network.ts:439"
  },
  "wdxb6x": {
   "tr": "{state}’da bayi bulunamadı: kimse markanı satmaya yanaşmadı. Yeniden denersen tanıdıkların artar; itibarın yükseldikçe de kolaylaşır.",
-  "at": "src/core/network.ts:416"
+  "at": "src/core/network.ts:442"
  },
  "2qhhu2": {
   "tr": "{company} (eski bayi)",
-  "at": "src/core/network.ts:471"
+  "at": "src/core/network.ts:497"
  },
  "ze6253": {
   "tr": "{market} Pazarı: Geçen Yılın Satışları",
@@ -8229,15 +8229,15 @@
  },
  "sl9bhk": {
   "tr": "{v} / 100 (50 = sınıf ortalaması)",
-  "at": "src/ui/components/ui.tsx:151"
+  "at": "src/ui/components/ui.tsx:154"
  },
  "kxl8uk": {
   "tr": "Tahmin: {lo}–{hi} (50 = sınıf ortalaması)",
-  "at": "src/ui/components/ui.tsx:226"
+  "at": "src/ui/components/ui.tsx:229"
  },
  "1oucclv": {
   "tr": "Ayrıntı",
-  "at": "src/ui/components/ui.tsx:237"
+  "at": "src/ui/components/ui.tsx:240"
  },
  "b84y0": {
   "tr": "Malzeme ve parça",
@@ -10372,8 +10372,8 @@
   "tr": "Lansman heyecanı",
   "at": "src/ui/screens/ModelView.tsx:353"
  },
- "dzrl3a": {
-  "tr": "İki yıldan sonra her yıl alıcı gözünde eskir; makyaj ya da yeni kuşak tazeler.",
+ "19siu9l": {
+  "tr": "Çıktığı günden başlayarak her yıl biraz, dört yaşından sonra hızla eskir; makyaj ya da yeni kuşak tazeler.",
   "at": "src/ui/screens/ModelView.tsx:356"
  },
  "1q293v4": {
@@ -10516,8 +10516,8 @@
   "tr": "dergiler “iddialı” der",
   "at": "src/ui/screens/ProjectView.tsx:219"
  },
- "1mj5fsf": {
-  "tr": "Dergiler fiyatı sınıfa göre tartar: sınıf fiyatının üstüne çıktıkça puan azar azar düşer, bu sınıfta {steep} üstünde “iddialı” derler. Ucuz başlayıp sonra zam yapmak işe yaramaz: lansmandan sonraki üç yılda {hike}’den büyük bir zam dergilerin yeniden yazmasına ve itibar kaybına yol açar.",
+ "11lwnpe": {
+  "tr": "Alıcılar sınıf fiyatının {over} üstünden sonra çok daha hızlı kaçar. Dergiler fiyatı sınıfa göre tartar: sınıf fiyatının üstüne çıktıkça puan azar azar düşer, bu sınıfta {steep} üstünde “iddialı” derler; düşük puan lansman kalabalığını da küçültür. Ucuz başlayıp sonra zam yapmak işe yaramaz: lansmandan sonraki üç yılda {hike}’den büyük bir zam dergilerin yeniden yazmasına ve itibar kaybına yol açar.",
   "at": "src/ui/screens/ProjectView.tsx:230"
  },
  "19siuhf": {

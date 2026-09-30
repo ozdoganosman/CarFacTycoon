@@ -2,7 +2,7 @@ import { useState } from 'react';
 import * as A from '../../core/actions';
 import { credit, dealerUpkeep, gates, materialUnitCost, protoUnitCost } from '../../core/game';
 import { lineReport, lineUpkeep, reservedLines, suggestedLine, turnkeyLineCost, workshopLineCost } from '../../core/factory';
-import { MARKET_IDS, demandAtPrice, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
+import { MARKET_IDS, PRICE_OVER_FROM, demandAtPrice, referencePrice, segmentMarket, steepPriceRatio, weeklySegmentDemand } from '../../core/market';
 import { AREA_NAMES, SEVERITY_NAMES, SUPPLIERS, TESTS, defectRange, defectText, expectedRemaining, riskLabel, testTuning, testWeekCost, type Tuning } from '../../core/testing';
 import { yearFloat } from '../../core/time';
 import { DEALER_COMMISSION, costIndex, engineerSalary, lineBuildWeeks, overhead, shopCost } from '../../data/economy';
@@ -228,8 +228,8 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
       </table>
       <p className="muted small">
         {t(
-          'Dergiler fiyatı sınıfa göre tartar: sınıf fiyatının üstüne çıktıkça puan azar azar düşer, bu sınıfta {steep} üstünde “iddialı” derler. Ucuz başlayıp sonra zam yapmak işe yaramaz: lansmandan sonraki üç yılda {hike}’den büyük bir zam dergilerin yeniden yazmasına ve itibar kaybına yol açar.',
-          { steep: percent(steep - 1, 0), hike: percent(A.HIKE_TOLERANCE, 0) },
+          'Alıcılar sınıf fiyatının {over} üstünden sonra çok daha hızlı kaçar. Dergiler fiyatı sınıfa göre tartar: sınıf fiyatının üstüne çıktıkça puan azar azar düşer, bu sınıfta {steep} üstünde “iddialı” derler; düşük puan lansman kalabalığını da küçültür. Ucuz başlayıp sonra zam yapmak işe yaramaz: lansmandan sonraki üç yılda {hike}’den büyük bir zam dergilerin yeniden yazmasına ve itibar kaybına yol açar.',
+          { over: percent(PRICE_OVER_FROM, 0), steep: percent(steep - 1, 0), hike: percent(A.HIKE_TOLERANCE, 0) },
         )}
       </p>
     </div>

@@ -86,12 +86,24 @@ export function referencePrice(market: MarketId, segment: SegmentId, yf: number)
  * far above the class price loses most buyers, so profit comes from volume.
  */
 export const PRICE_COEF = 40;
+/**
+ * Past 15% over the class price a car leaves most of its buyers' budgets: each further step up the price
+ * loses buyers PRICE_OVER times faster, so a good car cannot also charge double.
+ */
+export const PRICE_OVER_FROM = 0.15;
+const PRICE_OVER = 1.5;
 /** Launch buzz counts, but less than the car itself. */
-const HYPE_WEIGHT = 0.6;
+const HYPE_WEIGHT = 0.4;
+
+/** The price's pull on buyers against the class price, in log terms, with the steeper slope past +15%. */
+const priceSlope = (ratio: number) => {
+  const lr = Math.log(ratio);
+  return lr + PRICE_OVER * Math.max(0, lr - Math.log(1 + PRICE_OVER_FROM));
+};
 
 export function priceTerm(segment: SegmentId, market: MarketId, consumer: number, yf: number): number {
   const sens = segmentDef(segment).priceSens * eraMods(market, yf).priceSens;
-  return -sens * PRICE_COEF * Math.log(consumer / referencePrice(market, segment, yf));
+  return -sens * PRICE_COEF * priceSlope(consumer / referencePrice(market, segment, yf));
 }
 
 /** Past this many utility points either way, magazines and buyers talk about the price. */
@@ -100,7 +112,10 @@ export const PRICE_REMARK = 8;
 /** How far above the class price (as a ratio) a car can go before it is called steep. */
 export function steepPriceRatio(segment: SegmentId, market: MarketId, yf: number): number {
   const sens = segmentDef(segment).priceSens * eraMods(market, yf).priceSens;
-  return Math.exp(PRICE_REMARK / (sens * PRICE_COEF));
+  const lr = PRICE_REMARK / (sens * PRICE_COEF);
+  const knee = Math.log(1 + PRICE_OVER_FROM);
+  // Undo the steeper slope past the knee.
+  return Math.exp(lr <= knee ? lr : knee + (lr - knee) / (1 + PRICE_OVER));
 }
 
 export const brandTerm = (reputation: number, segment: SegmentId) => (reputation - 50) * 0.12 * segmentDef(segment).brandSens;
@@ -194,18 +209,21 @@ export function rivalPriceNow(rm: RivalModel, week: number): number {
 // ---- offers & shares ----
 
 /**
- * Buyers tire of a design: after two years on sale a car starts to look dated,
- * more so every year, whatever its specification.
+ * Buyers tire of a design little by little from the day it comes out (about an eighth of its buyers a
+ * year), and faster once it is past four years old, whatever its specification.
  */
-export const DATED_PER_YEAR = 3;
+export const DATED_PER_YEAR = 1;
+const DATED_OLD_FROM = 4;
+const DATED_PER_OLD_YEAR = 2.5;
 export function datedPenalty(ageYears: number): number {
-  return -Math.min(20, Math.max(0, ageYears - 2) * DATED_PER_YEAR);
+  const a = Math.max(0, ageYears);
+  return -Math.min(20, a * DATED_PER_YEAR + Math.max(0, a - DATED_OLD_FROM) * DATED_PER_OLD_YEAR);
 }
 
-/** How old a model looks: a facelift takes about two thirds of the years off. */
+/** How old a model looks: a facelift takes about three quarters of the years off. */
 export function modelAgeYears(model: Pick<CarModel, 'launchWeek' | 'refreshWeek'>, week: number): number {
   const refresh = model.refreshWeek ?? model.launchWeek;
-  return (week - refresh) / 52 + 0.35 * ((refresh - model.launchWeek) / 52);
+  return (week - refresh) / 52 + 0.25 * ((refresh - model.launchWeek) / 52);
 }
 
 export interface Offer {
@@ -334,7 +352,7 @@ export function segmentMarket(state: GameState, market: MarketId, segment: Segme
   if (!mine.length || demand <= 0) return { demand, offers, othersWeight, totalWeight: rivalsWeight + othersWeight, player };
   const split = playerStateDemand(
     state,
-    mine.map((o) => ({ id: o.id, utility: o.utility })),
+    mine.map((o) => ({ id: o.id, utility: o.utility, price: o.priceTerm })),
     demand,
     rivalsWeight + othersWeight,
     segment,

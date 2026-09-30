@@ -617,9 +617,11 @@ describe('market pressure', () => {
     expect(materialUnitCost(s, { ...base, tooling: 'precision' })).toBeLessThan(materialUnitCost(s, { ...base, tooling: 'soft' }));
   });
 
-  it('a model looks dated after two years and a facelift takes most of that away', () => {
-    expect(datedPenalty(1.5)).toBe(-0);
-    expect(datedPenalty(5)).toBeLessThan(-8);
+  it('a model looks dated little by little, faster when old, and a facelift takes most of that away', () => {
+    // No cliff: each of the first years costs the same small amount.
+    expect(datedPenalty(1)).toBeCloseTo(-1);
+    expect(datedPenalty(2) - datedPenalty(1)).toBeCloseTo(datedPenalty(1));
+    expect(datedPenalty(6)).toBeLessThan(-8);
     expect(datedPenalty(30)).toBe(-20);
     const aged = modelAgeYears({ launchWeek: 0, refreshWeek: 0 }, 52 * 8);
     const faced = modelAgeYears({ launchWeek: 0, refreshWeek: 52 * 7 }, 52 * 8);

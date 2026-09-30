@@ -353,7 +353,7 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
             <span>{t('Lansman heyecanı')}</span>
             <b>+{dec(mine.hype, 1)}</b>
           </div>
-          <div title={t('İki yıldan sonra her yıl alıcı gözünde eskir; makyaj ya da yeni kuşak tazeler.')}>
+          <div title={t('Çıktığı günden başlayarak her yıl biraz, dört yaşından sonra hızla eskir; makyaj ya da yeni kuşak tazeler.')}>
             <span>{t('Yaş')}</span>
             <b className={mine.age < 0 ? 'tone-bad' : ''}>{dec(mine.age, 1)}</b>
           </div>
