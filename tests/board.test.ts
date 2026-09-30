@@ -7,7 +7,23 @@ import { makeRng } from '../src/core/rng';
 import { lastMove, mergeRivals, rivalMovesMonth, startPriceWar, techLeap } from '../src/core/rivalMoves';
 import { rivalDef, updateRivals } from '../src/core/rivals';
 import { deserialize, serialize } from '../src/core/save';
-import { boardVeto, boardYear, buyBack, canGoPublic, goPublic, marketCap, nextTarget } from '../src/core/shares';
+import {
+  VETO_AT,
+  boardOutlook,
+  boardVeto,
+  boardYear,
+  boughtThisYear,
+  buyBack,
+  buybackCost,
+  buybackPremium,
+  canGoPublic,
+  dividendFor,
+  goPublic,
+  issueShares,
+  marketCap,
+  nextTarget,
+} from '../src/core/shares';
+import { money } from '../src/core/util';
 import { setRacingLevel } from '../src/core/racing';
 import { weekFor } from '../src/core/time';
 import type { GameState, YearSummary } from '../src/core/types';
@@ -234,25 +250,131 @@ describe('the stock exchange and the board', () => {
   });
 
   it('expects half the profit and a rising dividend; a great year and a rival on the board raise the bar', () => {
-    // Calm years, far from the caps: 1926 and 1927.
-    const s = game(1926);
+    // Calm years with a growing market, far from the caps: 1924 and 1925.
+    const s = game(1924);
     const sh = listed(s, 0.3);
-    const base = nextTarget(s, 1926);
+    const base = nextTarget(s, 1924);
+    expect(base.growth).toBeGreaterThan(0);
     expect(base.dividend).toBeCloseTo(0.3 * 0.5 * 80000, 0);
     // A year that paid 60% of its profit and grew far beyond the target.
-    sh.history.push({ year: 1926, growth: base.growth + 0.3, targetGrowth: base.growth, dividend: 0.3 * 0.6 * 1e5, targetDividend: 0, profit: 1e5, met: true, confidence: 70, full: 0.6 * 1e5 });
-    s.years.push(summary(1926, 2e6, 1e5));
-    const next = nextTarget(s, 1927);
+    sh.history.push({ year: 1924, growth: base.growth + 0.3, targetGrowth: base.growth, dividend: 0.3 * 0.6 * 1e5, targetDividend: 0, profit: 1e5, met: true, confidence: 70, full: 0.6 * 1e5 });
+    s.years.push(summary(1924, 2e6, 1e5));
+    const next = nextTarget(s, 1925);
     expect(next.dividend).toBeCloseTo(0.3 * 0.63 * 1e5, 0);
     const calm = { ...sh.history[0], growth: base.growth };
     sh.history[0] = calm;
-    const plain = nextTarget(s, 1927);
+    const plain = nextTarget(s, 1925);
     sh.history[0] = { ...calm, growth: base.growth + 0.3 };
     expect(next.growth).toBeGreaterThan(plain.growth + 0.04);
     sh.seat = 'monarch';
-    const strict = nextTarget(s, 1927);
+    const strict = nextTarget(s, 1925);
     expect(strict.growth).toBeGreaterThan(next.growth + 0.03);
     expect(strict.dividend).toBeCloseTo(next.dividend * 1.15, 0);
+  });
+
+  it('in a crisis year the dividend target falls with the revenue target', () => {
+    const s = game(1930);
+    listed(s, 0.25);
+    const crash = nextTarget(s, 1930);
+    expect(crash.growth).toBeLessThan(-0.2);
+    expect(crash.dividend).toBeCloseTo(0.25 * 0.5 * 80000 * (1 + crash.growth), 0);
+    // The war years: the board expects half the revenue, and half the dividend.
+    const war = game(1943);
+    listed(war, 0.25);
+    expect(nextTarget(war, 1943).dividend).toBeCloseTo(0.25 * 0.5 * 80000 * 0.5, 0);
+  });
+
+  it('buying shares back recomputes the year’s dividend target for the smaller outside share', () => {
+    const s = game(1920);
+    const sh = listed(s, 0.25);
+    s.company.cash = 1e9;
+    const target = sh.target.dividend;
+    expect(target).toBeGreaterThan(0);
+    for (let i = 0; i < 4; i++) expect(buyBack(s, 0.05).ok).toBe(true);
+    expect(sh.float).toBeCloseTo(0.05, 6);
+    expect(sh.target.dividend).toBeCloseTo((target * 0.05) / 0.25, 0);
+    // The board panel's forecast and the log follow the new share.
+    const out = boardOutlook(s)!;
+    expect(out.dividend).toBeCloseTo(dividendFor(s, out.profit), 6);
+    expect(s.log[s.log.length - 1].text).toContain(money(sh.target.dividend));
+    // New shares raise it again.
+    expect(issueShares(s, 0.05).ok).toBe(true);
+    expect(sh.target.dividend).toBeCloseTo((target * 0.1) / 0.25, 0);
+  });
+
+  it('each slice bought back costs more than the one before', () => {
+    const s = game(1926);
+    const sh = listed(s, 0.3);
+    s.company.cash = 1e9;
+    const slices: number[] = [];
+    for (let i = 0; i < 5; i++) {
+      slices.push(buybackCost(s, 0.05));
+      expect(buyBack(s, 0.05).ok).toBe(true);
+    }
+    for (let i = 1; i < slices.length; i++) expect(slices[i]).toBeGreaterThan(slices[i - 1] * 1.03);
+    expect(sh.bought).toMatchObject({ year: 1926 });
+    // The premium over the market price is shown, and it climbs.
+    expect(buybackPremium(s, 0.05)).toBeGreaterThan(0.3);
+    // Buying the same 25% at once costs about what the five slices did.
+    const fresh = game(1926);
+    listed(fresh, 0.3);
+    fresh.company.cash = 1e9;
+    const once = buybackCost(fresh, 0.25);
+    const total = slices.reduce((a, b) => a + b, 0);
+    expect(once).toBeGreaterThan(total * 0.93);
+    expect(once).toBeLessThan(total * 1.02);
+    // A new year, a fresh market: the push is gone.
+    s.week = weekFor(1927);
+    expect(boughtThisYear(s).pct).toBe(0);
+  });
+
+  it('one bad year, however bad, brings at most a warning; the veto needs another', () => {
+    for (const start of [100, 75, 60, 50, 40]) {
+      const s = game(1920);
+      const sh = listed(s);
+      sh.confidence = start;
+      sh.payout = 0;
+      sh.seat = 'monarch';
+      // Sales halve, a loss, no dividend: the worst year there is.
+      s.years.push(summary(1920, 5e5, -1e5));
+      s.week = weekFor(1921);
+      expect(boardYear(s, 1920)).toBe(false);
+      expect(sh.confidence).toBeGreaterThanOrEqual(VETO_AT);
+      expect(boardVeto(s)).toBeUndefined();
+      expect(sh.ultimatum).toBeFalsy();
+      expect(s.modals.some((m) => m.kind === 'event' && m.eventId === 'board-warning')).toBe(true);
+      // A second bad year in a row: now the board forbids.
+      s.years.push(summary(1921, 3e5, -1e5));
+      s.week = weekFor(1922);
+      boardYear(s, 1921);
+      expect(boardVeto(s)).toBeTruthy();
+    }
+  });
+
+  it('a year whose profit grew as much as asked meets the growth target even when sales dipped', () => {
+    const s = game(1920);
+    const sh = listed(s);
+    sh.payout = 1;
+    sh.target = { year: 1920, growth: 0.2, dividend: 0 };
+    // After a boom year: revenue −6.8%, profit +25%.
+    s.years.push(summary(1920, 1e6 * 0.932, 1e5));
+    s.week = weekFor(1921);
+    const before = sh.confidence;
+    boardYear(s, 1920);
+    const last = sh.history[sh.history.length - 1];
+    expect(last.met).toBe(true);
+    expect(last.profitGrowth).toBeCloseTo(0.25, 6);
+    expect(sh.confidence).toBeGreaterThan(before - 5);
+    // After a loss year any profit would look like growth: then only revenue counts.
+    const loss = game(1920);
+    const lh = listed(loss);
+    lh.payout = 1;
+    loss.years[loss.years.length - 1].profit = -1e4;
+    lh.target = { year: 1920, growth: 0.2, dividend: 0 };
+    loss.years.push(summary(1920, 1e6 * 0.932, 1e5));
+    loss.week = weekFor(1921);
+    boardYear(loss, 1920);
+    expect(lh.history[lh.history.length - 1].met).toBe(false);
   });
 
   it('a board that lost faith vetoes racing, buying rivals and new lines', () => {
@@ -266,15 +388,15 @@ describe('the stock exchange and the board', () => {
     expect(setRacingLevel(s, 2).ok).toBe(false);
     // Cutting back is always allowed.
     expect(setRacingLevel(s, 0).ok).toBe(true);
-    // A bad board meeting disbands the racing team.
-    sh.confidence = 45;
+    // A bad board meeting after the warning disbands the racing team.
+    sh.confidence = 38;
     s.racing = { level: 2, fame: 1 };
     sh.payout = 0;
     s.years.push(summary(1920, 1, 1e4));
     s.week = weekFor(1921);
     sh.target = { year: 1920, growth: 0.1, dividend: 1e6 };
     boardYear(s, 1920);
-    expect(sh.confidence).toBeLessThan(40);
+    expect(sh.confidence).toBeLessThan(VETO_AT);
     expect(s.racing.level).toBe(0);
   });
 });

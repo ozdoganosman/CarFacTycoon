@@ -95,7 +95,7 @@ function nextSteps(s: GameState): { text: string; go?: () => void }[] {
   // The board: say it early when this year's targets are slipping.
   const board = boardOutlook(s);
   if (s.shares && board?.judged && weekOfYear(s.week) >= 13) {
-    const short = [board.projected < board.needed ? t('ciro') : '', board.dividend < s.shares.target.dividend * 0.98 ? t('temettü') : ''].filter(Boolean);
+    const short = [board.growthOk ? '' : t('ciro'), board.dividendOk ? '' : t('temettü')].filter(Boolean);
     if (short.length) {
       const p = { year: s.shares.target.year, what: list(short), trust: Math.round(s.shares.confidence) };
       out.push({
