@@ -137,6 +137,74 @@ describe('state network', () => {
     expect(N.marginalWeekly(s, 1, 0, yf)).toBeGreaterThan(N.dealerSupport(yf));
   });
 
+  it('weighs a service shop like a dealer in the overhead, the same in the whole bill and the marginal one', () => {
+    const s = game();
+    const yf = 1930.5;
+    const n = N.stateNet(s, 'MI');
+    n.dealers = 40;
+    const dealersOnly = N.networkOverhead(s, yf);
+    n.dealers = 20;
+    n.service = 20;
+    expect(N.networkOverhead(s, yf)).toBeCloseTo(dealersOnly, 6);
+    expect(N.marginalWeekly(s, 0, 1, yf) - N.shopUpkeep(yf)).toBeCloseTo(N.marginalWeekly(s, 1, 0, yf) - N.dealerSupport(yf), 6);
+    const before = N.networkWeekly(s, yf);
+    const add = N.marginalWeekly(s, 0, 5, yf);
+    n.service += 5;
+    expect(N.networkWeekly(s, yf) - before).toBeCloseTo(add, 6);
+    // The playtest's network of mid-1930 (64 dealers, 767 shops): its overhead was $8.8 mn a year with shops counted twice.
+    n.dealers = 64;
+    n.service = 767;
+    expect(N.networkOverhead(s, yf) * 52).toBeGreaterThan(2.8e6);
+    expect(N.networkOverhead(s, yf) * 52).toBeLessThan(3.4e6);
+  });
+
+  it('parts and repairs pay for the cars the shops look after, never for idle shops', () => {
+    const s = game();
+    const yf = 1930;
+    const n = N.stateNet(s, 'OH');
+    n.dealers = 2;
+    n.parc = 20000;
+    // Only the dealers' workshops: they keep what they take in.
+    expect(N.partsWeekly(s, yf)).toBe(0);
+    // Three shops, all of them busy.
+    n.service = 3;
+    expect(N.partsWeekly(s, yf)).toBeCloseTo(3 * N.partsPerShop(yf), 6);
+    // Enough for every car: more shops earn nothing more.
+    n.service = 20;
+    const all = N.partsWeekly(s, yf);
+    expect(N.shopCars(s, 'OH', yf)).toBeLessThan(n.parc);
+    expect(all).toBeCloseTo(N.shopCars(s, 'OH', yf) * N.partsPerCar(yf), 6);
+    n.service = 60;
+    expect(N.partsWeekly(s, yf)).toBeCloseTo(all, 6);
+  });
+
+  it('a big network earns back about half its cost from parts and repairs', () => {
+    const s = game();
+    const yf = 1930.5;
+    const n = N.stateNet(s, 'MI');
+    // The playtest's network: 1.46 million cars on the road, all looked after.
+    n.dealers = 64;
+    n.service = 767;
+    n.parc = 1.46e6;
+    expect(N.serviceQuality(s, 'MI', yf)).toBe(1);
+    const share = N.partsWeekly(s, yf) / N.networkWeekly(s, yf);
+    expect(share).toBeGreaterThan(0.4);
+    expect(share).toBeLessThan(0.6);
+  });
+
+  it('books parts and repairs in the revenue and on a line of their own', () => {
+    const s = game();
+    s.company.cash = 1e6;
+    N.recordStateSales(s, 'MI', 3000, yearFloat(s.week));
+    N.stateNet(s, 'MI').service = 5;
+    tick(s);
+    const f = s.finance[s.finance.length - 1];
+    expect(f.parts).toBeGreaterThan(0);
+    expect(f.revenue).toBeCloseTo(f.parts!, 6);
+    for (let i = 0; i < 52; i++) tick(s);
+    expect(s.years[0].parts).toBeGreaterThan(0);
+  });
+
   it('brings an old save to the American, state-by-state game', () => {
     const s = game();
     runBot(s, 52 * 6, { segments: ['family'] });
@@ -235,6 +303,57 @@ describe('network in bulk', () => {
     autoService(s);
     expect(N.stateNet(s, 'MI').service).toBeLessThan(before);
     expect(N.serviceQuality(s, 'MI', yf)).toBe(1);
+  });
+
+  it('keeps the chosen service target, and closes shops above 1.3 times it', () => {
+    const s = crowded();
+    const yf = yearFloat(s.week);
+    s.company.cash = 1e7;
+    // All of it by default, and in older saves that never chose.
+    expect(N.serviceTarget(s)).toBe(1);
+    const old = JSON.parse(serialize(s)) as GameState;
+    delete old.network!.serviceTarget;
+    expect(N.serviceTarget(deserialize(JSON.stringify(old)))).toBe(1);
+    const full = N.servicePlan(s, yf).count;
+    N.setServiceTarget(s, 0.7);
+    expect(N.serviceTarget(s)).toBe(1);
+    // 80%: fewer shops, and service between the target and full.
+    N.setServiceTarget(s, 0.8);
+    expect(N.servicePlan(s, yf).count).toBeLessThan(full);
+    autoService(s);
+    expect(N.serviceSatisfaction(s, yf)).toBeGreaterThanOrEqual(0.8);
+    expect(N.serviceSatisfaction(s, yf)).toBeLessThan(1);
+    // Back to full service, then down again: the shops above 1.3× the lower target close.
+    N.setServiceTarget(s, 1);
+    autoService(s);
+    expect(N.serviceSatisfaction(s, yf)).toBe(1);
+    const shops = N.totalService(s);
+    N.setServiceTarget(s, 0.8);
+    autoService(s);
+    expect(N.totalService(s)).toBeLessThan(shops);
+    for (const id of ['MI', 'OH', 'IN'] as const) expect(N.serviceQuality(s, id, yf)).toBeGreaterThanOrEqual(0.8);
+    expect(N.servicePlan(s, yf).count).toBe(0);
+  });
+
+  it('closes idle shops only once service stays 1.3 times above the need without one', () => {
+    const s = game();
+    const yf = 1930;
+    const n = N.stateNet(s, 'OH');
+    n.dealers = 1;
+    n.service = 10;
+    const per = N.shopServiceCap(yf);
+    const cap = N.serviceCapacity(s, 'OH', yf);
+    const parcAt = (ratio: number) => (cap - per) / ratio / N.serviceNeed(yf);
+    // Without one shop still 1.25× what the cars need: all stay.
+    n.parc = parcAt(1.25);
+    expect(N.surplusShops(s, 'OH', yf)).toBe(0);
+    // 1.35×: the idle ones close, enough stay for 1.2× the need.
+    n.parc = parcAt(1.35);
+    const idle = N.surplusShops(s, 'OH', yf);
+    expect(idle).toBeGreaterThan(0);
+    expect(cap - idle * per).toBeGreaterThanOrEqual(1.2 * n.parc * N.serviceNeed(yf) - 1e-6);
+    // A lower target leaves more of them idle.
+    expect(N.surplusShops(s, 'OH', yf, 0.8)).toBeGreaterThan(idle);
   });
 
   it("a bought rival's dealers open states the make did not sell in yet", () => {

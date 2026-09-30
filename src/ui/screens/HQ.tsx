@@ -13,7 +13,7 @@ import { segmentDef } from '../../data/segments';
 import type { CarModel, GameState, LogCategory } from '../../core/types';
 import { useState } from 'react';
 import { store, useGameState } from '../store';
-import { dec, money, num, pct, recentProfit, signedMoney } from '../format';
+import { dec, money, num, pct, pctOf, recentProfit, signedMoney } from '../format';
 import { Badge, Button, Empty, Panel, Progress, Stat, Table } from '../components/ui';
 import { LineChart } from '../viz/LineChart';
 import { NewsArchive } from '../components/Newspaper';
@@ -37,6 +37,8 @@ interface Step {
 
 function nextSteps(s: GameState): Step[] {
   const out: Step[] = [];
+  /** A network that eats half the revenue: said near the top, it can sink the company. */
+  let heavy: Step | undefined;
   if (!s.projects.length && !s.models.some((m) => m.status === 'active')) {
     out.push({ text: t('İlk aracını tasarla: yeni bir proje başlat.'), go: () => store.go({ id: 'projects' }) });
   }
@@ -99,22 +101,50 @@ function nextSteps(s: GameState): Step[] {
         fix: { label: t('Komşularda bayi ara'), run: () => askSearchNeighbours(s) },
       });
     }
+    const target = N.serviceTarget(s);
     const poor = N.underServed(s, yf, 0.7).slice(0, 3);
     if (poor.length) {
       const plan = N.servicePlan(s, yf);
-      const p = { parc: num(N.totalParc(s)), shops: num(N.totalService(s)), n: plan.count, states: list(poor.map((id) => stateDef(id).name)) };
+      const p = { parc: num(N.totalParc(s)), shops: num(N.totalService(s)), n: plan.count, states: list(poor.map((id) => stateDef(id).name)), target: pct(target, 0) };
+      const auto = s.network?.autoService;
       out.push({
-        text: s.network?.autoService
-          ? t('Servis yetmiyor: {parc} araban için {shops} servis atölyesi var, ~{n} tane daha gerekiyor. En kötüleri: {states}. Otomatik servis kasa yettikçe açıyor.', p)
-          : t('Servis yetmiyor: {parc} araban için {shops} servis atölyesi var, ~{n} tane daha gerekiyor. En kötüleri: {states}. Sahipler bekliyor, arabalar erken hurdaya çıkıyor.', p),
+        text:
+          target < 1
+            ? auto
+              ? t('Servis yetmiyor: {parc} araban için {shops} servis atölyesi var, {target} servis hedefi için ~{n} tane daha gerekiyor. En kötüleri: {states}. Otomatik servis kasa yettikçe açıyor.', p)
+              : t('Servis yetmiyor: {parc} araban için {shops} servis atölyesi var, {target} servis hedefi için ~{n} tane daha gerekiyor. En kötüleri: {states}. Sahipler bekliyor, arabalar erken hurdaya çıkıyor.', p)
+            : auto
+              ? t('Servis yetmiyor: {parc} araban için {shops} servis atölyesi var, ~{n} tane daha gerekiyor. En kötüleri: {states}. Otomatik servis kasa yettikçe açıyor.', p)
+              : t('Servis yetmiyor: {parc} araban için {shops} servis atölyesi var, ~{n} tane daha gerekiyor. En kötüleri: {states}. Sahipler bekliyor, arabalar erken hurdaya çıkıyor.', p),
         go: toMap,
         fix: plan.count ? { label: t('Servisi yetir'), run: () => askCoverService(s) } : undefined,
       });
     }
+    // The network's cost less what its shops take in for parts and repairs.
+    const cost = N.networkWeekly(s, yf);
+    const parts = N.partsWeekly(s, yf);
+    const books = s.finance.slice(-52);
+    const yearRevenue = books.reduce((a, f) => a + f.revenue, 0);
     const revenue = s.finance.slice(-13).reduce((a, f) => a + f.revenue, 0) / 13;
-    if (revenue > 0 && N.networkWeekly(s, yf) > revenue * 0.12)
+    const bill = { cost: money(cost * 52), parts: money(parts * 52) };
+    if (books.length >= 26 && yearRevenue > 0 && (cost - parts) * 52 > yearRevenue * 0.5) {
+      // Half of what the company takes in goes to the network: a lower service target is the quickest cut.
+      const lower = N.SERVICE_TARGETS.find((v) => v < target);
+      const q = { ...bill, share: pctOf(((cost - parts) * 52) / yearRevenue), target: pct(lower ?? target, 0) };
+      heavy = {
+        text:
+          lower !== undefined
+            ? t('Bayi ve servis ağı yılda {cost} tutuyor, parça ve tamir {parts} getiriyor: net gideri son bir yılın cirosunun {share}. Şirket bu yükü uzun taşıyamaz: servis hedefini {target} yapmak atölyeleri ve genel gideri azaltır.', q)
+            : t('Bayi ve servis ağı yılda {cost} tutuyor, parça ve tamir {parts} getiriyor: net gideri son bir yılın cirosunun {share}. Servis hedefi zaten en düşükte ({target}): az satan bayileri kapat.', q),
+        go: toMap,
+        fix: lower !== undefined ? { label: t('Servis hedefi {target}', q), run: () => store.act((st) => N.setServiceTarget(st, lower)) } : undefined,
+      };
+    } else if (revenue > 0 && cost - parts > revenue * 0.12)
       out.push({
-        text: t('Bayi ve servis ağının gideri satış gelirinin {share}’i: az satan bayileri kapatmayı düşün.', { share: pct(N.networkWeekly(s, yf) / revenue, 0) }),
+        text:
+          parts > 0
+            ? t('Bayi ve servis ağı yılda {cost} tutuyor, parça ve tamir {parts} getiriyor: net gideri satış gelirinin {share}. Az satan bayileri kapatmayı düşün.', { ...bill, share: pctOf((cost - parts) / revenue) })
+            : t('Bayi ve servis ağının gideri satış gelirinin {share}’i: az satan bayileri kapatmayı düşün.', { share: pct(cost / revenue, 0) }),
         go: toMap,
       });
   }
@@ -184,6 +214,7 @@ function nextSteps(s: GameState): Step[] {
       }),
       go: () => store.go({ id: 'research' }),
     });
+  if (heavy) out.unshift(heavy);
   if (s.company.cash < 0) out.unshift({ text: t('Kasa ekside! Kredi al ya da masrafları kıs.'), go: () => store.go({ id: 'finance' }) });
   return out.slice(0, 6);
 }

@@ -4223,6 +4223,13 @@ fieldset {
   justify-content: space-between;
   gap: 6px 10px;
 }
+.svc-target {
+  align-items: center;
+  margin: 0;
+}
+.svc-target > .muted {
+  flex-basis: 100%;
+}
 .net-layout {
   display: grid;
   grid-template-columns: minmax(0, 2.1fr) minmax(260px, 1fr);

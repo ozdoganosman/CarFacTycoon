@@ -13,7 +13,7 @@ import type { GameState, ModalItem } from '../../core/types';
 import { lower, t } from '../../i18n';
 import { store, useGameState } from '../store';
 import { useBackClose } from '../back';
-import { COST_NAMES, dec, money, num, pct, signedMoney } from '../format';
+import { COST_NAMES, INCOME_NAMES, dec, money, num, pct, signedMoney } from '../format';
 import { Button } from './ui';
 import { CardAnimation } from './CardAnimation';
 import { LaunchReportView, LaunchShow } from './LaunchShow';
@@ -728,6 +728,12 @@ export function YearReportBody({ s, year }: { s: GameState; year: number }) {
         <span>{t('Ciro')}</span>
         <b>{money(y.revenue)}</b>
       </div>
+      {(y.parts ?? 0) > 0 && (
+        <div>
+          <span>{t(INCOME_NAMES.parts)}</span>
+          <b>{money(y.parts!)}</b>
+        </div>
+      )}
       <div>
         <span>{t('Faaliyet kârı')}</span>
         <b className={y.profit < 0 ? 'tone-bad' : 'tone-good'}>{money(y.profit)}</b>

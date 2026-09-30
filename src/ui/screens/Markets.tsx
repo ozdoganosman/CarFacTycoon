@@ -10,7 +10,7 @@ import { ATTRS, ATTR_NAMES, MARKET_TASTE, SEGMENTS, segmentDef } from '../../dat
 import { REGION_NAMES, STATE_IDS, stateDef, statePop, stateWeights, type StateId } from '../../data/states';
 import type { GameState } from '../../core/types';
 import { store, useGameState } from '../store';
-import { dec, money, num, pct } from '../format';
+import { INCOME_NAMES, dec, money, num, pct } from '../format';
 import { Badge, Button, NumberInput, Panel, Table, Toggle } from '../components/ui';
 import { Importance } from '../components/StatsPanel';
 import { LineChart } from '../viz/LineChart';
@@ -126,6 +126,8 @@ function NetworkPanel() {
   const { tone, legend } = tones(s, overlay, yf);
   const scrapped = STATE_IDS.reduce((a, id) => a + (s.network?.states[id]?.scrapped ?? 0), 0);
   const freightYear = STATE_IDS.reduce((a, id) => a + (s.network?.states[id]?.freightYear ?? 0), 0);
+  const cost = N.networkWeekly(s, yf) * 52;
+  const parts = N.partsWeekly(s, yf) * 52;
   return (
     <Panel title={t('Bayi ve servis haritası')}>
       <div className="net-summary">
@@ -155,7 +157,15 @@ function NetworkPanel() {
         </div>
         <div>
           <span className="muted small">{t('Ağ gideri')}</span>
-          <b>{t('{cost}/yıl', { cost: money(N.networkWeekly(s, yf) * 52) })}</b>
+          <b>{t('{cost}/yıl', { cost: money(cost) })}</b>
+        </div>
+        <div>
+          <span className="muted small">{t(INCOME_NAMES.parts)}</span>
+          <b className="tone-good">{t('{cost}/yıl', { cost: money(parts) })}</b>
+        </div>
+        <div>
+          <span className="muted small">{t('Ağın net gideri')}</span>
+          <b>{t('{cost}/yıl', { cost: money(cost - parts) })}</b>
         </div>
         <div>
           <span className="muted small">{t('Nakliye (bu yıl)')}</span>
@@ -212,16 +222,27 @@ export async function askCoverService(s: GameState) {
     states: N.planStates(plan.states),
     cost: money(plan.cost),
     upkeep: money(N.marginalWeekly(s, 0, plan.count, yf) * 52),
+    target: pct(N.serviceTarget(s), 0),
   };
-  const ok = await store.ask({
-    title: t('Servisi yetir: {n} servis atölyesi açılsın mı?', p),
-    body:
-      plan.count < all.count
+  const partial = plan.count < all.count;
+  // Short of the full service by choice: the plan reaches the company's target, not every car.
+  const body =
+    N.serviceTarget(s) < 1
+      ? partial
+        ? t(
+            'Servisi {target} hedefine çıkarmak için {all} atölye gerekiyor ({allCost}) ama kasan {n} tanesine yetiyor: önce sahiplerin en çok beklediği eyaletlere. Açılacak atölyeler: {states}. Açılışları {cost}; ağın yıllık gideri ~{upkeep} artar (bölge müdürlükleri ve parça depoları dahil).',
+            p,
+          )
+        : t('Açılacak atölyeler: {states}. Açılışları {cost}; ağın yıllık gideri ~{upkeep} artar (bölge müdürlükleri ve parça depoları dahil). Sonra her eyalette servis {target} hedefini tutar.', p)
+      : partial
         ? t(
             'Bütün arabalarına bakmak için {all} atölye gerekiyor ({allCost}) ama kasan {n} tanesine yetiyor: önce sahiplerin en çok beklediği eyaletlere. Açılacak atölyeler: {states}. Açılışları {cost}; ağın yıllık gideri ~{upkeep} artar (bölge müdürlükleri ve parça depoları dahil).',
             p,
           )
-        : t('Açılacak atölyeler: {states}. Açılışları {cost}; ağın yıllık gideri ~{upkeep} artar (bölge müdürlükleri ve parça depoları dahil). Sonra her eyalette arabalarına bakacak yer olur.', p),
+        : t('Açılacak atölyeler: {states}. Açılışları {cost}; ağın yıllık gideri ~{upkeep} artar (bölge müdürlükleri ve parça depoları dahil). Sonra her eyalette arabalarına bakacak yer olur.', p);
+  const ok = await store.ask({
+    title: t('Servisi yetir: {n} servis atölyesi açılsın mı?', p),
+    body,
     confirm: t('{cost} öde, aç', p),
   });
   if (ok) store.try((st) => N.coverService(st), t('{n} servis atölyesi açıldı', p));
@@ -252,8 +273,10 @@ function NetworkControls() {
   const plan = N.servicePlan(s, yf);
   const auto = !!s.network?.autoService;
   const waiting = s.network?.autoServiceWaiting ?? 0;
+  const target = N.serviceTarget(s);
   const next = N.nextSearches(s, yf);
   const max = N.maxSearches(s);
+  const gap = { parc: num(N.totalParc(s)), shops: num(N.totalService(s)), n: plan.count, target: pct(target, 0) };
   return (
     <div className="net-controls">
       <Toggle
@@ -269,15 +292,33 @@ function NetworkControls() {
           </>
         }
       />
+      <div className="preset-chips svc-target" role="radiogroup" aria-label={t('Servis hedefi')}>
+        <span className="small">{t('Servis hedefi')}</span>
+        {N.SERVICE_TARGETS.map((v) => (
+          <button
+            key={v}
+            type="button"
+            role="radio"
+            aria-checked={target === v}
+            className={`chip ${target === v ? 'is-on' : ''}`}
+            onClick={() => store.act((st) => N.setServiceTarget(st, v))}
+          >
+            {pct(v, 0)}
+          </button>
+        ))}
+        <span className="muted small">
+          {t(
+            'Otomatik servis ve “Servisi yetir” atölyeleri bu düzeye kadar açar; otomatik servis, hedefin 1,3 katını aşan atölyeleri kapatır. %90 ya da %80 daha az atölye ve daha az genel gider demek; karşılığında o eyaletlerde satış en çok %4 ya da %8 düşer, garanti aynı oranda pahalanır, parça ve tamir geliri azalır. İtibar ancak memnuniyet %80’in altına inerse zarar görür.',
+          )}
+        </span>
+      </div>
       <div className="net-controls-row">
         <span className="small">
           {plan.count
-            ? tx('Yolda <b>{parc}</b> araban var, <b>{shops}</b> servis atölyen var: hepsine bakmak için <warn>~{n} atölye daha</warn> gerekiyor.', {
-                parc: num(N.totalParc(s)),
-                shops: num(N.totalService(s)),
-                n: plan.count,
-              })
-            : t('Servis yetiyor: her eyalette arabalarına bakacak yer var.')}
+            ? target < 1
+              ? tx('Yolda <b>{parc}</b> araban var, <b>{shops}</b> servis atölyen var: {target} servis hedefi için <warn>~{n} atölye daha</warn> gerekiyor.', gap)
+              : tx('Yolda <b>{parc}</b> araban var, <b>{shops}</b> servis atölyen var: hepsine bakmak için <warn>~{n} atölye daha</warn> gerekiyor.', gap)
+            : N.serviceEnough(s)}
         </span>
         {plan.count > 0 && (
           <Button small kind="primary" onClick={() => askCoverService(s)}>
@@ -425,7 +466,8 @@ function StateCard({ id }: { id: StateId }) {
         {t('Ağ büyüdükçe genel gideri orantısız artar (bölge müdürlükleri, parça depoları): bir bayi daha yılda ~{dealer}, bir servis atölyesi ~{shop} ekler.', {
           dealer: money(addDealer),
           shop: money(addShop),
-        })}
+        })}{' '}
+        {t('Dolu çalışan bir atölye parça ve tamirden yılda ~{income} getirir; arabaların gerektirdiğinden fazla atölye bir şey getirmez.', { income: money(N.partsPerShop(yf) * 52) })}
       </p>
     </div>
   );

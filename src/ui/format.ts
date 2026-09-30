@@ -1,4 +1,4 @@
-import { money, num } from '../core/util';
+import { money, num, type IncomeCategory } from '../core/util';
 import { pctWith } from '../core/turkish';
 import { isTurkish, langDef, msg, t } from '../i18n';
 import { dec, fmtPercent } from '../i18n/format';
@@ -45,8 +45,13 @@ export function inYear(year: number): string {
   return `${n}’${word}`;
 }
 
+/** Names of the income lines in the books kept besides the revenue they are part of. */
+export const INCOME_NAMES: Record<IncomeCategory, string> = {
+  parts: msg('Parça ve tamir'),
+};
+
 /** Names of the cost lines in the books. */
-export const COST_NAMES: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue' | 'auto'>, string> = {
+export const COST_NAMES: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue' | 'auto' | IncomeCategory>, string> = {
   materials: msg('Malzeme ve parça'),
   labor: msg('Hat işçiliği'),
   salaries: msg('Mühendis maaşları'),
