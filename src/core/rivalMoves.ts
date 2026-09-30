@@ -5,7 +5,7 @@ import { companyValue } from './game';
 import { SEGMENT_IDS, priceNow, rivalSize, segmentMarket } from './market';
 import { isRivalActive, launchRivalModel, rivalDef } from './rivals';
 import type { Rng } from './rng';
-import { GREENMAIL_PREMIUM, MAX_FLOAT, marketCap } from './shares';
+import { GREENMAIL_PREMIUM, MAX_FLOAT, marketCap, nextTarget } from './shares';
 import { yearFloat, yearOf } from './time';
 import type { CarDesign, GameState, RivalMove, RivalMoveKind, RivalMovesState, SegmentId } from './types';
 import { log, money, pushModal } from './util';
@@ -266,6 +266,8 @@ export function acceptBid(s: GameState) {
     basis: b.price / b.stake,
     basisWeek: s.week,
   };
+  // The board sets its first year's growth and dividend at once, as after a listing.
+  s.shares.target = nextTarget(s, year + 1);
   delete st.bid;
   log(
     s,

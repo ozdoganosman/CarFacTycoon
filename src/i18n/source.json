@@ -2053,27 +2053,27 @@
  },
  "1xanjl4": {
   "tr": "{company} şirketin {pct}’ini {price} karşılığında aldı ve yönetim kurulunda koltuk kazandı.",
-  "at": "src/core/rivalMoves.ts:272"
+  "at": "src/core/rivalMoves.ts:274"
  },
  "cehgbr": {
   "tr": "Fiyat savaşı",
-  "at": "src/core/rivalMoves.ts:369"
+  "at": "src/core/rivalMoves.ts:371"
  },
  "ankbio": {
   "tr": "Teknoloji atağı",
-  "at": "src/core/rivalMoves.ts:370"
+  "at": "src/core/rivalMoves.ts:372"
  },
  "1igpdy4": {
   "tr": "Birleşme",
-  "at": "src/core/rivalMoves.ts:371"
+  "at": "src/core/rivalMoves.ts:373"
  },
  "13dtk71": {
   "tr": "Hisse teklifi",
-  "at": "src/core/rivalMoves.ts:372"
+  "at": "src/core/rivalMoves.ts:374"
  },
  "ng7zfg": {
   "tr": "Hisse baskını",
-  "at": "src/core/rivalMoves.ts:373"
+  "at": "src/core/rivalMoves.ts:375"
  },
  "1o9wq6m": {
   "tr": "{company} kapılarını kapattı. Pazarında boşluk oluştu.",
