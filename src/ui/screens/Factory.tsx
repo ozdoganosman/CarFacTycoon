@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as A from '../../core/actions';
-import { autoAllowsBlack, autoHoldText, demandGap, newLineSize } from '../../core/autocap';
+import { autoAllowsBlack, autoHoldText, demandGap, newLineSize, weeklyDemand } from '../../core/autocap';
 import {
   LINE_SIZES,
   MILITARY_COMPLEXITY,
@@ -101,8 +101,9 @@ function CapacityPlanner() {
   const usesBlack = s.lines.some((l) => l.stations.paint.some((id) => stationDef(id).blackOnly));
   const [black, setBlack] = useState(usesBlack);
   const allowBlack = blackOption && black;
-  // Without a choice, the car buyers are waiting for most (never a model nobody wants).
-  const demandOf = (x: (typeof active)[number]) => Object.values(x.lastDemand ?? {}).reduce((a, b) => a + b, 0);
+  // Without a choice, the car buyers are waiting for most (never a model nobody wants). In its launch
+  // week a car has no sales yet: the market's forecast stands in (core/autocap.ts).
+  const demandOf = (x: (typeof active)[number]) => weeklyDemand(s, x);
   const gapOf = (x: (typeof active)[number]) => demandOf(x) - modelCapacity(s, x);
   const short = active.filter((x) => gapOf(x) >= 0.5).sort((a, b) => gapOf(b) - gapOf(a));
   const suggested = short[0] ?? [...active].sort((a, b) => demandOf(b) - demandOf(a))[0];
@@ -120,7 +121,7 @@ function CapacityPlanner() {
   const each = quote?.cost ?? 0;
   const shopEach = workshopLineCost(s.week) + (m ? A.retoolCost(s, m) : 0);
   const shopCap = lineReport(s, { ...emptyLine('plan', 'plan'), stations: workshopPlan(yf) }, m?.stats.complexity ?? 1).throughput;
-  const demand = m ? Object.values(m.lastDemand ?? {}).reduce((a, b) => a + b, 0) : 0;
+  const demand = m ? demandOf(m) : 0;
   const cap = m ? modelCapacity(s, m) : 0;
   const upgrades = s.lines
     .map((l) => ({ l, q: modernizeQuote(l, s.week, allowBlack) }))
@@ -139,7 +140,7 @@ function CapacityPlanner() {
         <>
           <div className="planner-models">
             {active.map((x) => {
-              const d = Object.values(x.lastDemand ?? {}).reduce((a, b) => a + b, 0);
+              const d = demandOf(x);
               const c = modelCapacity(s, x);
               return (
                 <div key={x.id} className={`planner-model ${x.id === m?.id ? 'is-on' : ''}`}>
@@ -468,6 +469,9 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
   );
 }
 
+/** A station's cars a week: whole numbers plain, the hand workshops' halves with the language's decimal mark ("1,5"). */
+const capText = (v: number) => dec(v, Number.isInteger(v) ? 0 : 1);
+
 function StageColumn({ line, stage, bottleneck, capacity, wage }: { line: ProductionLine; stage: StageId; bottleneck: boolean; capacity: number; wage: number }) {
   const s = useGameState();
   const yf = yearFloat(s.week);
@@ -496,8 +500,8 @@ function StageColumn({ line, stage, bottleneck, capacity, wage }: { line: Produc
                 {t(d.name)} {count > 1 && <b>×{count}</b>}
                 <small className="muted">
                   {count > 1
-                    ? t('{cap}/hf · {cost}/hf (her biri)', { cap: d.capacity, cost: money(d.upkeep * wage) })
-                    : t('{cap}/hf · {cost}/hf', { cap: d.capacity, cost: money(d.upkeep * wage) })}
+                    ? t('{cap}/hf · {cost}/hf (her biri)', { cap: capText(d.capacity), cost: money(d.upkeep * wage) })
+                    : t('{cap}/hf · {cost}/hf', { cap: capText(d.capacity), cost: money(d.upkeep * wage) })}
                 </small>
               </span>
               <span className="station-btns">
@@ -538,18 +542,18 @@ function StageColumn({ line, stage, bottleneck, capacity, wage }: { line: Produc
         {options.map((o) => (
           <option key={o.id} value={o.id}>
             {o.blackOnly
-              ? t('{station}: {cap}/hf · {cost} · sadece siyah', { station: t(o.name), cap: o.capacity, cost: money(stationPrice(o.id, s.week)) })
-              : t('{station}: {cap}/hf · {cost}', { station: t(o.name), cap: o.capacity, cost: money(stationPrice(o.id, s.week)) })}
+              ? t('{station}: {cap}/hf · {cost} · sadece siyah', { station: t(o.name), cap: capText(o.capacity), cost: money(stationPrice(o.id, s.week)) })
+              : t('{station}: {cap}/hf · {cost}', { station: t(o.name), cap: capText(o.capacity), cost: money(stationPrice(o.id, s.week)) })}
           </option>
         ))}
       </select>
-      <span className="muted small">{t('{v} ham kapasite', { v: num(line.stations[stage].reduce((a, id) => a + stationDef(id).capacity, 0)) })}</span>
+      <span className="muted small">{t('{v} ham kapasite', { v: capText(line.stations[stage].reduce((a, id) => a + stationDef(id).capacity, 0)) })}</span>
       {line.stations[stage].length > 0 && (
         <Toggle
           checked={!!line.nightShift?.[stage]}
           onChange={(v) => store.try((st) => A.setNightShift(st, line.id, stage, v))}
           label={t('Gece vardiyası')}
-          sub={t('+{extra} kapasite · işçilik ×{cost}', { extra: pct(NIGHT_SHIFT_OUTPUT - 1, 0), cost: NIGHT_SHIFT_COST })}
+          sub={t('+{extra} kapasite · işçilik ×{cost}', { extra: pct(NIGHT_SHIFT_OUTPUT - 1, 0), cost: dec(NIGHT_SHIFT_COST, 1) })}
         />
       )}
     </div>

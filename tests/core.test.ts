@@ -11,7 +11,7 @@ import { racingOutlook, racingPaused, setRacingLevel } from '../src/core/racing'
 import { pctWith, withSuffix } from '../src/core/turkish';
 import { budgetVerdict, launchBudget } from '../src/core/budget';
 import { acquisitionTargets } from '../src/core/acquisitions';
-import { datedPenalty, modelAgeYears, priceNow, segmentMarket } from '../src/core/market';
+import { classShare, datedPenalty, demandAtPrice, lastingDemandAtPrice, modelAgeYears, modelDemand, priceNow, segmentMarket, withoutHype } from '../src/core/market';
 import { makeRng } from '../src/core/rng';
 import { deserialize, serialize } from '../src/core/save';
 import { eraReference, scoreStats } from '../src/core/scoring';
@@ -24,7 +24,7 @@ import { SEGMENTS } from '../src/data/segments';
 import { inYear } from '../src/ui/format';
 import { FOCUS_KEYS, bonusFromPoints, presetFocus, teamOutput } from '../src/core/development';
 import { experienceFactor } from '../src/core/estimate';
-import { SMALL_LINES, autoCapacity, newLineSize } from '../src/core/autocap';
+import { SMALL_LINES, autoCapacity, autoReserve, lastingDemand, newLineSize, weeklyDemand } from '../src/core/autocap';
 import { buildLaunchReport } from '../src/core/feedback';
 import { ledSegments } from '../src/core/rivalMoves';
 import { MAX_SLOTS } from '../src/data/economy';
@@ -993,5 +993,79 @@ describe('playtest fixes: capacity, reports, facelifts, parts', () => {
     expect(partsVsQuality(own, par.reliability).reliability).toBeGreaterThan(-1e-6);
     expect(partsVsQuality(own, par.failures).failures).toBeLessThan(1 + 1e-6);
     expect(partsVsQuality({ engine: 'quality', gearbox: 'quality', electrics: 'quality' }, 40)).toEqual({ reliability: 0, failures: 1 });
+  });
+});
+
+describe('playtest fixes: launch buzz, capacity after launch, auto-capacity reserve', () => {
+  it('tells the share that lasts from the launch buzz, and leaves the market as it was', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 12 });
+    runBot(s, 52 * 2, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active')!;
+    m.hype = 10;
+    const sm = segmentMarket(s, 'usa', m.segment);
+    const launch = classShare(s, m, 'usa');
+    expect(launch).toBeGreaterThan(0);
+    expect(launch).toBeCloseTo(sm.offers.find((o) => o.id === m.id)!.weight / sm.totalWeight, 9);
+    const lasting = withoutHype(m, () => classShare(s, m, 'usa'));
+    expect(m.hype).toBe(10);
+    // Ten points of buzz weigh four points of utility: nearly twice the buyers at first.
+    expect(lasting).toBeLessThan(launch * 0.75);
+    expect(lasting).toBeGreaterThan(launch * 0.4);
+    // The price preview likewise.
+    const price = priceNow(m, s.week);
+    expect(lastingDemandAtPrice(s, m, 'usa', price)).toBeLessThan(demandAtPrice(s, m, 'usa', price) * 0.75);
+    expect(m.hype).toBe(10);
+    m.hype = 0;
+    expect(classShare(s, m, 'usa')).toBeCloseTo(lasting, 9);
+  });
+
+  it('in its launch week a car is planned on the forecast, not on sales it has not had yet', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 12 });
+    runBot(s, 52 * 2, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active')!;
+    // As just launched: no week of sales yet, the launch buzz on.
+    m.lastDemand = undefined;
+    m.demandTrend = undefined;
+    m.hype = 8;
+    const forecast = modelDemand(s, m);
+    expect(forecast).toBeGreaterThan(0);
+    expect(weeklyDemand(s, m)).toBeCloseTo(forecast, 9);
+    // What lasts starts at 60% of the first week's buyers, as it would with a week of sales.
+    const lasting = lastingDemand(s, m);
+    expect(lasting).toBeCloseTo(0.6 * forecast, 9);
+    // The trend buyers are built for starts there, not at nothing: a week later the planner reads the same.
+    tick(s);
+    expect(m.lastDemand).toBeDefined();
+    expect(lastingDemand(s, m)).toBeGreaterThan(0.8 * lasting);
+  });
+
+  it('automatic capacity does not lock a rich company’s till behind its parts bill, and spends nothing while losing money', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 12 });
+    runBot(s, 52 * 2, { segments: ['family'] });
+    const m = s.models.find((x) => x.status === 'active')!;
+    A.setModelAutoCapacity(s, m.id, true);
+    // A big maker's books: its sales pay a large parts bill.
+    for (const f of s.finance.slice(-8)) Object.assign(f, { revenue: 1_000_000, materials: 800_000, labor: 30_000, other: 5_000, rnd: 0, investment: 0 });
+    s.company.cash = 4.4e6;
+    s.company.taxOwed = 0;
+    // Six weeks of running costs, parts included, would be more than the till: half of it stays.
+    expect(autoReserve(s)).toBe(s.company.cash / 2);
+    m.lastDemand = { usa: 200, europe: 0 };
+    m.demandTrend = 200;
+    autoCapacity(s, () => 100);
+    expect(m.autoHold).not.toBe('cash');
+    expect(s.company.cash).toBeLessThan(4.4e6);
+    // A till far bigger than the bills keeps the six weeks of running costs.
+    s.company.cash = 40e6;
+    expect(autoReserve(s)).toBeGreaterThan(6 * 830_000);
+    expect(autoReserve(s)).toBeLessThan(6 * 1_000_000);
+    // Losing money: six weeks of the losses stay in the till, and here that is all of it.
+    for (const f of s.finance.slice(-8)) f.revenue = 200_000;
+    s.company.cash = 2e6;
+    expect(autoReserve(s)).toBeGreaterThan(s.company.cash);
+    m.lastDemand = { usa: 400, europe: 0 };
+    m.demandTrend = 400;
+    autoCapacity(s, () => 100);
+    expect(s.company.cash).toBe(2e6);
   });
 });
