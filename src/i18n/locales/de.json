@@ -137,6 +137,7 @@
  "tsc3f5": "solange Krieg herrscht, wird die Fabrik nicht erweitert",
  "1i43374": "selbst auf einer neuen Linie bleibt der Gewinn pro Auto unter 8 %: Wachstum würde nur die Verluste vergrößern, also bring zuerst Preis oder Kosten in Ordnung",
  "dyrsdp": "nicht genug Geld in der Kasse",
+ "ownrdr": "die nächste Erweiterung macht sich mit der dauerhaften Nachfragelücke nicht schnell genug bezahlt",
  "1c8z6lh": "die neue Generation ist unterwegs: Für ein alterndes Auto wird keine neue Anlage gebaut",
  "roxm5u": "die Linien sind ausgelastet, und die Nachfragelücke ist zu klein für eine neue Linie",
  "6ntr5j": {
@@ -167,6 +168,8 @@
  "1bzw63e": "eine neue Linie mit {n} Plätzen und Schwarzlackierung",
  "1jj42xe": "eine neue Linie mit {n} Plätzen",
  "movklg": "die Modernisierung von {line} auf {n} Plätze",
+ "3cuvo8": "die beste Option, {what} ({cost}, +{gain} Autos/Wo.), würde sich {all} bezahlt machen, wenn jedes gebaute Auto verkauft würde, aber die dauerhafte Nachfrage liegt nur ~{gap} Autos/Wo. über der Produktion (Linien im Bau eingerechnet); bei so vielen Verkäufen macht sie sich {time} bezahlt; die Automatik wartet höchstens {limit} Jahre",
+ "28b15v": "die beste Option, {what} ({cost}, +{gain} Autos/Wo.), macht sich bei diesem Preis {time} bezahlt; die Automatik wartet höchstens {limit} Jahre",
  "1a7id9c": "erst in über zehn Jahren",
  "cmli6o": {
   "one": "in ~{n} Monat",
@@ -1765,6 +1768,7 @@
  "199iy3v": "Umsatzziel {growth}: mindestens <b>{needed}</b> bis Jahresende (Vorjahr {prev}). Bei diesem Tempo liegt die Prognose zum Jahresende bei <b>{projected}</b>.",
  "j6e1ic": "Auch der Gewinn zählt: Erreicht der Jahresgewinn mindestens <b>{needed}</b> (Vorjahr {prev}), ist das Wachstumsziel erfüllt. Gewinnprognose: <b>{projected}</b>.",
  "1bjhbiu": "Dividendenziel <b>{target}</b>. Bei dieser Ausschüttungsquote beträgt die erwartete Dividende <b>{dividend}</b> (erwarteter Jahresgewinn {profit}).",
+ "1r0fq48": "Der Aufsichtsrat wollte {set}, verlangt aber nie mehr als drei Viertel des Jahresgewinns.",
  "1tisdmv": "Weil der Markt geschrumpft ist, hat der Aufsichtsrat auch das Dividendenziel um so viel gesenkt wie das Umsatzziel ({cut}).",
  "1u5o5b4": "Der Aufsichtsrat prüft dich zum ersten Mal Ende {year}.",
  "1ys3il8": "Ausschüttungsquote (wie viel vom Gewinnanteil der externen Aktionäre ausgezahlt wird). Der Aufsichtsrat erwartet die Hälfte des Gewinns und etwas mehr als im Vorjahr; sitzt ein Konkurrent im Aufsichtsrat, sogar noch mehr:",
@@ -2587,6 +2591,10 @@
  },
  "5rc7fj": "Wird jedes gebaute Auto verkauft, bleiben dir ~{margin} pro Auto: Die Linie macht sich in <pay>~{years} Jahren</pay> bezahlt.",
  "ezvvj1": "Die dauerhafte Nachfrage (ohne Marktstart-Rummel) decken deine bestehenden Linien und die Linien im Bau bereits: Bei diesem Preis stünde eine neue Linie still.",
+ "19egbbm": {
+  "one": "Aber die Käufer wollen dauerhaft nur ~{gap} Autos/Wo. mehr (ohne Marktstart-Rummel, Linien im Bau eingerechnet): Werden nur so viele verkauft, macht sich die Linie in <pay>~{n} Monat</pay> bezahlt. Die Automatik rechnet genauso und wartet höchstens {limit} Jahre.",
+  "other": "Aber die Käufer wollen dauerhaft nur ~{gap} Autos/Wo. mehr (ohne Marktstart-Rummel, Linien im Bau eingerechnet): Werden nur so viele verkauft, macht sich die Linie in <pay>~{n} Monaten</pay> bezahlt. Die Automatik rechnet genauso und wartet höchstens {limit} Jahre."
+ },
  "68utlu": "Bei diesem Preis bleibt pro Auto nichts übrig: Eine neue Linie macht sich nicht bezahlt.",
  "1hzpn4f": "Liniengröße",
  "mzwbql": "Liniengröße (Plätze pro Abschnitt):",
@@ -2736,6 +2744,7 @@
  "10do6dn": "{name}: Zeit für den Marktstart!",
  "12ybms3": "{name} wird nicht mehr gebaut und ist ausverkauft. Nimm ihn aus dem Programm oder weise ihn einer Linie zu.",
  "18oh8lm": "{name} läuft auf keiner Linie; verkauft wird aus dem Lager.",
+ "3h49hb": "{name}: Die Käufer wollen das {times}-Fache deiner Produktion, aber die Automatik erweitert nicht: {reason}.",
  "bbcbb7": "Die Nachfrage nach dem {name} übersteigt die Produktion. Beseitige den Engpass oder füge eine Linie hinzu.",
  "1a547ql": "{name}: Die Bestände stapeln sich. Senke den Preis oder das Produktionstempo.",
  "e0xgfw": "{name} liegt preislich {gap} über seiner Klasse, und die Linien stehen still. Überprüfe den Preis.",
@@ -2789,6 +2798,7 @@
   "one": "{n} Ingenieur hat nichts zu tun ({reason}), bezieht aber {pay} Gehalt pro Woche: Starte ein neues Projekt oder F&E, oder entlasse ihn, wenn nötig.",
   "other": "{n} Ingenieure haben nichts zu tun ({reason}), beziehen aber {pay} Gehalt pro Woche: Starte ein neues Projekt oder F&E, oder entlasse notfalls einige."
  },
+ "18cqtys": "In der Kasse liegen {cash} ungenutzt (über Reserve und ein Jahr Fixkosten hinaus). Lass das Geld arbeiten: Baue Linien für Autos, die die Nachfrage nicht decken, bring ein Auto in einer neuen Klasse heraus, bau das Händlernetz aus oder kauf einen Konkurrenten.",
  "rlwf6z": "Die Kasse ist im Minus! Nimm einen Kredit auf oder senke die Kosten.",
  "134thrc": "Meine Firma",
  "3l951u": "Kunden",
@@ -3087,6 +3097,7 @@
  "bzok9n": "am profitabelsten mit dieser Linie",
  "1q1k1e4": "am profitabelsten mit mehr Linien (~{profit}/Wo.)",
  "18hhnsp": "die Presse nennt ihn „ehrgeizig“",
+ "xcibi4": "<b>Du bist nah an der Obergrenze:</b> Das Auto holt sich bei den Käufern, die seine Händler erreichen, schon den größtmöglichen Anteil; unter den Klassenpreis zu gehen bringt keine Verkäufe, nur weniger Gewinn. Den Anteil vergrößern Händlernetz und Ansehen.",
  "11lwnpe": "Liegt der Preis mehr als {over} über dem Klassenpreis, springen die Käufer viel schneller ab. Die Zeitschriften messen den Preis an der Klasse: Je weiter er über dem Klassenpreis liegt, desto mehr rutscht die Note nach und nach ab, und liegt er in dieser Klasse mehr als {steep} darüber, nennen sie ihn „ehrgeizig“; eine schlechte Note verkleinert auch den Andrang zum Marktstart. Billig anfangen und den Preis später erhöhen funktioniert nicht: Eine Erhöhung um mehr als {hike} in den ersten drei Jahren nach dem Marktstart bringt die Zeitschriften dazu, ihre Tests neu zu schreiben, und kostet dich Ansehen.",
  "1p535an": "Was das Facelift bringt",
  "vrbl57": "Alter in den Augen der Käufer",

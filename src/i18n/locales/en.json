@@ -137,6 +137,7 @@
  "tsc3f5": "the factory isn’t expanded while the war is on",
  "1i43374": "even on a new line, profit per car stays below 8%: growing would only grow the losses, so fix the price or the cost first",
  "dyrsdp": "not enough cash",
+ "ownrdr": "the next expansion wouldn’t pay for itself fast enough on the lasting demand gap",
  "1c8z6lh": "its new generation is on the way: no new plant for an aging car",
  "roxm5u": "the lines are full and the demand gap is too small for a new line",
  "6ntr5j": {
@@ -167,6 +168,8 @@
  "1bzw63e": "a new {n}-slot black-paint line",
  "1jj42xe": "a new {n}-slot line",
  "movklg": "rebuilding {line} as a {n}-slot line",
+ "3cuvo8": "the best option, {what} ({cost}, +{gain} cars/wk), would pay for itself {all} if every car it built sold, but lasting demand is only ~{gap} cars/wk above output (lines under construction included); selling only that many, it pays off {time}; auto capacity waits at most {limit} years",
+ "28b15v": "the best option, {what} ({cost}, +{gain} cars/wk), pays for itself {time} at this price; auto capacity waits at most {limit} years",
  "1a7id9c": "in more than ten years",
  "cmli6o": {
   "one": "in ~{n} month",
@@ -1771,6 +1774,7 @@
  "199iy3v": "Revenue target {growth}: at least <b>{needed}</b> by year’s end (last year {prev}). At this pace, the year-end forecast is <b>{projected}</b>.",
  "j6e1ic": "Profit counts too: if the year’s profit reaches at least <b>{needed}</b> (last year {prev}), the growth target is met. Profit forecast: <b>{projected}</b>.",
  "1bjhbiu": "Dividend target <b>{target}</b>. At this payout, the expected dividend is <b>{dividend}</b> (projected annual profit {profit}).",
+ "1r0fq48": "The board wanted {set}, but it never asks for more than three quarters of the year’s profit.",
  "1tisdmv": "Because the market shrank, the board also cut the dividend target by as much as the revenue target ({cut}).",
  "1u5o5b4": "The board will first review you at the end of {year}.",
  "1ys3il8": "Dividend payout (how much of the outside shareholders’ part of the profit is paid out). The board expects half the profit and a bit more than last year; with a rival on the board, even more:",
@@ -2596,6 +2600,10 @@
  },
  "5rc7fj": "If every car it builds sells, you keep ~{margin} per car: the line pays for itself in <pay>~{years} years</pay>.",
  "ezvvj1": "Lasting demand (launch buzz aside) is already covered by your current lines and the ones under construction: at this price a new line would stand idle.",
+ "19egbbm": {
+  "one": "But buyers lastingly want only ~{gap} more cars/wk (launch buzz aside, lines under construction included): if only that many sell, the line pays for itself in <pay>~{n} month</pay>. Auto capacity counts the same way and waits at most {limit} years.",
+  "other": "But buyers lastingly want only ~{gap} more cars/wk (launch buzz aside, lines under construction included): if only that many sell, the line pays for itself in <pay>~{n} months</pay>. Auto capacity counts the same way and waits at most {limit} years."
+ },
  "68utlu": "At this price nothing is left per car: a new line won’t pay for itself.",
  "1hzpn4f": "Line size",
  "mzwbql": "Line size (slots per section):",
@@ -2745,6 +2753,7 @@
  "10do6dn": "{name}: time to launch!",
  "12ybms3": "{name} is no longer being built and is out of stock. Discontinue it or assign it to a line.",
  "18oh8lm": "{name} isn’t built on any line; it’s selling from stock.",
+ "3h49hb": "{name}: buyers want {times} times what you build, but auto capacity isn’t expanding: {reason}.",
  "bbcbb7": "Demand for {name} exceeds output. Fix the bottleneck or add a line.",
  "1a547ql": "{name} stock is piling up. Lower the price or the production rate.",
  "e0xgfw": "{name} is priced {gap} above its class, and the lines sit idle. Take another look at the price.",
@@ -2786,6 +2795,7 @@
   "one": "{n} engineer is idle ({reason}) but draws {pay} a week in salary: start a new project or R&D, or let them go if you need to.",
   "other": "{n} engineers are idle ({reason}) but draw {pay} a week in salary: start a new project or R&D, or let some go if you need to."
  },
+ "18cqtys": "You have {cash} sitting idle (beyond the reserve and a year of fixed costs). Put it to work: add lines for cars that can’t keep up with demand, launch a car in a new class, grow the dealer network or buy a rival.",
  "rlwf6z": "Cash is negative! Take a loan or cut costs.",
  "134thrc": "My company",
  "3l951u": "Customers",
@@ -3084,6 +3094,7 @@
  "bzok9n": "most profitable with this line",
  "1q1k1e4": "most profitable with more lines (~{profit}/wk)",
  "18hhnsp": "magazines call it “ambitious”",
+ "xcibi4": "<b>You’re near the ceiling:</b> the car already takes all the share it can of the buyers its dealers reach; going below the class price won’t bring sales, it only costs profit. The dealer network and reputation grow the share.",
  "11lwnpe": "Buyers walk away much faster once the price is more than {over} above the class price. Magazines weigh the price against the class: the higher above the class price, the more the score slips, bit by bit, and in this class, at more than {steep} above it, they call it “ambitious”; a low score also shrinks the launch crowd. Starting cheap and raising the price later doesn’t work: in the three years after launch, a hike of more than {hike} makes the magazines rewrite their reviews and costs you reputation.",
  "1p535an": "What the facelift brings",
  "vrbl57": "Age in buyers’ eyes",

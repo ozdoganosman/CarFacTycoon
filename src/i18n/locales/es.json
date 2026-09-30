@@ -137,6 +137,7 @@
  "tsc3f5": "la fábrica no se amplía mientras dure la guerra",
  "1i43374": "incluso en una línea nueva, el beneficio por auto queda por debajo del 8 %: crecer solo aumentaría las pérdidas; primero corrige el precio o el costo",
  "dyrsdp": "no alcanza la caja",
+ "ownrdr": "la próxima ampliación no se pagaría sola lo bastante rápido con la demanda sostenida sin cubrir",
  "1c8z6lh": "su nueva generación está en camino: no se amplía la fábrica para un auto que envejece",
  "roxm5u": "las líneas están llenas y la demanda insatisfecha es demasiado pequeña para una línea nueva",
  "6ntr5j": {
@@ -167,6 +168,8 @@
  "1bzw63e": "una línea nueva de pintura negra de {n} puestos",
  "1jj42xe": "una línea nueva de {n} puestos",
  "movklg": "reconstruir {line} como línea de {n} puestos",
+ "3cuvo8": "la mejor opción, {what} ({cost}, +{gain} autos/sem.), se pagaría sola {all} si se vendiera cada auto que fabrica, pero la demanda sostenida supera la producción (incluidas las líneas en construcción) en solo ~{gap} autos/sem.; vendiendo solo eso, se paga {time}; la capacidad automática espera como máximo {limit} años",
+ "28b15v": "la mejor opción, {what} ({cost}, +{gain} autos/sem.), se paga sola {time} a este precio; la capacidad automática espera como máximo {limit} años",
  "1a7id9c": "en más de diez años",
  "cmli6o": {
   "one": "en ~{n} mes",
@@ -1774,6 +1777,7 @@
  "199iy3v": "Objetivo de ingresos {growth}: al menos <b>{needed}</b> a fin de año (el año pasado, {prev}). A este ritmo, la previsión a fin de año es <b>{projected}</b>.",
  "j6e1ic": "El beneficio también cuenta: si el beneficio del año llega al menos a <b>{needed}</b> (el año pasado, {prev}), se cumple el objetivo de crecimiento. Previsión de beneficio: <b>{projected}</b>.",
  "1bjhbiu": "Objetivo de dividendos: <b>{target}</b>. Con este reparto, el dividendo previsto es <b>{dividend}</b> (beneficio anual previsto: {profit}).",
+ "1r0fq48": "El consejo quería {set}, pero nunca pide más de tres cuartas partes del beneficio del año.",
  "1tisdmv": "Como el mercado se contrajo, el consejo también bajó el objetivo de dividendos en la misma medida que el de ingresos ({cut}).",
  "1u5o5b4": "El consejo te evaluará por primera vez a finales de {year}.",
  "1ys3il8": "Reparto de dividendos (qué parte del beneficio que corresponde a los accionistas externos se reparte). El consejo espera la mitad del beneficio y un poco más que el año pasado; con un rival en el consejo, todavía más:",
@@ -2605,6 +2609,10 @@
  },
  "5rc7fj": "Si se vende cada auto que fabrica, te quedan ~{margin} por auto: la línea se paga sola en <pay>~{years} años</pay>.",
  "ezvvj1": "La demanda sostenida (sin contar el entusiasmo del lanzamiento) ya está cubierta por tus líneas actuales y las que están en construcción: a este precio, una línea nueva quedaría parada.",
+ "19egbbm": {
+  "one": "Pero los compradores solo piden ~{gap} autos/sem. más de forma sostenida (sin contar el entusiasmo del lanzamiento, incluidas las líneas en construcción): si solo se vende eso, la línea se paga sola en <pay>~{n} mes</pay>. La capacidad automática calcula igual y espera como máximo {limit} años.",
+  "other": "Pero los compradores solo piden ~{gap} autos/sem. más de forma sostenida (sin contar el entusiasmo del lanzamiento, incluidas las líneas en construcción): si solo se vende eso, la línea se paga sola en <pay>~{n} meses</pay>. La capacidad automática calcula igual y espera como máximo {limit} años."
+ },
  "68utlu": "A este precio no queda nada por auto: una línea nueva no se pagará sola.",
  "1hzpn4f": "Tamaño de la línea",
  "mzwbql": "Tamaño de la línea (puestos por sección):",
@@ -2754,6 +2762,7 @@
  "10do6dn": "{name}: ¡hora del lanzamiento!",
  "12ybms3": "{name} ya no se fabrica y se agotó su stock. Descontinúalo o asígnalo a una línea.",
  "18oh8lm": "{name} no se fabrica en ninguna línea; se vende del stock.",
+ "3h49hb": "{name}: los compradores piden {times} veces lo que produces, pero la capacidad automática no amplía: {reason}.",
  "bbcbb7": "La demanda de {name} supera la producción. Resuelve el cuello de botella o agrega una línea.",
  "1a547ql": "Se está acumulando stock de {name}. Baja el precio o el ritmo de producción.",
  "e0xgfw": "{name} tiene un precio {gap} por encima de su segmento y las líneas quedan paradas. Revisa el precio.",
@@ -2801,6 +2810,7 @@
   "one": "{n} ingeniero está sin trabajo ({reason}) pero cobra {pay} a la semana: inicia un proyecto nuevo o una investigación de I+D, o despídelo si hace falta.",
   "other": "{n} ingenieros están sin trabajo ({reason}) pero cobran {pay} a la semana: inicia un proyecto nuevo o una investigación de I+D, o despide a algunos si hace falta."
  },
+ "18cqtys": "Tienes {cash} ociosos en caja (aparte de la reserva y un año de gastos fijos). Ponlos a trabajar: monta líneas para los autos que no cubren la demanda, lanza un auto en un segmento nuevo, amplía la red de concesionarios o compra a un rival.",
  "rlwf6z": "¡La caja está en negativo! Pide un préstamo o recorta gastos.",
  "134thrc": "Mi empresa",
  "3l951u": "Clientes",
@@ -3099,6 +3109,7 @@
  "bzok9n": "más rentable con esta línea",
  "1q1k1e4": "más rentable si agregas líneas (~{profit}/sem.)",
  "18hhnsp": "las revistas lo llaman “ambicioso”",
+ "xcibi4": "<b>Estás cerca del techo:</b> el auto ya capta toda la cuota que puede entre los compradores a los que llegan sus concesionarios; bajar del precio del segmento no trae ventas, solo resta beneficio. La cuota crece con la red de concesionarios y la reputación.",
  "11lwnpe": "Los compradores se van mucho más rápido cuando el precio supera el del segmento en más del {over}. Las revistas valoran el precio según el segmento: cuanto más por encima del precio del segmento, más baja la nota, poco a poco, y en este segmento, a más del {steep} por encima, lo llaman “ambicioso”; una nota baja también reduce el público del lanzamiento. Empezar barato y subir el precio después no funciona: en los tres años posteriores al lanzamiento, una subida de más del {hike} hace que las revistas reescriban sus reseñas y te cuesta reputación.",
  "1p535an": "Lo que aporta el rediseño",
  "vrbl57": "Antigüedad percibida",
