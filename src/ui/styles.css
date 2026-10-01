@@ -1064,29 +1064,116 @@ fieldset {
 }
 
 /* ---------- HQ ---------- */
+/* To-dos as buttons, the most pressing first: urgent ones larger and red, steps waiting on the player
+   in brass, advice small and quiet. */
+.todo-panel {
+  align-self: start;
+}
 .todo {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: grid;
+  gap: 8px;
 }
-.todo li {
+.todo-item {
+  --lvl: var(--accent2);
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  padding: 7px 0;
-  border-bottom: 1px dashed var(--line);
+  border: 1px solid var(--rule);
+  border-inline-start: 4px solid var(--lvl);
+  border-radius: var(--radius);
+  background: var(--panel);
 }
-.todo li:last-child {
-  border-bottom: 0;
+.todo-item.lvl-urgent {
+  --lvl: var(--bad);
+  background: color-mix(in srgb, var(--bad) 8%, var(--panel));
+  border-color: color-mix(in srgb, var(--bad) 45%, var(--rule));
+  border-inline-start-color: var(--bad);
 }
-.todo-actions {
+.todo-item.lvl-act {
+  --lvl: var(--brass);
+}
+.todo-item.lvl-tip {
+  border-style: dashed;
+  border-inline-start-style: solid;
+  background: transparent;
+}
+.todo-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.todo-main:disabled {
+  cursor: default;
+}
+.todo-main:not(:disabled):hover {
+  background: color-mix(in srgb, var(--lvl) 9%, transparent);
+}
+.todo-icon {
   flex: none;
-  max-width: 50%;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  color: var(--lvl);
+}
+.lvl-urgent .todo-icon {
+  width: 30px;
+  height: 30px;
+}
+.lvl-tip .todo-icon {
+  width: 17px;
+  height: 17px;
+  opacity: 0.8;
+}
+.todo-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.todo-level {
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--lvl);
+}
+.todo-text {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.lvl-urgent .todo-text {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.lvl-tip .todo-text {
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+.todo-go {
+  flex: none;
+  margin-inline-start: auto;
+  color: var(--lvl);
+  opacity: 0.7;
+}
+[dir='rtl'] .todo-go {
+  transform: scaleX(-1);
+}
+.todo-item > .btn {
+  flex: none;
+  margin-inline-end: 10px;
 }
 .mini-list,
 .card-list {
@@ -4725,4 +4812,13 @@ fieldset {
 }
 .sp-facts .is-priority span {
   color: var(--ink);
+}
+@media (max-width: 520px) {
+  /* On a phone the quick-fix button goes under its line. */
+  .todo-item {
+    flex-wrap: wrap;
+  }
+  .todo-item > .btn {
+    margin: -4px 12px 10px 46px;
+  }
 }

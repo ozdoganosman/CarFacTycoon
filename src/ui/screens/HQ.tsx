@@ -23,16 +23,24 @@ import { askCoverService, askSearchNeighbours } from './Markets';
 import { TeamPanel } from '../components/TeamPanel';
 import { devWeeksLeft } from '../../core/budget';
 import { t, msg, list } from '../../i18n';
-import { Icon } from '../components/Icon';
+import { Icon, type IconName } from '../components/Icon';
 
 export function weeklySold(m: CarModel, weeks = 4) {
   const h = m.history.slice(-weeks);
   return h.length ? h.reduce((a, x) => a + x.sold, 0) / h.length : 0;
 }
 
-/** A to-do line: what to look at, and maybe a button that does it at once. */
+/** How much a to-do matters: something going wrong now, a step waiting on the player, or advice. */
+type Level = 'urgent' | 'act' | 'tip';
+const LEVELS: Level[] = ['urgent', 'act', 'tip'];
+/** Marked with msg(): show with t(). */
+const LEVEL_NAME: Record<Level, string> = { urgent: msg('Acil'), act: msg('Önemli'), tip: msg('Öneri') };
+
+/** A to-do line: what to look at, how much it matters, and maybe a button that does it at once. */
 interface Step {
   text: string;
+  level: Level;
+  icon: IconName;
   go?: () => void;
   fix?: { label: string; run: () => void };
 }
@@ -42,36 +50,40 @@ function nextSteps(s: GameState): Step[] {
   /** A network that eats half the revenue: said near the top, it can sink the company. */
   let heavy: Step | undefined;
   if (!s.projects.length && !s.models.some((m) => m.status === 'active')) {
-    out.push({ text: t('İlk aracını tasarla: yeni bir proje başlat.'), go: () => store.go({ id: 'projects' }) });
+    out.push({ level: 'act', icon: 'projects', text: t('İlk aracını tasarla: yeni bir proje başlat.'), go: () => store.go({ id: 'projects' }) });
   }
   for (const p of s.projects) {
-    if (p.phase === 'design') out.push({ text: t('{name}: tasarımı bitir ve geliştirmeyi başlat.', { name: p.name }), go: () => store.go({ id: 'project', projectId: p.id }) });
+    if (p.phase === 'design') out.push({ level: 'act', icon: 'projects', text: t('{name}: tasarımı bitir ve geliştirmeyi başlat.', { name: p.name }), go: () => store.go({ id: 'project', projectId: p.id }) });
     // A long development with a small team: say how much sooner more engineers would finish it.
     const left = devWeeksLeft(s, p);
     const faster = devWeeksLeft(s, p, 5);
     if (left >= 26 && faster <= left * 0.75)
       out.push({
+        level: 'tip',
+        icon: 'clock',
         text: t('{name} geliştirmesi ~{left} hafta sürecek; 5 mühendis daha alırsan ~{n} hafta. Mühendisleri bu sayfadaki “Mühendislik ekibi” kutusundan al.', {
           name: p.name,
           left,
           n: faster,
         }),
       });
-    if (p.phase === 'development' && p.dev.done >= p.dev.required) out.push({ text: t('{name}: geliştirme bitti, teste geç.', { name: p.name }), go: () => store.go({ id: 'project', projectId: p.id }) });
-    if (p.phase === 'production' && p.productionReadyWeek === undefined) out.push({ text: t('{name}: tedarikçileri ve üretim hattını seç.', { name: p.name }), go: () => store.go({ id: 'project', projectId: p.id }) });
-    if (p.phase === 'ready') out.push({ text: t('{name}: lansman zamanı!', { name: p.name }), go: () => store.go({ id: 'project', projectId: p.id }) });
+    if (p.phase === 'development' && p.dev.done >= p.dev.required) out.push({ level: 'act', icon: 'research', text: t('{name}: geliştirme bitti, teste geç.', { name: p.name }), go: () => store.go({ id: 'project', projectId: p.id }) });
+    if (p.phase === 'production' && p.productionReadyWeek === undefined) out.push({ level: 'act', icon: 'factory', text: t('{name}: tedarikçileri ve üretim hattını seç.', { name: p.name }), go: () => store.go({ id: 'project', projectId: p.id }) });
+    if (p.phase === 'ready') out.push({ level: 'act', icon: 'rosette', text: t('{name}: lansman zamanı!', { name: p.name }), go: () => store.go({ id: 'project', projectId: p.id }) });
   }
   for (const m of s.models.filter((x) => x.status === 'active')) {
     const lines = s.lines.filter((l) => l.modelId === m.id);
     // With no line and nothing left in stock the model only occupies the list: offer to retire it.
     if (!lines.length && m.inventory < 1)
-      out.push({ text: t('{name} artık üretilmiyor ve stoku bitti. Üretimden kaldır ya da bir hatta ata.', { name: m.name }), go: () => store.go({ id: 'model', modelId: m.id }) });
-    else if (!lines.length) out.push({ text: t('{name} hiçbir hatta üretilmiyor; stoktan satılıyor.', { name: m.name }), go: () => store.go({ id: 'factory' }) });
+      out.push({ level: 'tip', icon: 'models', text: t('{name} artık üretilmiyor ve stoku bitti. Üretimden kaldır ya da bir hatta ata.', { name: m.name }), go: () => store.go({ id: 'model', modelId: m.id }) });
+    else if (!lines.length) out.push({ level: 'act', icon: 'factory', text: t('{name} hiçbir hatta üretilmiyor; stoktan satılıyor.', { name: m.name }), go: () => store.go({ id: 'factory' }) });
     // In the launch week, before any sales, the market's forecast (not a stock pile nobody wants).
     const demand = weeklyDemand(s, m);
     const cap = lines.reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0) * m.productionRate;
     if (lines.length && demand > cap * 1.25 && m.inventory < cap)
       out.push({
+        level: 'act',
+        icon: 'factory',
         // With automatic capacity on, say why it is not growing (the payback it waits for, the till…).
         text:
           m.autoCapacity && m.autoHold
@@ -83,13 +95,15 @@ function nextSteps(s: GameState): Step[] {
             : t('{name} için talep üretimi aşıyor. Darboğazı çöz ya da hat ekle.', { name: m.name }),
         go: () => store.go({ id: 'factory' }),
       });
-    if (m.inventory > Math.max(8, demand * 12)) out.push({ text: t('{name} stokları birikiyor. Fiyatı ya da üretim hızını düşür.', { name: m.name }), go: () => store.go({ id: 'model', modelId: m.id }) });
+    if (m.inventory > Math.max(8, demand * 12)) out.push({ level: 'act', icon: 'models', text: t('{name} stokları birikiyor. Fiyatı ya da üretim hızını düşür.', { name: m.name }), go: () => store.go({ id: 'model', modelId: m.id }) });
     // A price far above its class with buyers staying away (an old index, a hopeful launch price).
     const gap = classGap(priceNow(m, s.week), m.segment, yearFloat(s.week));
     if (gap > CLASS_GAP_WARN && lines.length && demand < 0.8 * cap)
-      out.push({ text: t('{name} fiyatı sınıfın {gap} üstünde ve hatlar boş kalıyor. Fiyatı gözden geçir.', { name: m.name, gap: pct(gap, 0) }), go: () => store.go({ id: 'model', modelId: m.id }) });
+      out.push({ level: 'act', icon: 'tag', text: t('{name} fiyatı sınıfın {gap} üstünde ve hatlar boş kalıyor. Fiyatı gözden geçir.', { name: m.name, gap: pct(gap, 0) }), go: () => store.go({ id: 'model', modelId: m.id }) });
     if ((s.week - m.refreshWeek) / 52 > 3)
       out.push({
+        level: 'tip',
+        icon: 'clock',
         text: t('{name} {n} yaşında ve her yıl eskiyor; makyaj ya da yeni kuşak düşün.', { name: m.name, n: Math.floor((s.week - m.refreshWeek) / 52) }),
         go: () => store.go({ id: 'model', modelId: m.id }),
       });
@@ -106,6 +120,8 @@ function nextSteps(s: GameState): Step[] {
     if (next.length && (active === 0 || free >= 2)) {
       const p = { n: open, max: N.maxSearches(s), active };
       out.push({
+        level: 'tip',
+        icon: 'markets',
         text:
           open === 1
             ? t('Arabaların yalnızca fabrikanın eyaletinde satılıyor. Haritadan komşu bir eyalette bayi ara.')
@@ -123,6 +139,8 @@ function nextSteps(s: GameState): Step[] {
       const p = { parc: num(N.totalParc(s)), shops: num(N.totalService(s)), n: plan.count, states: list(poor.map((id) => stateDef(id).name)), target: pct(target, 0) };
       const auto = s.network?.autoService;
       out.push({
+        level: 'act',
+        icon: 'wrench',
         text:
           target < 1
             ? auto
@@ -147,6 +165,8 @@ function nextSteps(s: GameState): Step[] {
       const lower = N.SERVICE_TARGETS.find((v) => v < target);
       const q = { ...bill, share: pctOf(((cost - parts) * 52) / yearRevenue), target: pct(lower ?? target, 0) };
       heavy = {
+        level: 'urgent',
+        icon: 'alert',
         text:
           lower !== undefined
             ? t('Bayi ve servis ağı yılda {cost} tutuyor, parça ve tamir {parts} getiriyor: net gideri son bir yılın cirosunun {share}. Şirket bu yükü uzun taşıyamaz: servis hedefini {target} yapmak atölyeleri ve genel gideri azaltır.', q)
@@ -156,6 +176,8 @@ function nextSteps(s: GameState): Step[] {
       };
     } else if (revenue > 0 && cost - parts > revenue * 0.12)
       out.push({
+        level: 'tip',
+        icon: 'banknote',
         text:
           parts > 0
             ? t('Bayi ve servis ağı yılda {cost} tutuyor, parça ve tamir {parts} getiriyor: net gideri satış gelirinin {share}. Az satan bayileri kapatmayı düşün.', { ...bill, share: pctOf((cost - parts) / revenue) })
@@ -170,6 +192,8 @@ function nextSteps(s: GameState): Step[] {
     if (short.length) {
       const p = { year: s.shares.target.year, what: list(short), trust: Math.round(s.shares.confidence) };
       out.push({
+        level: s.shares.ultimatum ? 'urgent' : 'act',
+        icon: 'tophat',
         text: s.shares.ultimatum
           ? t('Yönetim kurulunun {year} hedefleri tutmayacak gibi ({what}). Güven {trust}/100: son uyarı.', p)
           : t('Yönetim kurulunun {year} hedefleri tutmayacak gibi ({what}). Güven {trust}/100.', p),
@@ -178,12 +202,14 @@ function nextSteps(s: GameState): Step[] {
     }
   }
   const veto = boardVeto(s);
-  if (veto) out.push({ text: veto, go: () => store.go({ id: 'company' }) });
+  if (veto) out.push({ level: 'urgent', icon: 'tophat', text: veto, go: () => store.go({ id: 'company' }) });
   // Research standing idle while rivals already build with technology the company has not learned.
   const r = s.research;
   const hold = queueHold(s, yearFloat(s.week));
   if (r && r.active.length === 0 && hold?.reason === 'cash')
     out.push({
+      level: 'tip',
+      icon: 'research',
       text: t('Ar-Ge sırası bekliyor: {tech}, serbest kasanın yarısından pahalı (sıra fabrikanın parasına dokunmaz). Elle başlatabilir ya da kasanın birikmesini bekleyebilirsin.', {
         tech: t(researchDef(hold.id)?.name ?? ''),
       }),
@@ -195,6 +221,8 @@ function nextSteps(s: GameState): Step[] {
     const behind = researchDefs().filter((d) => techState(s, d.id, yf) === 'available' && (adoption[d.id] ?? 0) >= 0.25);
     if (behind.length)
       out.push({
+        level: 'act',
+        icon: 'research',
         text: t('Ar-Ge boşta. Rakiplerin çoğu kullanıyor, sen bilmiyorsun: {techs}.', {
           techs: behind
             .slice(0, 3)
@@ -210,6 +238,8 @@ function nextSteps(s: GameState): Step[] {
     const o = racingOutlook(s, rt.level);
     if (o && (o.podium < 0.2 || (rt.dry ?? 0) >= 2))
       out.push({
+        level: 'tip',
+        icon: 'company',
         text: t('Yarış takımı {model} ile yarışıyor ({n} yaşında, ilk üç şansı {podium}): bütçe boşa gidiyor. Daha güçlü bir araba çıkar ya da takımı küçült.', {
           model: o.model,
           n: Math.floor(o.age),
@@ -222,6 +252,8 @@ function nextSteps(s: GameState): Step[] {
   const idle = idleEngineers(s);
   if (idle > 0 && s.models.length)
     out.push({
+      level: 'act',
+      icon: 'hq',
       text: t('{n} mühendis boşta ({reason}) ama haftada {pay} maaş alıyor: yeni bir proje ya da Ar-Ge başlat, gerekirse bir kısmını çıkar.', {
         n: idle,
         reason: idleReason(s),
@@ -233,14 +265,17 @@ function nextSteps(s: GameState): Step[] {
   const spare = idleCash(s);
   if (spare > 0 && s.models.some((m) => m.status === 'active'))
     out.push({
+      level: 'tip',
+      icon: 'banknote',
       text: t('Kasada {cash} boşta duruyor (yedek ve bir yıllık sabit gider dışında). Onu işe koş: talebi karşılamayan arabalara hat kur, yeni bir sınıfa araba çıkar, bayi ağını büyüt ya da bir rakibi satın al.', {
         cash: money(spare),
       }),
       go: () => store.go({ id: 'factory' }),
     });
   if (heavy) out.unshift(heavy);
-  if (s.company.cash < 0) out.unshift({ text: t('Kasa ekside! Kredi al ya da masrafları kıs.'), go: () => store.go({ id: 'finance' }) });
-  return out.slice(0, 6);
+  if (s.company.cash < 0) out.unshift({ level: 'urgent', icon: 'alert', text: t('Kasa ekside! Kredi al ya da masrafları kıs.'), go: () => store.go({ id: 'finance' }) });
+  // The most pressing first (in the order found within a level), and only as many as a glance takes in.
+  return out.map((x, i) => ({ x, i })).sort((a, b) => LEVELS.indexOf(a.x.level) - LEVELS.indexOf(b.x.level) || a.i - b.i).map(({ x }) => x).slice(0, 7);
 }
 
 const FEED_TABS: { id: 'all' | LogCategory; label: string }[] = [
@@ -326,25 +361,29 @@ export function HQ() {
       </div>
 
       <div className="grid-2">
-        <Panel title={t('Yapılacaklar')}>
+        <Panel title={t('Yapılacaklar')} className="todo-panel">
           {steps.length ? (
             <ul className="todo">
               {steps.map((step, i) => (
-                <li key={i}>
-                  <span>{step.text}</span>
-                  {(step.fix || step.go) && (
-                    <span className="todo-actions">
-                      {step.fix && (
-                        <Button small kind="primary" onClick={step.fix.run}>
-                          {step.fix.label}
-                        </Button>
-                      )}
-                      {step.go && (
-                        <Button small onClick={step.go}>
-                          {t('Git')}
-                        </Button>
-                      )}
+                <li key={i} className={`todo-item lvl-${step.level}`}>
+                  <button type="button" className="todo-main" onClick={step.go} disabled={!step.go}>
+                    <span className="todo-icon" aria-hidden>
+                      <Icon name={step.icon} size="100%" />
                     </span>
+                    <span className="todo-body">
+                      <span className="todo-level">{t(LEVEL_NAME[step.level])}</span>
+                      <span className="todo-text">{step.text}</span>
+                    </span>
+                    {step.go && (
+                      <span className="todo-go" aria-hidden>
+                        <Icon name="play" size={12} />
+                      </span>
+                    )}
+                  </button>
+                  {step.fix && (
+                    <Button small kind="primary" onClick={step.fix.run}>
+                      {step.fix.label}
+                    </Button>
                   )}
                 </li>
               ))}
