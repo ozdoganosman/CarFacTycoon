@@ -590,6 +590,13 @@
  "1guz2fa": "Großer Preis von Frankreich",
  "15t1o47": "Wegen des Krieges finden keine Rennen statt: Das Team wartet ab, und das Rennbudget wird nicht ausgegeben.",
  "10bg7n1": "Der Krieg ist vorbei, die Rennen gehen weiter: Das Team bereitet sich auf die Saison vor.",
+ "1hjmy2r": "{race}: {company} siegt mit dem {model}! Der Ruhm der Marke wächst.",
+ "cg3cr4": "{race}: {model} kommt unter die ersten drei.",
+ "29em8y": {
+  "one": "{race}: {model} geht leer aus. Das Auto ist ein Jahr alt; ohne ein neues, starkes Auto verbrennt das Team nur Geld.",
+  "other": "{race}: {model} geht leer aus. Das Auto ist {n} Jahre alt; ohne ein neues, starkes Auto verbrennt das Team nur Geld."
+ },
+ "9cq00c": "{race}: {model} geht leer aus. Du brauchst ein stärkeres Auto oder ein größeres Team.",
  "2hl950": "{race}: Sieg für den {model}!",
  "9ipk4s": "Das Team von {company} lässt die Konkurrenz im Staub; Rennbegeisterte stehen bei den Händlern Schlange",
  "aztqhq": "{race}: Das Werksteam von {company} hat mit dem {model} den ersten Platz belegt. Der erste große Sieg des Teams fand in der {market}-Presse breite Beachtung.",
@@ -1861,6 +1868,7 @@
  "1dg5pld": "Arbeitskosten (Schätzung)",
  "rfursi": "Bauaufwand {v}: Ein aufwendiges Auto bremst die Linie; moderne Stationen senken die Arbeit pro Auto",
  "27bggb": "In den Posten enthalten:",
+ "1gj4qon": "Kostensenkung in der Entwicklung ×{v}",
  "mew6do": "Know-how ×{v}",
  "64a31j": "Drehzahlmesser, roter Bereich ab {rpm} U/min",
  "15vy7r8": "U/min ×1000",
@@ -1880,6 +1888,8 @@
  "1uuma35": "Je höher die Verdichtung, desto härter die Verbrennung und desto schärfer der Klang. Ist die Verdichtung zu hoch für das Benzin der Zeit, klopft der Motor: unter Last ein metallisches Klingeln bei 5–10 kHz, je nach Zylinderbohrung.",
  "y4j0kj": "Motoren dieser Zeit haben keinen Drehzahlbegrenzer. Überschreitet ein Benzinmotor den roten Bereich, kommen die Ventilfedern nicht mehr mit und die Ventile flattern: Die Leistung fällt ab, der Motor setzt aus, klappert, knallt in den Auspuff und dreht nicht höher. Beim Diesel nimmt der Regler in der Einspritzpumpe Kraftstoff weg, um die Drehzahl zu halten.",
  "b96nmg": "Ändere die Einstellungen, während der Motor läuft: Der Klang ändert sich sofort.",
+ "rpaw8b": "Stopp",
+ "fug6jx": "Ankurbeln",
  "1cmaoi5": "Gas geben <hint>(halten)</hint>",
  "17ojv3y": "Konstantes Gas",
  "cof9mq": "Lautstärke",
@@ -2119,6 +2129,11 @@
  "k4p4sa": "Ab sofort beim nächsten Händler",
  "8jgzsq": "Leserbriefe",
  "s4q2el": "Noch steht nichts in der Zeitung.",
+ "e9fxwo": {
+  "one": "<b>{name} ist fertig</b> und wartet seit {n} Woche auf den Marktstart: In dieser Zeit zahlst du Gehälter, verkaufst aber keine Autos.",
+  "other": "<b>{name} ist fertig</b> und wartet seit {n} Wochen auf den Marktstart: In dieser Zeit zahlst du Gehälter, verkaufst aber keine Autos."
+ },
+ "1vgbwm6": "<b>{name} ist fertig:</b> Wähle einen Preis und bring das Auto auf den Markt.",
  "1hoxwfx": "<b>Spiel pausiert.</b> Solange die Zeit stillsteht, arbeiten die Ingenieure nicht, die Tests kommen nicht voran und die Fabrik produziert nichts.",
  "1mp8dv6": "Weiter (Leertaste)",
  "1bttp5n": "F&E abgeschlossen",
@@ -2211,9 +2226,14 @@
  "19rd9ub": "Du weißt noch nicht, wie wichtig das diesen Käufern ist",
  "t21oh2": "Hinweis: wahrscheinlich {level} (mehr Rückmeldungen nötig)",
  "1uw6drj": "Wichtigkeit: {level}",
+ "100k210": "Priorität aufheben",
+ "zrgm5n": "Priorisieren: Die Ingenieure arbeiten verstärkt daran",
+ "18lj41z": "Priorität",
+ "1kh71hp": "Priorisieren",
  "imrbjv": "Schätzung der Ingenieure",
  "17oscp2": "Was die Käufer der Klasse {segment} sagen werden, zeigt sich beim Marktstart. Die Spannen beziehen sich auf den Klassenschnitt (die Linie); Tests machen sie enger.",
  "15sut0i": "Eines der ersten Autos des Teams: Die Schätzungen sind grob und können danebenliegen. Mit jedem neuen Modell wird dein Team treffsicherer.",
+ "75768p": "<b>Wähle zwei Prioritäten:</b> Die Ingenieure widmen ihnen {share} ihrer Zeit.",
  "xwnquv": "Attraktivität ({segment})",
  "21h36i": "Klassen-Ø 50",
  "11nlncn": "grobe Schätzung",
@@ -2309,6 +2329,7 @@
  "arkc1j": "~{budget} pro Jahr ({share} vom Umsatz, mindestens {floor}).",
  "r4vbsf": "Ruhm",
  "1o59oqf": "{v} / 8 (voll)",
+ "11q0spp": "Saison {year}, {race}: <b>{model}</b> hat den ersten Platz geholt.",
  "b03b2g": "Saison {year}, {race}: <b>{model}</b> kam unter die ersten drei.",
  "9h6c9x": "Saison {year}, {race}: <b>{model}</b> blieb ohne Platzierung.",
  "e2svqw": "Konkurrenten kaufen",
@@ -2380,6 +2401,7 @@
  "1p8a952": "Holzbank",
  "w22uad": "Leder und Nussbaum",
  "1fwbvyy": "Komfort und Prestige ↑, Kosten ↑ (steigen schnell).",
+ "1bj4bx7": "Wenn die Entwicklung mit diesen Prioritäten endet.",
  "ypsqk": "ab {cost}",
  "acwg7n": "Erfordert: {list}",
  "1jl7w64": "Ein Facelift behält den Motor bei.",
@@ -2505,12 +2527,14 @@
   "other": "<b>Entwicklung:</b> geschätzt <b>~{n} Wochen</b> · {team}"
  },
  "6we1mr": "Der Entwurf nutzt Technik, die du noch nicht erforscht hast: {tech}. Erforsche sie in F&E oder nimm sie aus dem Entwurf.",
+ "oh2sbw": "Entwirf das Auto, wähle in der Schätzung der Ingenieure zwei Prioritäten und starte dann. Nach dem Start ist der Entwurf gesperrt; die Prioritäten kannst du jederzeit ändern.",
  "1gy4kh7": "Die meisten Autos der Klasse haben {list}, dieser Entwurf nicht: in der Liste unten einbauen oder erforschen.",
  "157blb2": "<b>Entwicklung abgeschlossen.</b> Solange die Zeit läuft, wird das Auto weiter verfeinert (Zuverlässigkeit bisher +{v}, bis zu 160 % Fortschritt).",
  "1w12fbg": {
   "one": "<b>Entwicklung {pct}</b> · noch ~{n} Woche · {team}",
   "other": "<b>Entwicklung {pct}</b> · noch ~{n} Wochen · {team}"
  },
+ "srf3hg": "Jede Woche arbeiten die Ingenieure mehr an den zwei priorisierten Bereichen.",
  "ytc024": {
   "one": "Team: {n} Ingenieur.",
   "other": "Team: {n} Ingenieure."
@@ -2525,6 +2549,7 @@
  "11qytd4": "Trotzdem starten",
  "19zapm2": "Entwicklung gestartet",
  "50huix": "Entwicklung starten",
+ "1nkx2fq": "Zeit starten",
  "w5xjxj": "Motorenwerkstatt",
  "1f0aqva": "Getriebewerkstatt",
  "hh4lez": "Elektrikwerkstatt",
@@ -2699,6 +2724,9 @@
  "n4836l": "% vom Umsatz",
  "q91145": "davon „Nachfrage automatisch decken“ (abzüglich verkaufter Maschinen)",
  "14phn9x": "Betriebsgewinn (ohne Investitionen)",
+ "1kxo2eo": "Dringend",
+ "1kyisfs": "Wichtig",
+ "vpsrjh": "Tipp",
  "i4efms": "Entwirf dein erstes Auto: Starte ein neues Projekt.",
  "umcqex": "{name}: Stell den Entwurf fertig und starte die Entwicklung.",
  "ru9blv": {
@@ -3070,10 +3098,14 @@
  "fzffj5": "Nachfrage pro Woche (zum heutigen Preis)",
  "1fbgbv5": "{now} → {after} Autos/Wo.",
  "1qr90eb": "Käme es heute in den Verkauf, würde dieses Facelift die Nachfrage um <good>~{pct}</good> steigern ({now} → {after} Autos/Wo.); der Marktstart-Rummel bringt in den ersten Monaten noch zusätzliche Käufer.",
+ "1ixxoij": "Dieses Facelift steigert die Nachfrage nur um <warn>~{pct}</warn> ({now} → {after} Autos/Wo.). Richte die Prioritäten der Ingenieure auf das aus, was den Käufern wichtig ist, dann bringt es mehr.",
+ "cbm8jx": "<bad>Dieses Facelift steigert die Nachfrage nicht</bad> ({now} → {after} Autos/Wo.). Richte die Prioritäten der Ingenieure auf das aus, was den Käufern wichtig ist, oder denk über eine neue Generation nach.",
+ "1eaykq8": "Ein Facelift behält die Entwicklungs- und Testabstimmung des Autos bei; sinkt die Attraktivität trotzdem, werfen deine Änderungen am Entwurf das Auto in irgendeiner Hinsicht zurück: Überprüfe Entwurf und Prioritäten.",
  "1tsei44": {
   "one": "Ein Facelift lässt das Auto jünger wirken: Heute wirkt es {now} Jahre alt, direkt nach dem Facelift {after}. Bis zum Verkaufsstart dauert es ~{n} Woche; ohne Facelift wirkt es dann {later} Jahre alt.",
   "other": "Ein Facelift lässt das Auto jünger wirken: Heute wirkt es {now} Jahre alt, direkt nach dem Facelift {after}. Bis zum Verkaufsstart dauert es ~{n} Wochen; ohne Facelift wirkt es dann {later} Jahre alt."
  },
+ "13xzqpg": "Was deine Ingenieure mit den heutigen Prioritäten und dem heutigen Testplan erwarten, ohne Marktstart-Rummel. Das endgültige Urteil fällen die Zeitschriften zum Marktstart.",
  "19siuhf": "<b>Testprogramm abgeschlossen.</b> Als Nächstes: Zulieferer und Fertigungslinie.",
  "1akrla8": "Testprogramm",
  "1js6jm1": "Die Tests laufen jede Woche parallel, und gefundene Mängel werden sofort behoben. Kürzt du die Testwochen, kommt das Auto früher auf den Markt, aber versteckte Mängel brechen dann bei den Kunden auf.",
@@ -3239,6 +3271,7 @@
  "11rj4f0": "Facelift",
  "f09fgf": "Keine laufenden Projekte.",
  "orjwq4": "Wie funktioniert das?",
+ "g07umb": "<b>Entwurf und Entwicklung:</b> Du entscheidest, für wen das Auto ist: Wähle die Module, setze deine Ingenieure ein, wähle in der Schätzung der Ingenieure zwei Prioritäten (Fahrleistung, Effizienz, Komfort, Sicherheit, Kosten, Qualität …). Die Prioritäten verändern das Auto wirklich.",
  "18vi4nh": "<b>Tests:</b> Prüfstand, Straßentest, Dauertest und (ab 1934) Crashtest finden Mängel und stimmen das Auto ab. Kürzt du sie ab, brechen die Mängel bei den Kunden auf.",
  "1u8g1yj": "<b>Produktion:</b> Wähle die Zulieferer und die Linie; die Werkzeuge werden gefertigt.",
  "1s1icfy": "<b>Marktstart:</b> Lege Preis und Märkte fest. Die Zeitschriften vergeben Noten, und die Käufer sagen ihre Meinung.",
@@ -3360,21 +3393,5 @@
  "1ern1en": "K A N A D A",
  "1l658y2": "N",
  "1khau7x": "Meilen",
- "v48e9x": "M E X I K O",
- "e9fxwo": {
-  "one": "<b>{name} ist fertig</b> und wartet seit {n} Woche auf den Marktstart: In dieser Zeit zahlst du Gehälter, verkaufst aber keine Autos.",
-  "other": "<b>{name} ist fertig</b> und wartet seit {n} Wochen auf den Marktstart: In dieser Zeit zahlst du Gehälter, verkaufst aber keine Autos."
- },
- "1vgbwm6": "<b>{name} ist fertig:</b> Wähle einen Preis und bring das Auto auf den Markt.",
- "11q0spp": "Saison {year}, {race}: <b>{model}</b> hat den ersten Platz geholt.",
- "1hjmy2r": "{race}: {company} siegt mit dem {model}! Der Ruhm der Marke wächst.",
- "cg3cr4": "{race}: {model} kommt unter die ersten drei.",
- "29em8y": {
-  "one": "{race}: {model} geht leer aus. Das Auto ist ein Jahr alt; ohne ein neues, starkes Auto verbrennt das Team nur Geld.",
-  "other": "{race}: {model} geht leer aus. Das Auto ist {n} Jahre alt; ohne ein neues, starkes Auto verbrennt das Team nur Geld."
- },
- "9cq00c": "{race}: {model} geht leer aus. Du brauchst ein stärkeres Auto oder ein größeres Team.",
- "rpaw8b": "Stopp",
- "fug6jx": "Ankurbeln",
- "1nkx2fq": "Zeit starten"
+ "v48e9x": "M E X I K O"
 }

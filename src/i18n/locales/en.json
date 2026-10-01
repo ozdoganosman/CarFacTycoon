@@ -590,6 +590,13 @@
  "1guz2fa": "French Grand Prix",
  "15t1o47": "No races are being held because of the war: the team is standing by, and the racing budget isn’t being spent.",
  "10bg7n1": "The war is over and racing is back: the team is getting ready for the season.",
+ "1hjmy2r": "{company} won the {race} with the {model}! The make’s fame has grown.",
+ "cg3cr4": "{race}: the {model} finished in the top three.",
+ "29em8y": {
+  "one": "{race}: the {model} failed to place. The car is {n} year old; without a new, powerful car the team is just burning money.",
+  "other": "{race}: the {model} failed to place. The car is {n} years old; without a new, powerful car the team is just burning money."
+ },
+ "9cq00c": "{race}: the {model} failed to place. You need a more powerful car or a bigger team.",
  "2hl950": "{model} wins the {race}!",
  "9ipk4s": "The {company} team leaves its rivals in the dust; race fans line up at the dealers",
  "aztqhq": "The {company} factory team took first place in the {race} with the {model}. The team’s first major victory got wide coverage in the {market} press.",
@@ -1870,6 +1877,7 @@
  "1dg5pld": "Labor (estimate)",
  "rfursi": "build complexity {v}: a complex car slows the line; modern stations cut labor per car",
  "27bggb": "Included in the items:",
+ "1gj4qon": "cost-cutting in development ×{v}",
  "mew6do": "know-how ×{v}",
  "64a31j": "Tachometer, redline {rpm} rpm",
  "15vy7r8": "rpm ×1000",
@@ -1889,6 +1897,8 @@
  "1uuma35": "The higher the compression, the harder the combustion and the sharper the sound. If the compression is too high for the gasoline of the day, the engine knocks: under load, a metallic pinging that rings at 5–10 kHz depending on the cylinder bore.",
  "y4j0kj": "Engines of the period have no rev limiter. When a gasoline engine passes the redline, the valve springs can’t keep up and the valves float: power drops, the engine misfires, clatters, backfires through the exhaust and won’t rev any higher. On a diesel, the governor in the injection pump cuts the fuel to hold the revs.",
  "b96nmg": "Change the settings while the engine runs: the sound changes instantly.",
+ "rpaw8b": "Stop",
+ "fug6jx": "Hand-crank it",
  "1cmaoi5": "Hit the gas <hint>(hold)</hint>",
  "17ojv3y": "Steady throttle",
  "cof9mq": "Volume",
@@ -2128,6 +2138,11 @@
  "k4p4sa": "Waiting for you at your nearest dealer",
  "8jgzsq": "Letters to the Editor",
  "s4q2el": "Nothing in the papers yet.",
+ "e9fxwo": {
+  "one": "<b>{name} is ready</b> and has waited {n} week for its launch: meanwhile you’re paying salaries but selling no cars.",
+  "other": "<b>{name} is ready</b> and has waited {n} weeks for its launch: meanwhile you’re paying salaries but selling no cars."
+ },
+ "1vgbwm6": "<b>{name} is ready:</b> pick a price and launch it.",
  "1hoxwfx": "<b>Game paused.</b> While time is stopped, engineers don’t work, tests don’t progress and the factory doesn’t build.",
  "1mp8dv6": "Resume (space)",
  "1bttp5n": "R&D complete",
@@ -2220,9 +2235,14 @@
  "19rd9ub": "You don’t know yet how much these buyers care about this",
  "t21oh2": "Hint: probably {level} (more feedback needed)",
  "1uw6drj": "Importance: {level}",
+ "100k210": "Remove priority",
+ "zrgm5n": "Prioritize: engineers put extra work into it",
+ "18lj41z": "Priority",
+ "1kh71hp": "Prioritize",
  "imrbjv": "Engineers’ estimate",
  "17oscp2": "What {segment} buyers will say becomes clear at launch. Ranges are relative to the class average (the line); testing narrows them.",
  "15sut0i": "One of the team’s first cars: the estimates are rough and may be off. Every new model sharpens your team.",
+ "75768p": "<b>Pick two priorities:</b> your engineers give them {share} of their time.",
  "xwnquv": "Appeal ({segment})",
  "21h36i": "class avg. 50",
  "11nlncn": "rough guess",
@@ -2318,6 +2338,7 @@
  "arkc1j": "~{budget} a year ({share} of revenue, at least {floor}).",
  "r4vbsf": "Fame",
  "1o59oqf": "{v} / 8 (full)",
+ "11q0spp": "{year} season, {race}: <b>{model}</b> took first place.",
  "b03b2g": "{year} season, {race}: <b>{model}</b> finished in the top three.",
  "9h6c9x": "{year} season, {race}: <b>{model}</b> failed to place.",
  "e2svqw": "Buy a rival",
@@ -2389,6 +2410,7 @@
  "1p8a952": "Wooden bench",
  "w22uad": "Leather and walnut",
  "1fwbvyy": "Comfort and prestige ↑, cost ↑ (climbs fast).",
+ "1bj4bx7": "If development finishes with these priorities.",
  "ypsqk": "from {cost}",
  "acwg7n": "Requires: {list}",
  "1jl7w64": "A facelift keeps the engine.",
@@ -2514,12 +2536,14 @@
   "other": "<b>Development:</b> est. <b>~{n} weeks</b> · {team}"
  },
  "6we1mr": "The design uses technology you haven’t researched yet: {tech}. Research it in R&D or take it out of the design.",
+ "oh2sbw": "Design the car, pick two priorities in the engineers’ estimate, then start. Once started, the design is locked; you can change the priorities any time.",
  "1gy4kh7": "Most cars in the class have {list}, but this design doesn’t: add or research from the list below.",
  "157blb2": "<b>Development done.</b> As long as time runs, the car keeps getting polished (reliability +{v} so far, up to 160% progress).",
  "1w12fbg": {
   "one": "<b>Development {pct}</b> · ~{n} week left · {team}",
   "other": "<b>Development {pct}</b> · ~{n} weeks left · {team}"
  },
+ "srf3hg": "Every week, your engineers put more work into the two priority areas.",
  "ytc024": {
   "one": "Team: {n} engineer.",
   "other": "Team: {n} engineers."
@@ -2534,6 +2558,7 @@
  "11qytd4": "Start anyway",
  "19zapm2": "Development started",
  "50huix": "Start development",
+ "1nkx2fq": "Start time",
  "w5xjxj": "Engine shop",
  "1f0aqva": "Gearbox shop",
  "hh4lez": "Electrical shop",
@@ -2708,6 +2733,9 @@
  "n4836l": "% of revenue",
  "q91145": "of which “Meet demand automatically” (net of machines sold)",
  "14phn9x": "Operating profit (excl. investment)",
+ "1kxo2eo": "Urgent",
+ "1kyisfs": "Important",
+ "vpsrjh": "Tip",
  "i4efms": "Design your first car: start a new project.",
  "umcqex": "{name}: finish the design and start development.",
  "ru9blv": {
@@ -3067,10 +3095,14 @@
  "fzffj5": "Weekly demand (at today’s price)",
  "1fbgbv5": "{now} → {after} cars/wk",
  "1qr90eb": "If it went on sale today, this facelift would lift demand by <good>~{pct}</good> ({now} → {after} cars/wk); launch buzz brings extra buyers on top of that in the first months.",
+ "1ixxoij": "This facelift lifts demand by only <warn>~{pct}</warn> ({now} → {after} cars/wk). Shift your engineers’ priorities to what buyers care about and it will pay off better.",
+ "cbm8jx": "<bad>This facelift doesn’t lift demand</bad> ({now} → {after} cars/wk). Shift your engineers’ priorities to what buyers care about, or consider a new generation.",
+ "1eaykq8": "A facelift keeps the car’s development and test tuning; if appeal still drops, your design changes are setting the car back somewhere: review the design and the priorities.",
  "1tsei44": {
   "one": "A facelift makes the car look younger: today it looks {now} years old, right after the facelift {after}. It takes ~{n} week to go on sale; without a facelift, by then it will look {later} years old.",
   "other": "A facelift makes the car look younger: today it looks {now} years old, right after the facelift {after}. It takes ~{n} weeks to go on sale; without a facelift, by then it will look {later} years old."
  },
+ "13xzqpg": "What your engineers expect with today’s priorities and test plan, launch buzz aside. The magazines give the final verdict at launch.",
  "19siuhf": "<b>Test program complete.</b> Next up: suppliers and the production line.",
  "1akrla8": "Test program",
  "1js6jm1": "Tests run in parallel every week, and the defects they find are fixed right away. Cut test weeks and the car comes out sooner, but hidden defects blow up in the field.",
@@ -3236,6 +3268,7 @@
  "11rj4f0": "facelift",
  "f09fgf": "No projects in progress.",
  "orjwq4": "How does it work?",
+ "g07umb": "<b>Design and development:</b> You decide who the car is for: pick the modules, assign your engineers, pick two priorities in the engineers’ estimate (performance, efficiency, comfort, safety, cost, quality…). Priorities really change the car.",
  "18vi4nh": "<b>Testing:</b> Dynamometer, road, durability and (after 1934) crash tests find defects and tune the car. Cut them short and defects blow up in the field.",
  "1u8g1yj": "<b>Production:</b> Choose the suppliers and the line; the dies get made.",
  "1s1icfy": "<b>Launch:</b> Set the price and markets. Magazines score the car and buyers have their say.",
@@ -3360,21 +3393,5 @@
  "1ern1en": "C A N A D A",
  "1l658y2": "N",
  "1khau7x": "miles",
- "v48e9x": "M E X I C O",
- "e9fxwo": {
-  "one": "<b>{name} is ready</b> and has waited {n} week for its launch: meanwhile you’re paying salaries but selling no cars.",
-  "other": "<b>{name} is ready</b> and has waited {n} weeks for its launch: meanwhile you’re paying salaries but selling no cars."
- },
- "1vgbwm6": "<b>{name} is ready:</b> pick a price and launch it.",
- "11q0spp": "{year} season, {race}: <b>{model}</b> took first place.",
- "1hjmy2r": "{company} won the {race} with the {model}! The make’s fame has grown.",
- "cg3cr4": "{race}: the {model} finished in the top three.",
- "29em8y": {
-  "one": "{race}: the {model} failed to place. The car is {n} year old; without a new, powerful car the team is just burning money.",
-  "other": "{race}: the {model} failed to place. The car is {n} years old; without a new, powerful car the team is just burning money."
- },
- "9cq00c": "{race}: the {model} failed to place. You need a more powerful car or a bigger team.",
- "rpaw8b": "Stop",
- "fug6jx": "Hand-crank it",
- "1nkx2fq": "Start time"
+ "v48e9x": "M E X I C O"
 }

@@ -590,6 +590,13 @@
  "1guz2fa": "Gran Premio de Francia",
  "15t1o47": "No se celebran carreras por la guerra: el equipo espera y no se gasta el presupuesto de carreras.",
  "10bg7n1": "Terminó la guerra y vuelven las carreras: el equipo se prepara para la temporada.",
+ "1hjmy2r": "¡{company} ganó la carrera {race} con el {model}! Crece la fama de la marca.",
+ "cg3cr4": "{race}: el {model} terminó entre los tres primeros.",
+ "29em8y": {
+  "one": "{race}: el {model} no logró subir al podio. El auto tiene un año; sin un auto nuevo y potente, el equipo solo quema dinero.",
+  "other": "{race}: el {model} no logró subir al podio. El auto tiene {n} años; sin un auto nuevo y potente, el equipo solo quema dinero."
+ },
+ "9cq00c": "{race}: el {model} no logró subir al podio. Hace falta un auto más potente o un equipo más grande.",
  "2hl950": "¡El {model} gana la carrera {race}!",
  "9ipk4s": "El equipo {company} deja atrás a sus rivales; los aficionados que vieron la carrera hacen fila en los concesionarios",
  "aztqhq": "El equipo de fábrica de {company} ganó la carrera {race} con el {model}. Esta primera gran victoria del equipo tuvo amplia cobertura en la prensa de {market}.",
@@ -1876,6 +1883,7 @@
  "1dg5pld": "Mano de obra (estimada)",
  "rfursi": "dificultad de fabricación {v}: un auto complejo frena la línea; las estaciones modernas reducen la mano de obra por auto",
  "27bggb": "Incluido en las partidas:",
+ "1gj4qon": "reducción de costos en el desarrollo ×{v}",
  "mew6do": "conocimientos técnicos ×{v}",
  "64a31j": "Tacómetro, línea roja a {rpm} rpm",
  "15vy7r8": "rpm ×1000",
@@ -1895,6 +1903,8 @@
  "1uuma35": "Cuanto más alta es la compresión, más dura es la combustión y más agudo el sonido. Si la compresión es demasiado alta para la gasolina de la época, el motor pica: con carga, un tintineo metálico que resuena a 5–10 kHz según el diámetro del cilindro.",
  "y4j0kj": "Los motores de la época no tienen limitador de revoluciones. Cuando un motor de gasolina pasa la línea roja, los resortes de válvula no dan abasto y las válvulas flotan: la potencia cae, el motor falla, traquetea, petardea por el escape y no sube más de vueltas. En el diésel, en cambio, el regulador de la bomba de inyección corta el combustible para contener el régimen.",
  "b96nmg": "Cambia los ajustes con el motor en marcha: el sonido cambia al instante.",
+ "rpaw8b": "Parar",
+ "fug6jx": "Arrancar a manivela",
  "1cmaoi5": "Acelera <hint>(mantén pulsado)</hint>",
  "17ojv3y": "Acelerador fijo",
  "cof9mq": "Volumen",
@@ -2134,6 +2144,11 @@
  "k4p4sa": "Lo espera en nuestro concesionario más cercano",
  "8jgzsq": "Cartas de los lectores",
  "s4q2el": "Todavía no salió nada en los periódicos.",
+ "e9fxwo": {
+  "one": "<b>{name} está listo</b> y lleva {n} semana esperando el lanzamiento: mientras tanto pagas sueldos, pero no vendes autos.",
+  "other": "<b>{name} está listo</b> y lleva {n} semanas esperando el lanzamiento: mientras tanto pagas sueldos, pero no vendes autos."
+ },
+ "1vgbwm6": "<b>{name} está listo:</b> elige el precio y lánzalo.",
  "1hoxwfx": "<b>Juego en pausa.</b> Con el tiempo detenido, los ingenieros no trabajan, las pruebas no avanzan y la fábrica no produce.",
  "1mp8dv6": "Continuar (espacio)",
  "1bttp5n": "I+D terminada",
@@ -2226,9 +2241,14 @@
  "19rd9ub": "Todavía no sabes cuánto les importa esto a estos compradores",
  "t21oh2": "Pista: el nivel de importancia quizá sea {level} (hacen falta más opiniones)",
  "1uw6drj": "Nivel de importancia: {level}",
+ "100k210": "Quitar prioridad",
+ "zrgm5n": "Priorizar: los ingenieros le dedican trabajo extra",
+ "18lj41z": "Prioridad",
+ "1kh71hp": "Priorizar",
  "imrbjv": "Estimación de los ingenieros",
  "17oscp2": "Lo que opinen los compradores del segmento {segment} se sabrá en el lanzamiento. Los rangos son relativos a la media del segmento (la línea); las pruebas los estrechan.",
  "15sut0i": "Uno de los primeros autos del equipo: las estimaciones son aproximadas y pueden fallar. Cada modelo nuevo afina a tu equipo.",
+ "75768p": "<b>Elige dos prioridades:</b> los ingenieros les dedican el {share} de su tiempo.",
  "xwnquv": "Atractivo ({segment})",
  "21h36i": "media del seg. 50",
  "11nlncn": "estimación aproximada",
@@ -2327,6 +2347,7 @@
  "arkc1j": "~{budget} al año ({share} de los ingresos, mínimo {floor}).",
  "r4vbsf": "Fama",
  "1o59oqf": "{v} / 8 (al máximo)",
+ "11q0spp": "Temporada {year}, {race}: <b>{model}</b> ganó la carrera.",
  "b03b2g": "Temporada {year}, {race}: <b>{model}</b> terminó entre los tres primeros.",
  "9h6c9x": "Temporada {year}, {race}: <b>{model}</b> no logró clasificarse entre los primeros.",
  "e2svqw": "Comprar un rival",
@@ -2398,6 +2419,7 @@
  "1p8a952": "Banco de madera",
  "w22uad": "Cuero y nogal",
  "1fwbvyy": "Confort y prestigio ↑, costo ↑ (sube rápido).",
+ "1bj4bx7": "Si el desarrollo termina con estas prioridades.",
  "ypsqk": "desde {cost}",
  "acwg7n": "Requiere: {list}",
  "1jl7w64": "Un rediseño conserva el motor.",
@@ -2523,12 +2545,14 @@
   "other": "<b>Desarrollo:</b> estimado <b>~{n} semanas</b> · {team}"
  },
  "6we1mr": "El diseño usa tecnología que aún no has investigado: {tech}. Investígala en I+D o quítala del diseño.",
+ "oh2sbw": "Diseña el auto, elige dos prioridades en la estimación de los ingenieros y luego empieza. Una vez iniciado, el diseño queda bloqueado; las prioridades las puedes cambiar cuando quieras.",
  "1gy4kh7": "A este diseño le falta lo que tiene la mayoría de los autos del segmento: {list}. Agrégalo desde la lista de abajo o investígalo.",
  "157blb2": "<b>Desarrollo terminado.</b> Mientras corra el tiempo, el auto se sigue puliendo (confiabilidad +{v} hasta ahora, hasta un 160 % de avance).",
  "1w12fbg": {
   "one": "<b>Desarrollo {pct}</b> · falta ~{n} semana · {team}",
   "other": "<b>Desarrollo {pct}</b> · faltan ~{n} semanas · {team}"
  },
+ "srf3hg": "Cada semana, los ingenieros trabajan más en las dos áreas prioritarias.",
  "ytc024": {
   "one": "Equipo: {n} ingeniero.",
   "other": "Equipo: {n} ingenieros."
@@ -2543,6 +2567,7 @@
  "11qytd4": "Iniciar igual",
  "19zapm2": "Desarrollo iniciado",
  "50huix": "Iniciar desarrollo",
+ "1nkx2fq": "Iniciar el tiempo",
  "w5xjxj": "Taller de motores",
  "1f0aqva": "Taller de cajas de cambios",
  "hh4lez": "Taller eléctrico",
@@ -2717,6 +2742,9 @@
  "n4836l": "% de ingresos",
  "q91145": "de ello, por “Cubrir la demanda automáticamente” (descontadas las máquinas vendidas)",
  "14phn9x": "Beneficio operativo (sin inversiones)",
+ "1kxo2eo": "Urgente",
+ "1kyisfs": "Importante",
+ "vpsrjh": "Consejo",
  "i4efms": "Diseña tu primer auto: inicia un proyecto nuevo.",
  "umcqex": "{name}: termina el diseño e inicia el desarrollo.",
  "ru9blv": {
@@ -3082,10 +3110,14 @@
  "fzffj5": "Demanda semanal (al precio actual)",
  "1fbgbv5": "{now} → {after} autos/sem.",
  "1qr90eb": "Si saliera hoy a la venta, este rediseño aumentaría la demanda en <good>~{pct}</good> ({now} → {after} autos/sem.); en los primeros meses, el entusiasmo del lanzamiento sumará compradores por encima de eso.",
+ "1ixxoij": "Este rediseño solo aumenta la demanda en <warn>~{pct}</warn> ({now} → {after} autos/sem.). Si orientas las prioridades de los ingenieros hacia lo que les importa a los compradores, rendirá más.",
+ "cbm8jx": "<bad>Este rediseño no aumenta la demanda</bad> ({now} → {after} autos/sem.). Orienta las prioridades de los ingenieros hacia lo que les importa a los compradores o piensa en una nueva generación.",
+ "1eaykq8": "El rediseño conserva los ajustes de desarrollo y pruebas del auto; si aun así el atractivo baja, los cambios de diseño están empeorando el auto en algún aspecto: revisa el diseño y las prioridades.",
  "1tsei44": {
   "one": "El rediseño hace que el auto parezca más nuevo: hoy aparenta {now} años; justo después del rediseño, {after}. Tarda ~{n} semana en salir a la venta; sin rediseño, para entonces aparentará {later} años.",
   "other": "El rediseño hace que el auto parezca más nuevo: hoy aparenta {now} años; justo después del rediseño, {after}. Tarda ~{n} semanas en salir a la venta; sin rediseño, para entonces aparentará {later} años."
  },
+ "13xzqpg": "Lo que esperan tus ingenieros con las prioridades y el plan de pruebas actuales, sin contar el entusiasmo del lanzamiento. El veredicto final lo dan las revistas en el lanzamiento.",
  "19siuhf": "<b>Programa de pruebas terminado.</b> Lo siguiente: proveedores y línea de producción.",
  "1akrla8": "Programa de pruebas",
  "1js6jm1": "Las pruebas avanzan en paralelo cada semana y los defectos que encuentran se corrigen de inmediato. Si recortas semanas de pruebas, el auto sale antes, pero los defectos ocultos estallan en la calle.",
@@ -3251,6 +3283,7 @@
  "11rj4f0": "rediseño",
  "f09fgf": "No hay proyectos en curso.",
  "orjwq4": "¿Cómo funciona?",
+ "g07umb": "<b>Diseño y desarrollo:</b> Tú decides para quién es el auto: elige los módulos, asigna a tus ingenieros y elige dos prioridades en la estimación de los ingenieros (desempeño, eficiencia, confort, seguridad, costo, calidad…). Las prioridades cambian el auto de verdad.",
  "18vi4nh": "<b>Pruebas:</b> Las pruebas de dinamómetro, carretera, durabilidad y (desde 1934) choque encuentran defectos y ajustan el auto. Si las acortas, los defectos estallan en la calle.",
  "1u8g1yj": "<b>Producción:</b> Elige los proveedores y la línea; se fabrican los troqueles.",
  "1s1icfy": "<b>Lanzamiento:</b> Fija el precio y los mercados. Las revistas califican el auto y los compradores dan su opinión.",
@@ -3375,21 +3408,5 @@
  "1ern1en": "C A N A D Á",
  "1l658y2": "N",
  "1khau7x": "millas",
- "v48e9x": "M É X I C O",
- "e9fxwo": {
-  "one": "<b>{name} está listo</b> y lleva {n} semana esperando el lanzamiento: mientras tanto pagas sueldos, pero no vendes autos.",
-  "other": "<b>{name} está listo</b> y lleva {n} semanas esperando el lanzamiento: mientras tanto pagas sueldos, pero no vendes autos."
- },
- "1vgbwm6": "<b>{name} está listo:</b> elige el precio y lánzalo.",
- "11q0spp": "Temporada {year}, {race}: <b>{model}</b> ganó la carrera.",
- "1hjmy2r": "¡{company} ganó la carrera {race} con el {model}! Crece la fama de la marca.",
- "cg3cr4": "{race}: el {model} terminó entre los tres primeros.",
- "29em8y": {
-  "one": "{race}: el {model} no logró subir al podio. El auto tiene un año; sin un auto nuevo y potente, el equipo solo quema dinero.",
-  "other": "{race}: el {model} no logró subir al podio. El auto tiene {n} años; sin un auto nuevo y potente, el equipo solo quema dinero."
- },
- "9cq00c": "{race}: el {model} no logró subir al podio. Hace falta un auto más potente o un equipo más grande.",
- "rpaw8b": "Parar",
- "fug6jx": "Arrancar a manivela",
- "1nkx2fq": "Iniciar el tiempo"
+ "v48e9x": "M É X I C O"
 }
