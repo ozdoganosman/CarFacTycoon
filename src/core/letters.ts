@@ -124,6 +124,21 @@ export function customerLetters(s: GameState, m: CarModel, count = 3, rng: Rng =
     used.add(line);
     return t(line);
   };
+  /**
+   * A sentence about the i-th thing that stands out, or the next one when everything has been said about
+   * it already (a car far ahead in one thing has more owners praising it than sentences about it).
+   */
+  const about = (list: { k: AttrKey }[], table: Record<AttrKey, string[]>, i: number): string | undefined => {
+    for (let j = 0; j < list.length; j++) {
+      const lines = table[list[(i + j) % list.length].k].filter((x) => !used.has(x));
+      if (lines.length) {
+        const line = pick(rng, lines);
+        used.add(line);
+        return t(line);
+      }
+    }
+    return undefined;
+  };
   // Owners write from where our cars are: the states with cars of ours on the road, more from where there are more.
   const owners = STATE_LIST.map((id) => ({ id, n: s.network?.states[id]?.parc ?? 0 })).filter((x) => x.n > 0);
   const ownersTotal = owners.reduce((a, x) => a + x.n, 0);
@@ -137,15 +152,21 @@ export function customerLetters(s: GameState, m: CarModel, count = 3, rng: Rng =
     const names = NAMES[pick(rng, m.markets.length ? m.markets : [market])];
     const parts: string[] = [];
     let score = 3;
-    const g = good[i % Math.max(1, good.length)];
-    const b = bad[i % Math.max(1, bad.length)];
+    const g = good.length > 0;
+    const b = bad.length > 0;
     if (g && (rng() < 0.75 || !b)) {
-      parts.push(fresh(PRAISE[g.k]));
-      score += 1;
+      const line = about(good, PRAISE, i);
+      if (line) {
+        parts.push(line);
+        score += 1;
+      }
     }
     if (b && (rng() < 0.6 || !g)) {
-      parts.push(fresh(COMPLAINT[b.k]));
-      score -= 1;
+      const line = about(bad, COMPLAINT, i);
+      if (line) {
+        parts.push(line);
+        score -= 1;
+      }
     }
     if (surfaced.length && rng() < 0.5) {
       const d = pick(rng, surfaced);

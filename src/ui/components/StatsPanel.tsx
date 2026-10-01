@@ -5,9 +5,11 @@ import { costIndex, labourShare } from '../../data/economy';
 import { ATTRS, ATTR_NAMES, importanceLabel, segmentDef } from '../../data/segments';
 import { computeCarStats } from '../../core/vehicle';
 import { estimateRange, factRange, isRough, rawRange } from '../../core/estimate';
-import type { AttrKey, CarDesign, CarStats, DevBonus, Estimate, GameState, Scores, SegmentId } from '../../core/types';
+import type { AttrKey, CarDesign, CarStats, DevBonus, Estimate, FocusKey, GameState, Scores, SegmentId } from '../../core/types';
+import { ATTR_FOCUS, PRIORITY_SHARE } from '../../core/development';
+import { Icon } from './Icon';
 import { lower, t } from '../../i18n';
-import { dec, kmh, litres, money, secs } from '../format';
+import { dec, kmh, litres, money, pct, secs } from '../format';
 import { tx } from '../i18n';
 import { CostBreakdown } from './CostBreakdown';
 import { Info, RangeBar, ScoreBar } from './ui';
@@ -81,6 +83,9 @@ export function StatsPanel(props: {
   estimate?: Estimate;
   /** Scores as buyers see them (a car on sale: perceived reliability, workshop name). */
   scores?: Scores;
+  /** The engineers' two priorities, and the way to change them (the design and development screens). */
+  priorities?: FocusKey[];
+  onPriority?: (k: FocusKey) => void;
 }) {
   const { s, design, segment, yf } = props;
   const st = useCarStats(design, yf, props.bonus);
@@ -96,6 +101,21 @@ export function StatsPanel(props: {
   const target = ref;
   const est = props.estimate;
   const measurable = (k: AttrKey) => k === 'accel' || k === 'topSpeed' || k === 'economy';
+  const prio = props.onPriority ? (props.priorities ?? []) : undefined;
+  /** The button that makes an area one of the engineers' two priorities. */
+  const prioButton = (k: FocusKey | undefined) =>
+    prio && k ? (
+      <button
+        type="button"
+        className={`prio-btn ${prio.includes(k) ? 'is-on' : ''}`}
+        aria-pressed={prio.includes(k)}
+        title={prio.includes(k) ? t('Öncelikten çıkar') : t('Öncelik yap: mühendisler buna ekstra çalışır')}
+        onClick={() => props.onPriority!(k)}
+      >
+        <Icon name="star" size={13} />
+        <span>{prio.includes(k) ? t('Öncelik') : t('Öncelik yap')}</span>
+      </button>
+    ) : null;
   return (
     <div className="stats-panel">
       <div className="sp-head">
@@ -111,6 +131,11 @@ export function StatsPanel(props: {
               <div className="small tone-warn">{t('Ekibin ilk arabalarından biri: tahminler kaba ve yanılabilir. Her yeni model ekibini keskinleştirir.')}</div>
             )}
             {props.note && <div className="muted small">{props.note}</div>}
+            {prio && (
+              <div className="sp-prio-hint small">
+                {tx('<b>İki öncelik seç:</b> mühendisler zamanlarının {share} kadarını onlara verir.', { share: pct(2 * PRIORITY_SHARE, 0) })}
+              </div>
+            )}
             <ClassGaps est={est} scores={scores} />
           </div>
         ) : (
@@ -125,11 +150,13 @@ export function StatsPanel(props: {
       <div className="sp-rows">
         {ATTRS.map((k) => {
           const r = est ? estimateRange(est, k, scores[k]) : null;
+          const focus = ATTR_FOCUS[k];
           return (
-            <div key={k} className="sp-row">
+            <div key={k} className={`sp-row ${prio && focus && prio.includes(focus) ? 'is-priority' : ''}`}>
               <div className="sp-label">
                 <span>{t(ATTR_NAMES[k])}</span>
                 {!est && <Importance s={s} segment={segment} attr={k} />}
+                {prioButton(focus)}
               </div>
               <div className="sp-raw">
                 {!est ? rawValue(k, st, yf, segment) : measurable(k) ? (isRough(est, k) ? estimatedRaw(k, st, yf, segment, est) : rawValue(k, st, yf, segment)) : isRough(est, k) ? t('kaba tahmin') : t('ölçüldü')}
@@ -162,8 +189,10 @@ export function StatsPanel(props: {
             <span>{t('Ağırlık')}</span>
             <b>{t('{v} kg', { v: est ? span(factRange(est, 'mass', st.massKg), (v) => String(Math.round(v / 5) * 5)) : Math.round(st.massKg) })}</b>
           </div>
-          <div>
-            <span>{t('Malzeme maliyeti')}</span>
+          <div className={prio?.includes('cost') ? 'is-priority' : ''}>
+            <span>
+              {t('Malzeme maliyeti')} {prioButton('cost')}
+            </span>
             <b>{est ? span(factRange(est, 'cost', unit), money) : money(unit)}</b>
           </div>
           <div title={t('Malzeme + tahmini işçilik')}>

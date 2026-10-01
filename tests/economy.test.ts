@@ -195,3 +195,22 @@ describe('the world column', () => {
     expect(at(1930, 1)).toBe('Borsa Çöktü!');
   });
 });
+
+describe('the engineers’ priorities', () => {
+  it('two chosen areas take extra work, the rest share what is left; a third replaces the first', () => {
+    const s = game(1910);
+    const r = A.startProject(s, { name: 'X', segment: 'family', targetPrice: 0 });
+    if (!r.ok) throw new Error(r.error);
+    const p = s.projects.find((x) => x.id === r.id)!;
+    expect(p.dev.priorities).toEqual(['practicality', 'comfort']);
+    expect(p.dev.focus.practicality).toBeCloseTo(0.3, 6);
+    expect(p.dev.focus.safety).toBeCloseTo(0.4 / 6, 6);
+    A.togglePriority(s, r.id, 'safety');
+    expect(p.dev.priorities).toEqual(['comfort', 'safety']);
+    expect(p.dev.focus.practicality).toBeCloseTo(0.4 / 6, 6);
+    A.togglePriority(s, r.id, 'safety');
+    expect(p.dev.priorities).toEqual(['comfort']);
+    expect(p.dev.focus.comfort).toBeCloseTo(0.3, 6);
+    expect(Object.values(p.dev.focus).reduce((a, v) => a + v, 0)).toBeCloseTo(1, 9);
+  });
+});

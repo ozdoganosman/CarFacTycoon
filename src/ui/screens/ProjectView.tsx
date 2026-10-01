@@ -36,7 +36,7 @@ import { classGap, gapNames, researcherSalary } from '../../core/research';
 import { BudgetLine } from '../components/BudgetLine';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { Designer } from './Designer';
-import { DevBar, FocusPanel } from './DevPanel';
+import { DevBar } from './DevPanel';
 import { Icon } from '../components/Icon';
 
 const STEPS: { label: string; phases: ProjectPhase[] }[] = [
@@ -99,8 +99,6 @@ export function ProjectView({ projectId }: { projectId: string }) {
       {(p.phase === 'design' || p.phase === 'development') && (
         <>
           <DevBar project={p} />
-          {/* The brief first: what the engineers should work on, then the car itself. */}
-          <FocusPanel project={p} />
           {p.kind === 'facelift' && <FaceliftGain p={p} />}
           <Designer project={p} readOnly={p.phase === 'development'} />
         </>
@@ -334,10 +332,10 @@ function FaceliftGain({ p }: { p: Project }) {
         {change >= 0.1
           ? tx('Bugün satışa çıksa bu makyaj talebi <good>~{pct}</good> artırır ({now} → {after} araç/hf); lansman heyecanı ilk aylarda bunun üstüne alıcı getirir.', d)
           : change >= 0.03
-            ? tx('Bu makyaj talebi yalnız <warn>~{pct}</warn> artırır ({now} → {after} araç/hf). Geliştirme odağını alıcıların önem verdiği özelliklere çevirirsen getirisi artar.', d)
-            : tx('<bad>Bu makyaj talebi artırmıyor</bad> ({now} → {after} araç/hf). Geliştirme odağını alıcıların önem verdiği özelliklere çevir ya da yeni kuşak düşün.', d)}{' '}
+            ? tx('Bu makyaj talebi yalnız <warn>~{pct}</warn> artırır ({now} → {after} araç/hf). Mühendislerin önceliklerini alıcıların önem verdiği özelliklere çevirirsen getirisi artar.', d)
+            : tx('<bad>Bu makyaj talebi artırmıyor</bad> ({now} → {after} araç/hf). Mühendislerin önceliklerini alıcıların önem verdiği özelliklere çevir ya da yeni kuşak düşün.', d)}{' '}
         {o.appealAfter < o.appealNow &&
-          `${t('Makyaj arabanın geliştirme ve test ayarlarını korur; buna rağmen çekicilik düşüyorsa tasarımdaki değişiklikler arabayı bir yönden geriletiyor: tasarımı ve odağı gözden geçir.')} `}
+          `${t('Makyaj arabanın geliştirme ve test ayarlarını korur; buna rağmen çekicilik düşüyorsa tasarımdaki değişiklikler arabayı bir yönden geriletiyor: tasarımı ve öncelikleri gözden geçir.')} `}
         {t('Makyaj arabayı genç gösterir: bugün {now} yaşında görünüyor, makyajdan hemen sonra {after}. Satışa çıkması ~{n} hafta sürer; makyajsız o gün {later} yaşında görünecek.', {
           now: dec(o.ageNow, 1),
           after: dec(o.ageAfter, 1),
@@ -345,7 +343,7 @@ function FaceliftGain({ p }: { p: Project }) {
           later: dec(later, 1),
         })}
       </p>
-      <p className="muted small">{t('Mühendislerin bugünkü odak ve test planıyla beklediği sonuç; lansman heyecanı hariç. Kesin tepkiyi dergiler lansmanda verir.')}</p>
+      <p className="muted small">{t('Mühendislerin bugünkü öncelikler ve test planıyla beklediği sonuç; lansman heyecanı hariç. Kesin tepkiyi dergiler lansmanda verir.')}</p>
     </Panel>
   );
 }

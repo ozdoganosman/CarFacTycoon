@@ -1,5 +1,5 @@
 import { withTuning } from './testing';
-import type { DevBonus, FocusKey } from './types';
+import type { AttrKey, DevBonus, FocusKey, SegmentId } from './types';
 import { msg } from '../i18n';
 
 export const FOCUS_KEYS: FocusKey[] = ['performance', 'efficiency', 'comfort', 'handling', 'safety', 'practicality', 'cost', 'quality'];
@@ -89,15 +89,44 @@ export const FOCUS_PRESETS: { id: string; name: string; desc: string; focus: Par
   { id: 'work', name: msg('İş aracı'), desc: msg('Yük taşır, bozulmaz, ucuza çalışır.'), focus: { practicality: 0.3, quality: 0.3, cost: 0.25, efficiency: 0.15 } },
 ];
 
+/** How much of the engineers' time each chosen priority takes; the other areas share the rest. */
+export const PRIORITY_SHARE = 0.3;
+export const MAX_PRIORITIES = 2;
+
+/** The focus that puts extra work into up to two areas and spreads the rest evenly. */
+export function priorityFocus(keys: FocusKey[]): Record<FocusKey, number> {
+  const picked = FOCUS_KEYS.filter((k) => keys.includes(k)).slice(0, MAX_PRIORITIES);
+  if (!picked.length) return evenFocus();
+  const rest = (1 - PRIORITY_SHARE * picked.length) / (FOCUS_KEYS.length - picked.length);
+  return Object.fromEntries(FOCUS_KEYS.map((k) => [k, picked.includes(k) ? PRIORITY_SHARE : rest])) as Record<FocusKey, number>;
+}
+
+/** Where the engineers start for each class of car (the player changes them in the engineers' estimate). */
+export const SEGMENT_PRIORITIES: Record<SegmentId, FocusKey[]> = {
+  city: ['cost', 'quality'],
+  family: ['practicality', 'comfort'],
+  sport: ['handling', 'performance'],
+  luxury: ['comfort', 'quality'],
+  pickup: ['practicality', 'quality'],
+  suv: ['practicality', 'comfort'],
+};
+
+/** The focus area that improves each of the buyers' scores (prestige comes from the design itself). */
+export const ATTR_FOCUS: Partial<Record<AttrKey, FocusKey>> = {
+  accel: 'performance',
+  topSpeed: 'performance',
+  economy: 'efficiency',
+  comfort: 'comfort',
+  handling: 'handling',
+  safety: 'safety',
+  reliability: 'quality',
+  practicality: 'practicality',
+};
+
 export function presetFocus(id: string): Record<FocusKey, number> {
   const p = FOCUS_PRESETS.find((x) => x.id === id);
   if (!p || !Object.keys(p.focus).length) return evenFocus();
   return normalizeFocus(Object.fromEntries(FOCUS_KEYS.map((k) => [k, p.focus[k] ?? 0])) as Record<FocusKey, number>);
-}
-
-/** The preset a focus matches, if any. */
-export function matchingPreset(f: Record<FocusKey, number>): string | undefined {
-  return FOCUS_PRESETS.find((p) => FOCUS_KEYS.every((k) => Math.abs(presetFocus(p.id)[k] - (f[k] ?? 0)) < 0.005))?.id;
 }
 
 export function normalizeFocus(f: Record<FocusKey, number>): Record<FocusKey, number> {

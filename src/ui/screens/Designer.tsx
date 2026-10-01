@@ -387,7 +387,9 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
           yf={yf}
           bonus={A.projectedBonus(s, project)}
           estimate={project.estimate ?? neutral}
-          note={t('Geliştirme mevcut odak dağılımıyla biterse.')}
+          note={t('Geliştirme bu önceliklerle biterse.')}
+          priorities={project.dev.priorities}
+          onPriority={(k) => store.act((st) => A.togglePriority(st, project.id, k))}
         />
       </aside>
     </div>

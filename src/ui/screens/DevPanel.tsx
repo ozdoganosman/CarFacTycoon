@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
 import * as A from '../../core/actions';
-import { FOCUS_HINTS, FOCUS_KEYS, FOCUS_NAMES, FOCUS_PRESETS, devRate, matchingPreset, presetFocus } from '../../core/development';
+import { devRate } from '../../core/development';
 import { costIndex, engineerSalary } from '../../data/economy';
 import { yearFloat } from '../../core/time';
 import { classGap, gapNames, knownKnowhow, unknownTech } from '../../core/research';
@@ -9,16 +8,10 @@ import { t } from '../../i18n';
 import { dec, money, pct } from '../format';
 import { tx } from '../i18n';
 import { BudgetLine } from '../components/BudgetLine';
-import type { FocusKey, Project } from '../../core/types';
+import type { Project } from '../../core/types';
 import { store, useGameState } from '../store';
-import { Button, Progress, Slider } from '../components/ui';
+import { Button, Progress } from '../components/ui';
 import { Icon } from '../components/Icon';
-
-interface Bubble {
-  id: number;
-  key: FocusKey;
-  text: string;
-}
 
 /** Team, time and the one action of the design step, kept above the designer so it never needs scrolling to. */
 export function DevBar({ project: p }: { project: Project }) {
@@ -59,7 +52,7 @@ export function DevBar({ project: p }: { project: Project }) {
                 {t('Tasarımda henüz araştırılmamış teknoloji var: {tech}. Ar-Ge’de araştır ya da tasarımdan çıkar.', { tech: missing.map((x) => t(x)).join(', ') })}
               </span>
             ) : (
-              <span className="muted small">{t('Aracı tasarla, mühendislik odağını seç, sonra başlat. Başlayınca tasarım kilitlenir; odak her zaman değişebilir.')}</span>
+              <span className="muted small">{t('Aracı tasarla, mühendis tahmininden iki öncelik seç, sonra başlat. Başlayınca tasarım kilitlenir; öncelikler her zaman değişebilir.')}</span>
             )}
             {behind.length > 0 && (
               <span className="small tone-warn">{t('Sınıftaki arabaların çoğunda olan {list} bu tasarımda yok: aşağıdaki listeden ekle ya da araştır.', { list: gapNames(behind) })}</span>
@@ -74,7 +67,7 @@ export function DevBar({ project: p }: { project: Project }) {
         ) : (
           <>
             {tx('<b>Geliştirme {pct}</b> · kalan ~{n} hafta · {team}', { pct: progress, n: Math.ceil(remaining / Math.max(0.1, rate)), team })}
-            <span className="muted small">{t('Her hafta odak alanlarına puan birikir.')}</span>
+            <span className="muted small">{t('Her hafta mühendisler öncelikli iki alana daha çok çalışır.')}</span>
           </>
         )}
       </div>
@@ -152,127 +145,5 @@ export function DevBar({ project: p }: { project: Project }) {
         ) : null}
       </div>
     </div>
-  );
-}
-
-/**
- * How the engineers split their time. While development runs, points pop out
- * of each focus area like in Game Dev Tycoon.
- */
-export function FocusPanel({ project: p }: { project: Project }) {
-  const s = useGameState();
-  const bonus = A.projectedBonus(s, p);
-
-  // Point bubbles: compare with the previous render's points.
-  const last = useRef({ ...p.dev.points });
-  const [bubbles, setBubbles] = useState<Bubble[]>([]);
-  const nextId = useRef(1);
-  useEffect(() => {
-    const fresh: Bubble[] = [];
-    for (const k of FOCUS_KEYS) {
-      const delta = p.dev.points[k] - last.current[k];
-      if (delta > 0.05) fresh.push({ id: nextId.current++, key: k, text: `+${Math.max(1, Math.round(delta * 10))}` });
-    }
-    last.current = { ...p.dev.points };
-    if (!fresh.length) return;
-    setBubbles((b) => [...b.slice(-20), ...fresh]);
-    const ids = new Set(fresh.map((b) => b.id));
-    const timer = setTimeout(() => setBubbles((b) => b.filter((x) => !ids.has(x.id))), 1400);
-    return () => clearTimeout(timer);
-  }, [p.dev.points.performance, p.dev.points.efficiency, p.dev.points.comfort, p.dev.points.handling, p.dev.points.safety, p.dev.points.practicality, p.dev.points.cost, p.dev.points.quality]);
-
-  const locked = p.dev.locked ?? [];
-  // Keep the total at 100%: the unlocked sliders make room, the locked ones stay put.
-  const setFocus = (k: FocusKey, v: number) => store.act((st) => A.setFocus(st, p.id, A.refocus(p.dev.focus, locked, k, v)));
-  const effect: Record<FocusKey, string> = {
-    performance: t('Güç +{pct}', { pct: pct(bonus.powerMult - 1, 1) }),
-    efficiency: t('Tüketim −{pct}', { pct: pct(1 - bonus.fuelMult, 1) }),
-    comfort: t('Konfor +{v}', { v: dec(bonus.comfort, 1) }),
-    handling: t('Yol tutuş +{v}', { v: dec(bonus.handling ?? 0, 1) }),
-    safety: t('Güvenlik +{v}', { v: dec(bonus.safety, 1) }),
-    practicality: t('Pratiklik +{v}', { v: dec(bonus.practicality ?? 0, 1) }),
-    cost: t('Maliyet −{pct}', { pct: pct(1 - bonus.costMult, 1) }),
-    quality: t('Gizli kusur −{pct}', { pct: pct(1 - (bonus.defectMult ?? 1), 0) }),
-  };
-
-  return (
-    <section className="focus-panel" aria-label={t('Mühendislik odağı')}>
-      <div className="focus-head">
-        <div>
-          <h3>{t('Mühendislik odağı')}</h3>
-          <p className="muted small">
-            {t(
-              'Mühendislerin zamanını alanlara böl (toplam %100). Her kartın altındaki değer, geliştirme bu dağılımla biterse aracın kazanacağı iyileştirme; sağdaki tahmin de buna göre. Neye ağırlık vereceğin senin fikrin: bu araba kimin için?',
-            )}
-          </p>
-        </div>
-      </div>
-      <div className="preset-chips" role="group" aria-label={t('Hazır odaklar')}>
-        {FOCUS_PRESETS.map((x) => (
-          <button
-            key={x.id}
-            type="button"
-            className={`chip ${matchingPreset(p.dev.focus) === x.id ? 'is-on' : ''}`}
-            title={t(x.desc)}
-            onClick={() =>
-              store.act((st) => {
-                for (const k of locked) A.toggleFocusLock(st, p.id, k);
-                A.setFocus(st, p.id, presetFocus(x.id));
-              })
-            }
-          >
-            {t(x.name)}
-          </button>
-        ))}
-      </div>
-      <div className="focus-bar" aria-hidden>
-        {FOCUS_KEYS.map((k) => (
-          <span key={k} className={`focus-seg fc-${k}`} style={{ width: `${p.dev.focus[k] * 100}%` }} title={`${t(FOCUS_NAMES[k])} ${pct(p.dev.focus[k], 0)}`} />
-        ))}
-      </div>
-      <div className="focus-grid">
-        {FOCUS_KEYS.map((k) => (
-          <div key={k} className={`focus-card fc-${k} ${locked.includes(k) ? 'is-locked' : ''}`}>
-            <Slider
-              label={
-                <>
-                  <span className="focus-dot" aria-hidden /> {t(FOCUS_NAMES[k])}
-                  <button
-                    type="button"
-                    className="focus-lock"
-                    aria-pressed={locked.includes(k)}
-                    title={locked.includes(k) ? t('Kilidi aç') : t('Bu yüzdeyi kilitle: diğer kaydırıcılar onu değiştirmez')}
-                    onClick={() => store.act((st) => A.toggleFocusLock(st, p.id, k))}
-                  >
-                    <Icon name={locked.includes(k) ? 'lock' : 'unlock'} />
-                  </button>
-                </>
-              }
-              disabled={locked.includes(k)}
-              value={Math.round(p.dev.focus[k] * 100)}
-              min={0}
-              max={100}
-              onChange={(v) => setFocus(k, v / 100)}
-              format={(v) => pct(v / 100, 0)}
-            />
-            <div className="focus-foot">
-              <span className="focus-effect">
-                {effect[k]}
-                <span className="bubbles" aria-hidden>
-                  {bubbles
-                    .filter((b) => b.key === k)
-                    .map((b) => (
-                      <span key={b.id} className={`bubble bubble-${k}`}>
-                        {b.text}
-                      </span>
-                    ))}
-                </span>
-              </span>
-              <span className="muted small">{t(FOCUS_HINTS[k])}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
   );
 }

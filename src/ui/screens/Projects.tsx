@@ -3,7 +3,6 @@ import { newProjectBudget } from '../../core/budget';
 import { BudgetLine } from '../components/BudgetLine';
 import { MARKETS } from '../../data/markets';
 import * as A from '../../core/actions';
-import { FOCUS_PRESETS, presetFocus } from '../../core/development';
 import { availableSegments, gates } from '../../core/game';
 import { referencePrice, weeklySegmentDemand } from '../../core/market';
 import { yearFloat } from '../../core/time';
@@ -53,10 +52,6 @@ function NewProject({ onDone }: { onDone: () => void }) {
   const [platformId, setPlatformId] = useState('');
   const [engineId, setEngineId] = useState('');
   const [replaces, setReplaces] = useState('');
-  // A sensible starting point for the class; the player decides.
-  const PRESET_FOR: Record<SegmentId, string> = { city: 'people', family: 'family', sport: 'driver', luxury: 'luxury', pickup: 'work', suv: 'family' };
-  const [preset, setPreset] = useState(PRESET_FOR[segs.includes('family') ? 'family' : segs[0]]);
-  const presetDef = FOCUS_PRESETS.find((x) => x.id === preset);
   const g = gates(s);
   const sameSeg = s.models.filter((m) => m.status === 'active' && m.segment === segment);
   // What such a project would cost before launch, worked out on a copy of the game.
@@ -65,7 +60,6 @@ function NewProject({ onDone }: { onDone: () => void }) {
   const pickSegment = (id: SegmentId) => {
     setSegment(id);
     setReplaces('');
-    setPreset(PRESET_FOR[id]);
   };
 
   return (
@@ -150,20 +144,6 @@ function NewProject({ onDone }: { onDone: () => void }) {
           </select>
         </label>
       )}
-      <div className="field">
-        <span>
-          {t('Mühendislik odağı: mühendisler zamanlarını neye harcasın?')}{' '}
-          <span className="muted small">{t('(tasarımda ve geliştirmede kaydırıcılarla ince ayar yapılır)')}</span>
-        </span>
-        <div className="preset-chips" role="radiogroup" aria-label={t('Mühendislik odağı')}>
-          {FOCUS_PRESETS.map((x) => (
-            <button key={x.id} type="button" role="radio" aria-checked={preset === x.id} className={`chip ${preset === x.id ? 'is-on' : ''}`} title={t(x.desc)} onClick={() => setPreset(x.id)}>
-              {t(x.name)}
-            </button>
-          ))}
-        </div>
-        <span className="muted small">{presetDef && t(presetDef.desc)}</span>
-      </div>
       {budget && (
         <>
           <p className="muted small">{t('Şirketin son arabasına benzer bir tasarımla ve varsayılan test planıyla bu proje:')}</p>
@@ -178,7 +158,7 @@ function NewProject({ onDone }: { onDone: () => void }) {
           kind="primary"
           onClick={() => {
             const r = store.act((st) =>
-              A.startProject(st, { name, segment, targetPrice: Math.round(referencePrice(s.company.hq, segment, yf)), platformId: platformId || undefined, engineRefId: engineId || undefined, replacesModelId: replaces || undefined, focus: presetFocus(preset) }),
+              A.startProject(st, { name, segment, targetPrice: Math.round(referencePrice(s.company.hq, segment, yf)), platformId: platformId || undefined, engineRefId: engineId || undefined, replacesModelId: replaces || undefined }),
             );
             if (r && r.ok) {
               onDone();
@@ -232,7 +212,7 @@ export function Projects() {
         <ol className="steps">
           <li>
             {tx(
-              '<b>Tasarım ve geliştirme:</b> Aracı kimin için yaptığına sen karar ver: modülleri seç, mühendislerini ata, odağı dağıt (performans, verim, konfor, güvenlik, maliyet, kalite). Odak aracı gerçekten değiştirir.',
+              '<b>Tasarım ve geliştirme:</b> Aracı kimin için yaptığına sen karar ver: modülleri seç, mühendislerini ata, mühendis tahmininden iki öncelik seç (performans, verim, konfor, güvenlik, maliyet, kalite…). Öncelikler aracı gerçekten değiştirir.',
             )}
           </li>
           <li>

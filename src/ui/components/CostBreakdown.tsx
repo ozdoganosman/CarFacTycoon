@@ -124,7 +124,7 @@ export function CostBreakdown({ design, st, ci, yf, rough, segment, hq }: { desi
       {(Math.abs(focus - 1) > 0.005 || Math.abs(knowhow - 1) > 0.005) && (
         <p className="muted small cost-bd-mults">
           {t('Kalemlere dahil:')}
-          {Math.abs(focus - 1) > 0.005 && ` ${t('geliştirmede maliyet odağı ×{v}', { v: dec(focus, 2) })}`}
+          {Math.abs(focus - 1) > 0.005 && ` ${t('geliştirmede maliyet çalışması ×{v}', { v: dec(focus, 2) })}`}
           {Math.abs(focus - 1) > 0.005 && Math.abs(knowhow - 1) > 0.005 && ' ·'}
           {Math.abs(knowhow - 1) > 0.005 && ` ${t('ustalık bilgisi ×{v}', { v: dec(knowhow, 2) })}`}
         </p>

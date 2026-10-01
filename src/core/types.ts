@@ -237,6 +237,8 @@ export interface Project {
     points: Record<FocusKey, number>;
     /** Focus areas the player has pinned: moving another slider leaves them alone. */
     locked?: FocusKey[];
+    /** The two areas the engineers put extra work into (the focus follows them). Missing in old saves. */
+    priorities?: FocusKey[];
   };
   bonus?: DevBonus;
   defects: Defect[];

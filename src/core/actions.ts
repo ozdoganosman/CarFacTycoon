@@ -8,7 +8,7 @@ import { STAGES, stationDef } from '../data/stations';
 import { CHASSIS, byId, maxGears } from '../data/tech';
 import { toolingDef } from '../data/tooling';
 import { aiDesign } from './ai';
-import { FOCUS_KEYS, bonusFromPoints, evenFocus, normalizeFocus } from './development';
+import { FOCUS_KEYS, MAX_PRIORITIES, SEGMENT_PRIORITIES, bonusFromPoints, normalizeFocus, priorityFocus } from './development';
 import { displacementCc } from './engine';
 import { writeReviews } from './feedback';
 import { emptyLine, lineReport, modernizeQuote, nextLineName, planBalancedLine, reservedLines, retoolCost, stationPrice, stationResale, turnkeyLineCost, workshopLineCost, workshopPlan } from './factory';
@@ -119,7 +119,7 @@ export interface StartProjectOptions {
   platformId?: string;
   engineRefId?: string;
   replacesModelId?: string;
-  /** How the engineers split their time, chosen up front (a preset); even when missing. */
+  /** How the engineers split their time, chosen up front; when missing, the class's two usual priorities. */
   focus?: Record<FocusKey, number>;
 }
 
@@ -176,7 +176,13 @@ export function startProject(s: GameState, o: StartProjectOptions): { ok: true; 
     phase: 'design',
     createdWeek: s.week,
     engineers: Math.max(1, free),
-    dev: { required: 0, done: 0, focus: o.focus ? normalizeFocus(o.focus) : evenFocus(), points: { performance: 0, efficiency: 0, comfort: 0, handling: 0, safety: 0, practicality: 0, cost: 0, quality: 0 } },
+    dev: {
+      required: 0,
+      done: 0,
+      focus: o.focus ? normalizeFocus(o.focus) : priorityFocus(SEGMENT_PRIORITIES[o.segment]),
+      priorities: o.focus ? undefined : [...SEGMENT_PRIORITIES[o.segment]],
+      points: { performance: 0, efficiency: 0, comfort: 0, handling: 0, safety: 0, practicality: 0, cost: 0, quality: 0 },
+    },
     defects: [],
     defectPrior: 0,
     tests: { dyno: { planned: 4, done: 0 }, road: { planned: 8, done: 0 }, crash: { planned: 0, done: 0 }, durability: { planned: 8, done: 0 } },
@@ -227,7 +233,13 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
     phase: 'design',
     createdWeek: s.week,
     engineers: Math.max(1, free),
-    dev: { required: 0, done: 0, focus: evenFocus(), points: { performance: 0, efficiency: 0, comfort: 0, handling: 0, safety: 0, practicality: 0, cost: 0, quality: 0 } },
+    dev: {
+      required: 0,
+      done: 0,
+      focus: priorityFocus(SEGMENT_PRIORITIES[m.segment]),
+      priorities: [...SEGMENT_PRIORITIES[m.segment]],
+      points: { performance: 0, efficiency: 0, comfort: 0, handling: 0, safety: 0, practicality: 0, cost: 0, quality: 0 },
+    },
     defects: [],
     defectPrior: 0,
     tests: { dyno: { planned: 0, done: 0 }, road: { planned: 3, done: 0 }, crash: { planned: 0, done: 0 }, durability: { planned: 0, done: 0 } },
@@ -293,29 +305,18 @@ export function projectedBonus(s: GameState, p: Project): DevBonus {
   return bonusFromPoints(points, required, Math.max(p.dev.done, required), s.company.skill);
 }
 
-export function toggleFocusLock(s: GameState, pid: string, k: FocusKey) {
-  const p = project(s, pid);
-  const locked = new Set(p.dev.locked ?? []);
-  if (locked.has(k)) locked.delete(k);
-  else locked.add(k);
-  p.dev.locked = FOCUS_KEYS.filter((x) => locked.has(x));
-}
-
 /**
- * Move one focus slider; the other unlocked sliders make room in proportion, locked ones stay put.
- * Returns the new split (unchanged when everything else is locked).
+ * Put an area among the engineers' two priorities, or take it out; a third one replaces the one chosen
+ * first. The focus follows: extra work on the priorities, the rest spread evenly.
  */
-export function refocus(focus: Record<FocusKey, number>, locked: FocusKey[], k: FocusKey, v: number): Record<FocusKey, number> {
-  const others = FOCUS_KEYS.filter((x) => x !== k);
-  const fixed = others.filter((x) => locked.includes(x));
-  const free = others.filter((x) => !locked.includes(x));
-  if (!free.length) return focus;
-  const fixedSum = fixed.reduce((a, x) => a + focus[x], 0);
-  const val = Math.max(0, Math.min(v, 1 - fixedSum));
-  const rest = free.reduce((a, x) => a + focus[x], 0);
-  const next = { ...focus, [k]: val };
-  for (const x of free) next[x] = rest > 0 ? (focus[x] / rest) * (1 - fixedSum - val) : (1 - fixedSum - val) / free.length;
-  return next;
+export function togglePriority(s: GameState, pid: string, k: FocusKey) {
+  const p = project(s, pid);
+  const now = p.dev.priorities ?? [];
+  const next = now.includes(k) ? now.filter((x) => x !== k) : [...now, k].slice(-MAX_PRIORITIES);
+  p.dev.priorities = next;
+  p.dev.locked = [];
+  p.dev.focus = priorityFocus(next);
+  decide(s, 'focus:' + pid, `${p.name}: öncelik ${next.join(', ') || '-'}`);
 }
 
 export function setFocus(s: GameState, pid: string, focus: Record<FocusKey, number>) {
