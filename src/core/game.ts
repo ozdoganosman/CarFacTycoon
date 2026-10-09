@@ -16,7 +16,7 @@ import type { StateId } from '../data/states';
 import { makeRng, rand, stateRng } from './rng';
 import { updateRivals, initRivals } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
-import { autoService } from './autoservice';
+import { autoDealers, autoService } from './autoservice';
 import { eraReference } from './scoring';
 import { allTech, techName } from './techtree';
 import { knownKnowhow, labSpeed, noteResearch, pumpResearchQueue, researchDef, researcherSalary, startingKnowledge } from './research';
@@ -119,6 +119,7 @@ export function newGame(opts: NewGameOptions): GameState {
   // The factory's own state is the whole market at first. A new company opens service shops
   // by itself as its cars pile up (older saves keep it off until the player turns it on).
   network(state).autoService = true;
+  network(state).autoDealers = true;
   return state;
 }
 
@@ -374,6 +375,7 @@ export function tick(s: GameState): void {
     monthly(s);
     // Service first: a few shops cost little next to a new line, and waiting owners cost the name.
     autoService(s);
+    autoDealers(s);
     autoCapacity(s, (m) => materialUnitCost(s, m));
     checkBoom(s);
   }

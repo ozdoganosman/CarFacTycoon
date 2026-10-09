@@ -1,8 +1,30 @@
 import { costIndex } from '../data/economy';
-import { STATE_LIST, openPlannedShops, planStates, servicePlan, serviceTarget, stateNet, surplusShops } from './network';
+import {
+  STATE_LIST,
+  activeSearches,
+  canSearch,
+  coverage,
+  freightPerCar,
+  frontier,
+  marginalWeekly,
+  maxSearches,
+  networkWeekly,
+  openPlannedShops,
+  openStates,
+  planStates,
+  searchCost,
+  servicePlan,
+  serviceTarget,
+  startDealerSearch,
+  stateNet,
+  surplusShops,
+  totalDealers,
+} from './network';
+import { COST_KEYS } from './game';
+import { stateDef, stateWeights, type StateId } from '../data/states';
 import { yearFloat } from './time';
 import type { GameState } from './types';
-import { log, money } from './util';
+import { decide, log, money } from './util';
 import { t } from '../i18n';
 import { fmtPercent } from '../i18n/format';
 
@@ -60,4 +82,46 @@ export function autoService(s: GameState) {
       'info',
     );
   }
+}
+
+/**
+ * "Otomatik bayi araması": the network grows by itself, at a careful pace. Monthly, once a car is on
+ * sale and while the business pays for more dealers, it looks for dealers in the neighbouring state
+ * with the most buyers per dollar of freight, or adds dealers where a busy state is thinly covered.
+ * Searching everywhere at once would outgrow the sales and sink a young firm (a scripted player that
+ * did went broke), so: one search more per dozen dealers, a reserve of eight weeks of the network's
+ * cost, and no more once six states are open unless the last quarter earned twice what a dealer costs.
+ */
+export function autoDealers(s: GameState) {
+  const net = s.network;
+  if (!net?.autoDealers || !s.models.some((m) => m.status === 'active')) return;
+  const yf = yearFloat(s.week);
+  const active = s.models.filter((m) => m.status === 'active');
+  const price = active.reduce((a, m) => a + m.price, 0) / active.length;
+  const w = stateWeights(yf);
+  const reserve = 8 * networkWeekly(s, yf) + 4000 * (1 + (yf - 1900) / 10);
+  const recent = s.finance.slice(-13);
+  const keys = COST_KEYS.filter((k) => k !== 'investment');
+  const weeklyNet = recent.length ? recent.reduce((a, f) => a + f.revenue - keys.reduce((b, k) => b + (f[k] ?? 0), 0), 0) / recent.length : 0;
+  // (The first few states are cheap and the home state alone does not pay: those come first.)
+  if (openStates(s).length >= 6 && weeklyNet < marginalWeekly(s, 1, 0, yf) * 2) return;
+  const value = (id: StateId) => w[id] * Math.max(0, 1 - freightPerCar(s, id, yf) / price);
+  const searches = Math.min(maxSearches(s), 1 + Math.floor(totalDealers(s) / 12));
+  const started: string[] = [];
+  for (let tries = 0; tries < 3 && activeSearches(s) < searches; tries++) {
+    const next = frontier(s).filter((id) => canSearch(s, id).ok);
+    const thin = openStates(s).filter((id) => canSearch(s, id).ok && coverage(s, id, yf) < 0.45 && w[id] > 0.015);
+    const best = [...next.map((id) => ({ id, v: value(id) })), ...thin.map((id) => ({ id, v: value(id) * 0.8 * (1 - coverage(s, id, yf)) }))].sort((a, b) => b.v - a.v)[0];
+    if (!best || s.company.cash - (s.company.taxOwed ?? 0) < reserve + searchCost(s, best.id, yf) * 3) break;
+    if (!startDealerSearch(s, best.id).ok) break;
+    started.push(stateDef(best.id).name);
+  }
+  if (started.length) log(s, t('Otomatik bayi araması: {states}.', { states: started.join(', ') }), 'info');
+}
+
+/** Switch "Otomatik bayi araması" on or off. */
+export function setAutoDealers(s: GameState, on: boolean) {
+  if (!s.network) return;
+  s.network.autoDealers = on;
+  decide(s, 'autoDealers', `Otomatik bayi araması ${on ? 'açık' : 'kapalı'}`);
 }

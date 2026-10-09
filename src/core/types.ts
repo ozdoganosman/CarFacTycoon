@@ -424,6 +424,8 @@ export interface NetworkState {
   year: number;
   /** "Otomatik servis": open service shops by itself every month where cars wait for repairs (new games start with it on). */
   autoService?: boolean;
+  /** "Otomatik bayi araması": start dealer searches in the neighbouring states by itself every month (new games start with it on). */
+  autoDealers?: boolean;
   /** The share of the service the cars need that the network is kept to (1, 0.9 or 0.8; unset in older saves: all of it). */
   serviceTarget?: number;
   /** Shops automatic service could not open last month for the cash reserve, and when it last said so. */

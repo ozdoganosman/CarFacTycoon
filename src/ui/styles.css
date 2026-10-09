@@ -89,10 +89,14 @@
 
 /* ---------- Chart & drawing tokens ---------- */
 :root {
-  --series-1: #2a78d6;
-  --series-2: #eb6834;
-  --series-3: #1baf7a;
-  --series-4: #eda100;
+  /* Printing inks of the period: Prussian blue, brass, green, plum, teal, umber. Red stays for
+     bottlenecks and losses. */
+  --series-1: #285e8c;
+  --series-2: #b0802a;
+  --series-3: #3f7a45;
+  --series-4: #7b4f86;
+  --series-5: #2e7c78;
+  --series-6: #8a5a3a;
   --seq-1: #86b6ef;
   --seq-2: #5598e7;
   --seq-3: #2a78d6;
@@ -113,10 +117,12 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --series-3: #199e70;
-    --series-4: #c98500;
+    --series-1: #6a9fd0;
+    --series-2: #d6a74b;
+    --series-3: #6fb276;
+    --series-4: #b48cc0;
+    --series-5: #5fb3ad;
+    --series-6: #c38f6a;
     --seq-1: #184f95;
     --seq-2: #1c5cab;
     --seq-3: #2a78d6;
@@ -131,10 +137,12 @@
   }
 }
 :root[data-theme='dark'] {
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --series-3: #199e70;
-  --series-4: #c98500;
+  --series-1: #6a9fd0;
+  --series-2: #d6a74b;
+  --series-3: #6fb276;
+  --series-4: #b48cc0;
+  --series-5: #5fb3ad;
+  --series-6: #c38f6a;
   --seq-1: #184f95;
   --seq-2: #1c5cab;
   --seq-3: #2a78d6;
@@ -1979,7 +1987,7 @@ fieldset {
   fill: var(--series-1);
 }
 .chart .bar-neg {
-  fill: var(--series-2);
+  fill: var(--bad);
 }
 .chart-empty {
   display: grid;
@@ -2987,28 +2995,169 @@ fieldset {
   }
 }
 
-/* ---------- Capacity planner ---------- */
-.planner-models {
+/* ---------- Capacity: one row per car ---------- */
+.cap-row {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.cap-row:first-child {
+  padding-top: 0;
+}
+.cap-row p {
+  margin: 0;
+}
+.cap-head {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
+  align-items: center;
+  gap: 4px 12px;
 }
-.planner-model button {
+.cap-head .cap-mode {
+  margin: 0 0 0 auto;
+  align-items: center;
+}
+.cap-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex: none;
+  background: var(--metal);
+  border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.cap-swatch.is-neck {
+  background: var(--bad);
+}
+.cap-row > .link {
+  justify-self: start;
+}
+
+/* ---------- Factory floor plan: every line as a box, drawn on blueprint paper ---------- */
+.floor-panel .floor {
   display: grid;
-  gap: 2px;
-  text-align: start;
-  padding: 8px 12px;
-  border-radius: var(--radius);
-  border: 1px solid var(--line);
-  background: var(--panel-2);
-  color: var(--ink);
-  cursor: pointer;
-  font: inherit;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+  padding: 10px;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--bp-line) 18%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--bp-line) 18%, transparent) 1px, transparent 1px);
+  background-size: 16px 16px;
+  background-color: var(--bp);
+  border-radius: 2px;
 }
-.planner-model.is-on button {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent);
+.floor-line {
+  display: grid;
+  gap: 3px;
+  padding: 4px 5px 5px;
+  border: 1px solid color-mix(in srgb, var(--bp-ink) 45%, transparent);
+  border-top: 3px solid var(--model, var(--bp-line));
+  background: color-mix(in srgb, var(--bp) 70%, #000);
+  color: var(--bp-ink);
+  font: inherit;
+  cursor: pointer;
+  text-align: start;
+}
+.floor-line:hover,
+.floor-line:focus-visible {
+  border-color: var(--bp-ink);
+}
+.floor-name {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.floor-stages {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: end;
+  gap: 2px;
+  height: 18px;
+}
+.floor-stages i {
+  display: block;
+  background: var(--model, var(--bp-line));
+  opacity: 0.85;
+}
+.floor-stages i.is-neck {
+  background: var(--bad);
+  opacity: 1;
+}
+.floor-line.is-idle,
+.floor-line.is-building,
+.floor-line.is-retool {
+  border-top-color: var(--bp-line);
+  opacity: 0.55;
+}
+.floor-line.is-building .floor-stages i {
+  background: repeating-linear-gradient(45deg, var(--bp-line) 0 2px, transparent 2px 4px);
+}
+.floor-line.is-military {
+  border-top-color: var(--warn);
+}
+.floor-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 8px;
+}
+.floor-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+@media (max-width: 640px) {
+  .floor-panel .floor {
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+    gap: 4px;
+    padding: 6px;
+  }
+  .floor-line {
+    padding: 2px 3px 3px;
+  }
+  .floor-name {
+    font-size: 0.6rem;
+  }
+  .floor-stages {
+    height: 12px;
+  }
+}
+
+/* ---------- Lines, grouped by car ---------- */
+.line-groups-head {
+  margin: 8px 0 4px;
+}
+.section-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.line-group {
+  margin-bottom: 8px;
+}
+.line-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.line-group > div > .panel {
+  margin: 6px 0 6px 14px;
 }
 .planner-form {
   display: grid;
@@ -4556,6 +4705,38 @@ fieldset {
   padding: 2px 12px 8px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
+}
+/* Company: what opens later, one line each. */
+.later {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.later li {
+  padding-inline-start: 14px;
+  border-inline-start: 3px solid var(--line);
+}
+.net-autos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+.svc-target {
+  align-items: center;
+}
+/* Figures and texts kept a click away. */
+details.more {
+  margin: -4px 0 10px;
+}
+details.more > summary {
+  cursor: pointer;
+  color: var(--accent2);
+  width: max-content;
+}
+details.more[open] > summary {
+  margin-bottom: 6px;
 }
 .net-controls-row {
   display: flex;

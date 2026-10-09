@@ -2322,7 +2322,6 @@
  "17uiv9s": "Inversión (líneas, troqueles, concesionarios)",
  "1n6a078": "Dividendos y recompra de acciones",
  "19ddvki": "Cada tecnología nueva desbloquea una tarjeta: “¿Por qué funciona así?” ({seen}/{total})",
- "31u1at": "Contrata ingenieros y usa el dinero que ganes para hacer crecer la marca: gana fama en las carreras, compra rivales más pequeños, sal a bolsa.",
  "3ox4h1": "Máquinas, stock y caja, menos la deuda; más la capacidad de ganancia de la marca (seis veces el beneficio operativo del último año).",
  "1urhbk9": "Cuenta para la puntuación final: solo tu parte ({share}).",
  "rmsepc": "Cuenta para la puntuación final.",
@@ -2580,7 +2579,6 @@
  "1q1wkdz": "Construido",
  "1s24h2x": "{shop} construido",
  "2m3l7t": "Construir ({cost})",
- "1wzty9x": "Planificador de capacidad",
  "h2v9k9": "demanda ~{demand}/sem. · producción {output}/sem.",
  "196va67": {
   "one": "se pierde ~{n} auto/sem.",
@@ -2968,7 +2966,6 @@
  "xzz9hc": "A medida que la red crece, sus gastos generales crecen todavía más rápido (oficinas regionales, depósitos de repuestos): un concesionario más suma ~{dealer} al año; un taller de servicio más, ~{shop}.",
  "nm81qv": "Un taller con trabajo completo deja ~{income} al año en repuestos y reparaciones; los talleres que tus autos no necesitan no dejan nada.",
  "198gg56": "Estados",
- "12cbrez": "Solo los estados donde vendes y sus vecinos",
  "crxd3u": "Todos los estados",
  "1od0xo7": "Estado",
  "b1cy2u": "Situación",

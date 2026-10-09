@@ -5,7 +5,6 @@ import { yearFloat } from '../../core/time';
 import { costIndex } from '../../data/economy';
 import { store, useGameState } from '../store';
 import { COST_NAMES, INCOME_NAMES, money, pct, signedMoney } from '../format';
-import { TeamPanel } from '../components/TeamPanel';
 import { Button, NumberInput, Panel, Stat, Table } from '../components/ui';
 import { BarChart } from '../viz/LineChart';
 import { t } from '../../i18n';
@@ -33,21 +32,18 @@ export function Finance() {
         <Stat label={t('Kredi limiti')} value={money(Math.max(0, c.limit))} sub={t('varlık ve itibara bağlı')} />
         <Stat label={t('Son 52 hafta faaliyet kârı')} value={signedMoney(operating)} tone={operating < 0 ? 'bad' : 'good'} />
       </div>
-      <div className="grid-2">
-        <Panel title={t('Banka')}>
-          <div className="price-row">
-            <NumberInput label={t('Tutar')} prefix="$" value={loan} min={0} step={1000} onChange={setLoan} />
-            <Button kind="primary" onClick={() => store.try((st) => A.takeLoan(st, loan), t('Kredi alındı'))}>
-              {t('Kredi al')}
-            </Button>
-            <Button onClick={() => store.try((st) => A.repayLoan(st, loan), t('Borç ödendi'))} disabled={s.company.loan <= 0}>
-              {t('Borç öde')}
-            </Button>
-          </div>
-          <p className="muted small">{t('Kasa 12 hafta üst üste ekside kalırsa şirket iflas eder. Buhran yıllarında (1930-33) bankalar limiti yarıya indirir ve faizi artırır.')}</p>
-        </Panel>
-        <TeamPanel compact />
-      </div>
+      <Panel title={t('Banka')}>
+        <div className="price-row">
+          <NumberInput label={t('Tutar')} prefix="$" value={loan} min={0} step={1000} onChange={setLoan} />
+          <Button kind="primary" onClick={() => store.try((st) => A.takeLoan(st, loan), t('Kredi alındı'))}>
+            {t('Kredi al')}
+          </Button>
+          <Button onClick={() => store.try((st) => A.repayLoan(st, loan), t('Borç ödendi'))} disabled={s.company.loan <= 0}>
+            {t('Borç öde')}
+          </Button>
+        </div>
+        <p className="muted small">{t('Kasa 12 hafta üst üste ekside kalırsa şirket iflas eder. Buhran yıllarında (1930-33) bankalar limiti yarıya indirir ve faizi artırır.')}</p>
+      </Panel>
       <Panel title={t('Yıllık faaliyet kârı')}>
         <BarChart
           bars={s.years.slice(-30).map((y) => ({ label: String(y.year), value: y.profit }))}

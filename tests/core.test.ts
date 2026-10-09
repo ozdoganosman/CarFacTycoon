@@ -212,6 +212,8 @@ describe('game', () => {
   it('walks a project from design to launch', () => {
     const s = newGame({ companyName: 'Test', hq: 'usa', seed: 3 });
     s.modals = [];
+    // Dealers by hand: the home state stays the only one until a dealer opens elsewhere.
+    s.network!.autoDealers = false;
     const r = A.startProject(s, { name: 'Deneme', segment: 'family', targetPrice: 900 });
     expect(r.ok).toBe(true);
     if (!r.ok) return;

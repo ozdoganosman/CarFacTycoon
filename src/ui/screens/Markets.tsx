@@ -11,7 +11,8 @@ import { REGION_NAMES, STATE_IDS, stateDef, statePop, stateWeights, type StateId
 import type { GameState } from '../../core/types';
 import { store, useGameState } from '../store';
 import { INCOME_NAMES, dec, money, num, pct } from '../format';
-import { Badge, Button, NumberInput, Panel, Table, Toggle, SegmentLabel } from '../components/ui';
+import { Badge, Button, Info, NumberInput, Panel, Table, Toggle, SegmentLabel } from '../components/ui';
+import { setAutoDealers } from '../../core/autoservice';
 import { Importance } from '../components/StatsPanel';
 import { LineChart } from '../viz/LineChart';
 import { UsMap, type MapMarker, type MapTone, type UsMapProps } from '../viz/UsMap';
@@ -144,32 +145,12 @@ function NetworkPanel() {
           <b>{N.totalService(s)}</b>
         </div>
         <div>
-          <span className="muted small">{t('Yoldaki araçların')}</span>
-          <b>{num(N.totalParc(s))}</b>
-        </div>
-        <div>
-          <span className="muted small">{t('Hurdaya çıkan')}</span>
-          <b>{num(scrapped)}</b>
-        </div>
-        <div>
           <span className="muted small">{t('Servis memnuniyeti')}</span>
           <b>{pct(N.serviceSatisfaction(s, yf), 0)}</b>
         </div>
         <div>
-          <span className="muted small">{t('Ağ gideri')}</span>
-          <b>{t('{cost}/yıl', { cost: money(cost) })}</b>
-        </div>
-        <div>
-          <span className="muted small">{t(INCOME_NAMES.parts)}</span>
-          <b className="tone-good">{t('{cost}/yıl', { cost: money(parts) })}</b>
-        </div>
-        <div>
           <span className="muted small">{t('Ağın net gideri')}</span>
           <b>{t('{cost}/yıl', { cost: money(cost - parts) })}</b>
-        </div>
-        <div>
-          <span className="muted small">{t('Nakliye (bu yıl)')}</span>
-          <b>{money(freightYear)}</b>
         </div>
         <div>
           <span className="muted small">{t('Bayi araması')}</span>
@@ -178,6 +159,31 @@ function NetworkPanel() {
           </b>
         </div>
       </div>
+      <details className="more">
+        <summary className="small">{t('Ayrıntılar')}</summary>
+        <div className="net-summary">
+          <div>
+            <span className="muted small">{t('Yoldaki araçların')}</span>
+            <b>{num(N.totalParc(s))}</b>
+          </div>
+          <div>
+            <span className="muted small">{t('Hurdaya çıkan')}</span>
+            <b>{num(scrapped)}</b>
+          </div>
+          <div>
+            <span className="muted small">{t('Ağ gideri')}</span>
+            <b>{t('{cost}/yıl', { cost: money(cost) })}</b>
+          </div>
+          <div>
+            <span className="muted small">{t(INCOME_NAMES.parts)}</span>
+            <b className="tone-good">{t('{cost}/yıl', { cost: money(parts) })}</b>
+          </div>
+          <div>
+            <span className="muted small">{t('Nakliye (bu yıl)')}</span>
+            <b>{money(freightYear)}</b>
+          </div>
+        </div>
+      </details>
       <NetworkControls />
       <div className="seg-toggle" role="group" aria-label={t('Harita görünümü')}>
         {OVERLAYS.map((o) => (
@@ -272,6 +278,7 @@ function NetworkControls() {
   const yf = yearFloat(s.week);
   const plan = N.servicePlan(s, yf);
   const auto = !!s.network?.autoService;
+  const autoDealers = !!s.network?.autoDealers;
   const waiting = s.network?.autoServiceWaiting ?? 0;
   const target = N.serviceTarget(s);
   const next = N.nextSearches(s, yf);
@@ -279,19 +286,38 @@ function NetworkControls() {
   const gap = { parc: num(N.totalParc(s)), shops: num(N.totalService(s)), n: plan.count, target: pct(target, 0) };
   return (
     <div className="net-controls">
-      <Toggle
-        checked={auto}
-        onChange={(v) => store.act((st) => N.setAutoService(st, v))}
-        label={t('Otomatik servis')}
-        sub={
-          <>
-            {t(
-              'Açıkken her ay, arabaların tamir beklediği eyaletlerde servis atölyesi açar (en kötü durumdakiler önce); arabaları azalan yerlerde boş kalanları kapatır. Kasada her zaman iki haftalık gider kadar yedek bırakır.',
-            )}
-            {auto && waiting > 0 && <span className="tone-warn"> {t('Kasa yetmediği için {n} atölye bekliyor.', { n: waiting })}</span>}
-          </>
-        }
-      />
+      <div className="net-autos">
+        <Toggle
+          checked={auto}
+          onChange={(v) => store.act((st) => N.setAutoService(st, v))}
+          label={
+            <>
+              {t('Otomatik servis')}{' '}
+              <Info>
+                {t(
+                  'Açıkken her ay, arabaların tamir beklediği eyaletlerde servis atölyesi açar (en kötü durumdakiler önce); arabaları azalan yerlerde boş kalanları kapatır. Kasada her zaman iki haftalık gider kadar yedek bırakır.',
+                )}
+              </Info>
+            </>
+          }
+          sub={auto && waiting > 0 ? <span className="tone-warn">{t('Kasa yetmediği için {n} atölye bekliyor.', { n: waiting })}</span> : undefined}
+        />
+        <Toggle
+          checked={autoDealers}
+          onChange={(v) => store.act((st) => setAutoDealers(st, v))}
+          label={
+            <>
+              {t('Otomatik bayi araması')}{' '}
+              <Info>
+                {t('Açıkken her ay, boş arama yerlerinde alıcısı en çok olan komşu eyaletlerde bayi aranır. Kasada otomatik servisin bıraktığı kadar yedek kalır.')}{' '}
+                {max < N.MAX_SEARCHES
+                  ? t('Aynı anda en çok {n} eyalette bayi aranabilir; her {per} bayi bir arama daha açar.', { n: max, per: N.DEALERS_PER_SEARCH })
+                  : t('Aynı anda en çok {n} eyalette bayi aranabilir.', { n: max })}
+              </Info>
+            </>
+          }
+        />
+      </div>
       <div className="preset-chips svc-target" role="radiogroup" aria-label={t('Servis hedefi')}>
         <span className="small">{t('Servis hedefi')}</span>
         {N.SERVICE_TARGETS.map((v) => (
@@ -306,38 +332,36 @@ function NetworkControls() {
             {pct(v, 0)}
           </button>
         ))}
-        <span className="muted small">
+        <Info>
           {t(
             'Otomatik servis ve “Servisi yetir” atölyeleri bu düzeye kadar açar; otomatik servis, hedefin 1,3 katını aşan atölyeleri kapatır. %90 ya da %80 daha az atölye ve daha az genel gider demek; karşılığında o eyaletlerde satış en çok %4 ya da %8 düşer, garanti aynı oranda pahalanır, parça ve tamir geliri azalır. İtibar ancak memnuniyet %80’in altına inerse zarar görür.',
           )}
-        </span>
+        </Info>
       </div>
-      <div className="net-controls-row">
-        <span className="small">
-          {plan.count
-            ? target < 1
-              ? tx('Yolda <b>{parc}</b> araban var, <b>{shops}</b> servis atölyen var: {target} servis hedefi için <warn>~{n} atölye daha</warn> gerekiyor.', gap)
-              : tx('Yolda <b>{parc}</b> araban var, <b>{shops}</b> servis atölyen var: hepsine bakmak için <warn>~{n} atölye daha</warn> gerekiyor.', gap)
-            : N.serviceEnough(s)}
-        </span>
-        {plan.count > 0 && (
-          <Button small kind="primary" onClick={() => askCoverService(s)}>
-            {t('Servisi yetir ({n} atölye · {cost})', { n: plan.count, cost: money(plan.cost) })}
-          </Button>
-        )}
-      </div>
-      <div className="net-controls-row">
-        <span className="small">
-          {max < N.MAX_SEARCHES
-            ? t('Aynı anda en çok {n} eyalette bayi aranabilir; her {per} bayi bir arama daha açar.', { n: max, per: N.DEALERS_PER_SEARCH })
-            : t('Aynı anda en çok {n} eyalette bayi aranabilir.', { n: max })}
-        </span>
-        {next.length > 0 && (
+      {/* By hand: what is missing, and one button for it. Automatic: it is taken care of each month. */}
+      {!auto && (
+        <div className="net-controls-row">
+          <span className="small">
+            {plan.count
+              ? target < 1
+                ? tx('Yolda <b>{parc}</b> araban var, <b>{shops}</b> servis atölyen var: {target} servis hedefi için <warn>~{n} atölye daha</warn> gerekiyor.', gap)
+                : tx('Yolda <b>{parc}</b> araban var, <b>{shops}</b> servis atölyen var: hepsine bakmak için <warn>~{n} atölye daha</warn> gerekiyor.', gap)
+              : N.serviceEnough(s)}
+          </span>
+          {plan.count > 0 && (
+            <Button small kind="primary" onClick={() => askCoverService(s)}>
+              {t('Servisi yetir ({n} atölye · {cost})', { n: plan.count, cost: money(plan.cost) })}
+            </Button>
+          )}
+        </div>
+      )}
+      {!autoDealers && next.length > 0 && (
+        <div className="net-controls-row">
           <Button small onClick={() => askSearchNeighbours(s)}>
             {t('Komşularda bayi ara ({n} eyalet · {cost})', { n: next.length, cost: money(next.reduce((a, id) => a + N.searchCost(s, id, yf), 0)) })}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -479,13 +503,16 @@ function StateList({ onPick }: { onPick: (id: StateId) => void }) {
   const [all, setAll] = useState(false);
   const frontier = new Set(N.frontier(s));
   const w = stateWeights(yf);
-  const ids = STATE_IDS.filter((id) => all || N.isOpen(s, id) || frontier.has(id) || s.network?.states[id]?.search).sort((a, b) => w[b] - w[a]);
+  // The ten with the most buyers among those sold in, searched or next door; every state on request.
+  const ids = STATE_IDS.filter((id) => all || N.isOpen(s, id) || frontier.has(id) || s.network?.states[id]?.search)
+    .sort((a, b) => w[b] - w[a])
+    .slice(0, all ? undefined : 10);
   return (
     <>
       <div className="row-between" style={{ marginTop: 12 }}>
         <h4 style={{ margin: 0 }}>{t('Eyaletler')}</h4>
         <button type="button" className="link-btn small" onClick={() => setAll(!all)}>
-          {all ? t('Yalnızca satış yapılan ve komşu eyaletler') : t('Bütün eyaletler')}
+          {all ? t('İlk 10 eyalet') : t('Bütün eyaletler')}
         </button>
       </div>
       <Table
@@ -594,14 +621,18 @@ function MarketPanel() {
           </p>
         </Panel>
         <Panel title={t('Rakip modeller')}>
-          <Table
-            head={[t('Model'), t('Üretici'), t('Segment'), t('Fiyat')]}
-            align={['l', 'l', 'l', 'r']}
-            className="compact"
-            rows={rivals
-              .sort((a, b) => a.segment.localeCompare(b.segment))
-              .map((r) => [r.name, RIVALS.find((x) => x.id === r.companyId)?.name ?? '', <SegmentLabel key="seg" id={r.segment} />, money(rivalPriceNow(r, s.week))])}
-          />
+          {/* A long list (each model's own class is compared on its screen): a click away. */}
+          <details className="more">
+            <summary className="small">{t('{n} model satışta', { n: rivals.length })}</summary>
+            <Table
+              head={[t('Model'), t('Üretici'), t('Segment'), t('Fiyat')]}
+              align={['l', 'l', 'l', 'r']}
+              className="compact"
+              rows={rivals
+                .sort((a, b) => a.segment.localeCompare(b.segment))
+                .map((r) => [r.name, RIVALS.find((x) => x.id === r.companyId)?.name ?? '', <SegmentLabel key="seg" id={r.segment} />, money(rivalPriceNow(r, s.week))])}
+            />
+          </details>
         </Panel>
       </div>
     </>

@@ -2313,7 +2313,6 @@
  "17uiv9s": "Investment (lines, dies, dealers)",
  "1n6a078": "Dividends and share buybacks",
  "19ddvki": "Every new technology unlocks a card: “Why does it work like this?” ({seen}/{total})",
- "31u1at": "Hire engineers and use the money you make to grow the brand: win fame at the races, buy up smaller rivals, go public.",
  "3ox4h1": "Machines, stock and cash, minus debt; plus the brand’s earning power (six times the past year’s operating profit).",
  "1urhbk9": "Counts toward your final score: only your stake ({share}).",
  "rmsepc": "Counts toward your final score.",
@@ -2571,7 +2570,6 @@
  "1q1wkdz": "Built",
  "1s24h2x": "{shop} built",
  "2m3l7t": "Build ({cost})",
- "1wzty9x": "Capacity planner",
  "h2v9k9": "demand ~{demand}/wk · output {output}/wk",
  "196va67": {
   "one": "~{n} car/wk lost",
@@ -2953,7 +2951,6 @@
  "xzz9hc": "As the network grows, its overhead grows faster than it does (regional offices, parts depots): one more dealer adds ~{dealer} a year, one more service shop ~{shop}.",
  "nm81qv": "A busy shop brings in ~{income} a year from parts and repairs; shops beyond what your cars need bring in nothing.",
  "198gg56": "States",
- "12cbrez": "Only states you sell in and their neighbors",
  "crxd3u": "All states",
  "1od0xo7": "State",
  "b1cy2u": "Status",

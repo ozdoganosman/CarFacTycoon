@@ -2304,7 +2304,6 @@
  "17uiv9s": "Investitionen (Linien, Werkzeuge, Händler)",
  "1n6a078": "Dividenden und Aktienrückkäufe",
  "19ddvki": "Jede neue Technik schaltet eine Karte frei: „Warum funktioniert das so?“ ({seen}/{total})",
- "31u1at": "Stelle Ingenieure ein und nutze das verdiente Geld, um die Marke wachsen zu lassen: Hol dir Ruhm bei Rennen, kauf kleinere Konkurrenten auf, geh an die Börse.",
  "3ox4h1": "Maschinen, Lager und Kasse abzüglich Schulden; dazu die Ertragskraft der Marke (das Sechsfache des Betriebsgewinns im vergangenen Jahr).",
  "1urhbk9": "Zählt für deine Endwertung: nur dein Anteil ({share}).",
  "rmsepc": "Zählt für deine Endwertung.",
@@ -2562,7 +2561,6 @@
  "1q1wkdz": "Eingerichtet",
  "1s24h2x": "{shop} eingerichtet",
  "2m3l7t": "Einrichten ({cost})",
- "1wzty9x": "Kapazitätsplaner",
  "h2v9k9": "Nachfrage ~{demand}/Wo. · Produktion {output}/Wo.",
  "196va67": {
   "one": "~{n} Auto/Wo. geht verloren",
@@ -2956,7 +2954,6 @@
  "xzz9hc": "Wächst das Netz, wachsen seine Gemeinkosten überproportional (Bezirksbüros, Ersatzteillager): Ein weiterer Händler kostet ~{dealer} pro Jahr zusätzlich, eine weitere Werkstatt ~{shop}.",
  "nm81qv": "Eine ausgelastete Werkstatt bringt mit Teilen und Reparaturen ~{income} im Jahr ein; Werkstätten über den Bedarf deiner Autos hinaus bringen nichts.",
  "198gg56": "Bundesstaaten",
- "12cbrez": "Nur Bundesstaaten mit Verkauf und ihre Nachbarn",
  "crxd3u": "Alle Bundesstaaten",
  "1od0xo7": "Bundesstaat",
  "b1cy2u": "Status",
