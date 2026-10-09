@@ -347,7 +347,8 @@ describe('what the money is for', () => {
     expect(s.rivalModels.filter((m) => m.companyId === t.id && m.active)).toHaveLength(0);
     for (let i = 0; i < 60; i++) tick(s);
     expect(s.rivalModels.filter((m) => m.companyId === t.id && m.active)).toHaveLength(0);
-  }, 30_000);
+    // 18 years of the smart bot: about 30 s on a slow machine.
+  }, 90_000);
 
   it('difficulty sets the starting till and the bank', () => {
     const easy = newGame({ companyName: 'E', hq: 'usa', seed: 1, difficulty: 'easy' });

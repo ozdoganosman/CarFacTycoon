@@ -8,6 +8,7 @@ import { MARKET_IDS } from './market';
 import { TESTS, testWeekCost } from './testing';
 import { yearFloat } from './time';
 import type { GameState, Project } from './types';
+import { clone } from './util';
 import { NO_BONUS, computeCarStats } from './vehicle';
 
 // "Can I finish this?" What a project will still cost before its car is on
@@ -96,7 +97,7 @@ export function budgetVerdict(b: LaunchBudget): 'ok' | 'credit' | 'short' {
 
 /** The budget of a project not started yet, as it would begin today (on a copy of the game). */
 export function newProjectBudget(s: GameState, segment: Project['segment'], replacesModelId?: string, start = startProjectFn): LaunchBudget | null {
-  const copy = structuredClone(s);
+  const copy = clone(s);
   const r = start(copy, { name: 'x', segment, targetPrice: 0, replacesModelId });
   if (!r.ok) return null;
   return launchBudget(copy, copy.projects.find((x) => x.id === r.id)!);

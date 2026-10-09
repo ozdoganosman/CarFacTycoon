@@ -15,6 +15,22 @@ export function log(state: GameState, text: string, tone: LogEntry['tone'] = 'in
 
 const LOG_KEEP: Record<LogCategory, number> = { company: 300, buyers: 80, rival: 150, tech: 80 };
 
+/**
+ * A deep copy of plain game data (objects, arrays, numbers, strings). Not structuredClone:
+ * older browsers (Chrome before 98, Safari before 15.4, old Android WebViews) do not have it,
+ * and the new-project window copies the game with this.
+ */
+export function clone<T>(v: T): T {
+  if (v === null || typeof v !== 'object') return v;
+  if (Array.isArray(v)) return v.map(clone) as T;
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(v)) out[k] = clone((v as Record<string, unknown>)[k]);
+  return out as T;
+}
+
+/** The last item of a list (Array.prototype.at is missing in the same older browsers). */
+export const lastOf = <T>(list: readonly T[]): T | undefined => list[list.length - 1];
+
 export function pushModal(state: GameState, modal: ModalItem) {
   state.modals.push(modal);
 }

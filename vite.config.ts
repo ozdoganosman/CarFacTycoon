@@ -33,6 +33,10 @@ export default defineConfig(({ mode }) => ({
   plugins: [react(), appExtras(mode === 'app'), ...(mode === 'single' ? [viteSingleFile()] : [])],
   build: {
     outDir: mode === 'single' ? 'dist-single' : mode === 'app' ? 'dist-app' : 'dist',
+    // Older phones and browsers too (the default asks for 2022-23 browsers): Android 7 WebViews
+    // that were never updated, Safari 14. New browser functions are avoided in the code itself
+    // (tests/oldBrowsers.test.ts).
+    target: ['es2020', 'chrome87', 'edge88', 'firefox78', 'safari14'],
     chunkSizeWarningLimit: 900,
   },
   test: {

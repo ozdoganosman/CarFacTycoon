@@ -46,7 +46,7 @@ import type {
   ToolingTier,
 } from './types';
 import { NO_BONUS, computeCarStats } from './vehicle';
-import { clamp, decide, earn, log, money, newId, shiftModal, spend } from './util';
+import { clamp, clone, decide, earn, log, money, newId, shiftModal, spend } from './util';
 import { list, t } from '../i18n';
 import { dec, fmtPercent } from '../i18n/format';
 
@@ -142,9 +142,9 @@ export function defaultDesign(s: GameState, segment: SegmentId, replacesModelId?
   void segment;
   const yf = yearFloat(s.week);
   const replaced = replacesModelId ? s.models.find((m) => m.id === replacesModelId) : undefined;
-  if (replaced) return structuredClone(replaced.design);
+  if (replaced) return clone(replaced.design);
   const latest = [...s.models].sort((a, b) => Math.max(b.launchWeek, b.refreshWeek) - Math.max(a.launchWeek, a.refreshWeek))[0];
-  if (latest) return structuredClone(latest.design);
+  if (latest) return clone(latest.design);
   const { design } = aiDesign('family', Math.floor(yf), { style: 'mass', skill: 40, market: s.company.hq }, () => 0.5);
   return restrictToKnown(s, { ...design, size: 0.4, styling: 0.3, interior: 0.3, suspBalance: 0.5 }, maxGears(yf));
 }
@@ -229,7 +229,7 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
     platformId: m.platformId,
     engineRefId: m.engineId,
     // A facelift also brings in whatever the engineers have learned since.
-    design: { ...structuredClone(m.design), knowhow: knownKnowhow(s) },
+    design: { ...clone(m.design), knowhow: knownKnowhow(s) },
     phase: 'design',
     createdWeek: s.week,
     engineers: Math.max(1, free),
