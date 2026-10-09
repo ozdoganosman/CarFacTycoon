@@ -10,7 +10,7 @@ import { tx } from '../i18n';
 import { BudgetLine } from '../components/BudgetLine';
 import type { Project } from '../../core/types';
 import { store, useGameState } from '../store';
-import { Button, Progress } from '../components/ui';
+import { Button, Info, Progress } from '../components/ui';
 import { Icon } from '../components/Icon';
 
 /** Team, time and the one action of the design step, kept above the designer so it never needs scrolling to. */
@@ -46,13 +46,14 @@ export function DevBar({ project: p }: { project: Project }) {
       <div className="dev-bar-text">
         {!developing ? (
           <>
-            {tx('<b>Geliştirme:</b> tahmini <b>~{n} hafta</b> · {team}', { n: Math.ceil(remaining / Math.max(0.1, rate)), team })}
-            {missing.length ? (
+            <span>
+              {tx('<b>Geliştirme:</b> tahmini <b>~{n} hafta</b> · {team}', { n: Math.ceil(remaining / Math.max(0.1, rate)), team })}{' '}
+              <Info>{t('Aracı tasarla, mühendis tahmininden iki öncelik seç, sonra başlat. Başlayınca tasarım kilitlenir; öncelikler her zaman değişebilir.')}</Info>
+            </span>
+            {missing.length > 0 && (
               <span className="small tone-bad">
                 {t('Tasarımda henüz araştırılmamış teknoloji var: {tech}. Ar-Ge’de araştır ya da tasarımdan çıkar.', { tech: missing.map((x) => t(x)).join(', ') })}
               </span>
-            ) : (
-              <span className="muted small">{t('Aracı tasarla, mühendis tahmininden iki öncelik seç, sonra başlat. Başlayınca tasarım kilitlenir; öncelikler her zaman değişebilir.')}</span>
             )}
             {behind.length > 0 && (
               <span className="small tone-warn">{t('Sınıftaki arabaların çoğunda olan {list} bu tasarımda yok: aşağıdaki listeden ekle ya da araştır.', { list: gapNames(behind) })}</span>
@@ -85,7 +86,7 @@ export function DevBar({ project: p }: { project: Project }) {
                 })}
               </>
             ) : (
-              <>{t('Daha çok mühendis geliştirmeyi hızlandırır; bir arabada bir düzineden fazlası orantılı hızlandırmaz.')}</>
+              <Info>{t('Daha çok mühendis geliştirmeyi hızlandırır; bir arabada bir düzineden fazlası orantılı hızlandırmaz.')}</Info>
             )}
           </span>
           <span className="dev-bar-hire-btns">

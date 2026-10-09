@@ -454,6 +454,13 @@ fieldset {
   place-items: center;
   width: 22px;
 }
+.nav-more,
+.nav-scrim {
+  display: none;
+}
+.nav-rest {
+  display: contents;
+}
 .nav-badge {
   margin-inline-start: auto;
   background: var(--accent);
@@ -1124,6 +1131,18 @@ fieldset {
 .todo-main:disabled {
   cursor: default;
 }
+/* On a phone the quick fix goes under the line, not beside it. */
+@media (max-width: 640px) {
+  .todo-item {
+    flex-wrap: wrap;
+  }
+  .todo-main {
+    flex-basis: 100%;
+  }
+  .todo-item > .btn {
+    margin: 0 12px 10px auto;
+  }
+}
 .todo-main:not(:disabled):hover {
   background: color-mix(in srgb, var(--lvl) 9%, transparent);
 }
@@ -1248,35 +1267,77 @@ fieldset {
   margin-bottom: 6px;
 }
 
-/* ---------- Stepper ---------- */
-.stepper {
+/* ---------- A project's phases: numbered stops on one ruled line ---------- */
+.phase-steps {
   display: flex;
+  align-items: center;
   list-style: none;
-  margin: 0;
+  margin: 4px 0 16px;
   padding: 0;
-  gap: 4px;
-  overflow-x: auto;
 }
-.stepper li {
-  flex: 1;
-  min-width: 110px;
-  text-align: center;
-  font-size: 0.82rem;
-  padding: 6px 8px;
-  border-radius: 2px;
-  background: var(--panel-2);
+.phase-steps li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1 1 auto;
+  min-width: 0;
   color: var(--muted);
-  border: 1px solid var(--line);
+  font-size: 0.85rem;
   white-space: nowrap;
 }
-.stepper li.is-done {
-  color: var(--good);
+.phase-steps li:last-child {
+  flex: 0 0 auto;
 }
-.stepper li.is-on {
-  background: var(--accent);
-  color: var(--accent-ink);
-  border-color: var(--accent);
+/* The rule to the next stop: brass once passed. */
+.phase-steps li:not(:last-child)::after {
+  content: '';
+  flex: 1 1 12px;
+  min-width: 12px;
+  height: 2px;
+  margin: 0 8px;
+  background: var(--line);
+}
+.phase-steps li.is-done::after {
+  background: var(--brass);
+}
+.phase-dot {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+}
+.phase-steps li.is-done {
+  color: var(--brass);
+}
+.phase-steps li.is-on {
+  color: var(--accent);
   font-weight: 700;
+}
+.phase-steps li.is-on .phase-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.phase-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* On a phone only the current stop says its name. */
+@media (max-width: 640px) {
+  .phase-steps li:not(.is-on) .phase-label {
+    display: none;
+  }
+  .phase-steps li:not(.is-on) {
+    flex: 1 1 0;
+  }
+  .phase-steps li.is-on {
+    flex: 0 1 auto;
+  }
 }
 
 /* ---------- Designer ---------- */
@@ -2337,18 +2398,90 @@ fieldset {
     top: 2px;
     inset-inline-end: 6px;
   }
+  /* Five screens and "Diğer"; the rest opens above the bar. */
+  .nav {
+    overflow: visible;
+    position: relative;
+  }
+  .nav > .nav-item {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .nav-more {
+    display: flex;
+  }
+  .nav-rest {
+    display: none;
+  }
+  .nav.is-more .nav-rest {
+    position: absolute;
+    bottom: 100%;
+    inset-inline: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: var(--topbar-bg);
+    border-top: 3px solid var(--brass);
+    box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.3);
+  }
+  .nav-rest .nav-item {
+    padding: 12px 6px;
+    min-width: 0;
+  }
+  .nav-rest .nav-claude {
+    margin: 0;
+    border: 0;
+    padding-top: 12px;
+  }
+  .nav.is-more .nav-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 29;
+    background: rgba(0, 0, 0, 0.25);
+  }
   .main {
     padding: 12px 16px;
   }
+  /* Two rows: name, date and the clock; then the money. */
   .topbar {
-    gap: 8px 12px;
-    padding: 8px 16px;
+    gap: 4px 10px;
+    padding: 6px 12px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    flex: 1 1 0;
+    font-size: 0.95rem;
+  }
+  .brand-mark {
+    width: 26px;
+    height: 26px;
+  }
+  .brand-name {
+    max-width: none;
+  }
+  .topbar-date {
+    font-size: 0.9rem;
+    padding: 1px 6px;
+  }
+  .speed-btn {
+    min-width: 36px;
+    min-height: 30px;
+    padding: 4px 8px;
   }
   .topbar-kpis {
     margin-inline-start: 0;
     order: 3;
     width: 100%;
     justify-content: space-between;
+  }
+  .kpi {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .kpi b {
+    font-size: 1rem;
   }
   .kpi-hide-sm {
     display: none;
@@ -2420,6 +2553,21 @@ fieldset {
   background: color-mix(in srgb, var(--accent2) 14%, var(--panel));
   border: 1px solid color-mix(in srgb, var(--accent2) 45%, var(--line));
   box-shadow: var(--shadow);
+}
+/* The stopped clock: a stamp and one line, not a panel. */
+.pause-banner.pause-stamp {
+  flex-wrap: nowrap;
+  padding: 6px 10px;
+  margin-bottom: 12px;
+}
+.pause-stamp .pause-text {
+  flex: 1;
+  color: var(--muted);
+}
+@media (max-width: 640px) {
+  .pause-stamp .pause-text {
+    display: none;
+  }
 }
 /* The way to the first car (GuideBar): a ruled slip pinned to the top of every screen. */
 .guide-bar {

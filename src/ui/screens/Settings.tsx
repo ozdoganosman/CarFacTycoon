@@ -6,6 +6,7 @@ import { Button, Choice, Panel, Toggle } from '../components/ui';
 import { AdSettings } from '../components/Sponsor';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { ads } from '../ads';
+import { hasKeyboard } from '../device';
 import { t, tc } from '../../i18n';
 
 type Theme = 'system' | 'light' | 'dark';
@@ -67,7 +68,7 @@ export function Settings() {
           checked={s.settings.engineerMode}
           onChange={(v) => store.act((st) => A.setEngineerMode(st, v))}
           label={t('Mühendis modu')}
-          sub={t(
+          info={t(
             'Açıkken (varsayılan) motorun silindir düzeni, çapı, stroku, sıkıştırma oranı, supap düzeni, yakıt sistemi ve kompresörü ayrı ayrı ayarlanır ve her ayarın ne işe yaradığı yazar. Karışık gelirse kapat: hazır motorlar ve tek bir karakter kaydırıcısıyla çalışırsın.',
           )}
         />
@@ -85,7 +86,7 @@ export function Settings() {
           label={t('Yeni teknoloji kartlarını göster')}
           sub={t('Yeni bir teknoloji açıldığında “Neden böyle çalışıyor?” kartı açılır ve oyun durur.')}
         />
-        <p className="muted small">{t('Kısayollar: boşluk = duraklat/devam, 1-2-3 = hız.')}</p>
+        {hasKeyboard() && <p className="muted small">{t('Kısayollar: boşluk = duraklat/devam, 1-2-3 = hız.')}</p>}
       </Panel>
       <Panel title={t('Görünüm')}>
         <Choice

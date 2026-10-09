@@ -1,7 +1,7 @@
 import { formatDate, yearFloat } from '../../core/time';
 import type { CarModel } from '../../core/types';
 import { store, useGameState } from '../store';
-import { dec, money, num } from '../format';
+import { cars, dec, money, num } from '../format';
 import { Badge, Empty, SegmentLabel } from '../components/ui';
 import { CarSVG } from '../viz/CarSVG';
 import { weeklySold } from './HQ';
@@ -11,7 +11,7 @@ import { t } from '../../i18n';
 function ModelEntry({ m }: { m: CarModel }) {
   const active = m.status === 'active';
   const figures: [string, string][] = [
-    [t('Haftalık'), active ? dec(weeklySold(m), 1) : '—'],
+    [t('Haftalık'), active ? cars(weeklySold(m)) : '—'],
     [t('Toplam satış'), num(m.unitsSold)],
     [t('Fiyat'), money(m.price)],
     [t('Dergi'), dec(m.reviewScore, 1)],

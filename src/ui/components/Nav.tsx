@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { AREAS, areaOpen, type Area } from '../../core/guide';
+import { useBackClose } from '../back';
 import { msg, t } from '../../i18n';
 import { store, useGameState, type Screen } from '../store';
 import { Icon, type IconName } from './Icon';
@@ -17,8 +19,13 @@ const ITEMS: { id: Screen['id']; label: string; icon: IconName }[] = [
   { id: 'settings', label: msg('Ayarlar'), icon: 'settings' },
 ];
 
+/** On a phone the bar holds the first five screens and "Diğer", which opens the rest above it. */
+const PRIMARY = 5;
+
 export function Nav() {
   const s = useGameState();
+  const [more, setMore] = useState(false);
+  useBackClose(more, () => setMore(false));
   const cur = store.screen.id;
   const active = (id: Screen['id']) => cur === id || (id === 'projects' && cur === 'project') || (id === 'models' && cur === 'model');
   const badges: Partial<Record<Screen['id'], number>> = {
@@ -28,26 +35,48 @@ export function Nav() {
   const isArea = (id: Screen['id']): id is Area => (AREAS as string[]).includes(id);
   const items = ITEMS.filter((it) => !isArea(it.id) || areaOpen(s, it.id));
   const fresh = (id: Screen['id']) => isArea(id) && !!s.openedNew?.includes(id);
+  const primary = items.slice(0, PRIMARY);
+  const rest = items.slice(PRIMARY);
+  const item = (it: (typeof ITEMS)[number]) => (
+    <button
+      key={it.id}
+      type="button"
+      className={`nav-item ${active(it.id) ? 'is-on' : ''}`}
+      data-nav={it.id}
+      onClick={() => {
+        setMore(false);
+        store.go({ id: it.id } as Screen);
+      }}
+      aria-current={active(it.id) ? 'page' : undefined}
+    >
+      <span className="nav-icon" aria-hidden>
+        <Icon name={it.icon} size={20} />
+      </span>
+      <span className="nav-label">{t(it.label)}</span>
+      {!!badges[it.id] && <span className="nav-badge">{badges[it.id]}</span>}
+      {fresh(it.id) && <span className="nav-badge nav-new">{t('yeni')}</span>}
+    </button>
+  );
   return (
-    <nav className="nav" aria-label={t('Ana menü')}>
-      {items.map((it) => (
-        <button
-          key={it.id}
-          type="button"
-          className={`nav-item ${active(it.id) ? 'is-on' : ''}`}
-          data-nav={it.id}
-          onClick={() => store.go({ id: it.id } as Screen)}
-          aria-current={active(it.id) ? 'page' : undefined}
-        >
-          <span className="nav-icon" aria-hidden>
-            <Icon name={it.icon} size={20} />
-          </span>
-          <span className="nav-label">{t(it.label)}</span>
-          {!!badges[it.id] && <span className="nav-badge">{badges[it.id]}</span>}
-          {fresh(it.id) && <span className="nav-badge nav-new">{t('yeni')}</span>}
-        </button>
-      ))}
-      <SendToClaude />
+    <nav className={`nav ${more ? 'is-more' : ''}`} aria-label={t('Ana menü')}>
+      {primary.map(item)}
+      <button
+        type="button"
+        className={`nav-item nav-more ${rest.some((it) => active(it.id)) ? 'is-on' : ''}`}
+        aria-expanded={more}
+        onClick={() => setMore(!more)}
+      >
+        <span className="nav-icon" aria-hidden>
+          <Icon name="menu" size={20} />
+        </span>
+        <span className="nav-label">{t('Diğer')}</span>
+        {rest.some((it) => fresh(it.id)) && <span className="nav-badge nav-new">{t('yeni')}</span>}
+      </button>
+      {more && <div className="nav-scrim" onClick={() => setMore(false)} aria-hidden />}
+      <div className="nav-rest">
+        {rest.map(item)}
+        <SendToClaude />
+      </div>
     </nav>
   );
 }

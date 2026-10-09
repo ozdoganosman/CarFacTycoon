@@ -14,7 +14,7 @@ import { segmentDef } from '../../data/segments';
 import type { CarModel, GameState, LogCategory } from '../../core/types';
 import { useState } from 'react';
 import { store, useGameState } from '../store';
-import { dec, money, num, pct, pctOf, recentProfit, signedMoney } from '../format';
+import { cars, dec, money, num, pct, pctOf, recentProfit, signedMoney } from '../format';
 import { Badge, Button, Empty, Panel, Progress, Stat, Table } from '../components/ui';
 import { LineChart } from '../viz/LineChart';
 import { NewsArchive } from '../components/Newspaper';
@@ -433,7 +433,7 @@ export function HQ() {
                   {m.name}
                 </button>,
                 t(segmentDef(m.segment).name),
-                dec(weeklySold(m), 1),
+                cars(weeklySold(m)),
                 num(m.inventory),
                 money(m.price),
                 dec(m.reviewScore, 1),

@@ -26,7 +26,7 @@ import { priceNow } from '../../core/market';
 import { STAGES, STATIONS, stationDef } from '../../data/stations';
 import type { CarModel, ComponentKey, GameState, ProductionLine, StageId } from '../../core/types';
 import { store, useGameState } from '../store';
-import { dec, money, num, pct } from '../format';
+import { cars, dec, money, num, pct } from '../format';
 import { Badge, Button, Info, Panel, Toggle } from '../components/ui';
 import { LineViz } from '../viz/LineViz';
 import { t, msg } from '../../i18n';
@@ -112,9 +112,6 @@ function modelCapacity(s: GameState, m: CarModel): number {
     .filter((l) => l.modelId === m.id && !l.military && !lineOffline(s, l))
     .reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
 }
-
-/** Whole cars a week ("12"), a fraction only below ten ("2,5"). */
-const cars = (v: number) => dec(v, v < 10 && !Number.isInteger(v) ? 1 : 0);
 
 /**
  * Every line of the factory at a glance, drawn like a floor plan: one box per line, its four stages
@@ -273,7 +270,7 @@ function PlannerForm({ m }: { m: CarModel }) {
       <p>
         {tx(
           '<b>Anahtar teslim hat:</b> bugünün en iyi makineleriyle ve dengeli kurulur (hiçbir bölüm darboğazın besleyebileceğinden fazla makine almaz). {model} için {size} yerli hat başına <b>+{output} araç/hf</b>, kalıp dahil <b>{cost}</b>. Binası ve makineleri <b>{n} haftada</b> kurulur.',
-          { model: m.name, size, output: dec(perLine(allowBlack), 1), cost: money(each), n: build },
+          { model: m.name, size, output: cars(perLine(allowBlack)), cost: money(each), n: build },
         )}{' '}
         {payback < Infinity ? (
           <>
@@ -313,7 +310,7 @@ function PlannerForm({ m }: { m: CarModel }) {
             aria-checked={size === k}
             className={`chip ${size === k ? 'is-on' : ''}`}
             onClick={() => setSizePick(k)}
-            title={t('{output} araç/hf · {cost}', { output: dec(outputAt(allowBlack, k), 1), cost: money(quoteAt(allowBlack, k)?.cost ?? 0) })}
+            title={t('{output} araç/hf · {cost}', { output: cars(outputAt(allowBlack, k)), cost: money(quoteAt(allowBlack, k)?.cost ?? 0) })}
           >
             {k === fits && sizePick === undefined
               ? t('{n} yer · {output}/hf (önerilen)', { n: k, output: dec(outputAt(allowBlack, k), 0) })
@@ -340,7 +337,7 @@ function PlannerForm({ m }: { m: CarModel }) {
           <span className="small">
             {tx(
               '<b>Küçük atölye hattı:</b> başlangıçtaki atölye gibi, el işçiliği makineleriyle. Yavaş ve araç başına işçiliği pahalı ama ucuz: +{output} araç/hf, kalıp dahil <b>{cost}</b>.',
-              { output: dec(shopCap, 1), cost: money(shopEach) },
+              { output: cars(shopCap), cost: money(shopEach) },
             )}
           </span>
           <Button disabled={s.company.cash < shopEach} onClick={() => store.try((st) => A.buildWorkshopLine(st, m.id), t('Atölye hattı kuruldu: {model}', { model: m.name }))}>
@@ -378,7 +375,7 @@ function PlannerForm({ m }: { m: CarModel }) {
                   weeks: build,
                   output: dec(perLine(allowBlack) * count, 0),
                   demand: dec(demand, 0),
-                  cap: dec(cap, 1),
+                  cap: cars(cap),
                 },
               ),
               confirm: t('{n} hat kur', { n: count }),
@@ -530,7 +527,7 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
           <span className="muted small">
             · {isMilitary ? t('askeri üretim') : model ? model.name : t('boş')}
             {building ? ` · ${t('inşaatta ({n} hf)', { n: line.buildUntilWeek! - s.week })}` : ''} ·{' '}
-            {t('{output} araç/hafta · işçilik {cost}/hafta', { output: dec(r.throughput, 1), cost: money(upkeep) })}
+            {t('{output} araç/hafta · işçilik {cost}/hafta', { output: cars(r.throughput), cost: money(upkeep) })}
             {running && <> · {t('darboğaz: {stage}', { stage: t(STAGES.find((x) => x.id === r.bottleneck)!.name) })}</>}
             {staffed > 0 && <> · {t('gece vardiyası: {state}', { state: night })}</>}
           </span>
@@ -636,7 +633,7 @@ function StageColumn({ line, stage, bottleneck, capacity, wage }: { line: Produc
     <div className={`stage ${bottleneck ? 'is-bottleneck' : ''}`}>
       <div className="stage-head">
         <b>{t(def.name)}</b>
-        <span className={bottleneck ? 'tone-bad' : 'muted'}>{t('{v}/hf', { v: dec(capacity, 1) })}</span>
+        <span className={bottleneck ? 'tone-bad' : 'muted'}>{t('{v}/hf', { v: cars(capacity) })}</span>
       </div>
       {bottleneck && <Badge tone="bad">{t('Darboğaz')}</Badge>}
       <ul className="stations">

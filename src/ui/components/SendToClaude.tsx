@@ -1,4 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { serialize } from '../../core/save';
 import { msg, t } from '../../i18n';
 import { allowSharing, disableSharing, forgetMe, onSyncStatus, playtestSink, sendErrorText, sendPlaytest, syncNow, syncStatus, type SinkKind, type SyncStatus } from '../claudeLink';
@@ -198,7 +199,9 @@ export function SendToClaude() {
         <span className="nav-label">{dev ? t('Geri bildirim') : t('Claude’a gönder')}</span>
         {dot !== 'off' && <span className={`sync-dot sync-${dot}`} aria-label={statusText(st, kind)} />}
       </button>
-      {open && (
+      {/* On the body: the phone menu folds this button away while its window is open. */}
+      {open &&
+        createPortal(
         <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && close()}>
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="send-title">
             <h2 id="send-title">
@@ -277,8 +280,9 @@ export function SendToClaude() {
                 ))}
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </>
   );
 }

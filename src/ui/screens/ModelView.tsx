@@ -27,7 +27,7 @@ import { priceLevel } from '../../data/economy';
 import type { CarModel, MarketId } from '../../core/types';
 import { store, useGameState } from '../store';
 import { customerLetters } from '../../core/letters';
-import { dec, money, num, pct } from '../format';
+import { cars, dec, money, num, pct } from '../format';
 import { Badge, Button, Empty, NumberInput, Panel, Slider, Stat, Table, Toggle, ScoreBar, Info, SegmentLabel } from '../components/ui';
 import { StatsPanel } from '../components/StatsPanel';
 import { CarSVG } from '../viz/CarSVG';
@@ -111,7 +111,7 @@ export function ModelView({ modelId }: { modelId: string }) {
       </div>
 
       <div className="stats-row">
-        <Stat label={t('Haftalık satış')} value={dec(weeklySold(m), 1)} sub={t('talep {demand}', { demand: dec(demand, 1) })} />
+        <Stat label={t('Haftalık satış')} value={cars(weeklySold(m))} sub={t('talep {demand}', { demand: cars(demand) })} />
         <Stat label={t('Stok')} value={num(m.inventory)} tone={m.inventory > demand * 12 && m.inventory > 10 ? 'warn' : undefined} />
         <Stat label={t('Toplam satış')} value={num(m.unitsSold)} sub={money(m.revenueTotal)} />
         <Stat label={t('Dergi ortalaması')} value={dec(m.reviewScore, 1)} sub="/ 10" />
@@ -137,14 +137,13 @@ export function ModelView({ modelId }: { modelId: string }) {
                 checked={!!m.autoCapacity}
                 onChange={(v) => store.act((st) => A.setModelAutoCapacity(st, m.id, v))}
                 label={t('Talebi otomatik karşıla')}
+                info={t(
+                  'Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır.',
+                )}
                 sub={
                   <>
-                    {t(
-                      'Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır.',
-                    )}
                     {(m.autoSpent ?? 0) !== 0 && (
                       <>
-                        {' '}
                         {tx('<b>Bu model için şimdiye kadar net {spent} harcadı.</b> Harcamalar Finans’ta ayrı satırda görünür.', { spent: money(m.autoSpent ?? 0) })}
                       </>
                     )}
@@ -166,7 +165,7 @@ export function ModelView({ modelId }: { modelId: string }) {
                 step={5}
                 disabled={!!m.autoCapacity}
                 onChange={(v) => store.act((st) => A.setProductionRate(st, m.id, v / 100))}
-                format={(v) => t('{rate} · {output} araç/hafta', { rate: pct(v / 100, 0), output: dec((cap * v) / 100, 1) })}
+                format={(v) => t('{rate} · {output} araç/hafta', { rate: pct(v / 100, 0), output: cars((cap * v) / 100) })}
                 hint={t('Talep düşükse üretimi kıs: stok bekletmek para bağlar ve depolama masrafı çıkarır.')}
               />
               <p className="small">
@@ -215,11 +214,11 @@ export function ModelView({ modelId }: { modelId: string }) {
               checked={m.indexPrice}
               onChange={(v) => store.act(() => void (m.indexPrice = v))}
               label={t('Fiyatı sınıfa endeksle')}
-              sub={t('Açıkken fiyat, sınıfın tipik fiyatıyla birlikte değişir: enflasyon, incelen kâr payları ve ucuzlayan seri üretim dahil.')}
+              info={t('Açıkken fiyat, sınıfın tipik fiyatıyla birlikte değişir: enflasyon, incelen kâr payları ve ucuzlayan seri üretim dahil.')}
             />
             <p className="muted small">
               {t('Bu fiyatla talep ~{demand}/hafta ({n} eyalette satılıyor; yeni eyaletler için Harita).', {
-                demand: dec(demandAtPrice(s, m, 'usa', draftPrice), 1),
+                demand: cars(demandAtPrice(s, m, 'usa', draftPrice)),
                 n: N.openStates(s).length,
               })}
             </p>
@@ -240,10 +239,15 @@ export function ModelView({ modelId }: { modelId: string }) {
       {active && m.markets.length > 0 && <Competition modelId={m.id} market={market} setMarket={setMarket} />}
 
       <div className="grid-2">
-        <Panel title={t('Araç')}>
+        <Panel
+          title={
+            <>
+              {t('Araç')} <Info>{t('Puanlar bugünün sınıf ortalamasına göre. Model yaşlandıkça rakipler gelişir ve puanlar düşer.')}</Info>
+            </>
+          }
+        >
           <CarSVG body={m.design.body} size={m.design.size} year={yearFloat(m.refreshWeek)} cylinders={m.design.engine.cylinders} styling={m.design.styling} />
           <StatsPanel s={s} design={m.design} segment={m.segment} yf={yf} bonus={m.bonus} scores={scores} compact />
-          <p className="muted small">{t('Puanlar bugünün sınıf ortalamasına göre. Model yaşlandıkça rakipler gelişir ve puanlar düşer.')}</p>
         </Panel>
         <div>
           <Panel title={t('Dergiler')}>
@@ -331,7 +335,23 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
   const mine = rows.find((o) => o.id === m.id);
   return (
     <Panel
-      title={t('Neden bu kadar satıyor? {segment} pazarı', { segment: t(segmentDef(m.segment).name) })}
+      title={
+        <>
+          {t('Neden bu kadar satıyor? {segment} pazarı', { segment: t(segmentDef(m.segment).name) })}{' '}
+          <Info>
+            {t(
+              'Alıcılar her aracı çekiciliğine (tasarım puanları × segmentin gizli önceliklerine), fiyatına, markaya ve yaşına göre tartar: tasarım çıktığı ilk yıldan başlayarak yılda ~{slow} puan, {old} yaşından sonra yılda ~{fast} puan eskir (en çok −{max}); makyaj o güne kadarki yaşın dörtte üçünü siler. Bayi ağın ve bilinirliğin, aracını kaç alıcının görebileceğini belirler. Segment toplamı: {demand} araç/hafta.',
+              {
+                slow: dec(DATED_PER_YEAR, 0),
+                old: DATED_OLD_FROM,
+                fast: dec(DATED_PER_YEAR + DATED_PER_OLD_YEAR, 1),
+                max: DATED_MAX,
+                demand: dec(sm.demand, 0),
+              },
+            )}
+          </Info>
+        </>
+      }
       actions={
         <div className="seg-toggle">
           {m.markets.map((mk) => (
@@ -342,18 +362,6 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
         </div>
       }
     >
-      <p className="muted small">
-        {t(
-          'Alıcılar her aracı çekiciliğine (tasarım puanları × segmentin gizli önceliklerine), fiyatına, markaya ve yaşına göre tartar: tasarım çıktığı ilk yıldan başlayarak yılda ~{slow} puan, {old} yaşından sonra yılda ~{fast} puan eskir (en çok −{max}); makyaj o güne kadarki yaşın dörtte üçünü siler. Bayi ağın ve bilinirliğin, aracını kaç alıcının görebileceğini belirler. Segment toplamı: {demand} araç/hafta.',
-          {
-            slow: dec(DATED_PER_YEAR, 0),
-            old: DATED_OLD_FROM,
-            fast: dec(DATED_PER_YEAR + DATED_PER_OLD_YEAR, 1),
-            max: DATED_MAX,
-            demand: dec(sm.demand, 0),
-          },
-        )}
-      </p>
       {mine && (
         <div className="why">
           <div>

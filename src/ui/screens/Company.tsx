@@ -81,16 +81,23 @@ export function Company() {
       </div>
       <div className="grid-2">
         {racingOpen && (
-        <Panel title={t('Yarış takımı')} className="racing-panel">
+        <Panel
+          title={
+            <>
+              {t('Yarış takımı')}{' '}
+              <Info>
+                {t(
+                  'Her yıl Eylül’de sezonun büyük yarışı koşulur. Sonucu en iyi arabanın hızı, yol tutuşu ve dayanıklılığı, mühendislerin becerisi ve takımın bütçesi belirler. Zaferler bütün modellerinin prestijini ve markanın bilinirliğini artırır; ün, yarışmayı bırakınca yavaş yavaş söner.',
+                )}
+              </Info>
+            </>
+          }
+          className="racing-panel"
+        >
           {!racingOpen ? (
             <Empty>{t('Otomobil yarışları {year}’dan itibaren bir markanın vitrini olur.', { year: RACING_YEAR })}</Empty>
           ) : (
             <>
-              <p className="muted small">
-                {t(
-                  'Her yıl Eylül’de sezonun büyük yarışı koşulur. Sonucu en iyi arabanın hızı, yol tutuşu ve dayanıklılığı, mühendislerin becerisi ve takımın bütçesi belirler. Zaferler bütün modellerinin prestijini ve markanın bilinirliğini artırır; ün, yarışmayı bırakınca yavaş yavaş söner.',
-                )}
-              </p>
               {paused && <p className="note">{t('Savaş sürüyor: yarışlar yapılmıyor. Takım bekler, bütçe harcanmaz.')}</p>}
               {outlook ? (
                 <p className={`small ${outlook.podium < 0.2 ? 'tone-bad' : ''}`}>
@@ -151,12 +158,18 @@ export function Company() {
         </Panel>
         )}
         {buying && (
-        <Panel title={t('Rakip satın al')}>
-          <p className="muted small">
-            {t(
-              'Senden küçük üreticiler satılık. Satın aldığında modelleri piyasadan çekilir (müşterileri yeni bir marka arar), mühendisleri sana katılır, bayileri senin arabalarını satar: onun güçlü olduğu eyaletlerde, henüz satış yapmadıkların dahil, yeni bayilerin olur.',
-            )}
-          </p>
+        <Panel
+          title={
+            <>
+              {t('Rakip satın al')}{' '}
+              <Info>
+                {t(
+                  'Senden küçük üreticiler satılık. Satın aldığında modelleri piyasadan çekilir (müşterileri yeni bir marka arar), mühendisleri sana katılır, bayileri senin arabalarını satar: onun güçlü olduğu eyaletlerde, henüz satış yapmadıkların dahil, yeni bayilerin olur.',
+                )}
+              </Info>
+            </>
+          }
+        >
           {targets.length ? (
             <Table
               head={[t('Şirket'), t('Geçen yıl'), t('Mühendis'), t('Bayi'), t('Bedel'), '']}
