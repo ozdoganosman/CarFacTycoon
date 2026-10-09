@@ -113,6 +113,7 @@ export function DevBar({ project: p }: { project: Project }) {
         {!developing ? (
           <Button
             kind="primary"
+            guide="start-dev"
             disabled={missing.length > 0}
             onClick={async () => {
               // A project the company cannot see through to launch deserves a second thought.
@@ -135,7 +136,7 @@ export function DevBar({ project: p }: { project: Project }) {
             {t('Geliştirmeyi başlat')}
           </Button>
         ) : done ? (
-          <Button kind="primary" onClick={() => store.try((st) => A.finishDevelopment(st, p.id))}>
+          <Button kind="primary" guide="to-testing" onClick={() => store.try((st) => A.finishDevelopment(st, p.id))}>
             {t('Prototipleri yap, teste geç')}
           </Button>
         ) : paused ? (

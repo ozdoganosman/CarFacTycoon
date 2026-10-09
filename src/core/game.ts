@@ -109,7 +109,7 @@ export function newGame(opts: NewGameOptions): GameState {
     research: { known: startingKnowledge(1900), active: [] },
     news: [],
     cardsSeen: CARDS.filter((c) => c.year <= 1900).map((c) => c.id),
-    settings: { engineerMode: true, autoPauseCards: true, modeChosen: false, difficulty: diff.id },
+    settings: { engineerMode: true, autoPauseCards: true, modeChosen: false, difficulty: diff.id, guided: true },
     nextId: 1,
     decisions: [],
     errors: [],

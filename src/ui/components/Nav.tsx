@@ -1,3 +1,4 @@
+import { AREAS, areaOpen, type Area } from '../../core/guide';
 import { msg, t } from '../../i18n';
 import { store, useGameState, type Screen } from '../store';
 import { Icon, type IconName } from './Icon';
@@ -23,9 +24,13 @@ export function Nav() {
   const badges: Partial<Record<Screen['id'], number>> = {
     projects: s.projects.filter((p) => p.phase === 'ready' || p.phase === 'design').length,
   };
+  // On the way to the first car the menu opens screen by screen (core/guide.ts).
+  const isArea = (id: Screen['id']): id is Area => (AREAS as string[]).includes(id);
+  const items = ITEMS.filter((it) => !isArea(it.id) || areaOpen(s, it.id));
+  const fresh = (id: Screen['id']) => isArea(id) && !!s.openedNew?.includes(id);
   return (
     <nav className="nav" aria-label={t('Ana menü')}>
-      {ITEMS.map((it) => (
+      {items.map((it) => (
         <button
           key={it.id}
           type="button"
@@ -39,6 +44,7 @@ export function Nav() {
           </span>
           <span className="nav-label">{t(it.label)}</span>
           {!!badges[it.id] && <span className="nav-badge">{badges[it.id]}</span>}
+          {fresh(it.id) && <span className="nav-badge nav-new">{t('yeni')}</span>}
         </button>
       ))}
       <SendToClaude />

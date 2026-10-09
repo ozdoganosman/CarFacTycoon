@@ -2413,6 +2413,96 @@ fieldset {
   border: 1px solid color-mix(in srgb, var(--accent2) 45%, var(--line));
   box-shadow: var(--shadow);
 }
+/* The way to the first car (GuideBar): a ruled slip pinned to the top of every screen. */
+.guide-bar {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  max-width: 1280px;
+  margin: 0 auto 16px;
+  padding: 8px 14px 10px;
+  background: var(--panel);
+  border: 1px solid var(--brass);
+  border-top: 3px solid var(--brass);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 6px rgba(40, 30, 10, 0.12);
+}
+.guide-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.guide-label {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.guide-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+.guide-dots i {
+  width: 18px;
+  height: 4px;
+  background: var(--line);
+}
+.guide-dots i.is-done {
+  background: var(--brass);
+}
+.guide-dots i.is-on {
+  background: var(--accent);
+}
+.guide-close {
+  margin-inline-start: auto;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+.guide-body {
+  display: flex;
+  align-items: center;
+  gap: 10px 12px;
+}
+.guide-icon {
+  flex: none;
+  color: var(--accent);
+}
+.guide-text {
+  flex: 1;
+}
+.guide-body .btn {
+  flex: none;
+}
+@media (max-width: 640px) {
+  .guide-body {
+    flex-wrap: wrap;
+  }
+  .guide-body .btn {
+    margin-inline-start: auto;
+  }
+}
+/* The button the guide points at. */
+@keyframes guide-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  30% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--brass) 55%, transparent); }
+  60% { box-shadow: 0 0 0 2px var(--brass); }
+}
+.guide-pulse {
+  animation: guide-pulse 0.9s ease-out 3;
+}
+.nav-badge.nav-new {
+  background: var(--brass);
+  text-transform: lowercase;
+}
 /* A finished car waiting for its launch: stays in the page (the pause banner keeps the sticky place). */
 .pause-banner.launch-ready {
   position: static;

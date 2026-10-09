@@ -156,6 +156,7 @@ function NewProject({ onDone }: { onDone: () => void }) {
         </Button>
         <Button
           kind="primary"
+          guide="start-project"
           onClick={() => {
             const r = store.act((st) =>
               A.startProject(st, { name, segment, targetPrice: Math.round(referencePrice(s.company.hq, segment, yf)), platformId: platformId || undefined, engineRefId: engineId || undefined, replacesModelId: replaces || undefined }),

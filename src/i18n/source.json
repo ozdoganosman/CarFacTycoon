@@ -7087,6 +7087,86 @@
   "tr": "Merkeze dön",
   "at": "src/ui/components/ErrorBoundary.tsx:33"
  },
+ "1xk3sdr": {
+  "tr": "İlk araban · {n}/{total}",
+  "at": "src/ui/components/GuideBar.tsx:25"
+ },
+ "f5t6zp": {
+  "tr": "Rehberi kapat",
+  "at": "src/ui/components/GuideBar.tsx:34"
+ },
+ "kz3v67": {
+  "tr": "Rehber kapansın mı?",
+  "at": "src/ui/components/GuideBar.tsx:38"
+ },
+ "1wm2ujg": {
+  "tr": "Bütün ekranlar menüde açılır ve ilk araba için adım adım yol gösterilmez. Ayarlar’dan yeniden açabilirsin.",
+  "at": "src/ui/components/GuideBar.tsx:39"
+ },
+ "1nkx2fq": {
+  "tr": "Zamanı başlat",
+  "at": "src/ui/components/GuideBar.tsx:68"
+ },
+ "1lruauk": {
+  "tr": "Göster",
+  "at": "src/ui/components/GuideBar.tsx:71"
+ },
+ "1v162co": {
+  "tr": "Arabanın sınıfını seç ve <b>Tasarıma başla</b>’ya bas: mühendisler ilk araban için sade bir tasarım hazırlar.",
+  "at": "src/ui/components/GuideBar.tsx:75"
+ },
+ "1qhhmkj": {
+  "tr": "Şirketin ilk arabasını yap: bir proje aç ve sınıfını seç.",
+  "at": "src/ui/components/GuideBar.tsx:76"
+ },
+ "1gcyx6j": {
+  "tr": "Proje aç",
+  "at": "src/ui/components/GuideBar.tsx:76"
+ },
+ "kvhr5z": {
+  "tr": "<b>{name}</b>: tasarım hazır, istediğin gibi değiştirebilirsin. Sonra <b>Geliştirmeyi başlat</b>’a bas.",
+  "at": "src/ui/components/GuideBar.tsx:80"
+ },
+ "ybjimb": {
+  "tr": "Projeye git",
+  "at": "src/ui/components/GuideBar.tsx:81"
+ },
+ "bp8bae": {
+  "tr": "<b>{name}</b>: geliştirme bitti. Prototipleri yap ve teste geç.",
+  "at": "src/ui/components/GuideBar.tsx:85"
+ },
+ "9bw2qt": {
+  "tr": "<b>{name}</b> geliştiriliyor: ~{n} hafta. Zaman durunca mühendisler de durur.",
+  "at": "src/ui/components/GuideBar.tsx:89"
+ },
+ "ilpbz4": {
+  "tr": "<b>{name}</b> geliştiriliyor: ~{n} hafta. Bitince oyun durur ve seni çağırır.",
+  "at": "src/ui/components/GuideBar.tsx:90"
+ },
+ "y503km": {
+  "tr": "<b>{name}</b>: testler bitti. Üretim hazırlığına geç.",
+  "at": "src/ui/components/GuideBar.tsx:95"
+ },
+ "163q19b": {
+  "tr": "<b>{name}</b> test ediliyor: ~{n} hafta. Testler kusurları bulur ve arabayı ayarlar.",
+  "at": "src/ui/components/GuideBar.tsx:98"
+ },
+ "al2fcb": {
+  "tr": "<b>{name}</b>: kalıplar hazırlanıyor, ~{n} hafta sonra araba üretime hazır.",
+  "at": "src/ui/components/GuideBar.tsx:103"
+ },
+ "11xvymv": {
+  "tr": "<b>{name}</b>: üretim hattını ve kalıpları seç, kalıpları sipariş et.",
+  "at": "src/ui/components/GuideBar.tsx:106"
+ },
+ "1cjpb42": {
+  "tr": "<b>{name}</b> hazır: fiyatını seç ve arabayı piyasaya çıkar.",
+  "at": "src/ui/components/GuideBar.tsx:112"
+ },
+ "1wibtju": {
+  "tr": "Lansmana git",
+  "at": "src/ui/components/GuideBar.tsx:113"
+ },
  "177qh2": {
   "tr": "Övgü yağmuru",
   "at": "src/ui/components/LaunchShow.tsx:22"
@@ -7427,10 +7507,6 @@
   "tr": "Üretim hazırlığına geç",
   "at": "src/ui/components/ModalHost.tsx:254"
  },
- "1wibtju": {
-  "tr": "Lansmana git",
-  "at": "src/ui/components/ModalHost.tsx:254"
- },
  "138izfn": {
   "tr": "Harika",
   "at": "src/ui/components/ModalHost.tsx:274"
@@ -7514,10 +7590,6 @@
  "1bpukdo": {
   "tr": "Projede fiyatı ve pazarları seçip lansmanı yap.",
   "at": "src/ui/components/ModalHost.tsx:396"
- },
- "ybjimb": {
-  "tr": "Projeye git",
-  "at": "src/ui/components/ModalHost.tsx:407"
  },
  "1m28q35": {
   "tr": "Bu sürede maaşlar ve kira ödeniyor ama araba satılmıyor.",
@@ -7733,39 +7805,43 @@
  },
  "10xkb1f": {
   "tr": "Merkez",
-  "at": "src/ui/components/Nav.tsx:7"
+  "at": "src/ui/components/Nav.tsx:8"
  },
  "ildfbo": {
   "tr": "Projeler",
-  "at": "src/ui/components/Nav.tsx:8"
+  "at": "src/ui/components/Nav.tsx:9"
  },
  "ks5aq1": {
   "tr": "Ar-Ge",
-  "at": "src/ui/components/Nav.tsx:9"
+  "at": "src/ui/components/Nav.tsx:10"
  },
  "16q3bx1": {
   "tr": "Modeller",
-  "at": "src/ui/components/Nav.tsx:10"
+  "at": "src/ui/components/Nav.tsx:11"
  },
  "19w42z8": {
   "tr": "Harita",
-  "at": "src/ui/components/Nav.tsx:12"
+  "at": "src/ui/components/Nav.tsx:13"
  },
  "7yw0zu": {
   "tr": "Finans",
-  "at": "src/ui/components/Nav.tsx:13"
+  "at": "src/ui/components/Nav.tsx:14"
  },
  "nvoqam": {
   "tr": "Şirket",
-  "at": "src/ui/components/Nav.tsx:14"
+  "at": "src/ui/components/Nav.tsx:15"
  },
  "iyphig": {
   "tr": "Bilgi kartları",
-  "at": "src/ui/components/Nav.tsx:15"
+  "at": "src/ui/components/Nav.tsx:16"
  },
  "18dz2yn": {
   "tr": "Ayarlar",
-  "at": "src/ui/components/Nav.tsx:16"
+  "at": "src/ui/components/Nav.tsx:17"
+ },
+ "1jxqbru": {
+  "tr": "yeni",
+  "at": "src/ui/components/Nav.tsx:47"
  },
  "16v18wh": {
   "tr": "Motorlu Araçlar, Yollar ve Sanayi Üzerine Haftalık Havadis",
@@ -7849,19 +7925,19 @@
  },
  "e9fxwo": {
   "tr": "<b>{name} hazır</b> ve {n} haftadır lansman bekliyor: bu sürede maaşlar ödeniyor ama araba satılmıyor.",
-  "at": "src/ui/components/PauseBanner.tsx:26"
+  "at": "src/ui/components/PauseBanner.tsx:28"
  },
  "1vgbwm6": {
   "tr": "<b>{name} hazır:</b> fiyatı seçip lansmanı yap.",
-  "at": "src/ui/components/PauseBanner.tsx:27"
+  "at": "src/ui/components/PauseBanner.tsx:29"
  },
  "1hoxwfx": {
   "tr": "<b>Oyun duraklatıldı.</b> Zaman akmadan mühendisler çalışmaz, testler ilerlemez, fabrika üretmez.",
-  "at": "src/ui/components/PauseBanner.tsx:49"
+  "at": "src/ui/components/PauseBanner.tsx:51"
  },
  "1mp8dv6": {
   "tr": "Devam et (boşluk)",
-  "at": "src/ui/components/PauseBanner.tsx:51"
+  "at": "src/ui/components/PauseBanner.tsx:53"
  },
  "1bttp5n": {
   "tr": "Ar-Ge tamamlandı",
@@ -8381,15 +8457,15 @@
  },
  "sl9bhk": {
   "tr": "{v} / 100 (50 = sınıf ortalaması)",
-  "at": "src/ui/components/ui.tsx:157"
+  "at": "src/ui/components/ui.tsx:160"
  },
  "kxl8uk": {
   "tr": "Tahmin: {lo}–{hi} (50 = sınıf ortalaması)",
-  "at": "src/ui/components/ui.tsx:263"
+  "at": "src/ui/components/ui.tsx:266"
  },
  "1oucclv": {
   "tr": "Ayrıntı",
-  "at": "src/ui/components/ui.tsx:274"
+  "at": "src/ui/components/ui.tsx:277"
  },
  "hz6ql0": {
   "tr": "Parça ve tamir",
@@ -9246,27 +9322,23 @@
  },
  "1n1rgmj": {
   "tr": "Bu proje kasayı aşıyor",
-  "at": "src/ui/screens/DevPanel.tsx:122"
+  "at": "src/ui/screens/DevPanel.tsx:123"
  },
  "d4rvzq": {
   "tr": "Lansmana kadar ~{need} gerekiyor; kasa {cash} ve banka kredisi {credit} birlikte yetmiyor. Kalıp parası bittiğinde araba satışa çıkamaz. Daha küçük ya da ucuz bir tasarım, kısa bir test planı ya da önce satıştaki arabalardan para kazanmak daha güvenli.",
-  "at": "src/ui/screens/DevPanel.tsx:123"
+  "at": "src/ui/screens/DevPanel.tsx:124"
  },
  "11qytd4": {
   "tr": "Yine de başlat",
-  "at": "src/ui/screens/DevPanel.tsx:127"
+  "at": "src/ui/screens/DevPanel.tsx:128"
  },
  "19zapm2": {
   "tr": "Geliştirme başladı",
-  "at": "src/ui/screens/DevPanel.tsx:132"
+  "at": "src/ui/screens/DevPanel.tsx:133"
  },
  "50huix": {
   "tr": "Geliştirmeyi başlat",
-  "at": "src/ui/screens/DevPanel.tsx:135"
- },
- "1nkx2fq": {
-  "tr": "Zamanı başlat",
-  "at": "src/ui/screens/DevPanel.tsx:143"
+  "at": "src/ui/screens/DevPanel.tsx:136"
  },
  "w5xjxj": {
   "tr": "Motor atölyesi",
@@ -9970,47 +10042,47 @@
  },
  "u5kmg0": {
   "tr": "Satıştaki modeller",
-  "at": "src/ui/screens/HQ.tsx:423"
+  "at": "src/ui/screens/HQ.tsx:425"
  },
  "1uyk1gi": {
   "tr": "Ayrıntılar",
-  "at": "src/ui/screens/HQ.tsx:423"
+  "at": "src/ui/screens/HQ.tsx:425"
  },
  "mdrz46": {
   "tr": "Segment",
-  "at": "src/ui/screens/HQ.tsx:427"
+  "at": "src/ui/screens/HQ.tsx:429"
  },
  "t48n6l": {
   "tr": "Haftalık satış",
-  "at": "src/ui/screens/HQ.tsx:427"
+  "at": "src/ui/screens/HQ.tsx:429"
  },
  "qrw8wk": {
   "tr": "Stok",
-  "at": "src/ui/screens/HQ.tsx:427"
+  "at": "src/ui/screens/HQ.tsx:429"
  },
  "1rxb0am": {
   "tr": "Fiyat",
-  "at": "src/ui/screens/HQ.tsx:427"
+  "at": "src/ui/screens/HQ.tsx:429"
  },
  "5oy6ic": {
   "tr": "Dergi",
-  "at": "src/ui/screens/HQ.tsx:427"
+  "at": "src/ui/screens/HQ.tsx:429"
  },
  "1phuos9": {
   "tr": "Haftalık satış (araç)",
-  "at": "src/ui/screens/HQ.tsx:445"
+  "at": "src/ui/screens/HQ.tsx:447"
  },
  "57wta3": {
   "tr": "Modellerin haftalık satış grafiği",
-  "at": "src/ui/screens/HQ.tsx:446"
+  "at": "src/ui/screens/HQ.tsx:448"
  },
  "gqnx2r": {
   "tr": "Henüz satışta bir modelin yok.",
-  "at": "src/ui/screens/HQ.tsx:450"
+  "at": "src/ui/screens/HQ.tsx:452"
  },
  "1v3wtoz": {
   "tr": "Gazete arşivi",
-  "at": "src/ui/screens/HQ.tsx:454"
+  "at": "src/ui/screens/HQ.tsx:458"
  },
  "1xahij4": {
   "tr": "Pazar ve bayi ağı",
@@ -11394,11 +11466,11 @@
  },
  "1mmw5aw": {
   "tr": "Lansmanı yap",
-  "at": "src/ui/screens/ProjectView.tsx:1081"
+  "at": "src/ui/screens/ProjectView.tsx:1082"
  },
  "99ud4t": {
   "tr": "Hat: {name}",
-  "at": "src/ui/screens/ProjectView.tsx:1084"
+  "at": "src/ui/screens/ProjectView.tsx:1085"
  },
  "1ajzw1u": {
   "tr": "Tasarım",
@@ -11450,39 +11522,39 @@
  },
  "shtwno": {
   "tr": "Tasarıma başla",
-  "at": "src/ui/screens/Projects.tsx:169"
+  "at": "src/ui/screens/Projects.tsx:170"
  },
  "1gipbpd": {
   "tr": "Devam eden projeler",
-  "at": "src/ui/screens/Projects.tsx:190"
+  "at": "src/ui/screens/Projects.tsx:191"
  },
  "11rj4f0": {
   "tr": "makyaj",
-  "at": "src/ui/screens/Projects.tsx:201"
+  "at": "src/ui/screens/Projects.tsx:202"
  },
  "f09fgf": {
   "tr": "Devam eden proje yok.",
-  "at": "src/ui/screens/Projects.tsx:208"
+  "at": "src/ui/screens/Projects.tsx:209"
  },
  "orjwq4": {
   "tr": "Nasıl çalışır?",
-  "at": "src/ui/screens/Projects.tsx:211"
+  "at": "src/ui/screens/Projects.tsx:212"
  },
  "g07umb": {
   "tr": "<b>Tasarım ve geliştirme:</b> Aracı kimin için yaptığına sen karar ver: modülleri seç, mühendislerini ata, mühendis tahmininden iki öncelik seç (performans, verim, konfor, güvenlik, maliyet, kalite…). Öncelikler aracı gerçekten değiştirir.",
-  "at": "src/ui/screens/Projects.tsx:214"
+  "at": "src/ui/screens/Projects.tsx:215"
  },
  "18vi4nh": {
   "tr": "<b>Test:</b> Dinamometre, yol, dayanıklılık ve (1934’ten sonra) çarpışma testleri kusurları bulur ve aracı ayarlar. Kısa kesersen kusurlar sahada patlar.",
-  "at": "src/ui/screens/Projects.tsx:219"
+  "at": "src/ui/screens/Projects.tsx:220"
  },
  "1u8g1yj": {
   "tr": "<b>Üretim:</b> Tedarikçileri ve hattı seç, kalıplar hazırlanır.",
-  "at": "src/ui/screens/Projects.tsx:221"
+  "at": "src/ui/screens/Projects.tsx:222"
  },
  "1s1icfy": {
   "tr": "<b>Lansman:</b> Fiyatı ve pazarları belirle. Dergiler puan verir, alıcılar yorum yapar.",
-  "at": "src/ui/screens/Projects.tsx:222"
+  "at": "src/ui/screens/Projects.tsx:223"
  },
  "12cq98h": {
   "tr": "Araştırılabilir",
@@ -11640,10 +11712,6 @@
   "tr": "Önümüzdeki on yılda yeni bir şey beklenmiyor.",
   "at": "src/ui/screens/Research.tsx:207"
  },
- "1jxqbru": {
-  "tr": "yeni",
-  "at": "src/ui/screens/Research.tsx:233"
- },
  "9p42fk": {
   "tr": "önce {techs}",
   "at": "src/ui/screens/Research.tsx:235"
@@ -11776,78 +11844,86 @@
   "tr": "Açıkken (varsayılan) motorun silindir düzeni, çapı, stroku, sıkıştırma oranı, supap düzeni, yakıt sistemi ve kompresörü ayrı ayrı ayarlanır ve her ayarın ne işe yaradığı yazar. Karışık gelirse kapat: hazır motorlar ve tek bir karakter kaydırıcısıyla çalışırsın.",
   "at": "src/ui/screens/Settings.tsx:70"
  },
+ "u5w5oy": {
+  "tr": "İlk araba rehberi",
+  "at": "src/ui/screens/Settings.tsx:78"
+ },
+ "a02ptq": {
+  "tr": "Açıkken ilk araban piyasaya çıkana kadar her ekranın üstünde sıradaki adım yazar ve menüdeki ekranlar gerektikçe açılır.",
+  "at": "src/ui/screens/Settings.tsx:79"
+ },
  "ttoxsz": {
   "tr": "Yeni teknoloji kartlarını göster",
-  "at": "src/ui/screens/Settings.tsx:77"
+  "at": "src/ui/screens/Settings.tsx:85"
  },
  "1ye3j6z": {
   "tr": "Yeni bir teknoloji açıldığında “Neden böyle çalışıyor?” kartı açılır ve oyun durur.",
-  "at": "src/ui/screens/Settings.tsx:78"
+  "at": "src/ui/screens/Settings.tsx:86"
  },
  "t3yg6x": {
   "tr": "Kısayollar: boşluk = duraklat/devam, 1-2-3 = hız.",
-  "at": "src/ui/screens/Settings.tsx:80"
+  "at": "src/ui/screens/Settings.tsx:88"
  },
  "8z4wkb": {
   "tr": "Görünüm",
-  "at": "src/ui/screens/Settings.tsx:82"
+  "at": "src/ui/screens/Settings.tsx:90"
  },
  "owb7d8": {
   "tr": "Sistem",
-  "at": "src/ui/screens/Settings.tsx:90"
+  "at": "src/ui/screens/Settings.tsx:98"
  },
  "1l6sss4": {
   "tr": "Açık",
   "ctx": "tema",
-  "at": "src/ui/screens/Settings.tsx:91"
+  "at": "src/ui/screens/Settings.tsx:99"
  },
  "3azp51": {
   "tr": "Koyu",
-  "at": "src/ui/screens/Settings.tsx:92"
+  "at": "src/ui/screens/Settings.tsx:100"
  },
  "1yit0gs": {
   "tr": "Reklamlar",
-  "at": "src/ui/screens/Settings.tsx:97"
+  "at": "src/ui/screens/Settings.tsx:105"
  },
  "v2bbzh": {
   "tr": "Kayıt",
-  "at": "src/ui/screens/Settings.tsx:101"
+  "at": "src/ui/screens/Settings.tsx:109"
  },
  "19gfdvx": {
   "tr": "Oyun her çeyrek otomatik olarak bu tarayıcıya kaydedilir. Başka bir cihazda devam etmek için kayıt kodunu kopyala ve orada yapıştırıp yükle ya da bir kayıt dosyası seç.",
-  "at": "src/ui/screens/Settings.tsx:103"
+  "at": "src/ui/screens/Settings.tsx:111"
  },
  "1fwvdt3": {
   "tr": "Kaydedildi",
-  "at": "src/ui/screens/Settings.tsx:111"
+  "at": "src/ui/screens/Settings.tsx:119"
  },
  "1rqn4c": {
   "tr": "Şimdi kaydet",
-  "at": "src/ui/screens/Settings.tsx:114"
+  "at": "src/ui/screens/Settings.tsx:122"
  },
  "qbq9ks": {
   "tr": "Kayıt dosyası yükle",
-  "at": "src/ui/screens/Settings.tsx:117"
+  "at": "src/ui/screens/Settings.tsx:125"
  },
  "q0cnw6": {
   "tr": "Ana menüye dönülsün mü?",
-  "at": "src/ui/screens/Settings.tsx:133"
+  "at": "src/ui/screens/Settings.tsx:141"
  },
  "1k9h9iy": {
   "tr": "Oyun bu tarayıcıya kaydedilir; ana menüden kaldığın yerden devam edebilirsin.",
-  "at": "src/ui/screens/Settings.tsx:134"
+  "at": "src/ui/screens/Settings.tsx:142"
  },
  "1iomgf2": {
   "tr": "Kayıt kodu",
-  "at": "src/ui/screens/Settings.tsx:145"
+  "at": "src/ui/screens/Settings.tsx:153"
  },
  "1x9iq8h": {
   "tr": "Başka bir cihazdan kopyaladığın kayıt kodunu buraya yapıştır",
-  "at": "src/ui/screens/Settings.tsx:152"
+  "at": "src/ui/screens/Settings.tsx:160"
  },
  "1g0rzzt": {
   "tr": "Koddan yükle",
-  "at": "src/ui/screens/Settings.tsx:157"
+  "at": "src/ui/screens/Settings.tsx:165"
  },
  "1t60kgc": {
   "tr": "1900, Amerika. Küçük bir atölye. Amacın ülkenin büyük otomobil markalarından biri olmak.",
@@ -11885,13 +11961,17 @@
   "tr": "Bu sürüm 1900-1960 dönemini kapsar. Sonraki dönemler (petrol krizi, emisyon kuralları, elektrikli araçlar) ve 1961 “Devrim” ile başlayan Türkiye senaryosu genişleme olarak gelecek.",
   "at": "src/ui/screens/StartScreen.tsx:94"
  },
+ "1spk1bz": {
+  "tr": "Menüde yeni: {names}",
+  "at": "src/ui/store.ts:99"
+ },
  "kzs36z": {
   "tr": "Olmadı.",
-  "at": "src/ui/store.ts:150"
+  "at": "src/ui/store.ts:166"
  },
  "lnlxx6": {
   "tr": "Oyunda bir hata oluştu ve oyun durdu. Hata kaydedildi; Claude’a gönderilecek.",
-  "at": "src/ui/store.ts:238"
+  "at": "src/ui/store.ts:258"
  },
  "ve6mvq": {
   "tr": "{body} gövdeli araç çizimi",

@@ -689,7 +689,17 @@ export interface GameState {
   /** Sponsor money for watching an advertisement (Android app): when it was last paid and how much in all. */
   sponsor?: SponsorState;
   /** modeChosen: the player picked the engine designer mode themselves (older saves defaulted to the simple one). */
-  settings: { engineerMode: boolean; autoPauseCards: boolean; modeChosen?: boolean; difficulty?: DifficultyId };
+  settings: {
+    engineerMode: boolean;
+    autoPauseCards: boolean;
+    modeChosen?: boolean;
+    difficulty?: DifficultyId;
+    /** The way to the first car is guided and the menu opens screen by screen (core/guide.ts); new games only. */
+    guided?: boolean;
+  };
+  /** Screens opened on the way to the first car (core/guide.ts), and those not visited since. */
+  opened?: ('research' | 'finance' | 'factory' | 'markets' | 'company')[];
+  openedNew?: ('research' | 'finance' | 'factory' | 'markets' | 'company')[];
   gameOver?: { reason: 'bankrupt' | 'end' | 'ousted'; week: number };
   nextId: number;
   /** Number for the next line's name, so names are never reused. */

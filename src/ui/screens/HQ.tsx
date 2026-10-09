@@ -420,6 +420,8 @@ export function HQ() {
         </div>
       </div>
 
+      {/* Before the first car there is nothing to show here yet. */}
+      {s.models.length > 0 && (
       <Panel title={t('Satıştaki modeller')} actions={<Button small onClick={() => store.go({ id: 'models' })}>{t('Ayrıntılar')}</Button>}>
         {active.length ? (
           <>
@@ -450,10 +452,13 @@ export function HQ() {
           <Empty>{t('Henüz satışta bir modelin yok.')}</Empty>
         )}
       </Panel>
+      )}
 
-      <Panel title={t('Gazete arşivi')}>
-        <NewsArchive />
-      </Panel>
+      {(s.news?.length ?? 0) > 0 && (
+        <Panel title={t('Gazete arşivi')}>
+          <NewsArchive />
+        </Panel>
+      )}
       <NewsFeed />
     </div>
   );

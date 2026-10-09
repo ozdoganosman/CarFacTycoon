@@ -10,6 +10,7 @@ import { NewsCard, NewspaperHost } from './components/Newspaper';
 import { ResearchCard } from './components/ResearchCard';
 import { ConfirmHost } from './components/ConfirmHost';
 import { LaunchReadyBanner, PauseBanner } from './components/PauseBanner';
+import { GuideBar } from './components/GuideBar';
 import { HQ } from './screens/HQ';
 import { Projects } from './screens/Projects';
 import { Research } from './screens/Research';
@@ -114,6 +115,7 @@ export function App() {
         <Nav />
         <main className="main" ref={mainRef}>
           <ShareBar />
+          <GuideBar />
           <PauseBanner />
           <LaunchReadyBanner />
           {body}

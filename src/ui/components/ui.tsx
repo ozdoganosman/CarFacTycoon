@@ -28,6 +28,8 @@ export function Button(props: {
   title?: string;
   small?: boolean;
   type?: 'button' | 'submit';
+  /** The first-car guide points at this button (GuideBar). */
+  guide?: string;
 }) {
   return (
     <button
@@ -36,6 +38,7 @@ export function Button(props: {
       onClick={props.onClick}
       disabled={props.disabled}
       title={props.title}
+      data-guide={props.guide}
     >
       {props.children}
     </button>

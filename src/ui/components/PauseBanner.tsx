@@ -1,3 +1,4 @@
+import { guideStep } from '../../core/guide';
 import { isBlockingModal } from '../../core/util';
 import { t } from '../../i18n';
 import { tx } from '../i18n';
@@ -13,7 +14,8 @@ export function LaunchReadyBanner() {
   const s = useGameState();
   const sc = store.screen;
   const ready = s.projects.filter((p) => p.phase === 'ready' && !(sc.id === 'project' && sc.projectId === p.id));
-  if (!ready.length || s.gameOver) return null;
+  // On the way to the first car the guide says it (GuideBar).
+  if (!ready.length || s.gameOver || guideStep(s)) return null;
   return (
     <>
       {ready.map((p) => {
@@ -39,7 +41,7 @@ export function LaunchReadyBanner() {
 /** Reminds the player that nothing happens while the clock is stopped. */
 export function PauseBanner() {
   const s = useGameState();
-  if (store.speed !== 0 || s.modals.some(isBlockingModal) || s.gameOver) return null;
+  if (store.speed !== 0 || s.modals.some(isBlockingModal) || s.gameOver || guideStep(s)) return null;
   const waiting =
     s.projects.some((p) => p.phase === 'development' || p.phase === 'testing' || (p.phase === 'production' && p.productionReadyWeek !== undefined)) ||
     s.models.some((m) => m.status === 'active');

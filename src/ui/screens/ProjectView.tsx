@@ -355,7 +355,7 @@ function NextStep({ p }: { p: Project }) {
   return (
     <div className="next-step" role="status">
       <span>{tx('<b>Test programı bitti.</b> Sırada tedarikçiler ve üretim hattı var.')}</span>
-      <Button kind="primary" onClick={() => store.try((st) => A.finishTesting(st, p.id))}>
+      <Button kind="primary" guide="finish-tests" onClick={() => store.try((st) => A.finishTesting(st, p.id))}>
         {t('Üretim hazırlığına geç')}
       </Button>
     </div>
@@ -758,7 +758,7 @@ function Production({ p }: { p: Project }) {
         {!lineId && <p className="note">{t('Kalıpları sipariş etmek için önce arabanın üretileceği hattı seç.')}</p>}
         {lineId && quote && s.company.cash < quote.cost && <ToolingShort p={p} lineId={lineId} tier={tier} setTier={setTier} cost={quote.cost} />}
         <div className="row-end">
-          <Button kind="primary" disabled={!lineId || (quote ? s.company.cash < quote.cost : true)} onClick={() => lineId && store.try((st2) => A.startTooling(st2, p.id, lineId, tier))}>
+          <Button kind="primary" guide="order-tooling" disabled={!lineId || (quote ? s.company.cash < quote.cost : true)} onClick={() => lineId && store.try((st2) => A.startTooling(st2, p.id, lineId, tier))}>
             {quote
               ? t('{tooling}: sipariş et ({cost})', { tooling: t(toolingDef(tier).name), cost: money(quote.cost) })
               : t('{tooling}: sipariş et', { tooling: t(toolingDef(tier).name) })}
@@ -1071,6 +1071,7 @@ function Launch({ p }: { p: Project }) {
         <div className="row-end">
           <Button
             kind="primary"
+            guide="launch"
             disabled={!markets.length}
             onClick={() => {
               const r = store.act((st2) => A.launchModel(st2, p.id, { price, markets, autoShow }));
