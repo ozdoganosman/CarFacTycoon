@@ -309,7 +309,7 @@ function NetworkControls() {
             <>
               {t('Otomatik bayi araması')}{' '}
               <Info>
-                {t('Açıkken her ay, boş arama yerlerinde alıcısı en çok olan komşu eyaletlerde bayi aranır. Kasada otomatik servisin bıraktığı kadar yedek kalır.')}{' '}
+                {t('Açıkken her ay, alıcısı en çok olan komşu eyaletlerde ya da bayisi az kalabalık eyaletlerde temkinli bir hızla bayi aranır: her 12 bayi bir arama daha açar, kasada ağın sekiz haftalık gideri kadar yedek kalır ve altı eyaletten sonra işler kâr etmiyorsa durur.')}{' '}
                 {max < N.MAX_SEARCHES
                   ? t('Aynı anda en çok {n} eyalette bayi aranabilir; her {per} bayi bir arama daha açar.', { n: max, per: N.DEALERS_PER_SEARCH })
                   : t('Aynı anda en çok {n} eyalette bayi aranabilir.', { n: max })}
