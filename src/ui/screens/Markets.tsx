@@ -2,6 +2,8 @@ import { useState } from 'react';
 import * as A from '../../core/actions';
 import * as N from '../../core/network';
 import { rivalPriceNow } from '../../core/market';
+import { AD_LEVELS, adBrandTerm, adNorm, adTermAt } from '../../core/advertising';
+import { adShare, adWeight } from '../../data/economy';
 import { yearFloat, yearOf } from '../../core/time';
 import { cityDef } from '../../data/cities';
 import { marketSize, segmentShares } from '../../data/markets';
@@ -11,7 +13,7 @@ import { REGION_NAMES, STATE_IDS, stateDef, statePop, stateWeights, type StateId
 import type { GameState } from '../../core/types';
 import { store, useGameState } from '../store';
 import { INCOME_NAMES, dec, money, num, pct } from '../format';
-import { Badge, Button, Info, NumberInput, Panel, Table, Toggle, SegmentLabel } from '../components/ui';
+import { Badge, Button, Choice, Info, NumberInput, Panel, Table, Toggle, SegmentLabel } from '../components/ui';
 import { setAutoDealers } from '../../core/autoservice';
 import { Importance } from '../components/StatsPanel';
 import { LineChart } from '../viz/LineChart';
@@ -29,6 +31,79 @@ export function Markets() {
       <MarketPanel />
       <Knowledge />
     </div>
+  );
+}
+
+/**
+ * National advertising: the budget (by hand, or kept at what a maker of the company's size spends in
+ * the era), the era's usual and what the brand's reputation makes of it (core/advertising.ts).
+ */
+function AdPanel() {
+  const s = useGameState();
+  const yf = yearFloat(s.week);
+  const ms = s.markets.usa;
+  const [ad, setAd] = useState(ms.adBudget);
+  const norm = adNorm(s, yf);
+  const term = adBrandTerm(s, yf);
+  const n = Math.round(Math.abs(term));
+  const branded = adWeight(yf) > 0;
+  // Reputation points at a level, as the choice shows them.
+  const effect = (level: number) => {
+    const v = adTermAt(level, yf);
+    return Math.abs(v) < 0.05 ? t('itibar ±0') : t('itibar {v}', { v: `${v > 0 ? '+' : '−'}${dec(Math.abs(v), Math.abs(v) < 5 ? 1 : 0)}` });
+  };
+  return (
+    <Panel
+      title={
+        <>
+          {t('Reklam')}{' '}
+          <Info>
+            {t(
+              'Dergiler, radyo ve sonra televizyon çağında markalar reklamla akılda kalır. Senin büyüklüğündeki bir üretici cirosunun bir payını reklama verir; bu pay dönemle büyür. Olağandan azını veren markanın itibarı yavaş yavaş düşer, fazlasını veren biraz yükselir. Reklam ayrıca satış yaptığın eyaletlerde bilinirliği artırır. Harcanan para geri dönmez: adını korumanın bedelidir.',
+            )}
+          </Info>
+        </>
+      }
+    >
+      <Choice<number>
+        compact
+        value={ms.adLevel ?? 0}
+        onChange={(v) => store.act((st) => A.setAdLevel(st, v || undefined))}
+        options={[
+          { value: 0, label: t('Elle'), sub: t('haftalık bütçeyi sen yazarsın') },
+          ...AD_LEVELS.map((k) => ({
+            value: k,
+            label: k === 1 ? t('Dönemin olağanı') : t('Olağanın {k} katı', { k }),
+            sub: norm > 0 ? `${t('haftada ~{cost}', { cost: money(k * norm) })}${branded ? ` · ${effect(k)}` : ''}` : t('ilk satıştan sonra'),
+          })),
+        ]}
+      />
+      {ms.adLevel ? (
+        <p>{tx('Bu hafta reklama <b>{budget}</b> gidiyor (cironun {share}).', { budget: money(ms.adBudget), share: pct(ms.adLevel * adShare(yf), 1) })}</p>
+      ) : (
+        <div className="price-row">
+          <NumberInput label={t('Haftalık reklam bütçesi')} prefix="$" value={ad} min={0} step={10} onChange={setAd} />
+          <Button small onClick={() => store.act((st) => A.setAdBudget(st, 'usa', ad))}>
+            {t('Uygula')}
+          </Button>
+        </div>
+      )}
+      {!branded ? (
+        <p className="small">{t('Bu dönemde reklam yalnızca bilinirliği artırır: tanınmış bir marka adını reklamsız da korur.')}</p>
+      ) : (
+        norm > 0 && (
+          <p className="small">
+            {!ms.adLevel && `${t('Dönemin olağanı: haftada ~{norm} (cironun {share}).', { norm: money(norm), share: pct(adShare(yf), 1) })} `}
+            {term <= -0.5
+              ? tx('<bad>Markan unutuluyor:</bad> itibarın zamanla ~{n} puan düşer.', { n })
+              : term >= 0.5
+                ? tx('<good>Reklam markanı öne çıkarıyor:</good> itibarın zamanla ~{n} puan yükselir.', { n })
+                : t('Marka yerini koruyor.')}
+          </p>
+        )
+      )}
+      <p className="muted small">{t('Satılan ve yolda görülen her araba da markanı tanıtır. Bayiler satıştan %12 komisyon alır.')}</p>
+    </Panel>
   );
 }
 
@@ -556,7 +631,6 @@ function MarketPanel() {
   ];
   const taste = MARKET_TASTE.usa;
   const rivals = s.rivalModels.filter((r) => r.active && r.markets.includes('usa'));
-  const [ad, setAd] = useState(ms.adBudget);
   return (
     <>
       <Panel title={t('Amerikan pazarı')}>
@@ -607,19 +681,7 @@ function MarketPanel() {
         </div>
       </Panel>
       <div className="grid-2">
-        <Panel title={t('Reklam')}>
-          <div className="price-row">
-            <NumberInput label={t('Haftalık reklam bütçesi')} prefix="$" value={ad} min={0} step={10} onChange={setAd} />
-            <Button small onClick={() => store.act((st) => A.setAdBudget(st, 'usa', ad))}>
-              {t('Uygula')}
-            </Button>
-          </div>
-          <p className="muted small">
-            {t(
-              'Reklam, satış yaptığın bütün eyaletlerde bilinirliği artırır; etkisi azalan getirilidir. Satılan ve yolda görülen her araba da markanı tanıtır. Bayiler satıştan %12 komisyon alır.',
-            )}
-          </p>
-        </Panel>
+        <AdPanel />
         <Panel title={t('Rakip modeller')}>
           {/* A long list (each model's own class is compared on its screen): a click away. */}
           <details className="more">

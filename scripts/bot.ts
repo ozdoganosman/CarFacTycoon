@@ -6,7 +6,9 @@ import { maxGears } from '../src/data/tech';
 import { STATIONS } from '../src/data/stations';
 import { availableSegments, credit, materialUnitCost, tick } from '../src/core/game';
 import * as N from '../src/core/network';
-import { costIndex, newLineCost } from '../src/data/economy';
+import { adWeight, costIndex, newLineCost } from '../src/data/economy';
+import { adNorm } from '../src/core/advertising';
+import { idleCash } from '../src/core/autocap';
 import { lineReport, lineUpkeep, modernizeQuote, reservedLines, stationPrice, turnkeyLineCost, planBalancedLine, emptyLine } from '../src/core/factory';
 import { demandAtPrice, referencePrice } from '../src/core/market';
 import { MAX_SLOTS, DEALER_COMMISSION } from '../src/data/economy';
@@ -164,6 +166,16 @@ export function botStep(s: GameState, o: BotOptions = {}) {
     if (affordable(want, 0.15)) A.startResearch(s, want!.id);
     else if (affordable(other, 0.02)) A.startResearch(s, other!.id);
   }
+  // Advertising: as much as the era expects once a silent brand is forgotten (core/advertising.ts).
+  // Money idle for a year buys a better name: twice or three times the usual once there is a year of
+  // it spare, kept up (a name is built over years) until the idle money is gone.
+  if (adWeight(yf) > 0 && (s.week % 13 === 0 || !s.markets.usa.adLevel)) {
+    const idle = idleCash(s);
+    const year = (k: number) => 52 * k * adNorm(s, yf);
+    const now = s.markets.usa.adLevel ?? 1;
+    const level = idle > year(3) ? 3 : idle > year(2) ? Math.max(2, now) : idle > 0 ? now : 1;
+    if (s.markets.usa.adLevel !== level) A.setAdLevel(s, level);
+  }
   // Engineers: grow with the company; a bigger maker's cars need more of them (core/investments.ts).
   const wantEng = Math.min(Math.round(60 * companyWorkScale(s)), 2 + Math.floor(s.company.cash / 40000));
   if (s.company.engineers < wantEng && s.company.cash > 10000) A.hireEngineers(s, s.company.engineers > 60 ? 5 : 1);
@@ -251,7 +263,7 @@ function smartFactoryAndPrices(s: GameState) {
       let pick: { k: number; ratio: number; cost: number } | null = null;
       for (const k of [2, 3, 4, 6, MAX_SLOTS]) {
         const add = lineReport(s, { ...emptyLine('x', 'x'), slots: Math.max(3, k), stations: planBalancedLine(yf, true, k) }, m.stats.complexity).throughput;
-        const cost = turnkeyLineCost(s.week, true, k) + A.retoolCost(s, m);
+        const cost = turnkeyLineCost(s.week, true, k) + A.retoolCost(s, m, add);
         const gain = (profitWith(cap + add) - now) * 52;
         if (gain * 1.5 > cost && s.company.cash - (s.company.taxOwed ?? 0) > cost * 1.5 && (!pick || gain / cost > pick.ratio)) pick = { k, ratio: gain / cost, cost };
       }

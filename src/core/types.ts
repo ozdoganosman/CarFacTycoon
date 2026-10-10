@@ -387,6 +387,8 @@ export interface MarketState {
   dealerLevel: number;
   awareness: number;
   adBudget: number; // $ per week (in current money)
+  /** Keep the budget at this many times what a maker of the company's size spends in the era (core/advertising.ts); unset: by hand. */
+  adLevel?: number;
 }
 
 /** The company in one state: its dealers and service, and its cars on the road there. */

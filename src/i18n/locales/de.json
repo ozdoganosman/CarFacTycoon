@@ -22,6 +22,7 @@
  "11wsr8h": "{name}: Prototypen fertig ({cost}). Das Testprogramm hat begonnen.",
  "1qmn60": "{test} ist noch nicht verfügbar.",
  "27jm2p": "Das Projekt ist nicht in der Testphase.",
+ "m210i": "Die Werkzeuge für das Facelift kosten {cost}.",
  "xkez36": "Die Wahl „Selbst bauen oder zukaufen“ wird mit deinem zweiten Modell freigeschaltet.",
  "5v1yny": "Richte zuerst eine Werkstatt für dieses Teil ein.",
  "e8uoin": "Das Projekt ist nicht in der Produktionsvorbereitung.",
@@ -2889,10 +2890,14 @@
   "one": "{n} Ingenieur hat nichts zu tun ({reason}), bezieht aber {pay} Gehalt pro Woche: Starte ein neues Projekt oder F&E, oder entlasse ihn, wenn nötig.",
   "other": "{n} Ingenieure haben nichts zu tun ({reason}), beziehen aber {pay} Gehalt pro Woche: Starte ein neues Projekt oder F&E, oder entlasse notfalls einige."
  },
- "hfui0q": "In der Kasse liegen {cash} ungenutzt (über Reserve und ein Jahr Fixkosten hinaus). Lass das Geld arbeiten: Baue Linien für Autos, die die Nachfrage nicht decken, bring ein Auto in einer neuen Klasse heraus, bau das Händlernetz aus, errichte eigene Zulieferwerke, bau die Ingenieursorganisation aus oder kauf einen Konkurrenten.",
+ "omrliy": "In der Kasse liegen {cash} ungenutzt (über Reserve und ein Jahr Fixkosten hinaus). Lass das Geld arbeiten: Baue Linien für Autos, die die Nachfrage nicht decken, bring ein Auto in einer neuen Klasse heraus, bau das Händlernetz aus, errichte eigene Zulieferwerke, bau die Ingenieursorganisation aus, wirb mehr als üblich (Ansehen) oder kauf einen Konkurrenten.",
  "myl93f": {
   "one": "{n} Ingenieur leistet nur die Arbeit von ~{output}: Die Organisation trägt ein so großes Team nicht. {name} ({cost}) würde die Projekte beschleunigen.",
   "other": "{n} Ingenieure leisten nur die Arbeit von ~{output}: Die Organisation trägt ein so großes Team nicht. {name} ({cost}) würde die Projekte beschleunigen."
+ },
+ "l0ukn7": {
+  "one": "Deine Marke gerät in Vergessenheit: Du wirbst weniger als in dieser Zeit üblich (~{norm} pro Woche wären es), dein Ansehen sinkt mit der Zeit um ~{n} Punkt. Halte das Budget im Marktbildschirm auf dem Üblichen.",
+  "other": "Deine Marke gerät in Vergessenheit: Du wirbst weniger als in dieser Zeit üblich (~{norm} pro Woche wären es), dein Ansehen sinkt mit der Zeit um ~{n} Punkte. Halte das Budget im Marktbildschirm auf dem Üblichen."
  },
  "kyygdt": "{name} beliefert nur {share} deiner Autos: Vergrößert ({cost}) rechnet es sich in ~{years} Jahren.",
  "rlwf6z": "Die Kasse ist im Minus! Nimm einen Kredit auf oder senke die Kosten.",
@@ -2926,6 +2931,29 @@
  "gqnx2r": "Du hast noch kein Modell im Verkauf.",
  "1v3wtoz": "Zeitungsarchiv",
  "1xahij4": "Markt und Händlernetz",
+ "o0ln45": "Ansehen ±0",
+ "1dxr4nw": "Ansehen {v}",
+ "v4rhh3": "Im Zeitalter der Zeitschriften, des Radios und dann des Fernsehens bleiben Marken durch Werbung im Gedächtnis. Ein Hersteller deiner Größe gibt einen Teil seines Umsatzes dafür aus, und dieser Anteil wächst mit der Zeit. Wer weniger als üblich ausgibt, verliert langsam an Ansehen; wer mehr ausgibt, gewinnt etwas. Werbung steigert außerdem die Bekanntheit in den Staaten, in denen du verkaufst. Das Geld kommt nicht zurück: Es ist der Preis dafür, deinen Namen zu bewahren.",
+ "q7q972": "du legst das Wochenbudget fest",
+ "1t6mq5p": "Zeitüblich",
+ "1werj26": "{k}-fach üblich",
+ "fbw2k9": "~{cost} pro Woche",
+ "dax7et": "nach den ersten Verkäufen",
+ "xen20q": "Diese Woche gehen <b>{budget}</b> in die Werbung ({share} des Umsatzes).",
+ "bvph7x": "Wöchentliches Werbebudget",
+ "1b20710": "Übernehmen",
+ "drxxom": "In dieser Zeit steigert Werbung nur die Bekanntheit: Eine bekannte Marke behält ihren Namen auch ohne sie.",
+ "m7jik6": "Zeitüblich: ~{norm} pro Woche ({share} des Umsatzes).",
+ "1dz3rt6": {
+  "one": "<bad>Deine Marke gerät in Vergessenheit:</bad> Dein Ansehen sinkt mit der Zeit um ~{n} Punkt.",
+  "other": "<bad>Deine Marke gerät in Vergessenheit:</bad> Dein Ansehen sinkt mit der Zeit um ~{n} Punkte."
+ },
+ "1yhg0e0": {
+  "one": "<good>Die Werbung hebt deine Marke hervor:</good> Dein Ansehen steigt mit der Zeit um ~{n} Punkt.",
+  "other": "<good>Die Werbung hebt deine Marke hervor:</good> Dein Ansehen steigt mit der Zeit um ~{n} Punkte."
+ },
+ "1epr0i6": "Die Marke hält ihren Platz.",
+ "11ehnli": "Jedes verkaufte und auf der Straße gesehene Auto macht deine Marke ebenfalls bekannt. Händler erhalten 12 % Provision auf den Verkauf.",
  "vl4aw9": "Netz",
  "vob6mb": "Nachfrage",
  "149gbh8": "Marktanteil",
@@ -3075,9 +3103,6 @@
  "tfrqu2": "{v} Tsd.",
  "hy88fw": "Größe des amerikanischen Marktes",
  "yh9o4e": "Anteile nach Klasse",
- "bvph7x": "Wöchentliches Werbebudget",
- "1b20710": "Übernehmen",
- "1t0d3h7": "Werbung steigert die Bekanntheit in allen Bundesstaaten, in denen du verkaufst, mit abnehmendem Ertrag. Auch jedes verkaufte und auf der Straße gesehene Auto macht deine Marke bekannt. Händler erhalten 12 % Provision auf jeden Verkauf.",
  "db8uxo": "Konkurrenzmodelle",
  "18qlrg5": {
   "one": "{n} Modell im Handel",
@@ -3201,6 +3226,11 @@
  "xcibi4": "<b>Du bist nah an der Obergrenze:</b> Das Auto holt sich bei den Käufern, die seine Händler erreichen, schon den größtmöglichen Anteil; unter den Klassenpreis zu gehen bringt keine Verkäufe, nur weniger Gewinn. Den Anteil vergrößern Händlernetz und Ansehen.",
  "11lwnpe": "Liegt der Preis mehr als {over} über dem Klassenpreis, springen die Käufer viel schneller ab. Die Zeitschriften messen den Preis an der Klasse: Je weiter er über dem Klassenpreis liegt, desto mehr rutscht die Note nach und nach ab, und liegt er in dieser Klasse mehr als {steep} darüber, nennen sie ihn „ehrgeizig“; eine schlechte Note verkleinert auch den Andrang zum Marktstart. Billig anfangen und den Preis später erhöhen funktioniert nicht: Eine Erhöhung um mehr als {hike} in den ersten drei Jahren nach dem Marktstart bringt die Zeitschriften dazu, ihre Tests neu zu schreiben, und kostet dich Ansehen.",
  "1p535an": "Was das Facelift bringt",
+ "1dd8n5a": "Facelift-Werkzeuge (nach den Tests bezahlt)",
+ "lewz0q": {
+  "one": "{cost} · {n} Linie",
+  "other": "{cost} · {n} Linien"
+ },
  "vrbl57": "Alter in den Augen der Käufer",
  "bih7nd": "{now} → {after} Jahre",
  "1r59t6n": "Attraktivität (Klassen-Ø 50)",
@@ -3299,6 +3329,11 @@
  "1k2buoj": "Stückkosten {change}",
  "iygz9z": "normaler Ausschuss",
  "iju8uq": "Werkzeugkosten",
+ "42lp6": "Werkzeugsätze",
+ "1pdj4pm": {
+  "one": "{n} Linie · {count} Autos pro Jahr",
+  "other": "{n} Linien · {count} Autos pro Jahr"
+ },
  "4soaf3": "Produktionsbereit",
  "19ajzam": {
   "one": "in {n} Woche",
@@ -3307,6 +3342,7 @@
  "x1s6z9": "Material pro Auto",
  "15cetui": "Linienkapazität",
  "1frcp0": "Gleiche Plattform: Werkzeuge großteils gemeinsam",
+ "3lmnrj": "Die Linien des alten Modells gehen beim Marktstart auf das neue Auto über. Werkzeuge werden für jede Linie eigens gefertigt: Je größer die Stückzahl, desto mehr Sätze und desto höher die Kosten.",
  "1g95fxt": {
   "one": "Die Lieferzeit des Teilezulieferers bestimmt die Vorbereitungszeit ({n} Woche).",
   "other": "Die Lieferzeit des Teilezulieferers bestimmt die Vorbereitungszeit ({n} Wochen)."

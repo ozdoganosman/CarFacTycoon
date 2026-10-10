@@ -24,6 +24,7 @@ import { TeamPanel } from '../components/TeamPanel';
 import { devWeeksLeft } from '../../core/budget';
 import { teamOutput } from '../../core/development';
 import { engineeringCost, nextEngineering, ownsPlant, plantCoverage, plantStep, teamSpan } from '../../core/investments';
+import { adBrandTerm, adNorm } from '../../core/advertising';
 import { SUPPLIER_PLANTS } from '../../data/investments';
 import { t, msg, list } from '../../i18n';
 import { Icon, type IconName } from '../components/Icon';
@@ -270,7 +271,7 @@ function nextSteps(s: GameState): Step[] {
     out.push({
       level: 'tip',
       icon: 'banknote',
-      text: t('Kasada {cash} boşta duruyor (yedek ve bir yıllık sabit gider dışında). Onu işe koş: talebi karşılamayan arabalara hat kur, yeni bir sınıfa araba çıkar, bayi ağını büyüt, kendi tedarik fabrikalarını kur, mühendislik teşkilatını büyüt ya da bir rakibi satın al.', {
+      text: t('Kasada {cash} boşta duruyor (yedek ve bir yıllık sabit gider dışında). Onu işe koş: talebi karşılamayan arabalara hat kur, yeni bir sınıfa araba çıkar, bayi ağını büyüt, kendi tedarik fabrikalarını kur, mühendislik teşkilatını büyüt, reklamı olağanın üstüne çıkar (itibar) ya da bir rakibi satın al.', {
         cash: money(spare),
       }),
       go: () => store.go({ id: 'factory' }),
@@ -289,6 +290,18 @@ function nextSteps(s: GameState): Step[] {
         cost: money(engineeringCost(org, yf0)),
       }),
       go: () => store.go({ id: 'company' }),
+    });
+  // A brand being forgotten: advertising well under the era's usual (core/advertising.ts).
+  const forgotten = adBrandTerm(s, yf0);
+  if (forgotten <= -2 && s.models.some((m) => m.status === 'active'))
+    out.push({
+      level: 'tip',
+      icon: 'markets',
+      text: t('Markan unutuluyor: reklama dönemin olağanından az veriyorsun (haftada ~{norm} olmalı), itibarın zamanla ~{n} puan düşer. Pazar ekranında bütçeyi olağanda tut.', {
+        norm: money(adNorm(s, yf0)),
+        n: Math.round(-forgotten),
+      }),
+      go: () => store.go({ id: 'markets' }),
     });
   // A supplier plant the company has outgrown, when growing it pays.
   for (const p of SUPPLIER_PLANTS) {

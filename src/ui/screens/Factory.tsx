@@ -256,8 +256,8 @@ function PlannerForm({ m }: { m: CarModel }) {
   const quote = quoteAt(allowBlack, size);
   const perLine = (b: boolean) => outputAt(b, size);
   const each = quote?.cost ?? 0;
-  const shopEach = workshopLineCost(s.week) + A.retoolCost(s, m);
   const shopCap = lineReport(s, { ...emptyLine('plan', 'plan'), stations: workshopPlan(yf) }, m.stats.complexity).throughput;
+  const shopEach = workshopLineCost(s.week) + A.retoolCost(s, m, shopCap);
   const demand = weeklyDemand(s, m);
   const cap = modelCapacity(s, m);
   const affordable = each > 0 ? Math.max(0, Math.floor(s.company.cash / each)) : 0;
@@ -553,7 +553,7 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
                 const m = s.models.find((x) => x.id === v)!;
                 const ok = await store.ask({
                   title: t('{line} hattında {model} üretilsin mi?', { line: line.name, model: m.name }),
-                  body: t('Hat yeniden ayarlanır: 3 hafta üretim durur ve {cost} kalıp masrafı çıkar.', { cost: money(A.retoolCost(s, m)) }),
+                  body: t('Hat yeniden ayarlanır: 3 hafta üretim durur ve {cost} kalıp masrafı çıkar.', { cost: money(A.retoolCost(s, m, lineReport(s, line, m.stats.complexity).throughput)) }),
                   confirm: t('Hattı ayarla'),
                 });
                 if (!ok) return;
@@ -564,7 +564,7 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
             <option value="">{t('— Boş —')}</option>
             {active.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.name} ({money(A.retoolCost(s, m))})
+                {m.name} ({money(A.retoolCost(s, m, lineReport(s, line, m.stats.complexity).throughput))})
               </option>
             ))}
           </select>

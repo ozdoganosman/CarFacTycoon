@@ -17,6 +17,7 @@ import { makeRng, rand, stateRng } from './rng';
 import { updateRivals, initRivals } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
 import { autoDealers, autoService } from './autoservice';
+import { adBrandTerm, followAdNorm } from './advertising';
 import { engineeringUpkeep, investmentsValue, plantCut, teamSpan } from './investments';
 import { eraReference } from './scoring';
 import { allTech, techName } from './techtree';
@@ -64,7 +65,8 @@ export function newGame(opts: NewGameOptions): GameState {
   const markets = {} as GameState['markets'];
   for (const m of MARKETS) {
     // The American market only: the factory sells in its own state first (see network.ts).
-    markets[m.id] = { unlocked: m.id === 'usa', dealerLevel: 0, awareness: m.id === 'usa' ? 0.15 : 0, adBudget: 0 };
+    // Advertising follows the era's usual for the company's size until the player sets it (core/advertising.ts).
+    markets[m.id] = { unlocked: m.id === 'usa', dealerLevel: 0, awareness: m.id === 'usa' ? 0.15 : 0, adBudget: 0, adLevel: m.id === 'usa' ? 1 : undefined };
   }
   const knowledge = {} as GameState['knowledge'];
   for (const s of SEGMENTS) knowledge[s.id] = {};
@@ -817,6 +819,7 @@ function fixedCosts(s: GameState) {
   // The engineering buildings: drawing office, proving ground, laboratories (core/investments.ts).
   const lab = engineeringUpkeep(s, yf);
   if (lab > 0) spend(s, lab, 'rnd');
+  followAdNorm(s, yf);
   for (const m of MARKET_IDS) {
     spend(s, dealerUpkeep(s, m), 'dealers');
     if (s.markets[m].adBudget > 0) spend(s, s.markets[m].adBudget, 'marketing');
@@ -846,7 +849,8 @@ function drift(s: GameState) {
     const sold = s.models.reduce((a, m) => a + m.unitsSold, 0);
     // Owners who wait weeks for a repair talk (once there are cars enough to matter).
     const service = totalParc(s) > 200 ? (serviceSatisfaction(s, yearFloat(s.week)) - 0.8) * 20 : 0;
-    const target = clamp(22 + review * 4 + rel * 0.35 + Math.min(15, Math.log1p(sold) * 1.3) + Math.min(0, service), 0, 100);
+    // A brand that advertises less than the era's usual is slowly forgotten (core/advertising.ts).
+    const target = clamp(22 + review * 4 + rel * 0.35 + Math.min(15, Math.log1p(sold) * 1.3) + Math.min(0, service) + adBrandTerm(s), 0, 100);
     s.company.reputation += (target - s.company.reputation) * 0.01;
   }
 }

@@ -22,6 +22,7 @@
  "11wsr8h": "{name}: prototypes ready ({cost}). The test program has begun.",
  "1qmn60": "{test} isn’t available yet.",
  "27jm2p": "The project isn’t in testing.",
+ "m210i": "The facelift dies need {cost}.",
  "xkez36": "The make-or-buy choice unlocks with your second model.",
  "5v1yny": "First set up a workshop for this part.",
  "e8uoin": "The project isn’t in production prep.",
@@ -2886,10 +2887,14 @@
   "one": "{n} engineer is idle ({reason}) but draws {pay} a week in salary: start a new project or R&D, or let them go if you need to.",
   "other": "{n} engineers are idle ({reason}) but draw {pay} a week in salary: start a new project or R&D, or let some go if you need to."
  },
- "hfui0q": "You have {cash} sitting idle (beyond the reserve and a year of fixed costs). Put it to work: add lines for cars that can’t keep up with demand, launch a car in a new class, grow the dealer network, build your own supplier plants, grow the engineering organization or buy a rival.",
+ "omrliy": "You have {cash} sitting idle (beyond the reserve and a year of fixed costs). Put it to work: add lines for cars that can’t keep up with demand, launch a car in a new class, grow the dealer network, build your own supplier plants, grow the engineering organization, advertise above the usual (reputation) or buy a rival.",
  "myl93f": {
   "one": "{n} engineer turns out only the work of ~{output}: the organization can’t carry a team this big. {name} ({cost}) would speed up projects.",
   "other": "{n} engineers turn out only the work of ~{output}: the organization can’t carry a team this big. {name} ({cost}) would speed up projects."
+ },
+ "l0ukn7": {
+  "one": "Your brand is being forgotten: you advertise less than is usual for the era (it should be ~{norm} a week), and your reputation will slowly drop by ~{n} point. Keep the budget at the usual on the Market screen.",
+  "other": "Your brand is being forgotten: you advertise less than is usual for the era (it should be ~{norm} a week), and your reputation will slowly drop by ~{n} points. Keep the budget at the usual on the Market screen."
  },
  "kyygdt": "{name} supplies only {share} of your cars: enlarged ({cost}) it pays back in ~{years} years.",
  "rlwf6z": "Cash is negative! Take a loan or cut costs.",
@@ -2923,6 +2928,29 @@
  "gqnx2r": "You have no models on sale yet.",
  "1v3wtoz": "Newspaper archive",
  "1xahij4": "Market and dealer network",
+ "o0ln45": "reputation ±0",
+ "1dxr4nw": "reputation {v}",
+ "v4rhh3": "In the age of magazines, radio and then television, brands stay in people’s minds through advertising. A maker of your size spends a share of its revenue on it, and that share grows with the era. A brand that spends less than the usual slowly loses reputation; one that spends more gains a little. Advertising also raises awareness in the states where you sell. The money does not come back: it is what keeping your name costs.",
+ "q7q972": "you set the weekly budget",
+ "1t6mq5p": "The era’s usual",
+ "1werj26": "{k} times the usual",
+ "fbw2k9": "~{cost} a week",
+ "dax7et": "after the first sales",
+ "xen20q": "<b>{budget}</b> goes to advertising this week ({share} of revenue).",
+ "bvph7x": "Weekly ad budget",
+ "1b20710": "Apply",
+ "drxxom": "In this era advertising only raises awareness: a known brand keeps its name without it.",
+ "m7jik6": "Usual for the era: ~{norm} a week ({share} of revenue).",
+ "1dz3rt6": {
+  "one": "<bad>Your brand is being forgotten:</bad> your reputation will slowly drop by ~{n} point.",
+  "other": "<bad>Your brand is being forgotten:</bad> your reputation will slowly drop by ~{n} points."
+ },
+ "1yhg0e0": {
+  "one": "<good>Advertising sets your brand apart:</good> your reputation will slowly rise by ~{n} point.",
+  "other": "<good>Advertising sets your brand apart:</good> your reputation will slowly rise by ~{n} points."
+ },
+ "1epr0i6": "The brand holds its place.",
+ "11ehnli": "Every car sold and seen on the road also makes your brand known. Dealers take a 12% commission on sales.",
  "vl4aw9": "Network",
  "vob6mb": "Demand",
  "149gbh8": "Market share",
@@ -3072,9 +3100,6 @@
  "tfrqu2": "{v}K",
  "hy88fw": "Size of the American market",
  "yh9o4e": "Shares by class",
- "bvph7x": "Weekly ad budget",
- "1b20710": "Apply",
- "1t0d3h7": "Advertising raises awareness in every state you sell in, with diminishing returns. Every car sold and seen on the road also promotes your brand. Dealers take a 12% commission on each sale.",
  "db8uxo": "Rival models",
  "18qlrg5": {
   "one": "{n} model on sale",
@@ -3198,6 +3223,11 @@
  "xcibi4": "<b>You’re near the ceiling:</b> the car already takes all the share it can of the buyers its dealers reach; going below the class price won’t bring sales, it only costs profit. The dealer network and reputation grow the share.",
  "11lwnpe": "Buyers walk away much faster once the price is more than {over} above the class price. Magazines weigh the price against the class: the higher above the class price, the more the score slips, bit by bit, and in this class, at more than {steep} above it, they call it “ambitious”; a low score also shrinks the launch crowd. Starting cheap and raising the price later doesn’t work: in the three years after launch, a hike of more than {hike} makes the magazines rewrite their reviews and costs you reputation.",
  "1p535an": "What the facelift brings",
+ "1dd8n5a": "Facelift dies (paid after testing)",
+ "lewz0q": {
+  "one": "{cost} · {n} line",
+  "other": "{cost} · {n} lines"
+ },
  "vrbl57": "Age in buyers’ eyes",
  "bih7nd": "{now} → {after} years",
  "1r59t6n": "Appeal (class avg. 50)",
@@ -3296,6 +3326,11 @@
  "1k2buoj": "unit cost {change}",
  "iygz9z": "normal scrap",
  "iju8uq": "Die cost",
+ "42lp6": "Die sets",
+ "1pdj4pm": {
+  "one": "{n} line · {count} cars a year",
+  "other": "{n} lines · {count} cars a year"
+ },
  "4soaf3": "Ready for production",
  "19ajzam": {
   "one": "in {n} week",
@@ -3304,6 +3339,7 @@
  "x1s6z9": "Materials per car",
  "15cetui": "Line capacity",
  "1frcp0": "Same platform: dies largely shared",
+ "3lmnrj": "The old model’s lines switch to the new car at launch. Dies are made for each line separately: the more volume, the more sets and the higher the cost.",
  "1g95fxt": {
   "one": "The parts supplier’s lead time sets the prep time ({n} week).",
   "other": "The parts supplier’s lead time sets the prep time ({n} weeks)."

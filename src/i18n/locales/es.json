@@ -22,6 +22,7 @@
  "11wsr8h": "{name}: prototipos listos ({cost}). Comenzó el programa de pruebas.",
  "1qmn60": "{test} aún no está disponible.",
  "27jm2p": "El proyecto no está en pruebas.",
+ "m210i": "Los troqueles del rediseño necesitan {cost}.",
  "xkez36": "La decisión de fabricar o comprar se desbloquea con tu segundo modelo.",
  "5v1yny": "Primero debes montar un taller para esta pieza.",
  "e8uoin": "El proyecto no está en preparación de producción.",
@@ -2901,10 +2902,14 @@
   "one": "{n} ingeniero está sin trabajo ({reason}) pero cobra {pay} a la semana: inicia un proyecto nuevo o una investigación de I+D, o despídelo si hace falta.",
   "other": "{n} ingenieros están sin trabajo ({reason}) pero cobran {pay} a la semana: inicia un proyecto nuevo o una investigación de I+D, o despide a algunos si hace falta."
  },
- "hfui0q": "Tienes {cash} ociosos en caja (aparte de la reserva y un año de gastos fijos). Ponlos a trabajar: monta líneas para los autos que no cubren la demanda, lanza un auto en un segmento nuevo, amplía la red de concesionarios, construye tus propias fábricas de suministros, amplía la organización de ingeniería o compra a un rival.",
+ "omrliy": "Tienes {cash} ociosos en caja (aparte de la reserva y un año de gastos fijos). Ponlos a trabajar: monta líneas para los autos que no cubren la demanda, lanza un auto en un segmento nuevo, amplía la red de concesionarios, construye tus propias fábricas de suministros, amplía la organización de ingeniería, anuncia por encima de lo habitual (reputación) o compra a un rival.",
  "myl93f": {
   "one": "{n} ingeniero solo rinde como ~{output}: la organización no da para un equipo tan grande. {name} ({cost}) aceleraría los proyectos.",
   "other": "{n} ingenieros solo rinden como ~{output}: la organización no da para un equipo tan grande. {name} ({cost}) aceleraría los proyectos."
+ },
+ "l0ukn7": {
+  "one": "Tu marca se está olvidando: anuncias menos de lo habitual en la época (deberían ser ~{norm} a la semana) y tu reputación bajará con el tiempo ~{n} punto. Mantén el presupuesto en lo habitual en la pantalla de Mercado.",
+  "other": "Tu marca se está olvidando: anuncias menos de lo habitual en la época (deberían ser ~{norm} a la semana) y tu reputación bajará con el tiempo ~{n} puntos. Mantén el presupuesto en lo habitual en la pantalla de Mercado."
  },
  "kyygdt": "{name} solo abastece {share} de tus autos: ampliada ({cost}) se paga en ~{years} años.",
  "rlwf6z": "¡La caja está en negativo! Pide un préstamo o recorta gastos.",
@@ -2938,6 +2943,29 @@
  "gqnx2r": "Todavía no tienes modelos a la venta.",
  "1v3wtoz": "Archivo de periódicos",
  "1xahij4": "Mercado y red de concesionarios",
+ "o0ln45": "reputación ±0",
+ "1dxr4nw": "reputación {v}",
+ "v4rhh3": "En la era de las revistas, la radio y después la televisión, las marcas se mantienen en la memoria gracias a la publicidad. Un fabricante de tu tamaño dedica a ella una parte de sus ingresos, y esa parte crece con la época. La marca que gasta menos de lo habitual pierde reputación poco a poco; la que gasta más gana un poco. La publicidad también aumenta el reconocimiento en los estados donde vendes. El dinero no vuelve: es lo que cuesta conservar tu nombre.",
+ "q7q972": "tú fijas el presupuesto semanal",
+ "1t6mq5p": "Lo habitual de la época",
+ "1werj26": "{k} veces lo habitual",
+ "fbw2k9": "~{cost} a la semana",
+ "dax7et": "tras las primeras ventas",
+ "xen20q": "Esta semana van <b>{budget}</b> a publicidad ({share} de los ingresos).",
+ "bvph7x": "Presupuesto semanal de publicidad",
+ "1b20710": "Aplicar",
+ "drxxom": "En esta época la publicidad solo aumenta el reconocimiento: una marca conocida conserva su nombre sin ella.",
+ "m7jik6": "Lo habitual en la época: ~{norm} a la semana ({share} de los ingresos).",
+ "1dz3rt6": {
+  "one": "<bad>Tu marca se está olvidando:</bad> tu reputación bajará con el tiempo ~{n} punto.",
+  "other": "<bad>Tu marca se está olvidando:</bad> tu reputación bajará con el tiempo ~{n} puntos."
+ },
+ "1yhg0e0": {
+  "one": "<good>La publicidad destaca tu marca:</good> tu reputación subirá con el tiempo ~{n} punto.",
+  "other": "<good>La publicidad destaca tu marca:</good> tu reputación subirá con el tiempo ~{n} puntos."
+ },
+ "1epr0i6": "La marca mantiene su lugar.",
+ "11ehnli": "Cada auto vendido y visto en la carretera también da a conocer tu marca. Los concesionarios cobran un 12 % de comisión sobre las ventas.",
  "vl4aw9": "Red",
  "vob6mb": "Demanda",
  "149gbh8": "Cuota de mercado",
@@ -3087,9 +3115,6 @@
  "tfrqu2": "{v} mil",
  "hy88fw": "Tamaño del mercado estadounidense",
  "yh9o4e": "Cuota por segmento",
- "bvph7x": "Presupuesto semanal de publicidad",
- "1b20710": "Aplicar",
- "1t0d3h7": "La publicidad aumenta el reconocimiento en todos los estados donde vendes, con rendimientos decrecientes. Cada auto vendido y visto en la calle también da a conocer tu marca. Los concesionarios se quedan con una comisión del 12 % de cada venta.",
  "db8uxo": "Modelos rivales",
  "18qlrg5": {
   "one": "{n} modelo a la venta",
@@ -3213,6 +3238,11 @@
  "xcibi4": "<b>Estás cerca del techo:</b> el auto ya capta toda la cuota que puede entre los compradores a los que llegan sus concesionarios; bajar del precio del segmento no trae ventas, solo resta beneficio. La cuota crece con la red de concesionarios y la reputación.",
  "11lwnpe": "Los compradores se van mucho más rápido cuando el precio supera el del segmento en más del {over}. Las revistas valoran el precio según el segmento: cuanto más por encima del precio del segmento, más baja la nota, poco a poco, y en este segmento, a más del {steep} por encima, lo llaman “ambicioso”; una nota baja también reduce el público del lanzamiento. Empezar barato y subir el precio después no funciona: en los tres años posteriores al lanzamiento, una subida de más del {hike} hace que las revistas reescriban sus reseñas y te cuesta reputación.",
  "1p535an": "Lo que aporta el rediseño",
+ "1dd8n5a": "Troqueles del rediseño (se pagan tras las pruebas)",
+ "lewz0q": {
+  "one": "{cost} · {n} línea",
+  "other": "{cost} · {n} líneas"
+ },
  "vrbl57": "Antigüedad percibida",
  "bih7nd": "{now} → {after} años",
  "1r59t6n": "Atractivo (media del seg. 50)",
@@ -3311,6 +3341,11 @@
  "1k2buoj": "costo unitario {change}",
  "iygz9z": "desperdicio normal",
  "iju8uq": "Costo de troqueles",
+ "42lp6": "Juegos de troqueles",
+ "1pdj4pm": {
+  "one": "{n} línea · {count} autos al año",
+  "other": "{n} líneas · {count} autos al año"
+ },
  "4soaf3": "Listo para producción",
  "19ajzam": {
   "one": "en {n} semana",
@@ -3319,6 +3354,7 @@
  "x1s6z9": "Materiales por auto",
  "15cetui": "Capacidad de la línea",
  "1frcp0": "Misma plataforma: troqueles en gran parte compartidos",
+ "3lmnrj": "Las líneas del modelo antiguo pasan al auto nuevo en el lanzamiento. Los troqueles se hacen para cada línea por separado: cuanto más volumen, más juegos y mayor costo.",
  "1g95fxt": {
   "one": "El plazo de entrega del proveedor de piezas marca el tiempo de preparación ({n} semana).",
   "other": "El plazo de entrega del proveedor de piezas marca el tiempo de preparación ({n} semanas)."

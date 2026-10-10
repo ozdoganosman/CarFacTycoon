@@ -313,9 +313,16 @@ function FaceliftGain({ p }: { p: Project }) {
   const later = modelAgeYears(m, s.week + weeks);
   const change = o.demandNow > 0.05 ? o.demandAfter / o.demandNow - 1 : 0;
   const d = { now: dec(o.demandNow, 1), after: dec(o.demandAfter, 1), pct: percent(Math.abs(change), 0) };
+  const dies = p.lineId ? A.toolingQuote(s, p, p.lineId) : null;
   return (
     <Panel title={t('Makyajın getirisi')}>
       <div className="quote">
+        {dies && (
+          <div>
+            <span>{t('Makyaj kalıpları (testten sonra ödenir)')}</span>
+            <b>{t('{cost} · {n} hat', { cost: money(dies.cost), n: dies.lines })}</b>
+          </div>
+        )}
         <div>
           <span>{t('Alıcı gözünde yaşı')}</span>
           <b>{t('{now} → {after} yıl', { now: dec(o.ageNow, 1), after: dec(o.ageAfter, 1) })}</b>
@@ -733,6 +740,10 @@ function Production({ p }: { p: Project }) {
               <b>{money(quote.cost)}</b>
             </div>
             <div>
+              <span>{t('Kalıp takımları')}</span>
+              <b>{t('{n} hat · yılda {count} araba', { n: quote.lines, count: num(Math.round(quote.carsPerYear)) })}</b>
+            </div>
+            <div>
               <span>{t('Üretime hazır')}</span>
               <b>{t('{n} hafta sonra', { n: readyWeeks })}</b>
             </div>
@@ -746,6 +757,9 @@ function Production({ p }: { p: Project }) {
             </div>
             {quote.sharedPlatform && <Badge tone="good">{t('Aynı platform: kalıplar büyük ölçüde ortak')}</Badge>}
           </div>
+        )}
+        {quote && quote.lines > 1 && (
+          <p className="muted small">{t('Eski modelin hatları lansmanda yeni arabaya geçer. Kalıplar her hat için ayrı yapılır: hacim büyüdükçe takım sayısı ve bedeli artar.')}</p>
         )}
         {quote && quote.leadWeeks > quote.weeks && (
           <p className="muted small">{t('Hazırlık süresini parça tedarikçisinin teslimi belirliyor ({n} hafta).', { n: quote.leadWeeks })}</p>
