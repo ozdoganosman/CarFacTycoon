@@ -17,6 +17,7 @@ import { makeRng, rand, stateRng } from './rng';
 import { updateRivals, initRivals } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
 import { autoDealers, autoService } from './autoservice';
+import { engineeringUpkeep, investmentsValue, plantCut, teamSpan } from './investments';
 import { eraReference } from './scoring';
 import { allTech, techName } from './techtree';
 import { knownKnowhow, labSpeed, noteResearch, pumpResearchQueue, researchDef, researcherSalary, startingKnowledge } from './research';
@@ -243,7 +244,8 @@ export function materialUnitCost(s: GameState, model: Pick<CarModel, 'stats' | '
   const war = s.flags.materialsUntil && yf < s.flags.materialsUntil && yf >= 1914.6 ? 1.25 : 1;
   // Parts makers next door, or everything by train from the East.
   const local = cityDef(s.company.city).parts;
-  return cost * costIndex(yf) * learning * war * local;
+  // The company's own body plant, tyre plant, glass works and steel mill (core/investments.ts).
+  return cost * costIndex(yf) * learning * war * local * (1 - plantCut(s));
 }
 
 export function companyAssets(s: GameState): number {
@@ -252,7 +254,7 @@ export function companyAssets(s: GameState): number {
     0,
   );
   const inventory = s.models.reduce((a, m) => a + m.inventory * materialUnitCost(s, m), 0);
-  return lines + inventory + Math.max(0, s.company.cash);
+  return lines + inventory + investmentsValue(s) + Math.max(0, s.company.cash);
 }
 
 /**
@@ -587,7 +589,7 @@ function advanceProjects(s: GameState) {
   const rng = stateRng(s);
   for (const p of s.projects) {
     if (p.phase === 'development') {
-      const work = devRate(p.engineers, s.company.skill);
+      const work = devRate(p.engineers, s.company.skill, teamSpan(s));
       const before = p.dev.done;
       const cap = p.dev.required * 1.6;
       const add = Math.min(work, Math.max(0, cap - p.dev.done));
@@ -812,6 +814,9 @@ function fixedCosts(s: GameState) {
   spend(s, s.company.engineers * engineerSalary(yf) + (s.company.researchers ?? 0) * researcherSalary(yf), 'salaries');
   s.company.idleSalary = (s.company.idleSalary ?? 0) + idleEngineers(s) * engineerSalary(yf);
   spend(s, overhead(yf, s.lines.length), 'other');
+  // The engineering buildings: drawing office, proving ground, laboratories (core/investments.ts).
+  const lab = engineeringUpkeep(s, yf);
+  if (lab > 0) spend(s, lab, 'rnd');
   for (const m of MARKET_IDS) {
     spend(s, dealerUpkeep(s, m), 'dealers');
     if (s.markets[m].adBudget > 0) spend(s, s.markets[m].adBudget, 'marketing');

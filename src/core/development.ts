@@ -37,13 +37,15 @@ export const skillFactor = (skill: number) => 0.6 + skill / 250;
 export const productivity = (skill: number) => 0.6 + skill / 100;
 
 /**
- * A bigger team is faster, but not in proportion: past a dozen or so engineers on one car they wait
- * for each other's drawings. Two engineers do the work of two; twenty the work of eight.
+ * A bigger team is faster, but not in proportion: engineers on one car wait for each other's drawings,
+ * tests and decisions. The span is at most how many engineers' work the team turns out; it grows with
+ * the engineering organisation (core/investments.ts). At a workshop bench (span 12) two engineers do
+ * the work of two, twenty the work of eight.
  */
-export const teamOutput = (engineers: number) => (engineers <= 2 ? engineers : engineers / (1 + (engineers - 2) / 12));
+export const teamOutput = (engineers: number, span = 12) => (engineers <= 2 ? engineers : engineers / (1 + (engineers - 2) / span));
 
 /** Work a project's team gets done per week. */
-export const devRate = (engineers: number, skill: number) => teamOutput(engineers) * productivity(skill);
+export const devRate = (engineers: number, skill: number, span = 12) => teamOutput(engineers, span) * productivity(skill);
 
 /**
  * Turns the development points spent per focus area into concrete improvements.

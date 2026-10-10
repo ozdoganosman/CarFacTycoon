@@ -1953,6 +1953,77 @@ fieldset {
   width: 100%;
   font-size: 0.82rem;
 }
+/* The engineering organisation as a ladder of stamps: built in brass, the next one ruled. */
+.ladder {
+  list-style: none;
+  margin: 8px 0 12px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
+}
+.ladder li {
+  padding: 6px 10px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  display: grid;
+}
+.ladder li.is-done {
+  border-style: solid;
+  border-color: var(--brass);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--brass) 10%, var(--panel));
+}
+.ladder li.is-next {
+  border-style: solid;
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.invest-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.invest-next > span {
+  flex: 1 1 260px;
+}
+/* The company's own supplier plants, one card each. */
+.plants {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.plant {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+.plant .btn {
+  justify-self: start;
+}
+.plant-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+.plant-head > .small {
+  margin-inline-start: auto;
+}
+.plant.is-owned {
+  border-color: var(--good);
+}
+.plant.is-locked {
+  opacity: 0.6;
+}
 .shops {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

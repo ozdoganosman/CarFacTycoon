@@ -47,6 +47,7 @@ import type {
 } from './types';
 import { NO_BONUS, computeCarStats } from './vehicle';
 import { clamp, clone, decide, earn, log, money, newId, shiftModal, spend } from './util';
+import { companyWorkScale } from './investments';
 import { list, t } from '../i18n';
 import { dec, fmtPercent } from '../i18n/format';
 
@@ -286,7 +287,8 @@ export function renameProject(s: GameState, pid: string, name: string) {
 /** Engineering work needed, after platform / engine reuse discounts. */
 export function requiredWork(s: GameState, p: Project): number {
   const stats = computeCarStats(p.design, yearFloat(s.week));
-  let w = stats.devWork;
+  // A bigger maker's car takes more engineering (core/investments.ts).
+  let w = stats.devWork * companyWorkScale(s);
   if (p.kind === 'facelift') return w * 0.35;
   const plat = p.platformId && s.platforms.find((x) => x.id === p.platformId);
   if (plat && plat.chassis === p.design.chassis && plat.size === p.design.size && plat.suspension === p.design.suspension) w *= 0.7;

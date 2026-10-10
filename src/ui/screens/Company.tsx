@@ -13,6 +13,7 @@ import { tx } from '../i18n';
 
 /** What the money is for: a racing team, buying rivals, and the company's worth. */
 import { RivalMovesPanel, SharesPanel } from '../components/BoardPanel';
+import { EngineeringPanel } from '../components/Investments';
 import { canGoPublic, founderShare } from '../../core/shares';
 
 export function Company() {
@@ -63,6 +64,7 @@ export function Company() {
         <Stat label={t('Yarış ünü')} value={dec(r.fame, 1)} sub={t('bütün modellere prestij +{v}', { v: dec(racingPrestige(s), 1) })} />
         <Stat label={t('Yarış zaferi')} value={r.wins ?? 0} />
       </div>
+      <EngineeringPanel />
       {/* What is not open yet waits in one short list instead of a panel each. */}
       {later.length > 0 && (
         <Panel title={t('Daha sonra')} className="later-panel">

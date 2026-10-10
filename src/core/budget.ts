@@ -1,5 +1,6 @@
 import { requiredWork, startProject as startProjectFn, toolingQuote } from './actions';
 import { devRate } from './development';
+import { teamSpan } from './investments';
 import { engineerSalary, lineBuildWeeks, overhead } from '../data/economy';
 import { suggestedLine, workshopLineCost } from './factory';
 import { researcherSalary } from './research';
@@ -46,7 +47,7 @@ export function operatingWeekly(s: GameState): number {
 export function devWeeksLeft(s: GameState, p: Project, extra = 0): number {
   if (p.phase !== 'design' && p.phase !== 'development') return 0;
   const sharing = s.projects.filter((x) => x.phase === 'development' && x.id !== p.id).length + 1;
-  const rate = devRate((s.company.engineers + extra) / sharing, s.company.skill);
+  const rate = devRate((s.company.engineers + extra) / sharing, s.company.skill, teamSpan(s));
   const required = p.phase === 'design' ? requiredWork(s, p) : p.dev.required;
   return Math.ceil(Math.max(0, required - p.dev.done) / Math.max(0.1, rate));
 }

@@ -12,6 +12,8 @@ import { demandAtPrice, referencePrice } from '../src/core/market';
 import { MAX_SLOTS, DEALER_COMMISSION } from '../src/data/economy';
 import { eventDef } from '../src/data/events';
 import { isBlockingModal } from '../src/core/util';
+import { buildEngineering, buildPlant, companyWorkScale, engineeringCost, nextEngineering, plantStep } from '../src/core/investments';
+import { SUPPLIER_PLANTS } from '../src/data/investments';
 import { yearFloat } from '../src/core/time';
 import type { GameState, SegmentId } from '../src/core/types';
 
@@ -162,9 +164,19 @@ export function botStep(s: GameState, o: BotOptions = {}) {
     if (affordable(want, 0.15)) A.startResearch(s, want!.id);
     else if (affordable(other, 0.02)) A.startResearch(s, other!.id);
   }
-  // Engineers: grow with the company.
-  const wantEng = Math.min(60, 2 + Math.floor(s.company.cash / 40000));
-  if (s.company.engineers < wantEng && s.company.cash > 10000) A.hireEngineers(s, 1);
+  // Engineers: grow with the company; a bigger maker's cars need more of them (core/investments.ts).
+  const wantEng = Math.min(Math.round(60 * companyWorkScale(s)), 2 + Math.floor(s.company.cash / 40000));
+  if (s.company.engineers < wantEng && s.company.cash > 10000) A.hireEngineers(s, s.company.engineers > 60 ? 5 : 1);
+  // The engineering organisation when it costs little next to the till, then the company's own
+  // supplier plants, built and grown with the company while a step pays for itself within four years.
+  const next = nextEngineering(s);
+  if (next && next.year <= yf && engineeringCost(next, yf) < 0.05 * s.company.cash && s.company.engineers > next.span) buildEngineering(s);
+  if (s.week % 13 === 0) {
+    for (const p of SUPPLIER_PLANTS) {
+      const step = p.year <= yf ? plantStep(s, p, yf) : null;
+      if (step && step.cost < 0.3 * s.company.cash && step.payback < 4) buildPlant(s, p.id);
+    }
+  }
   // Credit when broke.
   if (s.company.cash < 0) {
     const room = credit(s).limit - s.company.loan;

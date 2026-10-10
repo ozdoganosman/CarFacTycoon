@@ -29,6 +29,7 @@ import { store, useGameState } from '../store';
 import { cars, dec, money, num, pct } from '../format';
 import { Badge, Button, Info, Panel, Toggle } from '../components/ui';
 import { LineViz } from '../viz/LineViz';
+import { PlantsPanel } from '../components/Investments';
 import { t, msg } from '../../i18n';
 import { tx } from '../i18n';
 
@@ -99,6 +100,7 @@ export function Factory() {
           ))}
         </div>
       </Panel>
+      <PlantsPanel />
     </div>
   );
 }

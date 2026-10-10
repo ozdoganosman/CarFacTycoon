@@ -699,6 +699,10 @@ export interface GameState {
     /** The way to the first car is guided and the menu opens screen by screen (core/guide.ts); new games only. */
     guided?: boolean;
   };
+  /** Level of the engineering organisation (data/investments.ts ENGINEERING_LEVELS); unset: the workshop bench. */
+  engineering?: number;
+  /** The company's own supplier plants and the cars a year each can supply (data/investments.ts SUPPLIER_PLANTS). */
+  plants?: Partial<Record<'body' | 'tyres' | 'glass' | 'steel', number>>;
   /** Screens opened on the way to the first car (core/guide.ts), and those not visited since. */
   opened?: ('research' | 'finance' | 'factory' | 'markets' | 'company')[];
   openedNew?: ('research' | 'finance' | 'factory' | 'markets' | 'company')[];
