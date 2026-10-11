@@ -97,6 +97,9 @@ export interface CarDesign {
   interior: number;
   /** Engineering know-how built in (magneto, dampers…); older designs have none. */
   knowhow?: string[];
+  /** Paint (data/paints.ts) and, from the fifties, a contrasting roof; unset: a colour picked from the car's era. */
+  paint?: string;
+  roof?: string;
 }
 
 /** Bonuses earned during development, applied on top of the raw design. */

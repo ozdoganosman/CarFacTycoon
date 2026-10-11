@@ -5,6 +5,7 @@ import { msg, t } from '../../i18n';
 import { store, useGameState } from '../store';
 import { money } from '../format';
 import { CarSVG } from '../viz/CarSVG';
+import { ModelCar } from './ModelCar';
 import { Button } from './ui';
 import { PaperAdSlot } from './Sponsor';
 import { Icon } from './Icon';
@@ -173,7 +174,7 @@ export function Newspaper({ s, issue }: { s: GameState; issue: NewsIssue }) {
               <div className="paper-ad-maker">{s.company.name}</div>
               <div className="paper-ad-model">{adModel.name}</div>
               <div className="halftone paper-ad-car">
-                <CarSVG body={adModel.design.body} size={adModel.design.size} year={yearOf(adModel.refreshWeek)} cylinders={adModel.design.engine.cylinders} styling={adModel.design.styling} />
+                <ModelCar s={s} m={adModel} year={yearOf(adModel.refreshWeek)} />
               </div>
               <div className="paper-ad-slogan">{issue.ad.slogan}</div>
               <ul>

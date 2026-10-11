@@ -14,7 +14,7 @@ import { ads } from '../ads';
 import { store } from '../store';
 import { dec, kmh, litres, money, num, pct, secs } from '../format';
 import { Button, ScoreBar } from './ui';
-import { CarSVG } from '../viz/CarSVG';
+import { ModelCar } from './ModelCar';
 
 type Stage = 'reveal' | 'reviews' | 'rivals';
 
@@ -66,7 +66,7 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
           <>
             <div className="launch-stage">
               <div className="launch-spot" />
-              <CarSVG body={m.design.body} size={m.design.size} year={yearFloat(s.week)} cylinders={m.design.engine.cylinders} styling={m.design.styling} className="launch-car" />
+              <ModelCar s={s} m={m} year={yearFloat(s.week)} className="launch-car" />
               <div className="curtain curtain-l" />
               <div className="curtain curtain-r" />
             </div>

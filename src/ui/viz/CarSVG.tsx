@@ -15,6 +15,8 @@ export function CarSVG(props: {
   cylinders: number;
   styling: number;
   color?: string;
+  /** A contrasting roof (the two-tone fifties). */
+  roof?: string;
   width?: number;
   className?: string;
 }) {
@@ -44,6 +46,12 @@ export function CarSVG(props: {
   const rake = lerp(2, 22, s); // windscreen rake
   const round = lerp(3, 16, s);
   const paint = props.color ?? 'var(--car-body)';
+  const roofPaint = props.roof ?? paint;
+  // Whitewalls dressed the expensive cars from the twenties and every car after the war; a mascot sat
+  // on the radiator of a stylish thirties car; the late fifties grew fins.
+  const whitewall = year >= 1948 || (year >= 1922 && styling > 0.6);
+  const mascot = year >= 1928 && styling > 0.5;
+  const fins = year >= 1955 && styling > 0.35 && body !== 'pickup' && body !== 'suv';
   const trim = 'var(--car-trim)';
   const glass = 'var(--car-glass)';
   const tyre = 'var(--car-tyre)';
@@ -121,7 +129,7 @@ export function CarSVG(props: {
     return (
       <g key={x}>
         <circle cx={x} cy={y} r={wheelR} fill={tyre} />
-        {year >= 1948 && <circle cx={x} cy={y} r={wheelR * 0.78} fill="var(--car-whitewall)" />}
+        {whitewall && <circle cx={x} cy={y} r={wheelR * 0.78} fill="var(--car-whitewall)" />}
         <circle cx={x} cy={y} r={wheelR * (year < 1930 ? 0.82 : 0.62)} fill={year < 1930 ? 'var(--car-wood)' : paint} />
         {Array.from({ length: spokes }, (_, i) => {
           const a = (i / spokes) * Math.PI * 2;
@@ -143,7 +151,8 @@ export function CarSVG(props: {
       {fenderOpacity > 0 && (
         <rect x={rearX + wheelR} y={sill - 2} width={frontX - rearX - wheelR * 2} height={5} rx={2} fill={trim} opacity={fenderOpacity} />
       )}
-      {closed && <path d={cabin} fill={paint} stroke={trim} strokeWidth={1.5} strokeLinejoin="round" />}
+      {fins && <path d={`M${rearEnd + 2},${tailTop + 2} L${rearEnd - 4},${tailTop - lerp(4, 14, styling)} L${rearEnd + 34},${tailTop + 1} Z`} fill={paint} stroke={trim} strokeWidth={1.2} strokeLinejoin="round" />}
+      {closed && <path d={cabin} fill={roofPaint} stroke={trim} strokeWidth={1.5} strokeLinejoin="round" />}
       {windows.map((d, i) => (
         <path key={i} d={d} fill={glass} />
       ))}
@@ -190,6 +199,7 @@ export function CarSVG(props: {
       )}
       {wheel(rearX)}
       {wheel(frontX)}
+      {mascot && <path d={`M${grilleX - 6},${hoodTop + lerp(0, 5, s)} l3,-7 l5,4 z`} fill={chrome} />}
       {/* lamps */}
       <circle cx={lampX} cy={lampY} r={lerp(6, 5, s)} fill="var(--car-lamp)" stroke={chrome} strokeWidth={1.5} />
       <rect x={rearEnd - 2} y={tailTop + 6} width={4} height={6} rx={1} fill="var(--bad)" />

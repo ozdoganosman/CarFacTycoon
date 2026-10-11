@@ -1,14 +1,14 @@
-import { formatDate, yearFloat } from '../../core/time';
-import type { CarModel } from '../../core/types';
+import { formatDate } from '../../core/time';
+import type { CarModel, GameState } from '../../core/types';
 import { store, useGameState } from '../store';
 import { cars, dec, money, num } from '../format';
 import { Badge, Empty, SegmentLabel } from '../components/ui';
-import { CarSVG } from '../viz/CarSVG';
+import { ModelCar } from '../components/ModelCar';
 import { weeklySold } from './HQ';
 import { t } from '../../i18n';
 
 /** A model as a page of the maker's catalogue: the car, its name and class, and its figures. */
-function ModelEntry({ m }: { m: CarModel }) {
+function ModelEntry({ s, m }: { s: GameState; m: CarModel }) {
   const active = m.status === 'active';
   const figures: [string, string][] = [
     [t('Haftalık'), active ? cars(weeklySold(m)) : '—'],
@@ -19,7 +19,7 @@ function ModelEntry({ m }: { m: CarModel }) {
   return (
     <button type="button" className={`model-entry ${active ? '' : 'is-retired'}`} onClick={() => store.go({ id: 'model', modelId: m.id })}>
       <span className="model-entry-car" aria-hidden>
-        <CarSVG body={m.design.body} size={m.design.size} year={yearFloat(m.refreshWeek)} cylinders={m.design.engine.cylinders} styling={m.design.styling} />
+        <ModelCar s={s} m={m} />
       </span>
       <span className="model-entry-head">
         <span className="model-entry-name">
@@ -58,7 +58,7 @@ export function Models() {
         <>
           <div className="model-list">
             {active.map((m) => (
-              <ModelEntry key={m.id} m={m} />
+              <ModelEntry key={m.id} s={s} m={m} />
             ))}
           </div>
           {retired.length > 0 && (
@@ -66,7 +66,7 @@ export function Models() {
               <h4 className="model-list-title">{t('Üretimden kalktı')}</h4>
               <div className="model-list is-retired">
                 {retired.map((m) => (
-                  <ModelEntry key={m.id} m={m} />
+                  <ModelEntry key={m.id} s={s} m={m} />
                 ))}
               </div>
             </>

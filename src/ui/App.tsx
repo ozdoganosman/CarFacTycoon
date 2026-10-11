@@ -9,7 +9,7 @@ import { ModalHost, YearCard } from './components/ModalHost';
 import { NewsCard, NewspaperHost } from './components/Newspaper';
 import { ResearchCard } from './components/ResearchCard';
 import { ConfirmHost } from './components/ConfirmHost';
-import { LaunchReadyBanner, PauseBanner } from './components/PauseBanner';
+import { LaunchReadyBanner } from './components/PauseBanner';
 import { GuideBar } from './components/GuideBar';
 import { HQ } from './screens/HQ';
 import { Projects } from './screens/Projects';
@@ -116,7 +116,6 @@ export function App() {
         <main className="main" ref={mainRef}>
           <ShareBar />
           <GuideBar />
-          <PauseBanner />
           <LaunchReadyBanner />
           {body}
         </main>

@@ -30,7 +30,8 @@ import { customerLetters } from '../../core/letters';
 import { cars, dec, money, num, pct } from '../format';
 import { Badge, Button, Empty, NumberInput, Panel, Slider, Stat, Table, Toggle, ScoreBar, Info, SegmentLabel } from '../components/ui';
 import { StatsPanel } from '../components/StatsPanel';
-import { CarSVG } from '../viz/CarSVG';
+import { ModelCar } from '../components/ModelCar';
+import { modelPaint } from '../paint';
 import { LineChart } from '../viz/LineChart';
 import { weeklySold } from './HQ';
 import { lower, t } from '../../i18n';
@@ -51,6 +52,7 @@ export function ModelView({ modelId }: { modelId: string }) {
   const age = (s.week - m.refreshWeek) / 52;
   const hasFacelift = s.projects.some((p) => p.replacesModelId === m.id);
   const { scores } = modelScores(s, m);
+  const paint = modelPaint(s, m);
 
   return (
     <div className="screen">
@@ -108,6 +110,22 @@ export function ModelView({ modelId }: { modelId: string }) {
             </Button>
           </div>
         )}
+      </div>
+
+      <div className="model-hero">
+        <ModelCar s={s} m={m} />
+        <div className="model-hero-tags">
+          <span>{t('{gen}. kuşak', { gen: m.generation })}</span>
+          {paint.japan ? (
+            <span title={t('Hatlarında siyah vernik fırını var: başka renk yok.')}>{t('Japan siyahı')}</span>
+          ) : (
+            <span>
+              {t(paint.body.name)}
+              {paint.roof ? ` / ${t(paint.roof.name)}` : ''}
+            </span>
+          )}
+          {active && <span>{t('{n} hat', { n: lines.length })}</span>}
+        </div>
       </div>
 
       <div className="stats-row">
@@ -169,11 +187,13 @@ export function ModelView({ modelId }: { modelId: string }) {
                 hint={t('Talep düşükse üretimi kıs: stok bekletmek para bağlar ve depolama masrafı çıkarır.')}
               />
               <p className="small">
-                {tx('Hatlar: {lines}', {
-                  lines: lines.length ? lines.map((l) => l.name).join(', ') : <span className="tone-bad">{t('hiçbir hatta üretilmiyor')}</span>,
-                })}{' '}
+                {lines.length ? (
+                  t('{n} hatta, haftada {output} araç kapasiteyle üretiliyor.', { n: lines.length, output: cars(cap) })
+                ) : (
+                  <span className="tone-bad">{t('Hiçbir hatta üretilmiyor.')}</span>
+                )}{' '}
                 <Button small kind="ghost" onClick={() => store.go({ id: 'factory' })}>
-                  {t('Fabrika')}
+                  {t('Fabrikada gör')}
                 </Button>
               </p>
             </>
@@ -246,7 +266,6 @@ export function ModelView({ modelId }: { modelId: string }) {
             </>
           }
         >
-          <CarSVG body={m.design.body} size={m.design.size} year={yearFloat(m.refreshWeek)} cylinders={m.design.engine.cylinders} styling={m.design.styling} />
           <StatsPanel s={s} design={m.design} segment={m.segment} yf={yf} bonus={m.bonus} scores={scores} compact />
         </Panel>
         <div>
