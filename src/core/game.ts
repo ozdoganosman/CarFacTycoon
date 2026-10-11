@@ -23,7 +23,8 @@ import { engineeringUpkeep, investmentsValue, plantCut, teamSpan } from './inves
 import { eraReference } from './scoring';
 import { allTech, techName } from './techtree';
 import { knownKnowhow, labSpeed, noteResearch, pumpResearchQueue, researchDef, researcherSalary, startingKnowledge } from './research';
-import { checkBoom, publish, techIssue } from './news';
+import { chapterIssue, checkBoom, publish, techIssue } from './news';
+import { GOAL_POINTS, checkGoals, goalsMet, openChapter } from './goals';
 import { racingWeek } from './racing';
 import { rivalMovesMonth } from './rivalMoves';
 import { boardYear, founderShare } from './shares';
@@ -288,7 +289,7 @@ export const SCORE_TIERS: { min: number; name: string }[] = [
   { min: 0, name: msg('Butik atölye') },
 ];
 
-/** The end-of-campaign score: sales rank, company value, reputation, best magazine verdict, racing wins. */
+/** The end-of-campaign score: sales rank, company value, reputation, best magazine verdict, racing wins, decade goals. Shown live on HQ. */
 export function finalScore(s: GameState): FinalScore {
   const totalSold = s.models.reduce((a, m) => a + m.unitsSold, 0);
   const rank = [totalSold, ...s.rivals.map((r) => r.unitsSold)].sort((a, b) => b - a).indexOf(totalSold) + 1;
@@ -301,6 +302,7 @@ export function finalScore(s: GameState): FinalScore {
   const year = yearOf(s.week);
   const winYears = s.racing?.winYears ?? [];
   const wins = winYears.filter((y) => y > year - 20).length;
+  const goals = goalsMet(s);
   const parts = [
     // 1st → 400, 2nd → 325, 5th → 225, 10th → 150, 20th → 75, 40th → 0
     { label: t('Tüm zamanların satış sırası'), value: t('{rank}.', { rank }), points: Math.max(0, Math.round(400 * (1 - Math.log(rank) / Math.log(40)))), max: 400 },
@@ -309,6 +311,8 @@ export function finalScore(s: GameState): FinalScore {
     { label: t('İtibar'), value: `${Math.round(s.company.reputation)}/100`, points: Math.round(3 * s.company.reputation), max: 300 },
     { label: recent.length ? t('Son on yılın dergi puanı (ortalama)') : t('Son arabanın dergi puanı (eski)'), value: `${dec(review, 1)}/10`, points: Math.round(30 * review), max: 300 },
     { label: t('Son yirmi yılın yarış zaferleri'), value: String(wins), points: Math.min(200, 25 * wins), max: 200 },
+    // The decade goals (goals.ts): a few points each, for going where the game's chapters point.
+    { label: t('On yılların hedefleri'), value: `${goals.met}/${goals.of}`, points: GOAL_POINTS * goals.met, max: GOAL_POINTS * goals.of },
   ];
   const total = parts.reduce((a, p) => a + p.points, 0);
   return { total, max: parts.reduce((a, p) => a + p.max, 0), parts, rank, tier: SCORE_TIERS.find((t) => total >= t.min)!.name };
@@ -350,6 +354,7 @@ export function tick(s: GameState): void {
 
   if (s.week >= s.endWeek) {
     closeYear(s, yearOf(s.week) - 1);
+    checkGoals(s, yearOf(s.week) - 1);
     s.gameOver = { reason: 'end', week: s.week };
     s.modals.push({ kind: 'gameOver' });
     return;
@@ -357,8 +362,15 @@ export function tick(s: GameState): void {
 
   fireEvents(s);
   if (weekOfYear(s.week) === 0) {
-    closeYear(s, yearOf(s.week) - 1);
-    announceTech(s, yearOf(s.week));
+    const year = yearOf(s.week);
+    closeYear(s, year - 1);
+    announceTech(s, year);
+    // A new decade: the last one's goals are counted, and its paper opens the next chapter.
+    if (year % 10 === 0 && year > 1900 && !s.gameOver) {
+      checkGoals(s, year - 1);
+      openChapter(s, year);
+      publish(s, chapterIssue(s, year));
+    }
   } else if (weekOfYear(s.week) % 13 === 0) payTaxInstalment(s);
   if (isMonthStart(s.week)) {
     checkStall(s);
@@ -383,6 +395,7 @@ export function tick(s: GameState): void {
     autoDealers(s);
     autoCapacity(s, (m) => materialUnitCost(s, m));
     checkBoom(s);
+    checkGoals(s);
   }
   checkSolvency(s);
   void yf;

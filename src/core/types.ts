@@ -575,6 +575,14 @@ export type ModalItem =
   | { kind: 'research'; done: string[]; started: string[] }
   | { kind: 'gameOver' };
 
+/** What the company had when a decade's chapter opened: some goals count only what the decade added. */
+export interface ChapterSnapshot {
+  decade: number;
+  acquired: number;
+  military: number;
+  wins: number;
+}
+
 export interface LogEntry {
   week: number;
   text: string;
@@ -694,6 +702,8 @@ export interface GameState {
   racing?: { level: number; fame: number; wins?: number; winYears?: number[]; paused?: boolean; dry?: number; last?: { year: number; race: string; result: 'win' | 'podium' | 'none'; model: string } };
   /** Rival companies the player has bought. */
   acquired?: string[];
+  /** The decade goals met (goal id → week) and what each chapter started from (goals.ts). Older saves lack it. */
+  goals?: { done: Record<string, number>; chapters: Record<number, ChapterSnapshot> };
   /** Dealers, service and cars on the road, state by state (older saves get one on load). */
   network?: NetworkState;
   /** What the rivals did once the player got ahead (older saves lack it). */
@@ -750,7 +760,8 @@ export interface NewsLetter {
 export interface NewsIssue {
   id: string;
   week: number;
-  kind: 'tech' | 'boom';
+  /** chapter: a new decade's page (goals.ts). */
+  kind: 'tech' | 'boom' | 'chapter';
   lead: NewsStoryData & { art: NewsArt; caption?: string; paragraphs?: string[] };
   side: NewsStoryData[];
   world?: NewsStoryData;

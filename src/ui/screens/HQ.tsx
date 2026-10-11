@@ -26,6 +26,8 @@ import { teamOutput } from '../../core/development';
 import { engineeringCost, nextEngineering, ownsPlant, plantCoverage, plantStep, teamSpan } from '../../core/investments';
 import { adBrandTerm, adNorm } from '../../core/advertising';
 import { FactoryYard } from '../viz/FactoryYard';
+import { CampaignPanel } from '../components/Campaign';
+import { guideStep } from '../../core/guide';
 import { SUPPLIER_PLANTS } from '../../data/investments';
 import { t, msg, list } from '../../i18n';
 import { Icon, type IconName } from '../components/Icon';
@@ -445,6 +447,8 @@ export function HQ() {
         </Panel>
 
         <div className="hq-side">
+        {/* The campaign's score and the decade's goals, once the guided first car is out. */}
+        {!guideStep(s) && <CampaignPanel />}
         <Panel title={t('Projeler')} actions={<Button small onClick={() => store.go({ id: 'projects' })}>{t('Tümü')}</Button>}>
           {s.projects.length ? (
             <div className="mini-list">

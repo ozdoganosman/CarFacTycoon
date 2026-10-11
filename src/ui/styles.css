@@ -4785,6 +4785,76 @@ button.topbar-date {
   background: var(--ink);
 }
 
+/* HQ: the campaign (score now, the decade's goals) */
+.campaign-tier {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.campaign-next {
+  margin: 2px 0 0;
+}
+.campaign .score-scale {
+  margin: 8px 0 10px;
+  font-size: 0.68rem;
+}
+.campaign .score-scale span {
+  white-space: normal;
+  line-height: 1.15;
+}
+.campaign-head {
+  margin: 0 0 6px;
+}
+.goals {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.goals li {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 8px;
+  align-items: start;
+  font-size: 0.92rem;
+}
+.goal-mark {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--good);
+}
+.goals li.is-done .goal-mark {
+  border-color: var(--good);
+  background: color-mix(in srgb, var(--good) 14%, transparent);
+}
+.goals li.is-done .goal-text {
+  color: var(--muted);
+}
+.goal-bar {
+  display: block;
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--brass) calc(var(--p) * 100%), var(--line) 0);
+}
+[dir='rtl'] .goal-bar {
+  background: linear-gradient(to left, var(--brass) calc(var(--p) * 100%), var(--line) 0);
+}
+.score-parts summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 /* Designer: cost breakdown */
 .cost-bd {
   border-top: 1px solid var(--line);
