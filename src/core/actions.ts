@@ -27,7 +27,7 @@ import { stateRng } from './rng';
 import { acquisitionTargets } from './acquisitions';
 import { autoByDefault } from './autopilot';
 import { boardVeto } from './shares';
-import { beginResearch, ensureResearch, knownKnowhow, labSlots, missingRequirements, pumpResearchQueue, researchCost, researchDef, researcherHireCost, restrictToKnown, unknownTech } from './research';
+import { LAB_SHARES, beginResearch, designEngineers, ensureResearch, knownKnowhow, labEngineers, labSlots, missingRequirements, pumpResearchQueue, researchCost, researchDef, restrictToKnown, unknownTech } from './research';
 import { experienceFactor, newEstimate } from './estimate';
 import { TESTS, SUPPLIERS, expectedDefects, generateDefects, withTuning } from './testing';
 import { yearFloat } from './time';
@@ -87,22 +87,12 @@ export function hireEngineers(s: GameState, n: number): ActionResult {
   return ok;
 }
 
-/** Research staff: they only learn new technology, and faster than design engineers. */
-export function hireResearchers(s: GameState, n: number): ActionResult {
-  const cost = n * researcherHireCost(yearFloat(s.week));
-  if (s.company.cash < cost) return fail(t('Yeterli para yok.'));
-  spend(s, cost, 'other');
-  s.company.researchers = (s.company.researchers ?? 0) + n;
-  decide(s, 'researchers', `${n} Ar-Ge uzmanı işe alındı (toplam ${s.company.researchers})`);
-  return ok;
-}
-
-export function fireResearchers(s: GameState, n: number): ActionResult {
-  const have = s.company.researchers ?? 0;
-  if (have < n) return fail(t('Bu kadar Ar-Ge uzmanı yok.'));
-  s.company.researchers = have - n;
-  s.company.reputation = clamp(s.company.reputation - 0.1 * n, 0, 100);
-  decide(s, 'researchers', `${n} Ar-Ge uzmanı çıkarıldı (toplam ${s.company.researchers})`);
+/** Put a share of the engineers in the laboratory (research.ts LAB_SHARES): research speeds up at once, the projects lose them. */
+export function setLabShare(s: GameState, share: number): ActionResult {
+  if (!LAB_SHARES.includes(share as (typeof LAB_SHARES)[number])) return fail(t('Böyle bir pay yok.'));
+  s.company.labShare = share;
+  shareEngineers(s);
+  decide(s, 'lab', `Laboratuvar: mühendislerin %${Math.round(share * 100)}'i (${labEngineers(s)} kişi)`);
   return ok;
 }
 
@@ -168,7 +158,7 @@ export function startProject(s: GameState, o: StartProjectOptions): { ok: true; 
   if (eng) design.engine = { ...eng.design };
   design.knowhow = knownKnowhow(s);
   const id = newId(s, 'p');
-  const free = s.company.engineers - engineersBusy(s);
+  const free = designEngineers(s) - engineersBusy(s);
   const p: Project = {
     id,
     name: o.name.trim() || t('Proje {no}', { no: id.slice(1) }),
@@ -225,7 +215,7 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
   const m = model(s, modelId);
   if (s.projects.some((p) => p.replacesModelId === modelId && p.kind === 'facelift')) return { ok: false, error: t('Bu model için zaten bir makyaj projesi var.') };
   const id = newId(s, 'p');
-  const free = s.company.engineers - engineersBusy(s);
+  const free = designEngineers(s) - engineersBusy(s);
   s.projects.push({
     id,
     name: t('{name} (makyaj)', { name: m.name }),

@@ -9,7 +9,7 @@ import { lineReport } from '../../core/factory';
 import { autoHoldText, idleCash, weeklyDemand } from '../../core/autocap';
 import { formatDate, formatShort, weekOfYear, yearFloat, yearOf } from '../../core/time';
 import { boardOutlook, boardVeto } from '../../core/shares';
-import { queueHold, researchDef, researchDefs, rivalAdoption, techState } from '../../core/research';
+import { designEngineers, queueHold, researchDef, researchDefs, rivalAdoption, techState } from '../../core/research';
 import { segmentDef } from '../../data/segments';
 import type { CarModel, GameState, LogCategory } from '../../core/types';
 import { useState } from 'react';
@@ -303,13 +303,13 @@ function nextSteps(s: GameState): Step[] {
   // A team bigger than its organisation can put to work: the next level, when it is open and affordable.
   const org = nextEngineering(s);
   const yf0 = yearFloat(s.week);
-  if (org && org.year <= yf0 && idle === 0 && s.company.engineers >= 2 * teamSpan(s) && s.company.cash > engineeringCost(org, yf0))
+  if (org && org.year <= yf0 && idle === 0 && designEngineers(s) >= 2 * teamSpan(s) && s.company.cash > engineeringCost(org, yf0))
     out.push({
       level: 'tip',
       icon: 'research',
       text: t('{n} mühendis ancak ~{output} kişilik iş çıkarıyor: teşkilat bu kadar büyük bir ekibi kaldırmıyor. {name} ({cost}) projeleri hızlandırır.', {
-        n: s.company.engineers,
-        output: dec(teamOutput(s.company.engineers, teamSpan(s)), 0),
+        n: designEngineers(s),
+        output: dec(teamOutput(designEngineers(s), teamSpan(s)), 0),
         name: t(org.name),
         cost: money(engineeringCost(org, yf0)),
       }),

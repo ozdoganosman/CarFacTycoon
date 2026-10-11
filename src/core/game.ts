@@ -22,7 +22,7 @@ import { adBrandTerm, followAdNorm } from './advertising';
 import { engineeringUpkeep, investmentsValue, plantCut, teamSpan } from './investments';
 import { eraReference } from './scoring';
 import { allTech, techName } from './techtree';
-import { knownKnowhow, labSpeed, noteResearch, pumpResearchQueue, researchDef, researcherSalary, startingKnowledge } from './research';
+import { designEngineers, knownKnowhow, labSpeed, noteResearch, pumpResearchQueue, researchDef, startingKnowledge } from './research';
 import { chapterIssue, checkBoom, publish, techIssue } from './news';
 import { GOAL_POINTS, checkGoals, goalsMet, openChapter } from './goals';
 import { racingWeek } from './racing';
@@ -228,7 +228,8 @@ export function rescueLoan(s: GameState): number {
 /** Every engineer works: projects in development share the whole team equally. */
 export function shareEngineers(s: GameState) {
   const dev = s.projects.filter((p) => p.phase === 'development');
-  for (const p of dev) p.engineers = s.company.engineers / dev.length;
+  const team = designEngineers(s);
+  for (const p of dev) p.engineers = team / dev.length;
 }
 
 /** Unit cost of the prototypes under test, in 1900 dollars (older saves did not store it). */
@@ -859,7 +860,7 @@ function field(s: GameState) {
 
 function fixedCosts(s: GameState) {
   const yf = yearFloat(s.week);
-  spend(s, s.company.engineers * engineerSalary(yf) + (s.company.researchers ?? 0) * researcherSalary(yf), 'salaries');
+  spend(s, s.company.engineers * engineerSalary(yf), 'salaries');
   s.company.idleSalary = (s.company.idleSalary ?? 0) + idleEngineers(s) * engineerSalary(yf);
   spend(s, overhead(yf, s.lines.length), 'other');
   // The engineering buildings: drawing office, proving ground, laboratories (core/investments.ts).

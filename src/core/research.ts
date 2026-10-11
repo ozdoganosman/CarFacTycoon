@@ -207,26 +207,33 @@ export function researchCost(def: ResearchDef, yf: number, s?: GameState): numbe
 
 /** Cash the research queue leaves in the till: about six weeks of salaries and running costs. */
 export function researchReserve(s: GameState, yf: number): number {
-  return 6 * (s.company.engineers * engineerSalary(yf) + (s.company.researchers ?? 0) * researcherSalary(yf) + overhead(yf, s.lines.length)) + (s.company.taxOwed ?? 0);
+  return 6 * (s.company.engineers * engineerSalary(yf) + overhead(yf, s.lines.length)) + (s.company.taxOwed ?? 0);
 }
 
-/** A bigger engineering department learns faster; dedicated research staff much more so. */
-export const researchSpeed = (engineers: number, researchers = 0) => 0.6 + Math.min(2.4, engineers / 10) + Math.min(3, researchers / 4);
+/**
+ * The shares of its engineers a company can put in the laboratory. They research only: they learn new
+ * technology much faster and take on more subjects, but do not develop cars. (Older saves had research
+ * staff hired apart; they joined the engineers, save.ts.)
+ */
+export const LAB_SHARES = [0, 0.1, 0.25, 0.5] as const;
+/** Engineers working in the laboratory. */
+export const labEngineers = (s: GameState) => Math.round(s.company.engineers * (s.company.labShare ?? 0));
+/** Engineers left for developing cars. */
+export const designEngineers = (s: GameState) => s.company.engineers - labEngineers(s);
 
-/** The company's research speed and subjects at once, with its research staff; the engineering organisation's laboratories speed it too (data/investments.ts). */
+/** A bigger engineering department learns faster; engineers in the laboratory much more so. */
+export const researchSpeed = (engineers: number, lab = 0) => 0.6 + Math.min(2.4, engineers / 10) + Math.min(3, lab / 4);
+
+/** The company's research speed and subjects at once, with its laboratory; the engineering organisation's buildings speed it too (data/investments.ts). */
 export const labSpeed = (s: GameState) =>
-  researchSpeed(s.company.engineers, s.company.researchers ?? 0) * (1 + ENGINEERING_LEVELS[Math.min(ENGINEERING_LEVELS.length - 1, s.engineering ?? 0)].research);
-export const labSlots = (s: GameState) => researchSlots(s.company.engineers, s.company.researchers ?? 0);
-
-/** A researcher costs a third more than a design engineer. */
-export const researcherSalary = (yf: number) => 1.3 * engineerSalary(yf);
-export const researcherHireCost = (yf: number) => 60 * costIndex(yf);
+  researchSpeed(s.company.engineers, labEngineers(s)) * (1 + ENGINEERING_LEVELS[Math.min(ENGINEERING_LEVELS.length - 1, s.engineering ?? 0)].research);
+export const labSlots = (s: GameState) => researchSlots(s.company.engineers, labEngineers(s));
 
 /** Pay for a subject and put the engineers on it (checks are the caller's). */
 export function beginResearch(s: GameState, def: ResearchDef, yf: number): { cost: number; weeks: number } {
   const cost = researchCost(def, yf, s);
   spend(s, cost, 'rnd');
-  const weeks = researchWeeks(def, yf, s.company.engineers, s.company.researchers ?? 0);
+  const weeks = researchWeeks(def, yf, s.company.engineers, labEngineers(s));
   s.research!.active.push({ id: def.id, weeksLeft: weeks, weeks, speed: labSpeed(s) });
   log(s, t('Ar-Ge: {name} araştırması başladı ({cost}, {n} hafta).', { name: t(def.name), cost: money(cost), n: weeks }), 'info', 'tech');
   decide(s, 'research:' + def.id, `Ar-Ge: ${def.name} (${def.year}) ${money(cost)}, ${weeks} hafta`);
@@ -287,12 +294,12 @@ export function noteResearch(s: GameState, done: string[], started: string[]) {
   } else pushModal(s, { kind: 'research', done, started });
 }
 
-export function researchWeeks(def: ResearchDef, yf: number, engineers: number, researchers = 0): number {
-  return Math.max(2, Math.ceil((def.weeks * (1 + pioneer(def, yf))) / researchSpeed(engineers, researchers)));
+export function researchWeeks(def: ResearchDef, yf: number, engineers: number, lab = 0): number {
+  return Math.max(2, Math.ceil((def.weeks * (1 + pioneer(def, yf))) / researchSpeed(engineers, lab)));
 }
 
-/** How many subjects the department can work on at once: one more per 15 engineers or 6 researchers. */
-export const researchSlots = (engineers: number, researchers = 0) => 1 + Math.floor(engineers / 15) + Math.floor(researchers / 6);
+/** How many subjects the department can work on at once: one more per 15 engineers, and per 6 in the laboratory. */
+export const researchSlots = (engineers: number, lab = 0) => 1 + Math.floor(engineers / 15) + Math.floor(lab / 6);
 
 /** Tech ids a design needs. */
 export function designTech(d: CarDesign): string[] {

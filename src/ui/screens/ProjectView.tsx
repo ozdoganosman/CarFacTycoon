@@ -32,7 +32,7 @@ import { pctWith } from '../../core/turkish';
 import { Badge, Button, Choice, NumberInput, Panel, Progress, Slider, Toggle, SegmentLabel } from '../components/ui';
 import { newEstimate } from '../../core/estimate';
 import { devWeeksLeft, launchBudget } from '../../core/budget';
-import { classGap, gapNames, researcherSalary } from '../../core/research';
+import { classGap, gapNames } from '../../core/research';
 import { BudgetLine } from '../components/BudgetLine';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { Designer } from './Designer';
@@ -988,7 +988,7 @@ function Launch({ p }: { p: Project }) {
   const lastingSold = Math.min(cap, markets.reduce((a, mk) => a + lastingDemandAtPrice(s, preview, mk, price), 0));
   const labourWeek = line ? lineUpkeep(s, line, cap > 0 ? sold / cap : 0) : 0;
   const contribution = sold * (net - unit) - labourWeek;
-  const fixedCost = s.company.engineers * engineerSalary(yf) + (s.company.researchers ?? 0) * researcherSalary(yf) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, m) => a + dealerUpkeep(s, m), 0);
+  const fixedCost = s.company.engineers * engineerSalary(yf) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, m) => a + dealerUpkeep(s, m), 0);
   const weeklyNet = contribution - fixedCost;
   const others = s.models.some((m) => m.status === 'active' && m.id !== p.replacesModelId);
   // With other cars on sale their profit already carries the fixed costs.

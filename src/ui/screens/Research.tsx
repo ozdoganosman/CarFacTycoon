@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import * as A from '../../core/actions';
 import {
+  LAB_SHARES,
+  labEngineers,
   labSlots,
   labSpeed,
   missingRequirements,
@@ -11,8 +13,6 @@ import {
   researchSlots,
   researchSpeed,
   researchWeeks,
-  researcherHireCost,
-  researcherSalary,
   rivalAdoption,
   techState,
   type ResearchDef,
@@ -21,7 +21,7 @@ import { yearFloat } from '../../core/time';
 import { store, useGameState } from '../store';
 import { dec, money, pct, pctOf } from '../format';
 import { inYear } from '../format';
-import { Button, Info, Panel, Progress, Stat, ScreenTitle } from '../components/ui';
+import { Button, Choice, Info, Panel, Progress, Stat, ScreenTitle } from '../components/ui';
 import { locale, msg, t } from '../../i18n';
 import { tx } from '../i18n';
 import { Icon, type IconName } from '../components/Icon';
@@ -99,7 +99,7 @@ export function Research() {
             <>
               {t('Araştırma yeri')}
               <Info>
-                <p>{t('Her 15 mühendis ya da 6 Ar-Ge uzmanı bir konu daha yürütebilir.')}</p>
+                <p>{t('Her 15 mühendis bir konu daha yürütebilir; laboratuvardaki her 6 mühendis bir konu daha.')}</p>
               </Info>
             </>
           }
@@ -108,7 +108,7 @@ export function Research() {
         <Stat
           label={t('Araştırma hızı')}
           value={`×${dec(labSpeed(s), 1)}`}
-          sub={t('{engineers} mühendis · {researchers} Ar-Ge uzmanı', { engineers: s.company.engineers, researchers: s.company.researchers ?? 0 })}
+          sub={t('{engineers} mühendis · {lab} laboratuvarda', { engineers: s.company.engineers, lab: labEngineers(s) })}
         />
         <Stat
           label={
@@ -129,7 +129,7 @@ export function Research() {
         <Stat label={t('Rakiplerde var, sende yok')} value={count('rivals')} sub={t('teknoloji')} tone={count('rivals') > 3 ? 'warn' : undefined} />
       </div>
 
-      <LabStaff />
+      <LabShare />
 
       <div className="research-layout">
         <div className="research-main">
@@ -212,7 +212,7 @@ function ResearchRow({ d, expanded, onToggle, share }: { d: ResearchDef; expande
   const queue = r.queue ?? [];
   const st = techState(s, d.id, yf);
   const cost = researchCost(d, yf, s);
-  const weeks = researchWeeks(d, yf, s.company.engineers, s.company.researchers ?? 0);
+  const weeks = researchWeeks(d, yf, s.company.engineers, labEngineers(s));
   const missing = missingRequirements(s, d.id);
   const active = r.active.find((a) => a.id === d.id);
   const free = labSlots(s) - r.active.length;
@@ -294,45 +294,36 @@ function ResearchRow({ d, expanded, onToggle, share }: { d: ResearchDef; expande
   );
 }
 
-/** Research staff: hire them to learn faster and work on more subjects at once. */
-function LabStaff() {
+/**
+ * The laboratory: a share of the engineers who only research. They learn new technology much faster and
+ * take on more subjects; the cars in development go on with the rest (core/research.ts LAB_SHARES).
+ */
+function LabShare() {
   const s = useGameState();
-  const yf = yearFloat(s.week);
-  const n = s.company.researchers ?? 0;
   const e = s.company.engineers;
-  const hire = (k: number) => store.try((st) => A.hireResearchers(st, k), t('{n} Ar-Ge uzmanı işe alındı', { n: k }));
-  const next = n + 4;
+  const share = s.company.labShare ?? 0;
   return (
     <div className="lab-staff">
       <div className="lab-staff-text">
-        <b>{t('Ar-Ge uzmanları: {n}', { n })}</b>
+        <b>{t('Laboratuvar: {n} mühendis', { n: labEngineers(s) })}</b>
         <span className="muted small">
           {' '}
-          ·{' '}
-          {t('araştırma hızı ×{speed}, aynı anda {n} konu · maaşları haftada {pay}', {
-            speed: dec(labSpeed(s), 1),
-            n: labSlots(s),
-            pay: money(n * researcherSalary(yf)),
-          })}
+          · {t('araştırma hızı ×{speed}, aynı anda {n} konu', { speed: dec(labSpeed(s), 1), n: labSlots(s) })}
         </span>
-        <span className="small">
-          {t(
-            '+4 uzmanla hız ×{speed}, {n} konu. Uzmanlar yalnızca araştırır (araba geliştirmez); işe alınca süren araştırmalar da hızlanır. Kişi başı işe alma {hire}, maaş haftada {pay}.',
-            { speed: dec(researchSpeed(e, next), 1), n: researchSlots(e, next), hire: money(researcherHireCost(yf)), pay: money(researcherSalary(yf)) },
-          )}
-        </span>
+        <span className="small">{t('Laboratuvardaki mühendisler yalnızca araştırır: araba geliştirmezler, projeler geri kalanlarla yürür. Pay değişince süren araştırmalar da hızlanır ya da yavaşlar.')}</span>
       </div>
-      <div className="lab-staff-btns">
-        <Button kind="primary" small disabled={s.company.cash < researcherHireCost(yf)} onClick={() => hire(1)}>
-          {t('+1 Ar-Ge uzmanı al')}
-        </Button>
-        <Button small disabled={s.company.cash < 4 * researcherHireCost(yf)} onClick={() => hire(4)}>
-          +4
-        </Button>
-        <Button small kind="ghost" disabled={n <= 0} onClick={() => store.try((st) => A.fireResearchers(st, 1), t('Bir Ar-Ge uzmanı ayrıldı'))}>
-          −1
-        </Button>
-      </div>
+      <Choice
+        value={share}
+        onChange={(v) => store.try((st) => A.setLabShare(st, v))}
+        options={LAB_SHARES.map((v) => {
+          const lab = Math.round(e * v);
+          return {
+            value: v,
+            label: v === 0 ? t('Laboratuvar yok') : t('Mühendislerin {share}', { share: pctOf(v) }),
+            sub: t('{n} mühendis · hız ×{speed} · {slots} konu', { n: lab, speed: dec(researchSpeed(e, lab), 1), slots: researchSlots(e, lab) }),
+          };
+        })}
+      />
     </div>
   );
 }

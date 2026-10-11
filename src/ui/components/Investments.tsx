@@ -1,3 +1,4 @@
+import { designEngineers } from '../../core/research';
 import { teamOutput } from '../../core/development';
 import {
   annualUnits,
@@ -34,7 +35,8 @@ export function EngineeringPanel() {
   const lv = engineeringLevel(s);
   const next = nextEngineering(s);
   const scale = companyWorkScale(s);
-  const n = s.company.engineers;
+  // The engineers developing cars (the laboratory's work alone: research.ts).
+  const n = designEngineers(s);
   const output = teamOutput(n, lv.span);
   const cost = next ? engineeringCost(next, yf) : 0;
   const open = next && next.year <= yf;

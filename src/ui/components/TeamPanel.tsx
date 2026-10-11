@@ -1,7 +1,7 @@
 import * as A from '../../core/actions';
 import { devWeeksLeft } from '../../core/budget';
 import { engineersBusy, idleEngineers } from '../../core/game';
-import { labSlots, labSpeed } from '../../core/research';
+import { designEngineers, labSlots, labSpeed } from '../../core/research';
 import { yearFloat } from '../../core/time';
 import { costIndex, engineerSalary } from '../../data/economy';
 import { t } from '../../i18n';
@@ -41,7 +41,7 @@ export function TeamPanel({ compact }: { compact?: boolean }) {
       {/* How much of the team's work gets done at once, with the organisation it has (core/investments.ts). */}
       {n > 12 && (
         <p className="small">
-          {tx('Teşkilat: <b>{org}</b> · {n} mühendis ~{output} kişilik iş çıkarıyor.', { org: t(engineeringLevel(s).name), n, output: dec(teamOutput(n, teamSpan(s)), 0) })}{' '}
+          {tx('Teşkilat: <b>{org}</b> · {n} mühendis ~{output} kişilik iş çıkarıyor.', { org: t(engineeringLevel(s).name), n, output: dec(teamOutput(designEngineers(s), teamSpan(s)), 0) })}{' '}
           <button type="button" className="link small" onClick={() => store.go({ id: 'company', tab: 'general' })}>
             {t('Teşkilatı büyüt')}
           </button>

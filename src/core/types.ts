@@ -649,7 +649,9 @@ export interface Company {
   loan: number;
   reputation: number; // 0..100
   engineers: number;
-  /** Research staff: learn new technology faster (they do not develop cars). */
+  /** The share of the engineers working in the laboratory (research.ts LAB_SHARES): they research, and develop no cars. */
+  labShare?: number;
+  /** Older saves: research staff hired apart (they join the engineers on load). */
   researchers?: number;
   skill: number; // engineering skill 0..100
   shops: Record<ComponentKey, boolean>;

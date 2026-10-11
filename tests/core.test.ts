@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as A from '../src/core/actions';
 import { aiDesign, referenceBonus, referenceDesigns } from '../src/core/ai';
 import { computeEngine, displacementCc, eraRpmCap, racHp } from '../src/core/engine';
-import { researchCost, researchDef, researchDefs, researchScale, researchSlots, unknownTech } from '../src/core/research';
+import { labEngineers, researchCost, researchDef, researchDefs, researchScale, researchSlots, unknownTech } from '../src/core/research';
 import { KNOWHOW } from '../src/data/knowhow';
 import { capexScale, corporateTaxRate, costIndex } from '../src/data/economy';
 import { lineOffline, lineReport, nextLineName, paybackYears, reservedLines, stationPrice, suggestedLine } from '../src/core/factory';
@@ -866,18 +866,37 @@ describe('engineering focus on handling and practicality', () => {
 });
 
 describe('research staff, focus presets and waiting projects', () => {
-  it('research staff learn faster, take more subjects and speed up work under way', () => {
+  it('engineers in the laboratory learn faster, take more subjects and speed up work under way, and develop no cars', () => {
     const s = newGame({ companyName: 'Test', hq: 'usa', seed: 51 });
     s.modals = [];
     s.week = 52 * 11;
     s.company.cash = 5_000_000;
+    s.company.engineers = 32;
     expect(A.startResearch(s, 'vt:ohv').ok).toBe(true);
     const before = s.research!.active[0].weeksLeft;
-    expect(A.hireResearchers(s, 8).ok).toBe(true);
+    const slots = researchSlotsOf(s);
+    expect(A.setLabShare(s, 0.25).ok).toBe(true);
+    expect(labEngineers(s)).toBe(8);
     tick(s);
     const left = s.research!.active.find((a) => a.id === 'vt:ohv')?.weeksLeft ?? 0;
     expect(before - left).toBeGreaterThan(1.5);
-    expect(researchSlotsOf(s)).toBeGreaterThan(1);
+    expect(researchSlotsOf(s)).toBeGreaterThan(slots);
+    // The cars in development go on with the rest.
+    const r = A.startProject(s, { name: 'Lab', segment: 'family', targetPrice: 0 });
+    if (!r.ok) throw new Error(r.error);
+    expect(A.beginDevelopment(s, r.id).ok).toBe(true);
+    expect(s.projects.find((p) => p.id === r.id)!.engineers).toBe(24);
+    expect(A.setLabShare(s, 0.3).ok).toBe(false);
+  });
+
+  it('research staff of an older save join the engineers, in the laboratory', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 51 });
+    s.company.engineers = 24;
+    s.company.researchers = 8;
+    const loaded = deserialize(serialize(s));
+    expect(loaded.company.engineers).toBe(32);
+    expect(loaded.company.researchers).toBeUndefined();
+    expect(loaded.company.labShare).toBe(0.25);
   });
 
   it('a project can start with a focus preset', () => {
@@ -922,7 +941,7 @@ describe('research staff, focus presets and waiting projects', () => {
 });
 
 function researchSlotsOf(s: ReturnType<typeof newGame>) {
-  return researchSlots(s.company.engineers, s.company.researchers ?? 0);
+  return researchSlots(s.company.engineers, labEngineers(s));
 }
 
 describe('playtest fixes: capacity, reports, facelifts, parts', () => {
