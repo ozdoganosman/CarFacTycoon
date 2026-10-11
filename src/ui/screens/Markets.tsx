@@ -13,7 +13,7 @@ import { REGION_NAMES, STATE_IDS, stateDef, statePop, stateWeights, type StateId
 import type { GameState } from '../../core/types';
 import { store, useGameState } from '../store';
 import { INCOME_NAMES, dec, money, num, pct } from '../format';
-import { Badge, Button, Choice, Info, NumberInput, Panel, Table, Toggle, SegmentLabel } from '../components/ui';
+import { Badge, Button, Choice, Info, NumberInput, Panel, Table, Toggle, SegmentLabel, useScreenTabs } from '../components/ui';
 import { setAutoDealers } from '../../core/autoservice';
 import { Importance } from '../components/StatsPanel';
 import { LineChart } from '../viz/LineChart';
@@ -22,14 +22,26 @@ import { lower, msg, t } from '../../i18n';
 import { tx } from '../i18n';
 
 export function Markets() {
+  // One part at a time: the network on the map, the market and advertising, what buyers want.
+  const sc = store.screen;
+  const [tab, tabBar] = useScreenTabs(
+    'markets',
+    [
+      { id: 'network' as const, label: t('Bayi ve servis') },
+      { id: 'market' as const, label: t('Pazar ve reklam') },
+      { id: 'buyers' as const, label: t('Alıcılar') },
+    ],
+    sc.id === 'markets' ? sc.tab : undefined,
+  );
   return (
     <div className="screen">
       <div className="screen-head">
         <h1>{t('Pazar ve bayi ağı')}</h1>
       </div>
-      <NetworkPanel />
-      <MarketPanel />
-      <Knowledge />
+      {tabBar}
+      {tab === 'network' && <NetworkPanel />}
+      {tab === 'market' && <MarketPanel />}
+      {tab === 'buyers' && <Knowledge />}
     </div>
   );
 }

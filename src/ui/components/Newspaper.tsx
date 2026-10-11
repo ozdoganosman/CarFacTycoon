@@ -5,6 +5,7 @@ import { msg, t } from '../../i18n';
 import { store, useGameState } from '../store';
 import { money } from '../format';
 import { CarSVG } from '../viz/CarSVG';
+import { ModelCar } from './ModelCar';
 import { Button } from './ui';
 import { PaperAdSlot } from './Sponsor';
 import { Icon } from './Icon';
@@ -51,7 +52,7 @@ export function NewsCard() {
   };
   if (compact)
     return (
-      <aside className={`news-card is-compact ${issue.kind === 'boom' ? 'is-boom' : ''}`}>
+      <aside className={`news-card is-compact ${issue.kind !== 'tech' ? 'is-boom' : ''}`}>
         <button type="button" className="news-card-tab" onClick={read} title={issue.lead.headline}>
           <Icon name="newspaper" /> <span className={`mast-${era}`}>{t(MAST[era].name)}</span>
         </button>
@@ -61,7 +62,7 @@ export function NewsCard() {
       </aside>
     );
   return (
-    <aside className={`news-card ${issue.kind === 'boom' ? 'is-boom' : ''}`} aria-live="polite">
+    <aside className={`news-card ${issue.kind !== 'tech' ? 'is-boom' : ''}`} aria-live="polite">
       <div className="news-card-head">
         <span className={`news-card-mast mast-${era}`}>{t(MAST[era].name)}</span>
         <button type="button" className="year-card-x" aria-label={t('Kapat')} onClick={dismiss}>
@@ -69,7 +70,7 @@ export function NewsCard() {
         </button>
       </div>
       <b className="news-card-headline">{issue.lead.headline}</b>
-      <Button kind={issue.kind === 'boom' ? 'primary' : 'ghost'} onClick={read}>
+      <Button kind={issue.kind !== 'tech' ? 'primary' : 'ghost'} onClick={read}>
         <Icon name="newspaper" /> {t('Gazeteyi oku (oyun durur)')}
       </Button>
     </aside>
@@ -89,7 +90,8 @@ export function NewspaperHost() {
   if (!issue) return null;
   return (
     <div className="paper-backdrop" onClick={(e) => e.target === e.currentTarget && store.closeNews()}>
-      <div className="paper-wrap" role="dialog" aria-modal="true" aria-label={issue.lead.headline}>
+      {/* A record's front page spins in, as in the newsreels. */}
+      <div className={`paper-wrap ${issue.kind === 'boom' ? 'is-spin' : ''}`} role="dialog" aria-modal="true" aria-label={issue.lead.headline}>
         <button type="button" className="paper-close" onClick={() => store.closeNews()} aria-label={t('Gazeteyi kapat')}>
           ×
         </button>
@@ -110,7 +112,7 @@ export function Newspaper({ s, issue }: { s: GameState; issue: NewsIssue }) {
     <article className={`paper paper-${era}`}>
       <header className="paper-mast">
         <div className="paper-ears">
-          <span className="paper-ear">{issue.kind === 'boom' ? t('ÖZEL BASKI') : t('Hava: açık, yollar kuru')}</span>
+          <span className="paper-ear">{issue.kind === 'boom' ? t('ÖZEL BASKI') : issue.kind === 'chapter' ? t('YENİ BİR ON YIL') : t('Hava: açık, yollar kuru')}</span>
           <h1 className="paper-name">{t(mast.name)}</h1>
           <span className="paper-ear">{t('Son telgraflar içeride')}</span>
         </div>
@@ -173,7 +175,7 @@ export function Newspaper({ s, issue }: { s: GameState; issue: NewsIssue }) {
               <div className="paper-ad-maker">{s.company.name}</div>
               <div className="paper-ad-model">{adModel.name}</div>
               <div className="halftone paper-ad-car">
-                <CarSVG body={adModel.design.body} size={adModel.design.size} year={yearOf(adModel.refreshWeek)} cylinders={adModel.design.engine.cylinders} styling={adModel.design.styling} />
+                <ModelCar s={s} m={adModel} year={yearOf(adModel.refreshWeek)} />
               </div>
               <div className="paper-ad-slogan">{issue.ad.slogan}</div>
               <ul>
@@ -214,7 +216,7 @@ export function NewsArchive() {
       {list.map((n) => (
         <li key={n.id}>
           <button type="button" className="link-btn" onClick={() => store.openNews(n.id)}>
-            <span className="news-date">{formatDate(n.week)}</span> <Icon name={n.kind === 'boom' ? 'rosette' : 'newspaper'} />{' '}
+            <span className="news-date">{formatDate(n.week)}</span> <Icon name={n.kind === 'boom' ? 'rosette' : n.kind === 'chapter' ? 'scroll' : 'newspaper'} />{' '}
             {n.lead.headline}
           </button>
         </li>

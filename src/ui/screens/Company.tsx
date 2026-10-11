@@ -7,7 +7,7 @@ import { RACING_LEVELS, RACING_YEAR, racingBudget, racingOutlook, racingPaused, 
 import { yearFloat } from '../../core/time';
 import { store, useGameState } from '../store';
 import { dec, money, num, pct as fmtPct, pctOf } from '../format';
-import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table } from '../components/ui';
+import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table, ScreenTitle, useScreenTabs } from '../components/ui';
 import { list, t } from '../../i18n';
 import { tx } from '../i18n';
 
@@ -35,13 +35,22 @@ export function Company() {
     !racingOpen && { key: 'racing', title: t('Yarış takımı'), why: t('Otomobil yarışları {year}’dan itibaren bir markanın vitrini olur.', { year: RACING_YEAR }) },
     !buying && { key: 'buy', title: t('Rakip satın al'), why: t('Şu an satılık rakip yok: senden küçük ve satış yapan bir üretici çıktığında burada görünür.') },
   ].filter((x): x is { key: string; title: string; why: string } => !!x);
+  // One part at a time: the organisation (and what opens later), the stock market, the races, the rivals.
+  const sc = store.screen;
+  const [tab, tabBar] = useScreenTabs(
+    'company',
+    [
+      { id: 'general' as const, label: t('Teşkilat') },
+      ...(sharesOpen ? [{ id: 'shares' as const, label: t('Borsa') }] : []),
+      ...(racingOpen ? [{ id: 'racing' as const, label: t('Yarış') }] : []),
+      { id: 'rivals' as const, label: t('Rakipler') },
+    ],
+    sc.id === 'company' ? sc.tab : undefined,
+  );
   return (
     <div className="screen">
       <div className="screen-head">
-        <div>
-          <h1>{t('Şirket')}</h1>
-          <p className="muted">{t('Kazandığın parayı markayı büyütmek için kullan: yarışlarda ün kazan, küçük rakipleri satın al, borsaya açıl.')}</p>
-        </div>
+        <ScreenTitle id="company" title={t('Şirket')} intro={t('Kazandığın parayı markayı büyütmek için kullan: yarışlarda ün kazan, küçük rakipleri satın al, borsaya açıl.')} />
       </div>
       <div className="stats-row">
         <Stat
@@ -64,9 +73,10 @@ export function Company() {
         <Stat label={t('Yarış ünü')} value={dec(r.fame, 1)} sub={t('bütün modellere prestij +{v}', { v: dec(racingPrestige(s), 1) })} />
         <Stat label={t('Yarış zaferi')} value={r.wins ?? 0} />
       </div>
-      <EngineeringPanel />
+      {tabBar}
+      {tab === 'general' && <EngineeringPanel />}
       {/* What is not open yet waits in one short list instead of a panel each. */}
-      {later.length > 0 && (
+      {tab === 'general' && later.length > 0 && (
         <Panel title={t('Daha sonra')} className="later-panel">
           <ul className="later">
             {later.map((x) => (
@@ -77,12 +87,8 @@ export function Company() {
           </ul>
         </Panel>
       )}
-      <div className="grid-2">
-        {sharesOpen && <SharesPanel s={s} />}
-        <RivalMovesPanel s={s} />
-      </div>
-      <div className="grid-2">
-        {racingOpen && (
+      {tab === 'shares' && sharesOpen && <SharesPanel s={s} />}
+      {tab === 'racing' && racingOpen && (
         <Panel
           title={
             <>
@@ -158,7 +164,10 @@ export function Company() {
             </>
           )}
         </Panel>
-        )}
+      )}
+      {tab === 'rivals' && (
+      <div className="grid-2">
+        <RivalMovesPanel s={s} />
         {buying && (
         <Panel
           title={
@@ -226,6 +235,7 @@ export function Company() {
         </Panel>
         )}
       </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { PostHog } from 'posthog-js';
 import { finalScore } from '../core/game';
+import { chapterOf } from '../core/goals';
 import { yearFloat } from '../core/time';
 import type { GameState } from '../core/types';
 import { lastOf } from '../core/util';
@@ -115,7 +116,12 @@ interface Seen {
   over: boolean;
   /** How far the company has come on the way to its first car (see FIRST_STEPS). */
   step: number;
+  /** Decade goals already sent (goal_met). */
+  goals: number;
 }
+
+/** The decade goals met, in the order they were met. */
+const goalsDone = (s: GameState) => Object.entries(s.goals?.done ?? {}).sort((a, b) => a[1] - b[1]);
 let seen: Seen | null = null;
 
 /**
@@ -168,7 +174,7 @@ export function observeGame(s: GameState | null) {
   const year = yearOf(s);
   if (!seen || seen.seed !== s.seed) {
     track(s.week <= 1 ? 'game_started' : 'game_resumed', glance(s));
-    seen = { seed: s.seed, lastDecision: lastOf(decisions) ?? null, lastError: lastOf(errors) ?? null, year, over: !!s.gameOver, step: firstStep(s) };
+    seen = { seed: s.seed, lastDecision: lastOf(decisions) ?? null, lastError: lastOf(errors) ?? null, year, over: !!s.gameOver, step: firstStep(s), goals: goalsDone(s).length };
     return;
   }
   const step = firstStep(s);
@@ -183,9 +189,24 @@ export function observeGame(s: GameState | null) {
   if (!s.gameOver) seen.over = false;
   if (year > seen.year) {
     const y = s.years[s.years.length - 1];
-    track('year_end', { ...glance(s), year: y?.year ?? year - 1, revenue: y ? Math.round(y.revenue) : null, profit: y ? Math.round(y.profit) : null, units: y ? Math.round(y.unitsSold) : null });
+    // The score and its tier as they stand (HQ shows them live), for a funnel past the first car.
+    const score = finalScore(s);
+    track('year_end', {
+      ...glance(s),
+      year: y?.year ?? year - 1,
+      revenue: y ? Math.round(y.revenue) : null,
+      profit: y ? Math.round(y.profit) : null,
+      units: y ? Math.round(y.unitsSold) : null,
+      score: score.total,
+      tier: score.tier,
+      goals_met: goalsDone(s).length,
+    });
     seen.year = year;
   }
+  // The decade goals as they are met (core/goals.ts).
+  const goals = goalsDone(s);
+  for (const [goal, week] of goals.slice(seen.goals)) track('goal_met', { goal, decade: chapterOf(Math.floor(yearFloat(week))).decade, game_year: Math.floor(yearFloat(week)) });
+  seen.goals = Math.max(seen.goals, goals.length);
   for (const e of newSince(errors, seen.lastError)) track('game_error', { at: e.at, message: e.message, game_year: Math.floor(yearFloat(e.week)) });
   seen.lastError = lastOf(errors) ?? null;
   if (s.gameOver && !seen.over) {

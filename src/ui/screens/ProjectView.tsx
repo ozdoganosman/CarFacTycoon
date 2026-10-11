@@ -36,6 +36,7 @@ import { classGap, gapNames, researcherSalary } from '../../core/research';
 import { BudgetLine } from '../components/BudgetLine';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { Designer } from './Designer';
+import { seasoned, setProjectAuto } from '../../core/autopilot';
 import { DevBar } from './DevPanel';
 import { Icon } from '../components/Icon';
 
@@ -99,6 +100,7 @@ export function ProjectView({ projectId }: { projectId: string }) {
         ))}
       </ol>
       <NextStep p={p} />
+      <AutoSteps p={p} />
       {(p.phase === 'design' || p.phase === 'development') && (
         <>
           <DevBar project={p} />
@@ -359,6 +361,23 @@ function FaceliftGain({ p }: { p: Project }) {
 }
 
 /** When testing is finished, its next step sits right under the stepper, not at the bottom of the page. */
+/** From the third car on: let the project take its steps by itself, up to the launch (autopilot.ts). */
+function AutoSteps({ p }: { p: Project }) {
+  const s = useGameState();
+  const open = p.phase === 'design' || p.phase === 'development' || p.phase === 'testing' || (p.phase === 'production' && p.productionReadyWeek === undefined);
+  if (!seasoned(s) || !open) return null;
+  return (
+    <div className="auto-steps">
+      <Toggle
+        checked={!!p.auto}
+        onChange={(v) => store.try((st) => setProjectAuto(st, p.id, v))}
+        label={t('Kendiliğinden ilerlesin')}
+        sub={t('Geliştirme bitince teste, test bitince standart kalıplarla arabanın hattına geçer. Yalnızca lansmanda, fiyat için durur.')}
+      />
+    </div>
+  );
+}
+
 function NextStep({ p }: { p: Project }) {
   const testsDone = p.phase === 'testing' && TESTS.every((t) => p.tests[t.id].done >= p.tests[t.id].planned);
   if (!testsDone) return null;

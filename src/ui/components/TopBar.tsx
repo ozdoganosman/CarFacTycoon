@@ -4,6 +4,7 @@ import { store, useGameState, type Speed } from '../store';
 import { money, recentProfit, signedMoney } from '../format';
 import { Icon, type IconName } from './Icon';
 import { SponsorChip } from './Sponsor';
+import { useTweened } from '../anim';
 
 const SPEEDS: { s: Speed; icon: IconName; title: string }[] = [
   { s: 0, icon: 'pause', title: msg('Duraklat (boşluk)') },
@@ -15,6 +16,10 @@ const SPEEDS: { s: Speed; icon: IconName; title: string }[] = [
 export function TopBar() {
   const s = useGameState();
   const weekly = recentProfit(s, 4);
+  // A stopped clock shows on the date itself (a tap starts it again), not as a banner over every screen.
+  const paused = store.speed === 0 && !s.gameOver;
+  // The till runs to its new figure and glows green or red for a moment.
+  const cash = useTweened(s.company.cash);
   return (
     <header className="topbar">
       <div className="brand">
@@ -23,13 +28,25 @@ export function TopBar() {
         </span>
         <span className="brand-name">{s.company.name}</span>
       </div>
-      <div className="topbar-date" aria-live="polite">
-        {formatDate(s.week)}
-      </div>
+      {paused ? (
+        <button
+          type="button"
+          className="topbar-date is-paused"
+          onClick={() => store.setSpeed(store.lastSpeed)}
+          title={`${t('Zaman akmadan mühendisler çalışmaz, testler ilerlemez, fabrika üretmez.')} ${t('Devam etmek için dokun.')}`}
+        >
+          {formatDate(s.week)}
+          <span className="pause-mark">{t('Duraklatıldı')}</span>
+        </button>
+      ) : (
+        <div className="topbar-date" aria-live="polite">
+          {formatDate(s.week)}
+        </div>
+      )}
       <div className="topbar-kpis">
         <div className="kpi" title={t('Kasadaki para')}>
           <span>{t('Kasa')}</span>
-          <b className={s.company.cash < 0 ? 'tone-bad' : ''}>{money(s.company.cash)}</b>
+          <b className={`${s.company.cash < 0 ? 'tone-bad' : ''} ${cash.trend ? `is-${cash.trend}` : ''}`}>{money(cash.value)}</b>
         </div>
         <SponsorChip />
         <div className="kpi" title={t('Son 4 haftanın ortalama haftalık kârı (yatırımlar hariç)')}>
@@ -46,7 +63,7 @@ export function TopBar() {
           <button
             key={x.s}
             type="button"
-            className={`speed-btn ${store.speed === x.s ? 'is-on' : ''}`}
+            className={`speed-btn ${store.speed === x.s ? 'is-on' : ''} ${paused && x.s === store.lastSpeed ? 'is-hint' : ''}`}
             onClick={() => store.setSpeed(x.s)}
             title={t(x.title)}
             aria-pressed={store.speed === x.s}

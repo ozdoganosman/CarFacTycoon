@@ -31,6 +31,9 @@ import { tx } from '../i18n';
 import { Button, Choice, Info, Slider, Toggle } from '../components/ui';
 import { StatsPanel, useCarStats } from '../components/StatsPanel';
 import { CarSVG } from '../viz/CarSVG';
+import { PaintPicker } from '../components/PaintPicker';
+import { designPaint } from '../paint';
+import { stationDef } from '../../data/stations';
 import { LineChart } from '../viz/LineChart';
 import { EngineBlock, FourStroke, SuspensionSim } from '../cards/animations';
 import { EngineSound } from '../components/EngineSound';
@@ -261,6 +264,11 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
   };
   const setEngine = (e: EngineDesign) => set({ engine: e });
   const neutral = useMemo(() => newEstimate(() => 0.5), []);
+  const paint = designPaint(d, project.id, yf);
+  // Lines with a black japan oven paint every car black, whatever was ordered.
+  const japan = s.lines.some(
+    (l) => (l.id === project.lineId || (project.replacesModelId !== undefined && l.modelId === project.replacesModelId)) && l.stations.paint.some((id) => stationDef(id).blackOnly),
+  );
   const gate = useTechGate();
 
   return (
@@ -268,8 +276,14 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
       <div className="designer-col">
         <div className="designer-main">
           <div className="designer-car">
-            <CarSVG body={d.body} size={d.size} year={yf} cylinders={d.engine.cylinders} styling={d.styling} />
+            <CarSVG body={d.body} size={d.size} year={yf} cylinders={d.engine.cylinders} styling={d.styling} color={paint.body.color} roof={paint.roof?.color} />
           </div>
+          <PaintPicker
+            paint={paint}
+            year={yf}
+            onChange={(p, roof) => store.try((st) => A.setProjectPaint(st, project.id, p, roof))}
+            note={japan && paint.body.id !== 'black' ? t('Bu arabanın hattında siyah vernik fırını var: hangi rengi seçersen seç, araba siyah çıkar.') : undefined}
+          />
           <div className="tabs" role="tablist">
             {TABS.map((x) => (
               <button key={x.id} type="button" role="tab" data-tab={x.id} aria-selected={tab === x.id} className={`tab ${tab === x.id ? 'is-on' : ''}`} onClick={() => setTab(x.id)}>

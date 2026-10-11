@@ -42,6 +42,31 @@ from public.playtests
 where received_at >= '2026-10-09';  -- bu sürümden sonrası
 ```
 
+## İlk arabadan sonra: on yıllar ve hedefler
+
+Her on yıl bir bölümdür ve üç hedefi vardır (`src/core/goals.ts`); Merkez puanı ve unvanı canlı
+gösterir. İlk arabadan sonrasını üç olay ölçer:
+
+| Ne | PostHog olayı | Ne zaman |
+|---|---|---|
+| Yıl sonu | `year_end` (`score`, `tier`, `goals_met` ile) | her yılın sonunda |
+| Hedef | `goal_met` (`goal`, `decade`) | bir on yıl hedefi tuttuğunda |
+| Kendiliğinden ilerleyen proje | `decision` (`kind` = `auto`) | oyuncu seçimi açıp kapattığında |
+
+**Funnel** devamı: `first_launch` → `year_end` (`year` = 1909) → `year_end` (`year` = 1919) → … →
+`game_over` (`reason` = `end`). Hangi bölümde bırakıldığını ve o ana kadar kaç hedef tuttuğunu
+`year_end`'in `goals_met`'i, bölümlerin zorluğunu `goal_met`'in `goal` dağılımı gösterir. Botla
+oynanan bir kampanya on sekiz hedefin aşağı yukarı üçte ikisini tutturur (yarışmaz, rakip satın
+almaz, 1934'ten önce hiçbir sınıfın lideri olmaz): gerçek oyuncuların bundan çok aşağıda kaldığı bir
+hedef ya çok zor ya da ekranda yeterince görünmüyor demektir.
+
+## Durum: 11 Ekim 2026
+
+7 kayıt, 6 oyuncu (30 Eylül - 10 Ekim): hâlâ **hiçbirinde piyasaya çıkmış araba yok**. Eski
+tarayıcı düzeltmesi, rehberli ilk araba ve kademeli menü Pages'e 11 Ekim 02:41'de (UTC) çıktı; o
+saatten sonra gelmiş kayıt yok. Sıradaki adım: oyunu 10-20 kişiye oynatmak ve yukarıdaki sorguyu
+`received_at >= '2026-10-11 03:00'` ile çalıştırmak.
+
 ## Başlangıç noktası (bu değişiklikten önce)
 
 5 oyuncudan paylaşılan 6 oyun (30 Eylül - 5 Ekim 2026): **hiçbirinde proje ya da piyasaya çıkmış

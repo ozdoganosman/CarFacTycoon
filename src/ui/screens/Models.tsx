@@ -1,14 +1,15 @@
-import { formatDate, yearFloat } from '../../core/time';
-import type { CarModel } from '../../core/types';
+import { formatDate, yearOf } from '../../core/time';
+import { SEGMENTS } from '../../data/segments';
+import type { CarModel, GameState } from '../../core/types';
 import { store, useGameState } from '../store';
 import { cars, dec, money, num } from '../format';
-import { Badge, Empty, SegmentLabel } from '../components/ui';
-import { CarSVG } from '../viz/CarSVG';
+import { Badge, Empty, Panel, SegmentLabel } from '../components/ui';
+import { ModelCar } from '../components/ModelCar';
 import { weeklySold } from './HQ';
 import { t } from '../../i18n';
 
 /** A model as a page of the maker's catalogue: the car, its name and class, and its figures. */
-function ModelEntry({ m }: { m: CarModel }) {
+function ModelEntry({ s, m }: { s: GameState; m: CarModel }) {
   const active = m.status === 'active';
   const figures: [string, string][] = [
     [t('Haftalık'), active ? cars(weeklySold(m)) : '—'],
@@ -19,7 +20,7 @@ function ModelEntry({ m }: { m: CarModel }) {
   return (
     <button type="button" className={`model-entry ${active ? '' : 'is-retired'}`} onClick={() => store.go({ id: 'model', modelId: m.id })}>
       <span className="model-entry-car" aria-hidden>
-        <CarSVG body={m.design.body} size={m.design.size} year={yearFloat(m.refreshWeek)} cylinders={m.design.engine.cylinders} styling={m.design.styling} />
+        <ModelCar s={s} m={m} />
       </span>
       <span className="model-entry-head">
         <span className="model-entry-name">
@@ -45,6 +46,41 @@ function ModelEntry({ m }: { m: CarModel }) {
   );
 }
 
+/**
+ * The company's cars class by class, generation after generation: a strip of small drawings, the cars
+ * on sale at the end (a tap opens the car).
+ */
+function Lineage({ s }: { s: GameState }) {
+  // Each strip opens on its latest generation (the end of the line, either way the text runs).
+  const toEnd = (el: HTMLDivElement | null) => {
+    if (el && !el.dataset.placed) {
+      el.dataset.placed = '1';
+      el.scrollLeft = getComputedStyle(el).direction === 'rtl' ? -el.scrollWidth : el.scrollWidth;
+    }
+  };
+  const rows = SEGMENTS.map((seg) => ({ seg, cars: s.models.filter((m) => m.segment === seg.id).sort((a, b) => a.launchWeek - b.launchWeek) })).filter((x) => x.cars.length);
+  return (
+    <Panel title={t('Kuşaklar')}>
+      {rows.map(({ seg, cars: line }) => (
+        <div key={seg.id} className="lineage">
+          <SegmentLabel id={seg.id} />
+          <div className="lineage-strip" ref={toEnd}>
+            {line.map((m) => (
+              <button key={m.id} type="button" className={`lineage-car ${m.status === 'active' ? 'is-active' : ''}`} onClick={() => store.go({ id: 'model', modelId: m.id })}>
+                <ModelCar s={s} m={m} />
+                <b>{m.name}</b>
+                <small>
+                  {yearOf(m.launchWeek)}–{m.retiredWeek !== undefined ? yearOf(m.retiredWeek) : t('bugün')} · {t('{count} araç', { count: num(m.unitsSold) })}
+                </small>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </Panel>
+  );
+}
+
 export function Models() {
   const s = useGameState();
   const active = s.models.filter((m) => m.status === 'active').sort((a, b) => b.launchWeek - a.launchWeek);
@@ -58,19 +94,10 @@ export function Models() {
         <>
           <div className="model-list">
             {active.map((m) => (
-              <ModelEntry key={m.id} m={m} />
+              <ModelEntry key={m.id} s={s} m={m} />
             ))}
           </div>
-          {retired.length > 0 && (
-            <>
-              <h4 className="model-list-title">{t('Üretimden kalktı')}</h4>
-              <div className="model-list is-retired">
-                {retired.map((m) => (
-                  <ModelEntry key={m.id} m={m} />
-                ))}
-              </div>
-            </>
-          )}
+          {retired.length > 0 && <Lineage s={s} />}
         </>
       ) : (
         <Empty>{t('Henüz piyasaya çıkmış bir modelin yok. Projeler ekranından ilk aracını tasarla.')}</Empty>

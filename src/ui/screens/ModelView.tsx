@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as A from '../../core/actions';
 import { autoHoldText, weeklyDemand } from '../../core/autocap';
 import { materialUnitCost } from '../../core/game';
@@ -18,7 +18,7 @@ import {
 } from '../../core/market';
 import { scoreStats } from '../../core/scoring';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
-import { formatDate, formatShort, yearFloat } from '../../core/time';
+import { formatDate, formatShort, yearFloat, yearOf } from '../../core/time';
 import { MARKETS } from '../../data/markets';
 import * as N from '../../core/network';
 import { RIVALS } from '../../data/rivals';
@@ -30,10 +30,13 @@ import { customerLetters } from '../../core/letters';
 import { cars, dec, money, num, pct } from '../format';
 import { Badge, Button, Empty, NumberInput, Panel, Slider, Stat, Table, Toggle, ScoreBar, Info, SegmentLabel } from '../components/ui';
 import { StatsPanel } from '../components/StatsPanel';
-import { CarSVG } from '../viz/CarSVG';
+import { ModelCar } from '../components/ModelCar';
+import { designPaint, modelPaint } from '../paint';
+import { PaintPicker } from '../components/PaintPicker';
+import { AdPoster } from '../components/AdPoster';
 import { LineChart } from '../viz/LineChart';
 import { weeklySold } from './HQ';
-import { lower, t } from '../../i18n';
+import { lower, msg, t } from '../../i18n';
 import { tx } from '../i18n';
 
 export function ModelView({ modelId }: { modelId: string }) {
@@ -51,6 +54,11 @@ export function ModelView({ modelId }: { modelId: string }) {
   const age = (s.week - m.refreshWeek) / 52;
   const hasFacelift = s.projects.some((p) => p.replacesModelId === m.id);
   const { scores } = modelScores(s, m);
+  const paint = modelPaint(s, m);
+  // The page in four tabs, so a phone does not scroll through six screens of it.
+  const tabs = MODEL_TABS.filter((x) => active || x.id === 'summary' || x.id === 'car');
+  const [tab, setTab] = useState<ModelTab>('summary');
+  useEffect(() => setTab('summary'), [modelId]);
 
   return (
     <div className="screen">
@@ -110,6 +118,43 @@ export function ModelView({ modelId }: { modelId: string }) {
         )}
       </div>
 
+      <div className="model-hero">
+        <ModelCar s={s} m={m} />
+        {active && (
+          <details className="hero-paint">
+            <summary>{t('Boyayı değiştir')}</summary>
+            <PaintPicker
+            paint={designPaint(m.design, m.id, yearOf(m.launchWeek))}
+            year={yf}
+            onChange={(p, roof) => store.try((st) => A.setModelPaint(st, m.id, p, roof))}
+            note={paint.japan ? t('Hatlarında siyah vernik fırını var: hangi rengi seçersen seç, araba siyah çıkar.') : undefined}
+            />
+          </details>
+        )}
+        <div className="model-hero-tags">
+          <span>{t('{gen}. kuşak', { gen: m.generation })}</span>
+          {paint.japan ? (
+            <span title={t('Hatlarında siyah vernik fırını var: başka renk yok.')}>{t('Japan siyahı')}</span>
+          ) : (
+            <span>
+              {t(paint.body.name)}
+              {paint.roof ? ` / ${t(paint.roof.name)}` : ''}
+            </span>
+          )}
+          {active && <span>{t('{n} hat', { n: lines.length })}</span>}
+        </div>
+      </div>
+
+      <div className="tabs model-tabs" role="tablist">
+        {tabs.map((x) => (
+          <button key={x.id} type="button" role="tab" aria-selected={tab === x.id} className={`tab ${tab === x.id ? 'is-on' : ''}`} onClick={() => setTab(x.id)}>
+            {t(x.label)}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'summary' && (
+      <>
       <div className="stats-row">
         <Stat label={t('Haftalık satış')} value={cars(weeklySold(m))} sub={t('talep {demand}', { demand: cars(demand) })} />
         <Stat label={t('Stok')} value={num(m.inventory)} tone={m.inventory > demand * 12 && m.inventory > 10 ? 'warn' : undefined} />
@@ -169,11 +214,13 @@ export function ModelView({ modelId }: { modelId: string }) {
                 hint={t('Talep düşükse üretimi kıs: stok bekletmek para bağlar ve depolama masrafı çıkarır.')}
               />
               <p className="small">
-                {tx('Hatlar: {lines}', {
-                  lines: lines.length ? lines.map((l) => l.name).join(', ') : <span className="tone-bad">{t('hiçbir hatta üretilmiyor')}</span>,
-                })}{' '}
+                {lines.length ? (
+                  t('{n} hatta, haftada {output} araç kapasiteyle üretiliyor.', { n: lines.length, output: cars(cap) })
+                ) : (
+                  <span className="tone-bad">{t('Hiçbir hatta üretilmiyor.')}</span>
+                )}{' '}
                 <Button small kind="ghost" onClick={() => store.go({ id: 'factory' })}>
-                  {t('Fabrika')}
+                  {t('Fabrikada gör')}
                 </Button>
               </p>
             </>
@@ -236,8 +283,12 @@ export function ModelView({ modelId }: { modelId: string }) {
         )}
       </div>
 
-      {active && m.markets.length > 0 && <Competition modelId={m.id} market={market} setMarket={setMarket} />}
+      </>
+      )}
 
+      {tab === 'why' && active && m.markets.length > 0 && <Competition modelId={m.id} market={market} setMarket={setMarket} />}
+
+      {tab === 'car' && (
       <div className="grid-2">
         <Panel
           title={
@@ -246,7 +297,6 @@ export function ModelView({ modelId }: { modelId: string }) {
             </>
           }
         >
-          <CarSVG body={m.design.body} size={m.design.size} year={yearFloat(m.refreshWeek)} cylinders={m.design.engine.cylinders} styling={m.design.styling} />
           <StatsPanel s={s} design={m.design} segment={m.segment} yf={yf} bonus={m.bonus} scores={scores} compact />
         </Panel>
         <div>
@@ -267,11 +317,6 @@ export function ModelView({ modelId }: { modelId: string }) {
               <Empty>{t('Değerlendirme yok.')}</Empty>
             )}
           </Panel>
-          {m.status === 'active' && m.unitsSold > 0 && (
-            <Panel title={t('Müşteri mektupları')}>
-              <OwnerLetters s={s} m={m} />
-            </Panel>
-          )}
           <Panel title={t('Sahadaki kalite')}>
             <div className="quote">
               <div>
@@ -322,9 +367,35 @@ export function ModelView({ modelId }: { modelId: string }) {
           </Panel>
         </div>
       </div>
+      )}
+
+      {tab === 'ad' && active && (
+        <div className="grid-2">
+          <Panel
+            title={
+              <>
+                {t('Gazete ilanı')} <Info>{t('Arabanın dönemin gazetelerine verilecek ilanı: en iyi üç yanı ve fiyatı. Resim olarak indirip paylaşabilirsin.')}</Info>
+              </>
+            }
+          >
+            <AdPoster s={s} m={m} />
+          </Panel>
+          <Panel title={t('Müşteri mektupları')}>
+            {m.unitsSold > 0 ? <OwnerLetters s={s} m={m} /> : <Empty>{t('Henüz mektup yok: araba satıldıkça sahipleri yazar.')}</Empty>}
+          </Panel>
+        </div>
+      )}
     </div>
   );
 }
+
+type ModelTab = 'summary' | 'why' | 'car' | 'ad';
+const MODEL_TABS: { id: ModelTab; label: string }[] = [
+  { id: 'summary', label: msg('Özet') },
+  { id: 'why', label: msg('Neden satıyor?') },
+  { id: 'car', label: msg('Araç ve dergiler') },
+  { id: 'ad', label: msg('İlan ve mektuplar') },
+];
 
 function Competition({ modelId, market, setMarket }: { modelId: string; market: MarketId; setMarket: (m: MarketId) => void }) {
   const s = useGameState();

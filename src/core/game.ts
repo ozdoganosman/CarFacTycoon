@@ -14,15 +14,17 @@ import { network, networkWeek, networkWeekly, noteStateSales, partsWeekly, recor
 import { cityDef, type CityId } from '../data/cities';
 import type { StateId } from '../data/states';
 import { makeRng, rand, stateRng } from './rng';
-import { updateRivals, initRivals } from './rivals';
+import { updateRivals, initRivals, type RivalNews } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
 import { autoDealers, autoService } from './autoservice';
+import { SEASONED_AFTER, autoAdvance, dropStaleNotes, phaseNote } from './autopilot';
 import { adBrandTerm, followAdNorm } from './advertising';
 import { engineeringUpkeep, investmentsValue, plantCut, teamSpan } from './investments';
 import { eraReference } from './scoring';
 import { allTech, techName } from './techtree';
 import { knownKnowhow, labSpeed, noteResearch, pumpResearchQueue, researchDef, researcherSalary, startingKnowledge } from './research';
-import { checkBoom, publish, techIssue } from './news';
+import { chapterIssue, checkBoom, publish, techIssue } from './news';
+import { GOAL_POINTS, checkGoals, goalsMet, openChapter } from './goals';
 import { racingWeek } from './racing';
 import { rivalMovesMonth } from './rivalMoves';
 import { boardYear, founderShare } from './shares';
@@ -287,7 +289,7 @@ export const SCORE_TIERS: { min: number; name: string }[] = [
   { min: 0, name: msg('Butik atölye') },
 ];
 
-/** The end-of-campaign score: sales rank, company value, reputation, best magazine verdict, racing wins. */
+/** The end-of-campaign score: sales rank, company value, reputation, best magazine verdict, racing wins, decade goals. Shown live on HQ. */
 export function finalScore(s: GameState): FinalScore {
   const totalSold = s.models.reduce((a, m) => a + m.unitsSold, 0);
   const rank = [totalSold, ...s.rivals.map((r) => r.unitsSold)].sort((a, b) => b - a).indexOf(totalSold) + 1;
@@ -300,6 +302,7 @@ export function finalScore(s: GameState): FinalScore {
   const year = yearOf(s.week);
   const winYears = s.racing?.winYears ?? [];
   const wins = winYears.filter((y) => y > year - 20).length;
+  const goals = goalsMet(s);
   const parts = [
     // 1st → 400, 2nd → 325, 5th → 225, 10th → 150, 20th → 75, 40th → 0
     { label: t('Tüm zamanların satış sırası'), value: t('{rank}.', { rank }), points: Math.max(0, Math.round(400 * (1 - Math.log(rank) / Math.log(40)))), max: 400 },
@@ -308,6 +311,8 @@ export function finalScore(s: GameState): FinalScore {
     { label: t('İtibar'), value: `${Math.round(s.company.reputation)}/100`, points: Math.round(3 * s.company.reputation), max: 300 },
     { label: recent.length ? t('Son on yılın dergi puanı (ortalama)') : t('Son arabanın dergi puanı (eski)'), value: `${dec(review, 1)}/10`, points: Math.round(30 * review), max: 300 },
     { label: t('Son yirmi yılın yarış zaferleri'), value: String(wins), points: Math.min(200, 25 * wins), max: 200 },
+    // The decade goals (goals.ts): a few points each, for going where the game's chapters point.
+    { label: t('On yılların hedefleri'), value: `${goals.met}/${goals.of}`, points: GOAL_POINTS * goals.met, max: GOAL_POINTS * goals.of },
   ];
   const total = parts.reduce((a, p) => a + p.points, 0);
   return { total, max: parts.reduce((a, p) => a + p.max, 0), parts, rank, tier: SCORE_TIERS.find((t) => total >= t.min)!.name };
@@ -349,6 +354,7 @@ export function tick(s: GameState): void {
 
   if (s.week >= s.endWeek) {
     closeYear(s, yearOf(s.week) - 1);
+    checkGoals(s, yearOf(s.week) - 1);
     s.gameOver = { reason: 'end', week: s.week };
     s.modals.push({ kind: 'gameOver' });
     return;
@@ -356,12 +362,19 @@ export function tick(s: GameState): void {
 
   fireEvents(s);
   if (weekOfYear(s.week) === 0) {
-    closeYear(s, yearOf(s.week) - 1);
-    announceTech(s, yearOf(s.week));
+    const year = yearOf(s.week);
+    closeYear(s, year - 1);
+    announceTech(s, year);
+    // A new decade: the last one's goals are counted, and its paper opens the next chapter.
+    if (year % 10 === 0 && year > 1900 && !s.gameOver) {
+      checkGoals(s, year - 1);
+      openChapter(s, year);
+      publish(s, chapterIssue(s, year));
+    }
   } else if (weekOfYear(s.week) % 13 === 0) payTaxInstalment(s);
   if (isMonthStart(s.week)) {
     checkStall(s);
-    for (const n of updateRivals(s, stateRng(s))) log(s, n.text, n.tone, 'rival');
+    rivalNews(s, updateRivals(s, stateRng(s)));
     rivalMovesMonth(s, stateRng(s));
   }
   advanceProjects(s);
@@ -382,9 +395,34 @@ export function tick(s: GameState): void {
     autoDealers(s);
     autoCapacity(s, (m) => materialUnitCost(s, m));
     checkBoom(s);
+    checkGoals(s);
   }
   checkSolvency(s);
   void yf;
+}
+
+/**
+ * The month's rival news: in full for the classes the company sells or designs in, the rest in one line
+ * (a bot's campaign had up to seventy rival lines a year, most about classes it never entered).
+ */
+export function rivalNews(s: GameState, news: RivalNews[]) {
+  const mine = new Set<SegmentId>([...s.models.filter((m) => m.status === 'active').map((m) => m.segment), ...s.projects.map((p) => p.segment)]);
+  const elsewhere = new Map<SegmentId, number>();
+  for (const n of news) {
+    if (!n.segment || mine.has(n.segment)) log(s, n.text, n.tone, 'rival');
+    else elsewhere.set(n.segment, (elsewhere.get(n.segment) ?? 0) + 1);
+  }
+  if (!elsewhere.size) return;
+  const total = [...elsewhere.values()].reduce((a, b) => a + b, 0);
+  log(
+    s,
+    t('Bu ay arabası olmadığın sınıflarda {n} yeni rakip modeli: {classes}.', {
+      n: total,
+      classes: [...elsewhere].map(([seg, k]) => `${t(SEGMENTS.find((x) => x.id === seg)!.name)} ${k}`).join(', '),
+    }),
+    'info',
+    'rival',
+  );
 }
 
 function fireEvents(s: GameState) {
@@ -597,9 +635,9 @@ function advanceProjects(s: GameState) {
       const add = Math.min(work, Math.max(0, cap - p.dev.done));
       p.dev.done += add;
       for (const k of Object.keys(p.dev.points) as (keyof typeof p.dev.points)[]) p.dev.points[k] += add * p.dev.focus[k];
-      if (before < p.dev.required && p.dev.done >= p.dev.required) {
+      if (before < p.dev.required && p.dev.done >= p.dev.required && !p.auto) {
         log(s, t('{name}: geliştirme tamamlandı. İstersen biraz daha cilala ya da teste geç.', { name: p.name }), 'good');
-        pushModal(s, { kind: 'phase', projectId: p.id, phase: 'development' });
+        phaseNote(s, p, 'development');
       }
     } else if (p.phase === 'testing') {
       let running = false;
@@ -626,21 +664,25 @@ function advanceProjects(s: GameState) {
         p.bonus = withTuning(p.devBonus, p.tests);
       }
       const allDone = TESTS.every((t) => p.tests[t.id].done >= p.tests[t.id].planned);
-      if (running && allDone) {
+      if (running && allDone && !p.auto) {
         log(s, t('{name}: test programı bitti.', { name: p.name }), 'good');
-        pushModal(s, { kind: 'phase', projectId: p.id, phase: 'testing' });
+        phaseNote(s, p, 'testing');
       }
     } else if (p.phase === 'production' && p.productionReadyWeek !== undefined && s.week >= p.productionReadyWeek) {
       p.phase = 'ready';
       log(s, t('{name}: üretim hattı hazır. Lansman zamanı!', { name: p.name }), 'good');
-      pushModal(s, { kind: 'phase', projectId: p.id, phase: 'production' });
+      phaseNote(s, p, 'production');
     }
+    autoAdvance(s, p);
   }
+  dropStaleNotes(s);
 }
 
 function produce(s: GameState) {
   const yf = yearFloat(s.week);
   const militaryActive = (s.flags.militaryUntil ?? 0) > yf;
+  /** Whether any line built for the army this week (the 1940s goal counts weeks, not vehicles). */
+  let army = false;
   for (const line of s.lines) {
     if (line.military && militaryActive) {
       const units = lineReport(s, line, MILITARY_COMPLEXITY).throughput;
@@ -648,6 +690,7 @@ function produce(s: GameState) {
       spend(s, upkeep, 'labor');
       earn(s, upkeep + units * militaryMargin(s.week));
       s.flags.militaryUnits = (s.flags.militaryUnits ?? 0) + units;
+      army = true;
       continue;
     }
     const model = s.models.find((m) => m.id === line.modelId && m.status === 'active');
@@ -663,6 +706,7 @@ function produce(s: GameState) {
     model.unitsBuilt += built;
     pushHistory(model, s.week).built += built;
   }
+  if (army) s.flags.armyWeeks = (s.flags.armyWeeks ?? 0) + 1;
 }
 
 function pushHistory(model: CarModel, week: number) {
@@ -762,7 +806,9 @@ function sell(s: GameState) {
 function launchReports(s: GameState) {
   for (const m of s.models) {
     if (m.status !== 'active' || m.launchReportWeek !== s.week) continue;
-    pushModal(s, { kind: 'launchReport', modelId: m.id, report: buildLaunchReport(s, m) });
+    // The first two cars' reports stop the clock (they teach the game); later ones wait in a corner.
+    const quiet = s.models.indexOf(m) >= SEASONED_AFTER;
+    pushModal(s, { kind: 'launchReport', modelId: m.id, report: buildLaunchReport(s, m), ...(quiet ? { quiet } : {}) });
   }
 }
 

@@ -25,6 +25,7 @@ import {
 import { datedPenalty, demandAtPrice, modelAgeYears, modelScores, priceNow, priceTerm, referencePrice } from './market';
 import { stateRng } from './rng';
 import { acquisitionTargets } from './acquisitions';
+import { autoByDefault } from './autopilot';
 import { boardVeto } from './shares';
 import { beginResearch, ensureResearch, knownKnowhow, labSlots, missingRequirements, pumpResearchQueue, researchCost, researchDef, researcherHireCost, restrictToKnown, unknownTech } from './research';
 import { experienceFactor, newEstimate } from './estimate';
@@ -49,6 +50,7 @@ import type {
 import { NO_BONUS, computeCarStats } from './vehicle';
 import { clamp, clone, decide, earn, log, money, newId, shiftModal, spend } from './util';
 import { companyWorkScale } from './investments';
+import { TWO_TONE_YEAR, eraPaint, paintDef } from '../data/paints';
 import { followAdNorm } from './advertising';
 import { list, t } from '../i18n';
 import { dec, fmtPercent } from '../i18n/format';
@@ -147,7 +149,8 @@ export function defaultDesign(s: GameState, segment: SegmentId, replacesModelId?
   const replaced = replacesModelId ? s.models.find((m) => m.id === replacesModelId) : undefined;
   if (replaced) return clone(replaced.design);
   const latest = [...s.models].sort((a, b) => Math.max(b.launchWeek, b.refreshWeek) - Math.max(a.launchWeek, a.refreshWeek))[0];
-  if (latest) return clone(latest.design);
+  // A new car starts from the latest one's engineering, not its paint.
+  if (latest) return { ...clone(latest.design), paint: undefined, roof: undefined };
   const { design } = aiDesign('family', Math.floor(yf), { style: 'mass', skill: 40, market: s.company.hq }, () => 0.5);
   return restrictToKnown(s, { ...design, size: 0.4, styling: 0.3, interior: 0.3, suspBalance: 0.5 }, maxGears(yf));
 }
@@ -193,6 +196,7 @@ export function startProject(s: GameState, o: StartProjectOptions): { ok: true; 
     suppliers: { engine: 'quality', gearbox: 'quality', electrics: 'quality' },
     estimate: newEstimate(stateRng(s), experienceFactor(s)),
     autoCapacity: true,
+    ...autoByDefault(s),
   };
   decide(s, 'project:' + id, `Yeni proje: ${p.name} (${o.segment}, hedef fiyat ${money(o.targetPrice)}${plat ? ', ortak platform' : ''}${eng ? ', ortak motor' : ''})`);
   s.projects.push(p);
@@ -255,6 +259,7 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
       return e;
     })(),
     lineId: s.lines.find((l) => l.modelId === m.id)?.id,
+    ...autoByDefault(s),
   });
   decide(s, 'project:' + id, `Makyaj projesi: ${m.name}`);
   return { ok: true, id };
@@ -279,6 +284,34 @@ export function updateDesign(s: GameState, pid: string, design: CarDesign): Acti
   const p = project(s, pid);
   if (p.phase !== 'design') return fail(t('Tasarım geliştirme başladıktan sonra değiştirilemez.'));
   p.design = { ...design, knowhow: knownKnowhow(s) };
+  return ok;
+}
+
+/** Paint and roof that may be ordered now (data/paints.ts); unknown or future ones are refused. */
+function paintAllowed(s: GameState, paint?: string, roof?: string): string | undefined {
+  const yf = yearFloat(s.week);
+  const ok = (id?: string) => id === undefined || (paintDef(id)?.year ?? Infinity) <= yf;
+  if (!ok(paint) || !ok(roof)) return t('Bu boya henüz yok.');
+  if (roof !== undefined && yf < TWO_TONE_YEAR) return t('İki renkli boya {year} yılından itibaren yapılır.', { year: TWO_TONE_YEAR });
+  return undefined;
+}
+
+/** A project's paint: chosen at any stage before the launch (it changes how the car looks, nothing else). */
+export function setProjectPaint(s: GameState, pid: string, paint?: string, roof?: string): ActionResult {
+  const p = project(s, pid);
+  const bad = paintAllowed(s, paint, roof);
+  if (bad) return fail(bad);
+  p.design = { ...p.design, paint, roof };
+  return ok;
+}
+
+/** Repaint a car on sale: the next cars off the line come out in the new colour. */
+export function setModelPaint(s: GameState, modelId: string, paint?: string, roof?: string): ActionResult {
+  const m = model(s, modelId);
+  const bad = paintAllowed(s, paint, roof);
+  if (bad) return fail(bad);
+  m.design = { ...m.design, paint, roof };
+  decide(s, 'paint:' + modelId, `${m.name}: boya ${paint ?? '-'}${roof ? ` / ${roof}` : ''}`);
   return ok;
 }
 
@@ -594,7 +627,8 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
     id,
     name: p.name,
     segment: p.segment,
-    design: p.design,
+    // A car launched without a chosen paint keeps the colour it was drawn in on the drafting table.
+    design: p.design.paint ? p.design : { ...p.design, paint: eraPaint(p.id, yf).id },
     bonus,
     stats,
     platformId,

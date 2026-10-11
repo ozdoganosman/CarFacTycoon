@@ -39,9 +39,9 @@ export type Screen =
   | { id: 'models' }
   | { id: 'model'; modelId: string }
   | { id: 'factory' }
-  | { id: 'markets' }
+  | { id: 'markets'; tab?: string }
   | { id: 'finance' }
-  | { id: 'company' }
+  | { id: 'company'; tab?: string }
   | { id: 'cards' }
   | { id: 'settings' };
 

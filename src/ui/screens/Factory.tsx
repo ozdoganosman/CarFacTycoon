@@ -27,7 +27,7 @@ import { STAGES, STATIONS, stationDef } from '../../data/stations';
 import type { CarModel, ComponentKey, GameState, ProductionLine, StageId } from '../../core/types';
 import { store, useGameState } from '../store';
 import { cars, dec, money, num, pct } from '../format';
-import { Badge, Button, Info, Panel, Toggle } from '../components/ui';
+import { Badge, Button, Info, Panel, Toggle, ScreenTitle } from '../components/ui';
 import { LineViz } from '../viz/LineViz';
 import { PlantsPanel } from '../components/Investments';
 import { t, msg } from '../../i18n';
@@ -55,10 +55,7 @@ export function Factory() {
   return (
     <div className="screen">
       <div className="screen-head">
-        <div>
-          <h1>{t('Fabrika')}</h1>
-          <p className="muted">{t('En yavaş istasyon bütün hattın hızını belirler. Darboğaz kırmızı yanar.')}</p>
-        </div>
+        <ScreenTitle id="factory" title={t('Fabrika')} intro={t('En yavaş istasyon bütün hattın hızını belirler. Darboğaz kırmızı yanar.')} />
       </div>
       {military && (
         <p className="note">
@@ -115,53 +112,64 @@ function modelCapacity(s: GameState, m: CarModel): number {
     .reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
 }
 
+/** Above this many lines the plan draws one hall per car instead of a box per line. */
+const HALLS_FROM = 24;
+
 /**
  * Every line of the factory at a glance, drawn like a floor plan: one box per line, its four stages
  * filled by how much each can build, the bottleneck in red, the line in its model's colour. A box
- * opens that line below.
+ * opens that line below. A big factory is drawn as one hall per car (HallPlan).
  */
 function FloorPlan({ military, onPick }: { military: boolean; onPick: (id: string) => void }) {
   const s = useGameState();
   const active = s.models.filter((m) => m.status === 'active');
   const shown = active.filter((m) => s.lines.some((l) => l.modelId === m.id));
+  const info = (l: ProductionLine) => {
+    const i = active.findIndex((m) => m.id === l.modelId);
+    const model = active[i];
+    const isMilitary = military && !!l.military;
+    const r = lineReport(s, l, isMilitary ? MILITARY_COMPLEXITY : model?.stats.complexity ?? 1);
+    const building = l.buildUntilWeek !== undefined && s.week < l.buildUntilWeek;
+    const retooling = l.retoolUntilWeek !== undefined && s.week < l.retoolUntilWeek;
+    const state = building ? 'building' : retooling ? 'retool' : isMilitary ? 'military' : model ? 'run' : 'idle';
+    const what = isMilitary ? t('askeri üretim') : model ? model.name : t('boş');
+    return { i, r, state, label: `${l.name} · ${what} · ${t('{output} araç/hafta', { output: cars(r.throughput) })}` };
+  };
   return (
     <Panel title={t('Fabrika planı')} className="floor-panel">
-      <div className="floor" role="list">
-        {s.lines.map((l) => {
-          const i = active.findIndex((m) => m.id === l.modelId);
-          const model = active[i];
-          const isMilitary = military && !!l.military;
-          const r = lineReport(s, l, isMilitary ? MILITARY_COMPLEXITY : model?.stats.complexity ?? 1);
-          const building = l.buildUntilWeek !== undefined && s.week < l.buildUntilWeek;
-          const retooling = l.retoolUntilWeek !== undefined && s.week < l.retoolUntilWeek;
-          const state = building ? 'building' : retooling ? 'retool' : isMilitary ? 'military' : model ? 'run' : 'idle';
-          const most = Math.max(1, ...STAGES.map((st) => r.perStage[st.id]));
-          const what = isMilitary ? t('askeri üretim') : model ? model.name : t('boş');
-          return (
-            <button
-              key={l.id}
-              type="button"
-              role="listitem"
-              className={`floor-line is-${state}`}
-              style={i >= 0 ? ({ '--model': modelColor(i) } as React.CSSProperties) : undefined}
-              onClick={() => onPick(l.id)}
-              title={`${l.name} · ${what} · ${t('{output} araç/hafta', { output: cars(r.throughput) })}`}
-              aria-label={`${l.name} · ${what} · ${t('{output} araç/hafta', { output: cars(r.throughput) })}`}
-            >
-              <span className="floor-name">{l.name}</span>
-              <span className="floor-stages" aria-hidden>
-                {STAGES.map((st) => (
-                  <i
-                    key={st.id}
-                    className={state === 'run' && r.bottleneck === st.id ? 'is-neck' : ''}
-                    style={{ height: `${Math.max(12, (100 * r.perStage[st.id]) / most)}%` }}
-                  />
-                ))}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      {s.lines.length > HALLS_FROM ? (
+        <HallPlan military={military} onPick={onPick} info={info} />
+      ) : (
+        <div className="floor" role="list">
+          {s.lines.map((l) => {
+            const { i, r, state, label } = info(l);
+            const most = Math.max(1, ...STAGES.map((st) => r.perStage[st.id]));
+            return (
+              <button
+                key={l.id}
+                type="button"
+                role="listitem"
+                className={`floor-line is-${state}`}
+                style={i >= 0 ? ({ '--model': modelColor(i) } as React.CSSProperties) : undefined}
+                onClick={() => onPick(l.id)}
+                title={label}
+                aria-label={label}
+              >
+                <span className="floor-name">{l.name}</span>
+                <span className="floor-stages" aria-hidden>
+                  {STAGES.map((st) => (
+                    <i
+                      key={st.id}
+                      className={state === 'run' && r.bottleneck === st.id ? 'is-neck' : ''}
+                      style={{ height: `${Math.max(12, (100 * r.perStage[st.id]) / most)}%` }}
+                    />
+                  ))}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
       <div className="floor-legend small">
         {shown.map((m) => (
           <span key={m.id}>
@@ -173,6 +181,60 @@ function FloorPlan({ military, onPick }: { military: boolean; onPick: (id: strin
         </span>
       </div>
     </Panel>
+  );
+}
+
+type LineInfo = { i: number; r: ReturnType<typeof lineReport>; state: string; label: string };
+
+/**
+ * A big factory as one hall per car: its lines, what they build, how full each section is across the
+ * hall (the one that holds the hall back in red), and a mark per line (a tap opens that line).
+ */
+function HallPlan({ military, onPick, info }: { military: boolean; onPick: (id: string) => void; info: (l: ProductionLine) => LineInfo }) {
+  const s = useGameState();
+  const active = s.models.filter((m) => m.status === 'active');
+  const halls = [
+    ...active.map((m, i) => ({ key: m.id, title: m.name, color: modelColor(i), lines: s.lines.filter((l) => l.modelId === m.id && !(military && l.military)) })),
+    { key: 'military', title: t('Askeri üretim'), color: 'var(--warn)', lines: military ? s.lines.filter((l) => l.military) : [] },
+    { key: 'idle', title: t('Boş hatlar'), color: 'var(--bp-line)', lines: s.lines.filter((l) => !(military && l.military) && !active.some((m) => m.id === l.modelId)) },
+  ].filter((h) => h.lines.length > 0);
+  return (
+    <div className="halls" role="list">
+      {halls.map((h) => {
+        const lines = h.lines.map((l) => ({ l, ...info(l) }));
+        const running = lines.filter((x) => x.state === 'run' || x.state === 'military');
+        const perStage = Object.fromEntries(STAGES.map((st) => [st.id, running.reduce((a, x) => a + x.r.perStage[st.id], 0)])) as Record<string, number>;
+        const output = running.reduce((a, x) => a + x.r.throughput, 0);
+        const most = Math.max(1, ...STAGES.map((st) => perStage[st.id]));
+        const neck = running.length ? STAGES.reduce((a, st) => (perStage[st.id] < perStage[a.id] ? st : a)).id : undefined;
+        return (
+          <div key={h.key} className="hall" role="listitem" style={{ '--model': h.color } as React.CSSProperties}>
+            <div className="hall-head">
+              <b>{h.title}</b>
+              <span>
+                {t('{n} hat', { n: h.lines.length })}
+                {output > 0 && ` · ${t('{output} araç/hafta', { output: cars(output) })}`}
+              </span>
+            </div>
+            {running.length > 0 && (
+              <div className="hall-stages" aria-hidden>
+                {STAGES.map((st) => (
+                  <span key={st.id} className={st.id === neck ? 'is-neck' : ''}>
+                    <i style={{ width: `${Math.max(6, (100 * perStage[st.id]) / most)}%` }} />
+                    <small>{t(st.name)}</small>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="hall-lines">
+              {lines.map((x) => (
+                <button key={x.l.id} type="button" className={`hall-line is-${x.state}`} onClick={() => onPick(x.l.id)} title={x.label} aria-label={x.label} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

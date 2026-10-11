@@ -4,7 +4,7 @@ import { cardDef } from '../../data/cards';
 import { eventDef } from '../../data/events';
 import { MARKETS } from '../../data/markets';
 import { segmentDef } from '../../data/segments';
-import { SCORE_TIERS, cashReport, companyValue, finalScore, idleEngineers, idleReason, modelMargins, rescueLoan, type CashReport } from '../../core/game';
+import { cashReport, companyValue, finalScore, idleEngineers, idleReason, modelMargins, rescueLoan, type CashReport } from '../../core/game';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { allTech, techName } from '../../core/techtree';
 import { yearOf as yearOfWeek } from '../../core/time';
@@ -17,6 +17,7 @@ import { COST_NAMES, INCOME_NAMES, dec, money, num, pct, signedMoney } from '../
 import { Button } from './ui';
 import { CardAnimation } from './CardAnimation';
 import { LaunchReportView, LaunchShow } from './LaunchShow';
+import { ScoreScale } from './Campaign';
 import { SponsorButton, YearOffer } from './Sponsor';
 import { tx } from '../i18n';
 import { Icon, type IconName } from './Icon';
@@ -211,6 +212,33 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
     case 'phase': {
       const p = s.projects.find((x) => x.id === m.projectId);
       if (!p) return null;
+      if (m.stuck) {
+        return (
+          <Modal
+            title={p.name}
+            icon="alert"
+            actions={
+              <Button
+                kind="primary"
+                onClick={() => {
+                  store.keepPaused();
+                  store.act(A.dismissModal);
+                  store.go({ id: 'project', projectId: p.id });
+                }}
+              >
+                {p.phase === 'production' ? t('Üretim hazırlığına git') : t('Projeye bak')}
+              </Button>
+            }
+          >
+            <p>
+              {m.stuck === 'line'
+                ? t('Proje kendiliğinden ilerleyemedi: kalıpları sipariş edecek boşta bir hat yok. Yeni bir hat kur ya da hattı sen seç.')
+                : t('Proje kendiliğinden ilerleyemedi: kalıplara kasadaki para yetmiyor. Daha ucuz kalıp, kredi ya da vadeli sipariş seçeneklerine bak.')}
+            </p>
+            <p className="muted small">{t('Bu proje artık kendiliğinden ilerlemiyor; adımları sen atarsın.')}</p>
+          </Modal>
+        );
+      }
       const text =
         m.phase === 'development'
           ? t('Mühendisler temel geliştirmeyi bitirdi. Biraz daha cilalamak güvenilirliği artırır; ya da prototipleri yapıp teste geçebilirsin.')
@@ -653,18 +681,7 @@ function GameOver({ s }: { s: GameState }) {
           <h4>
             {tx('Oyun sonu puanı: {total} / {max} · {tier}', { total: score.total, max: score.max, tier: <span className="tone-good">{t(score.tier)}</span> })}
           </h4>
-          <div className="score-scale" aria-hidden>
-            {[...SCORE_TIERS].reverse().map((tier, i, arr) => {
-              const next = arr[i + 1]?.min ?? score.max;
-              return (
-                <span key={tier.name} className={score.tier === tier.name ? 'is-on' : ''} style={{ flex: next - tier.min }}>
-                  {t(tier.name)}
-                  <small>{tier.min}+</small>
-                </span>
-              );
-            })}
-            <i style={{ left: `${Math.min(100, (score.total / score.max) * 100)}%` }} />
-          </div>
+          <ScoreScale score={score} />
           <table className="table compact">
             <tbody>
               {score.parts.map((p) => (

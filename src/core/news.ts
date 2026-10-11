@@ -11,12 +11,46 @@ import { money, pushModal } from './util';
 import { pctWith } from './turkish';
 import { dec, fmtNumber, fmtPercent } from '../i18n/format';
 import { lower, msg, t } from '../i18n';
+import { CHAPTERS, chapterOf, goalStatus } from './goals';
+import { finalScore } from './game';
 
 // Front pages: the day new technology appears in the world, and the day one of
 // the player's cars takes off. Issues are kept for the archive and shown as a
 // corner card that does not stop the clock.
 
 const MAX_ISSUES = 60;
+
+/**
+ * A new decade's front page: the chapter's name and what the age brings, the company's three goals for
+ * the decade, and the last decade's report card.
+ */
+export function chapterIssue(s: GameState, year: number): NewsIssue {
+  const def = chapterOf(year);
+  const prev = CHAPTERS.find((c) => c.decade === def.decade - 10);
+  const card = prev ? goalStatus(s, prev) : [];
+  const score = finalScore(s);
+  const latest = [...s.models].filter((m) => m.status === 'active').sort((a, b) => b.refreshWeek - a.refreshWeek)[0];
+  return {
+    id: `n${s.nextId++}`,
+    week: s.week,
+    kind: 'chapter',
+    lead: {
+      headline: t('{decade}: {name}', { decade: t(def.label), name: t(def.name) }),
+      deck: t('Yeni bir on yıl başlıyor. {company} bu on yıla {tier} olarak giriyor: {score} puan.', { company: s.company.name, tier: t(score.tier), score: score.total }),
+      body: t(def.intro),
+      art: latest ? { kind: 'car', modelId: latest.id } : { kind: 'tech', area: 'Motor' },
+      caption: latest ? t('{company} {model}', { company: s.company.name, model: latest.name }) : undefined,
+      paragraphs: prev
+        ? [
+            t('{decade} karnesi: üç hedefin {n} tanesi tuttu.', { decade: t(prev.label), n: card.filter((g) => g.done).length }),
+            ...card.map((g) => `${g.done ? '✓' : '✗'} ${g.text}`),
+          ]
+        : [],
+    },
+    side: goalStatus(s, def).map((g) => ({ headline: g.text, deck: t('On yılın hedefi'), body: g.hint })),
+    world: worldFor(s.week),
+  };
+}
 
 export function publish(s: GameState, issue: NewsIssue) {
   s.news ??= [];
@@ -226,14 +260,16 @@ export function boomIssue(s: GameState, m: CarModel, reason: { kind: 'units'; un
       },
     ],
     world: worldFor(s.week),
-    ad: {
-      modelId: m.id,
-      slogan: t(SLOGANS[best[0]]),
-      lines: best.map((k) => t(BLURB[k])),
-      price,
-    },
+    ad: { modelId: m.id, ...modelAdCopy(s, m) },
     letters: customerLetters(s, m, 2),
   };
+}
+
+/** A model's advertisement: its best quality as the slogan, its three best as the lines, and its price. */
+export function modelAdCopy(s: GameState, m: CarModel): { slogan: string; lines: string[]; price: number } {
+  const { scores } = modelScores(s, m);
+  const best = (Object.keys(scores) as AttrKey[]).sort((a, b) => scores[b] - scores[a]).slice(0, 3);
+  return { slogan: t(SLOGANS[best[0]]), lines: best.map((k) => t(BLURB[k])), price: priceNow(m, s.week) };
 }
 
 /** A model's own milestones; the company's first thousand cars get a page of their own. */

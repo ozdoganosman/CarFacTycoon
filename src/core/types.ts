@@ -97,6 +97,9 @@ export interface CarDesign {
   interior: number;
   /** Engineering know-how built in (magneto, dampers…); older designs have none. */
   knowhow?: string[];
+  /** Paint (data/paints.ts) and, from the fifties, a contrasting roof; unset: a colour picked from the car's era. */
+  paint?: string;
+  roof?: string;
 }
 
 /** Bonuses earned during development, applied on top of the raw design. */
@@ -229,6 +232,8 @@ export interface Project {
   /** What the project has been waiting on the player for, and since when (for the standing-still warning). */
   waitKind?: 'design' | 'tested' | 'tooling' | 'launch';
   waitSince?: number;
+  /** Goes on by itself once in development: tests as planned, standard dies on its natural line; stops for the launch (autopilot.ts). */
+  auto?: boolean;
   engineers: number;
   dev: {
     required: number;
@@ -553,8 +558,13 @@ export type ModalItem =
   | { kind: 'service'; modelId: string; defectId: string }
   | { kind: 'reviews'; modelId: string }
   | { kind: 'launch'; modelId: string; venue: string; facelift?: boolean }
-  | { kind: 'launchReport'; modelId: string; report: LaunchReport }
-  | { kind: 'phase'; projectId: string; phase: ProjectPhase }
+  /** `quiet`: a corner note (from the third car on), opened by the player when they like. */
+  | { kind: 'launchReport'; modelId: string; report: LaunchReport; quiet?: boolean }
+  /**
+   * A project step finished. `quiet`: a corner note instead of a pop-up (from the third car on);
+   * `auto`: the project went on by itself (Project.auto); `stuck`: it could not, and says why.
+   */
+  | { kind: 'phase'; projectId: string; phase: ProjectPhase; quiet?: boolean; auto?: boolean; stuck?: 'line' | 'cash' }
   | { kind: 'yearReport'; year: number }
   | { kind: 'news'; newsId: string }
   | { kind: 'unlock'; title: string; body: string }
@@ -564,6 +574,15 @@ export type ModalItem =
   /** Research finished (and what started next from the queue): a corner note that does not stop the clock. */
   | { kind: 'research'; done: string[]; started: string[] }
   | { kind: 'gameOver' };
+
+/** What the company had when a decade's chapter opened: some goals count only what the decade added. */
+export interface ChapterSnapshot {
+  decade: number;
+  acquired: number;
+  /** Weeks the lines had built for the army (flags.armyWeeks). */
+  armyWeeks: number;
+  wins: number;
+}
 
 export interface LogEntry {
   week: number;
@@ -684,6 +703,8 @@ export interface GameState {
   racing?: { level: number; fame: number; wins?: number; winYears?: number[]; paused?: boolean; dry?: number; last?: { year: number; race: string; result: 'win' | 'podium' | 'none'; model: string } };
   /** Rival companies the player has bought. */
   acquired?: string[];
+  /** The decade goals met (goal id → week) and what each chapter started from (goals.ts). Older saves lack it. */
+  goals?: { done: Record<string, number>; chapters: Record<number, ChapterSnapshot> };
   /** Dealers, service and cars on the road, state by state (older saves get one on load). */
   network?: NetworkState;
   /** What the rivals did once the player got ahead (older saves lack it). */
@@ -740,7 +761,8 @@ export interface NewsLetter {
 export interface NewsIssue {
   id: string;
   week: number;
-  kind: 'tech' | 'boom';
+  /** chapter: a new decade's page (goals.ts). */
+  kind: 'tech' | 'boom' | 'chapter';
   lead: NewsStoryData & { art: NewsArt; caption?: string; paragraphs?: string[] };
   side: NewsStoryData[];
   world?: NewsStoryData;

@@ -42,7 +42,7 @@ export function TeamPanel({ compact }: { compact?: boolean }) {
       {n > 12 && (
         <p className="small">
           {tx('Teşkilat: <b>{org}</b> · {n} mühendis ~{output} kişilik iş çıkarıyor.', { org: t(engineeringLevel(s).name), n, output: dec(teamOutput(n, teamSpan(s)), 0) })}{' '}
-          <button type="button" className="link small" onClick={() => store.go({ id: 'company' })}>
+          <button type="button" className="link small" onClick={() => store.go({ id: 'company', tab: 'general' })}>
             {t('Teşkilatı büyüt')}
           </button>
         </p>
