@@ -21,7 +21,7 @@ import { yearFloat } from '../../core/time';
 import { store, useGameState } from '../store';
 import { dec, money, pct, pctOf } from '../format';
 import { inYear } from '../format';
-import { Button, Info, Panel, Progress, Stat } from '../components/ui';
+import { Button, Info, Panel, Progress, Stat, ScreenTitle } from '../components/ui';
 import { locale, msg, t } from '../../i18n';
 import { tx } from '../i18n';
 import { Icon, type IconName } from '../components/Icon';
@@ -91,10 +91,7 @@ export function Research() {
   return (
     <div className="screen">
       <div className="screen-head">
-        <div>
-          <h1>{t('Ar-Ge')}</h1>
-          <p className="muted">{t('Yeni teknoloji dünyada ortaya çıkar; tasarımda kullanmak için önce mühendislerinin öğrenmesi gerekir. Sıraya dizdiklerin sırayla kendiliğinden başlar.')}</p>
-        </div>
+        <ScreenTitle id="research" title={t('Ar-Ge')} intro={t('Yeni teknoloji dünyada ortaya çıkar; tasarımda kullanmak için önce mühendislerinin öğrenmesi gerekir. Sıraya dizdiklerin sırayla kendiliğinden başlar.')} />
       </div>
       <div className="stats-row">
         <Stat

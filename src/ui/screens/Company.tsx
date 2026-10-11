@@ -7,7 +7,7 @@ import { RACING_LEVELS, RACING_YEAR, racingBudget, racingOutlook, racingPaused, 
 import { yearFloat } from '../../core/time';
 import { store, useGameState } from '../store';
 import { dec, money, num, pct as fmtPct, pctOf } from '../format';
-import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table } from '../components/ui';
+import { Button, Choice, Empty, Info, Panel, Progress, Stat, Table, ScreenTitle } from '../components/ui';
 import { list, t } from '../../i18n';
 import { tx } from '../i18n';
 
@@ -38,10 +38,7 @@ export function Company() {
   return (
     <div className="screen">
       <div className="screen-head">
-        <div>
-          <h1>{t('Şirket')}</h1>
-          <p className="muted">{t('Kazandığın parayı markayı büyütmek için kullan: yarışlarda ün kazan, küçük rakipleri satın al, borsaya açıl.')}</p>
-        </div>
+        <ScreenTitle id="company" title={t('Şirket')} intro={t('Kazandığın parayı markayı büyütmek için kullan: yarışlarda ün kazan, küçük rakipleri satın al, borsaya açıl.')} />
       </div>
       <div className="stats-row">
         <Stat

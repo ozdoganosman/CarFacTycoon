@@ -350,3 +350,40 @@ export function Info({ children, label = t('Ayrıntı') }: { children: ReactNode
     </span>
   );
 }
+
+/** How many times a screen's introduction is shown in full before it moves into an (i). */
+const INTRO_VISITS = 3;
+
+/**
+ * A screen's title and its one-line introduction: in full on the first visits, then behind an (i) next
+ * to the title (the line has been read; on a phone the screen starts with its content). Visits are
+ * counted in this browser only.
+ */
+export function ScreenTitle({ id, title, intro }: { id: string; title: ReactNode; intro: ReactNode }) {
+  const key = `carfactycoon.intro.${id}`;
+  const [visits] = useState(() => {
+    try {
+      return Number(localStorage.getItem(key) ?? 0);
+    } catch {
+      return 0;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(key, String(visits + 1));
+    } catch {
+      /* private window: the introduction stays */
+    }
+  }, [key, visits]);
+  return visits < INTRO_VISITS ? (
+    <div>
+      <h1>{title}</h1>
+      <p className="muted">{intro}</p>
+    </div>
+  ) : (
+    <h1>
+      {title} <Info>{intro}</Info>
+    </h1>
+  );
+}
+

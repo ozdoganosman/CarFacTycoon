@@ -13,7 +13,8 @@ import { store, useGameState } from '../store';
 import { money, num } from '../format';
 import { inYear } from '../format';
 import { tx } from '../i18n';
-import { Badge, Button, Choice, Empty, Panel, Progress, SegmentLabel } from '../components/ui';
+import { Badge, Button, Choice, Panel, Progress, SegmentLabel } from '../components/ui';
+import { CarSVG } from '../viz/CarSVG';
 
 /** Marked with msg(): show with t(PHASE_LABEL[phase]). */
 export const PHASE_LABEL: Record<ProjectPhase, string> = {
@@ -177,6 +178,22 @@ function NewProject({ onDone }: { onDone: () => void }) {
 export function Projects() {
   const s = useGameState();
   const [creating, setCreating] = useState(s.projects.length === 0 && s.models.length === 0);
+  // The empty drafting table sketches the company's latest car.
+  const ghost = [...s.models].sort((a, b) => b.launchWeek - a.launchWeek)[0];
+  const steps = (
+    <ol className="steps">
+      <li>
+        {tx(
+          '<b>Tasarım ve geliştirme:</b> Aracı kimin için yaptığına sen karar ver: modülleri seç, mühendislerini ata, mühendis tahmininden iki öncelik seç (performans, verim, konfor, güvenlik, maliyet, kalite…). Öncelikler aracı gerçekten değiştirir.',
+        )}
+      </li>
+      <li>
+        {tx('<b>Test:</b> Dinamometre, yol, dayanıklılık ve (1934’ten sonra) çarpışma testleri kusurları bulur ve aracı ayarlar. Kısa kesersen kusurlar sahada patlar.')}
+      </li>
+      <li>{tx('<b>Üretim:</b> Tedarikçileri ve hattı seç, kalıplar hazırlanır.')}</li>
+      <li>{tx('<b>Lansman:</b> Fiyatı ve pazarları belirle. Dergiler puan verir, alıcılar yorum yapar.')}</li>
+    </ol>
+  );
   return (
     <div className="screen">
       <div className="screen-head">
@@ -206,23 +223,30 @@ export function Projects() {
             ))}
           </div>
         ) : (
-          <Empty>{t('Devam eden proje yok.')}</Empty>
+          <div className="drafting-empty">
+            <div className="drafting-ghost" aria-hidden>
+              <CarSVG body={ghost?.design.body ?? 'phaeton'} size={ghost?.design.size ?? 0.4} year={yearFloat(s.week)} cylinders={ghost?.design.engine.cylinders ?? 4} styling={0.5} className="ghost-car" />
+            </div>
+            <p>{t('Çizim masası boş. Sıradaki arabanı tasarla: yeni bir sınıf, bir yeni kuşak ya da bir makyaj.')}</p>
+            {!creating && (
+              <Button kind="primary" onClick={() => setCreating(true)}>
+                + {t('Yeni proje')}
+              </Button>
+            )}
+          </div>
         )}
       </Panel>
-      <Panel title={t('Nasıl çalışır?')}>
-        <ol className="steps">
-          <li>
-            {tx(
-              '<b>Tasarım ve geliştirme:</b> Aracı kimin için yaptığına sen karar ver: modülleri seç, mühendislerini ata, mühendis tahmininden iki öncelik seç (performans, verim, konfor, güvenlik, maliyet, kalite…). Öncelikler aracı gerçekten değiştirir.',
-            )}
-          </li>
-          <li>
-            {tx('<b>Test:</b> Dinamometre, yol, dayanıklılık ve (1934’ten sonra) çarpışma testleri kusurları bulur ve aracı ayarlar. Kısa kesersen kusurlar sahada patlar.')}
-          </li>
-          <li>{tx('<b>Üretim:</b> Tedarikçileri ve hattı seç, kalıplar hazırlanır.')}</li>
-          <li>{tx('<b>Lansman:</b> Fiyatı ve pazarları belirle. Dergiler puan verir, alıcılar yorum yapar.')}</li>
-        </ol>
-      </Panel>
+      {s.company.modelsLaunched > 0 ? (
+        // A maker who has launched a car knows the way: the steps fold away.
+        <details className="panel how-folded">
+          <summary className="panel-head">
+            <h3>{t('Nasıl çalışır?')}</h3>
+          </summary>
+          {steps}
+        </details>
+      ) : (
+        <Panel title={t('Nasıl çalışır?')}>{steps}</Panel>
+      )}
     </div>
   );
 }
