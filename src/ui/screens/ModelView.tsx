@@ -33,6 +33,7 @@ import { StatsPanel } from '../components/StatsPanel';
 import { ModelCar } from '../components/ModelCar';
 import { designPaint, modelPaint } from '../paint';
 import { PaintPicker } from '../components/PaintPicker';
+import { AdPoster } from '../components/AdPoster';
 import { LineChart } from '../viz/LineChart';
 import { weeklySold } from './HQ';
 import { lower, t } from '../../i18n';
@@ -298,6 +299,17 @@ export function ModelView({ modelId }: { modelId: string }) {
               <Empty>{t('Değerlendirme yok.')}</Empty>
             )}
           </Panel>
+          {active && (
+            <Panel
+              title={
+                <>
+                  {t('Gazete ilanı')} <Info>{t('Arabanın dönemin gazetelerine verilecek ilanı: en iyi üç yanı ve fiyatı. Resim olarak indirip paylaşabilirsin.')}</Info>
+                </>
+              }
+            >
+              <AdPoster s={s} m={m} />
+            </Panel>
+          )}
           {m.status === 'active' && m.unitsSold > 0 && (
             <Panel title={t('Müşteri mektupları')}>
               <OwnerLetters s={s} m={m} />

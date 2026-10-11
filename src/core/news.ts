@@ -226,14 +226,16 @@ export function boomIssue(s: GameState, m: CarModel, reason: { kind: 'units'; un
       },
     ],
     world: worldFor(s.week),
-    ad: {
-      modelId: m.id,
-      slogan: t(SLOGANS[best[0]]),
-      lines: best.map((k) => t(BLURB[k])),
-      price,
-    },
+    ad: { modelId: m.id, ...modelAdCopy(s, m) },
     letters: customerLetters(s, m, 2),
   };
+}
+
+/** A model's advertisement: its best quality as the slogan, its three best as the lines, and its price. */
+export function modelAdCopy(s: GameState, m: CarModel): { slogan: string; lines: string[]; price: number } {
+  const { scores } = modelScores(s, m);
+  const best = (Object.keys(scores) as AttrKey[]).sort((a, b) => scores[b] - scores[a]).slice(0, 3);
+  return { slogan: t(SLOGANS[best[0]]), lines: best.map((k) => t(BLURB[k])), price: priceNow(m, s.week) };
 }
 
 /** A model's own milestones; the company's first thousand cars get a page of their own. */
