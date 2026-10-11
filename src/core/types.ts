@@ -579,7 +579,8 @@ export type ModalItem =
 export interface ChapterSnapshot {
   decade: number;
   acquired: number;
-  military: number;
+  /** Weeks the lines had built for the army (flags.armyWeeks). */
+  armyWeeks: number;
   wins: number;
 }
 

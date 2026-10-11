@@ -681,6 +681,8 @@ function advanceProjects(s: GameState) {
 function produce(s: GameState) {
   const yf = yearFloat(s.week);
   const militaryActive = (s.flags.militaryUntil ?? 0) > yf;
+  /** Whether any line built for the army this week (the 1940s goal counts weeks, not vehicles). */
+  let army = false;
   for (const line of s.lines) {
     if (line.military && militaryActive) {
       const units = lineReport(s, line, MILITARY_COMPLEXITY).throughput;
@@ -688,6 +690,7 @@ function produce(s: GameState) {
       spend(s, upkeep, 'labor');
       earn(s, upkeep + units * militaryMargin(s.week));
       s.flags.militaryUnits = (s.flags.militaryUnits ?? 0) + units;
+      army = true;
       continue;
     }
     const model = s.models.find((m) => m.id === line.modelId && m.status === 'active');
@@ -703,6 +706,7 @@ function produce(s: GameState) {
     model.unitsBuilt += built;
     pushHistory(model, s.week).built += built;
   }
+  if (army) s.flags.armyWeeks = (s.flags.armyWeeks ?? 0) + 1;
 }
 
 function pushHistory(model: CarModel, week: number) {

@@ -1409,227 +1409,231 @@
  },
  "psx13f": {
   "tr": "SKANDAL: {name}’deki bilinen kusuru gizlediğin ortaya çıktı. Davalar ve zorunlu geri çağırma: {cost}. İtibar −15.",
-  "at": "src/core/game.ts:850"
+  "at": "src/core/game.ts:854"
  },
  "1oyrjra": {
   "tr": "Kasa eksiye düştü! 12 hafta içinde toparlanmazsan şirket iflas eder. Banka kredisi alabilir, masrafları kısabilirsin.",
-  "at": "src/core/game.ts:922"
+  "at": "src/core/game.ts:926"
  },
  "rmcw96": {
   "tr": "Son uyarı: {n} hafta içinde kasa artıya geçmezse iflas!",
-  "at": "src/core/game.ts:926"
+  "at": "src/core/game.ts:930"
  },
  "1lp6z6t": {
   "tr": "1900’ler",
-  "at": "src/core/goals.ts:53"
+  "at": "src/core/goals.ts:62"
  },
  "bzzf3i": {
   "tr": "Atölyeden yola",
-  "at": "src/core/goals.ts:54"
+  "at": "src/core/goals.ts:63"
  },
  "1us992c": {
   "tr": "Otomobil zenginlerin oyuncağı; yollar toz, benzin eczanede satılıyor. Atölyede başlayan her marka ilk arabasını yola çıkarmaya çalışıyor.",
-  "at": "src/core/goals.ts:55"
+  "at": "src/core/goals.ts:64"
  },
  "fy8gcd": {
   "tr": "İlk arabanı piyasaya çıkar",
-  "at": "src/core/goals.ts:57"
+  "at": "src/core/goals.ts:66"
  },
  "j27d6k": {
   "tr": "Projeler ekranında yeni bir proje başlat.",
-  "at": "src/core/goals.ts:57"
+  "at": "src/core/goals.ts:66"
  },
  "z2f1bm": {
   "tr": "{n} eyalette satış yap",
-  "at": "src/core/goals.ts:58"
+  "at": "src/core/goals.ts:67"
  },
  "1e6f6pj": {
   "tr": "Harita ekranında komşu eyaletlerde bayi ara.",
-  "at": "src/core/goals.ts:58"
+  "at": "src/core/goals.ts:67"
  },
  "1wvbwu5": {
   "tr": "Toplam {n} araba sat",
-  "at": "src/core/goals.ts:59"
+  "at": "src/core/goals.ts:68"
  },
  "1g81v0o": {
   "tr": "Talebi karşılayacak kadar üret; fiyat rehberine bak.",
-  "at": "src/core/goals.ts:59"
+  "at": "src/core/goals.ts:68"
  },
  "i2e96c": {
   "tr": "1910’lar",
-  "at": "src/core/goals.ts:64"
+  "at": "src/core/goals.ts:73"
  },
  "uhlakj": {
   "tr": "Hareketli hat",
-  "at": "src/core/goals.ts:65"
+  "at": "src/core/goals.ts:74"
  },
  "1yx3cbk": {
   "tr": "Seri üretim otomobili halka indiriyor. Büyük fabrikalar küçük atölyeleri geride bırakıyor; Büyük Savaş çeliği pahalandıracak.",
-  "at": "src/core/goals.ts:66"
+  "at": "src/core/goals.ts:75"
  },
  "varpgo": {
   "tr": "Bir yılda {n} araba sat",
-  "at": "src/core/goals.ts:68"
+  "at": "src/core/goals.ts:77"
  },
  "1i47mmx": {
   "tr": "Hatlarını büyüt ve bayi ağını genişlet.",
-  "at": "src/core/goals.ts:68"
+  "at": "src/core/goals.ts:77"
  },
  "kmwjki": {
   "tr": "Amerika’nın en büyük {n} üreticisinden biri ol",
-  "at": "src/core/goals.ts:69"
+  "at": "src/core/goals.ts:78"
  },
  "14k0eom": {
   "tr": "Geçen yılın satışlarına göre sayılır.",
-  "at": "src/core/goals.ts:69"
+  "at": "src/core/goals.ts:78"
  },
  "wisw8g": {
   "tr": "Bir sınıfın lideri ol",
-  "at": "src/core/goals.ts:70"
+  "at": "src/core/goals.ts:79"
  },
  "9209lt": {
   "tr": "Sınıfın en az sekizde birini sat ve her rakipten fazla sat.",
-  "at": "src/core/goals.ts:70"
+  "at": "src/core/goals.ts:79"
  },
  "sj1k7z": {
   "tr": "1920’ler",
-  "at": "src/core/goals.ts:75"
+  "at": "src/core/goals.ts:84"
  },
  "1656f2j": {
   "tr": "Kükreyen yirmiler",
-  "at": "src/core/goals.ts:76"
+  "at": "src/core/goals.ts:85"
  },
  "sbp24c": {
   "tr": "Kapalı gövde, taksitli satış ve her yıl yeni model: otomobil artık bir moda. Dergiler ve yarış pistleri markaları konuşuyor.",
-  "at": "src/core/goals.ts:77"
+  "at": "src/core/goals.ts:86"
  },
  "kzruac": {
   "tr": "Dergilerden 8,5 üstü alan bir araba çıkar",
-  "at": "src/core/goals.ts:79"
+  "at": "src/core/goals.ts:88"
  },
  "4i7bbf": {
   "tr": "Sınıfın alıcılarının önem verdiği alanlara öncelik ver, iyi test et.",
-  "at": "src/core/goals.ts:79"
+  "at": "src/core/goals.ts:88"
  },
  "n6kmyp": {
   "tr": "İtibarını {n}’e çıkar",
-  "at": "src/core/goals.ts:80"
+  "at": "src/core/goals.ts:89"
  },
  "1uq69c3": {
   "tr": "İyi arabalar, yeterli servis ve olağanın üstünde reklam.",
-  "at": "src/core/goals.ts:80"
+  "at": "src/core/goals.ts:89"
  },
  "123nean": {
   "tr": "Bir yarış kazan",
-  "at": "src/core/goals.ts:81"
+  "at": "src/core/goals.ts:90"
  },
  "50p8wi": {
   "tr": "Şirket ekranında yarış takımı kur; hızlı ve dayanıklı bir arabayla yarış.",
-  "at": "src/core/goals.ts:81"
+  "at": "src/core/goals.ts:90"
  },
  "14mf7z2": {
   "tr": "1930’lar",
-  "at": "src/core/goals.ts:86"
+  "at": "src/core/goals.ts:95"
  },
  "po3p9t": {
   "tr": "Buhran yılları",
-  "at": "src/core/goals.ts:87"
+  "at": "src/core/goals.ts:96"
  },
  "1vp9fb2": {
   "tr": "Borsa çöktü, bankalar krediyi kıstı, lüks talep yok oldu. Ayakta kalan markalar ucuzlayan rakiplerini toplayacak.",
-  "at": "src/core/goals.ts:88"
+  "at": "src/core/goals.ts:97"
  },
  "ccnmam": {
   "tr": "1930-1933 yıllarının dördünü de kârla kapat",
-  "at": "src/core/goals.ts:90"
+  "at": "src/core/goals.ts:99"
  },
  "1ifq0kk": {
   "tr": "Fiyatı ve üretimi talebe uydur, boştaki hatları sat.",
-  "at": "src/core/goals.ts:90"
+  "at": "src/core/goals.ts:99"
  },
  "17cuj4q": {
   "tr": "Bir rakibi satın al",
-  "at": "src/core/goals.ts:91"
+  "at": "src/core/goals.ts:100"
  },
  "wleyya": {
   "tr": "Şirket ekranında senden küçük rakipler satılık.",
-  "at": "src/core/goals.ts:91"
+  "at": "src/core/goals.ts:100"
  },
  "1e42vhx": {
   "tr": "{n} farklı sınıfta araba sat",
-  "at": "src/core/goals.ts:92"
+  "at": "src/core/goals.ts:101"
  },
  "17cox7i": {
   "tr": "Yeni bir sınıfa araba çıkar.",
-  "at": "src/core/goals.ts:92"
+  "at": "src/core/goals.ts:101"
  },
  "4ydq2t": {
   "tr": "1940’lar",
-  "at": "src/core/goals.ts:97"
+  "at": "src/core/goals.ts:106"
  },
  "6wzng3": {
   "tr": "Savaş ve barış",
-  "at": "src/core/goals.ts:98"
+  "at": "src/core/goals.ts:107"
  },
  "1u5j36l": {
   "tr": "Fabrikalar orduya çalışacak, sivil araba yapılmayacak. Barış gelince herkes yeni bir araba isteyecek.",
-  "at": "src/core/goals.ts:99"
+  "at": "src/core/goals.ts:108"
  },
- "hgje6v": {
-  "tr": "Orduya {n} araç üret",
-  "at": "src/core/goals.ts:101"
+ "akn4qs": {
+  "tr": "Savaş yıllarında iki yıl orduya üret",
+  "at": "src/core/goals.ts:110"
  },
  "tpjb1p": {
   "tr": "Savaş sözleşmelerini kabul et; hatlar Fabrika ekranında orduya ayrılır.",
-  "at": "src/core/goals.ts:101"
+  "at": "src/core/goals.ts:110"
  },
  "mttdl3": {
   "tr": "Barışın ilk üç yılında (1945-1947) yeni bir araba çıkar",
-  "at": "src/core/goals.ts:102"
+  "at": "src/core/goals.ts:111"
  },
  "1qjozr1": {
   "tr": "Savaş biterken bir projeyi hazır tut.",
-  "at": "src/core/goals.ts:102"
+  "at": "src/core/goals.ts:111"
  },
  "1b9wfkz": {
   "tr": "Arazi aracı sınıfına bir araba çıkar",
-  "at": "src/core/goals.ts:103"
+  "at": "src/core/goals.ts:112"
  },
  "b6vm2c": {
   "tr": "Arazi aracı sınıfı 1946’da açılır; cip tecrübesi işe yarar.",
-  "at": "src/core/goals.ts:103"
+  "at": "src/core/goals.ts:112"
  },
  "i968s4": {
   "tr": "1950’ler",
-  "at": "src/core/goals.ts:108"
+  "at": "src/core/goals.ts:117"
  },
  "11e76iq": {
   "tr": "Altın çağ",
-  "at": "src/core/goals.ts:109"
+  "at": "src/core/goals.ts:118"
  },
  "1kchg37": {
   "tr": "Otoyollar, banliyöler, iki renkli boyalar ve kuyruk kanatları. Amerika tekerlekler üstünde; büyükler daha da büyüyor.",
-  "at": "src/core/goals.ts:110"
+  "at": "src/core/goals.ts:119"
  },
  "17e23hg": {
   "tr": "Her sınıfta güncel bir araba ve yetecek kadar hat.",
-  "at": "src/core/goals.ts:112"
+  "at": "src/core/goals.ts:121"
  },
  "n9kzfe": {
   "tr": "İki renkli boyalı bir araba çıkar",
-  "at": "src/core/goals.ts:114"
+  "at": "src/core/goals.ts:123"
  },
  "1215g3d": {
   "tr": "Tasarımda tavan için ikinci bir renk seç.",
-  "at": "src/core/goals.ts:114"
+  "at": "src/core/goals.ts:123"
  },
  "11qh4ik": {
   "tr": "şu an {rank}.",
-  "at": "src/core/goals.ts:157"
+  "at": "src/core/goals.ts:171"
+ },
+ "1lyvsy5": {
+  "tr": "{n} / {of} hafta",
+  "at": "src/core/goals.ts:174"
  },
  "c67opq": {
   "tr": "On yılın hedefi tamam: {goal}. Bitiş puanına +{points}.",
-  "at": "src/core/goals.ts:170"
+  "at": "src/core/goals.ts:188"
  },
  "82zg6c": {
   "tr": "Mühendislik teşkilatı en üst düzeyde.",

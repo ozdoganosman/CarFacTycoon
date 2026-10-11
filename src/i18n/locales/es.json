@@ -489,10 +489,7 @@
  "4ydq2t": "Los años 1940",
  "6wzng3": "Guerra y paz",
  "1u5j36l": "Las fábricas trabajarán para el Ejército y no se harán autos civiles. Cuando llegue la paz, todos querrán un auto nuevo.",
- "hgje6v": {
-  "one": "Produce {n} vehículo para el Ejército",
-  "other": "Produce {n} vehículos para el Ejército"
- },
+ "akn4qs": "Produce para el ejército durante dos años de guerra",
  "tpjb1p": "Acepta los contratos de guerra; en la pantalla Fábrica, las líneas se asignan al Ejército.",
  "mttdl3": "Lanza un auto nuevo en los tres primeros años de paz (1945-1947)",
  "1qjozr1": "Ten un proyecto listo para cuando termine la guerra.",
@@ -505,6 +502,10 @@
  "n9kzfe": "Lanza un auto con pintura bicolor",
  "1215g3d": "En el diseño, elige un segundo color para el techo.",
  "11qh4ik": "ahora {rank}.º",
+ "1lyvsy5": {
+  "one": "{n} / {of} semanas",
+  "other": "{n} / {of} semanas"
+ },
  "c67opq": "Objetivo de la década cumplido: {goal}. +{points} a la puntuación final.",
  "82zg6c": "La organización de ingeniería está en su nivel más alto.",
  "1xad5zb": "{name} se puede construir a partir de {year}.",

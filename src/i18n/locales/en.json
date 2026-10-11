@@ -489,10 +489,7 @@
  "4ydq2t": "The 1940s",
  "6wzng3": "War and peace",
  "1u5j36l": "The factories will work for the Army; no civilian cars will be built. When peace comes, everyone will want a new car.",
- "hgje6v": {
-  "one": "Build {n} vehicle for the Army",
-  "other": "Build {n} vehicles for the Army"
- },
+ "akn4qs": "Build for the army for two of the war years",
  "tpjb1p": "Accept the war contracts; lines are set aside for the Army on the Factory screen.",
  "mttdl3": "Launch a new car in the first three years of peace (1945–1947)",
  "1qjozr1": "Have a project ready as the war ends.",
@@ -505,6 +502,10 @@
  "n9kzfe": "Launch a car with two-tone paint",
  "1215g3d": "In the design, pick a second color for the roof.",
  "11qh4ik": "now #{rank}",
+ "1lyvsy5": {
+  "one": "{n} / {of} weeks",
+  "other": "{n} / {of} weeks"
+ },
  "c67opq": "Goal of the decade met: {goal}. +{points} to your final score.",
  "82zg6c": "The engineering organization is at its highest level.",
  "1xad5zb": "{name} can be built from {year} on.",

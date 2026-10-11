@@ -154,6 +154,38 @@ describe('the decade goals', () => {
   });
 });
 
+describe('the decade goals count the decade', () => {
+  it('a year of sales and the makers’ ranking count only the decade’s own years', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 6 });
+    s.modals = [];
+    // A record 1909: it closes the old decade and does not meet the new one's goals.
+    s.segmentSales['1909:usa:family:p'] = 1e6;
+    s.week = weekFor(1910, 0) - 1;
+    tick(s);
+    const goal = (id: string) => goalStatus(s).find((g) => g.id === id)?.done;
+    expect(goal('top-5')).toBe(false);
+    expect(goal('year-50k')).toBe(false);
+    // A record 1910 does.
+    s.segmentSales['1910:usa:family:p'] = 1e6;
+    s.week = weekFor(1911, 0) - 1;
+    tick(s);
+    expect(goal('top-5')).toBe(true);
+    expect(goal('year-50k')).toBe(true);
+  });
+
+  it('the war goal counts weeks built for the army, whatever the size of the factory', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 6 });
+    s.modals = [];
+    s.flags.armyWeeks = 300;
+    s.week = weekFor(1940, 0) - 1;
+    tick(s);
+    expect(goalStatus(s).find((g) => g.id === 'army-2y')?.done).toBe(false);
+    s.flags.armyWeeks = 300 + 104;
+    for (let i = 0; i < 5; i++) tick(s);
+    expect(goalStatus(s).find((g) => g.id === 'army-2y')?.done).toBe(true);
+  });
+});
+
 describe('spare money and the news', () => {
   it('lists where spare money can go, what pays back fastest first', () => {
     const s = seasonedCompany();

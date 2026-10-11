@@ -1,5 +1,4 @@
 import { msg, t } from '../i18n';
-import { recentUnits } from './investments';
 import { openStates } from './network';
 import { ledSegments, salesRank } from './rivalMoves';
 import { weekFor, yearOf } from './time';
@@ -27,6 +26,8 @@ interface GoalDef {
   atMost?: boolean;
   /** Show the value as a number of cars (thousands separated). */
   cars?: boolean;
+  /** The value is weeks: shown as weeks of the target. */
+  weeks?: boolean;
 }
 
 export interface ChapterDef {
@@ -46,6 +47,14 @@ const launchedIn = (s: GameState, c: Chapter, from = c.decade, to = c.decade + 1
   s.models.filter((m) => m.launchWeek >= weekFor(from, 0) && m.launchWeek < weekFor(to, 0));
 const activeClasses = (s: GameState) => new Set(s.models.filter((m) => m.status === 'active').map((m) => m.segment)).size;
 const profitableYears = (s: GameState, from: number, to: number) => s.years.filter((y) => y.year >= from && y.year <= to && y.profit > 0).length;
+/** The decade's best year for cars sold: a finished year, or this one so far. */
+function bestYear(s: GameState, c: Chapter): number {
+  const year = yearOf(s.week);
+  const sofar = s.models.reduce((a, m) => a + m.history.reduce((b, h) => b + (yearOf(h.week) === year ? h.sold : 0), 0), 0);
+  return Math.max(sofar, ...s.years.filter((y) => y.year >= c.decade && y.year < year).map((y) => y.unitsSold));
+}
+/** The makers' ranking by last year's sales, once last year is one of the decade's own. */
+const decadeRank = (s: GameState, c: Chapter) => (yearOf(s.week) - 1 >= c.decade ? salesRank(s) : 99);
 
 export const CHAPTERS: ChapterDef[] = [
   {
@@ -65,8 +74,8 @@ export const CHAPTERS: ChapterDef[] = [
     name: msg('Hareketli hat'),
     intro: msg('Seri üretim otomobili halka indiriyor. Büyük fabrikalar küçük atölyeleri geride bırakıyor; Büyük Savaş çeliği pahalandıracak.'),
     goals: [
-      { id: 'year-50k', text: msg('Bir yılda {n} araba sat'), hint: msg('Hatlarını büyüt ve bayi ağını genişlet.'), target: 50000, value: (s) => recentUnits(s), cars: true },
-      { id: 'top-5', text: msg('Amerika’nın en büyük {n} üreticisinden biri ol'), hint: msg('Geçen yılın satışlarına göre sayılır.'), target: 5, value: (s) => salesRank(s), atMost: true },
+      { id: 'year-50k', text: msg('Bir yılda {n} araba sat'), hint: msg('Hatlarını büyüt ve bayi ağını genişlet.'), target: 50000, value: bestYear, cars: true },
+      { id: 'top-5', text: msg('Amerika’nın en büyük {n} üreticisinden biri ol'), hint: msg('Geçen yılın satışlarına göre sayılır.'), target: 5, value: decadeRank, atMost: true },
       { id: 'lead-class', text: msg('Bir sınıfın lideri ol'), hint: msg('Sınıfın en az sekizde birini sat ve her rakipten fazla sat.'), target: 1, value: (s) => ledSegments(s).length },
     ],
   },
@@ -98,7 +107,7 @@ export const CHAPTERS: ChapterDef[] = [
     name: msg('Savaş ve barış'),
     intro: msg('Fabrikalar orduya çalışacak, sivil araba yapılmayacak. Barış gelince herkes yeni bir araba isteyecek.'),
     goals: [
-      { id: 'army-10k', text: msg('Orduya {n} araç üret'), hint: msg('Savaş sözleşmelerini kabul et; hatlar Fabrika ekranında orduya ayrılır.'), target: 10000, value: (s, c) => Math.round((s.flags.militaryUnits ?? 0) - c.military), cars: true },
+      { id: 'army-2y', text: msg('Savaş yıllarında iki yıl orduya üret'), hint: msg('Savaş sözleşmelerini kabul et; hatlar Fabrika ekranında orduya ayrılır.'), target: 104, value: (s, c) => (s.flags.armyWeeks ?? 0) - c.armyWeeks, weeks: true },
       { id: 'postwar-car', text: msg('Barışın ilk üç yılında (1945-1947) yeni bir araba çıkar'), hint: msg('Savaş biterken bir projeyi hazır tut.'), target: 1, value: (s, c) => launchedIn(s, c, 1945, 1948).length },
       { id: 'suv', text: msg('Arazi aracı sınıfına bir araba çıkar'), hint: msg('Arazi aracı sınıfı 1946’da açılır; cip tecrübesi işe yarar.'), target: 1, value: (s, c) => launchedIn(s, c).filter((m) => m.segment === 'suv').length },
     ],
@@ -109,8 +118,8 @@ export const CHAPTERS: ChapterDef[] = [
     name: msg('Altın çağ'),
     intro: msg('Otoyollar, banliyöler, iki renkli boyalar ve kuyruk kanatları. Amerika tekerlekler üstünde; büyükler daha da büyüyor.'),
     goals: [
-      { id: 'year-750k', text: msg('Bir yılda {n} araba sat'), hint: msg('Her sınıfta güncel bir araba ve yetecek kadar hat.'), target: 750000, value: (s) => recentUnits(s), cars: true },
-      { id: 'top-3', text: msg('Amerika’nın en büyük {n} üreticisinden biri ol'), hint: msg('Geçen yılın satışlarına göre sayılır.'), target: 3, value: (s) => salesRank(s), atMost: true },
+      { id: 'year-750k', text: msg('Bir yılda {n} araba sat'), hint: msg('Her sınıfta güncel bir araba ve yetecek kadar hat.'), target: 750000, value: bestYear, cars: true },
+      { id: 'top-3', text: msg('Amerika’nın en büyük {n} üreticisinden biri ol'), hint: msg('Geçen yılın satışlarına göre sayılır.'), target: 3, value: decadeRank, atMost: true },
       { id: 'two-tone', text: msg('İki renkli boyalı bir araba çıkar'), hint: msg('Tasarımda tavan için ikinci bir renk seç.'), target: 1, value: (s, c) => launchedIn(s, c).filter((m) => !!m.design.roof).length },
     ],
   },
@@ -121,7 +130,7 @@ export const chapterOf = (year: number) => CHAPTERS.find((c) => year >= c.decade
 const snapshot = (s: GameState, decade: number): Chapter => ({
   decade,
   acquired: s.acquired?.length ?? 0,
-  military: s.flags.militaryUnits ?? 0,
+  armyWeeks: s.flags.armyWeeks ?? 0,
   wins: s.racing?.winYears?.length ?? 0,
 });
 
@@ -154,7 +163,16 @@ export function goalStatus(s: GameState, def: ChapterDef = chapterOf(yearOf(s.we
     // Met since the last monthly look: shown as met already.
     const done = s.goals?.done[g.id] !== undefined || (live && met(g, v));
     const share = done ? 1 : g.atMost ? (v > 0 && v < 99 ? Math.min(1, g.target / v) : 0) : Math.max(0, Math.min(1, v / g.target));
-    const progress = done || g.target === 1 ? undefined : g.atMost ? (v > 0 && v < 99 ? t('şu an {rank}.', { rank: v }) : undefined) : `${fmtCount(v)} / ${fmtCount(g.target)}`;
+    const progress =
+      done || g.target === 1
+        ? undefined
+        : g.atMost
+          ? v > 0 && v < 99
+            ? t('şu an {rank}.', { rank: v })
+            : undefined
+          : g.weeks
+            ? t('{n} / {of} hafta', { n: Math.max(0, Math.round(v)), of: g.target })
+            : `${fmtCount(v)} / ${fmtCount(g.target)}`;
     return { id: g.id, text: t(g.text, { n: fmtCount(g.target) }), hint: t(g.hint), done, progress, share };
   });
 }

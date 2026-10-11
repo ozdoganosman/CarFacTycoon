@@ -489,10 +489,7 @@
  "4ydq2t": "Die 1940er",
  "6wzng3": "Krieg und Frieden",
  "1u5j36l": "Die Fabriken werden für die Armee arbeiten, zivile Autos werden nicht gebaut. Wenn der Frieden kommt, wird jeder ein neues Auto wollen.",
- "hgje6v": {
-  "one": "Baue {n} Fahrzeug für die Armee",
-  "other": "Baue {n} Fahrzeuge für die Armee"
- },
+ "akn4qs": "Baue in den Kriegsjahren zwei Jahre lang für die Armee",
  "tpjb1p": "Nimm die Militäraufträge an; in der Fabrik werden Linien für die Armee abgestellt.",
  "mttdl3": "Bring in den ersten drei Friedensjahren (1945-1947) ein neues Auto heraus",
  "1qjozr1": "Halte zum Kriegsende ein Projekt bereit.",
@@ -505,6 +502,10 @@
  "n9kzfe": "Bring ein Auto mit zweifarbiger Lackierung heraus",
  "1215g3d": "Wähle im Entwurf eine zweite Farbe für das Dach.",
  "11qh4ik": "derzeit Platz {rank}",
+ "1lyvsy5": {
+  "one": "{n} / {of} Wochen",
+  "other": "{n} / {of} Wochen"
+ },
  "c67opq": "Ziel des Jahrzehnts erreicht: {goal}. +{points} für die Endwertung.",
  "82zg6c": "Die Ingenieursorganisation hat die höchste Stufe erreicht.",
  "1xad5zb": "{name} kann ab {year} gebaut werden.",
