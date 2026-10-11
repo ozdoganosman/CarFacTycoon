@@ -230,7 +230,7 @@ describe('game', () => {
     expect(s.models[0].unitsSold).toBeGreaterThan(0);
     expect(s.company.modelsLaunched).toBe(1);
     // The American market only, and only the home state until a dealer opens elsewhere.
-    expect(s.markets.europe.unlocked).toBe(false);
+    expect(s.models[0].markets).toEqual(['usa']);
     const net = s.network!.states;
     expect(Object.keys(net).filter((id) => (net[id as keyof typeof net]?.sold ?? 0) > 0)).toEqual(['MI']);
     expect(net.MI!.parc).toBeGreaterThan(s.models[0].unitsSold * 0.95);
@@ -710,8 +710,8 @@ describe('money that matters', () => {
   });
 
   it('corporate tax takes its share of a profitable year in instalments, and losses carry forward', () => {
-    expect(corporateTaxRate(1905, 'usa')).toBe(0);
-    expect(corporateTaxRate(1955, 'usa')).toBeCloseTo(0.52, 5);
+    expect(corporateTaxRate(1905)).toBe(0);
+    expect(corporateTaxRate(1955)).toBeCloseTo(0.52, 5);
     const s = newGame({ companyName: 'Test', hq: 'usa', seed: 23 });
     s.modals = [];
     s.years = [];
@@ -722,7 +722,7 @@ describe('money that matters', () => {
     s.company.lossCarry = 100_000;
     tick(s);
     const taxable = 400_000;
-    const due = taxable * corporateTaxRate(1919, 'usa');
+    const due = taxable * corporateTaxRate(1919);
     const paid = s.finance[s.finance.length - 1].tax;
     expect(paid).toBeCloseTo(due / 4, 0);
     expect(s.company.taxOwed).toBeCloseTo((due * 3) / 4, 0);

@@ -4,8 +4,8 @@ import { teamSpan } from './investments';
 import { engineerSalary, lineBuildWeeks, overhead } from '../data/economy';
 import { suggestedLine, workshopLineCost } from './factory';
 import { designEngineers } from './research';
-import { COST_KEYS, credit, dealerUpkeep, materialUnitCost } from './game';
-import { MARKET_IDS } from './market';
+import { COST_KEYS, credit, materialUnitCost } from './game';
+import { networkWeekly } from './network';
 import { TESTS, testWeekCost } from './testing';
 import { yearFloat } from './time';
 import type { GameState, Project } from './types';
@@ -37,7 +37,7 @@ export function operatingWeekly(s: GameState): number {
   // A new company has no books yet: its salaries, rent and agents are the whole story.
   if (recent.length < 4) {
     const yf = yearFloat(s.week);
-    return -(s.company.engineers * engineerSalary(yf) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, m) => a + dealerUpkeep(s, m), 0));
+    return -(s.company.engineers * engineerSalary(yf) + overhead(yf, s.lines.length) + networkWeekly(s));
   }
   const keys = COST_KEYS.filter((k) => k !== 'investment' && k !== 'rnd' && k !== 'tax');
   return recent.reduce((a, f) => a + f.revenue - keys.reduce((b, k) => b + (f[k] ?? 0), 0), 0) / recent.length;

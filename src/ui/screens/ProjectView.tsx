@@ -1,9 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import * as A from '../../core/actions';
-import { credit, dealerUpkeep, gates, materialUnitCost, protoUnitCost } from '../../core/game';
+import { credit, gates, materialUnitCost, protoUnitCost } from '../../core/game';
 import { lineReport, lineUpkeep, reservedLines, suggestedLine, turnkeyLineCost, workshopLineCost } from '../../core/factory';
 import {
-  MARKET_IDS,
   PRICE_OVER_FROM,
   demandAtPrice,
   lastingDemandAtPrice,
@@ -968,7 +967,8 @@ function Launch({ p }: { p: Project }) {
   const s = useGameState();
   const yf = yearFloat(s.week);
   const st = useCarStats(p.design, yf, p.bonus);
-  const unlocked = MARKETS.filter((m) => s.markets[m.id].unlocked).map((m) => m.id);
+  // Only the American market is played.
+  const unlocked: MarketId[] = ['usa'];
   const [price, setPrice] = useState(() => Math.round(p.kind === 'facelift' ? p.targetPrice : referencePrice(s.company.hq, p.segment, yf)));
   const [markets] = useState<MarketId[]>(unlocked);
   // A show can cost a young firm half its till: the player turns it on, never by default.
@@ -988,7 +988,7 @@ function Launch({ p }: { p: Project }) {
   const lastingSold = Math.min(cap, markets.reduce((a, mk) => a + lastingDemandAtPrice(s, preview, mk, price), 0));
   const labourWeek = line ? lineUpkeep(s, line, cap > 0 ? sold / cap : 0) : 0;
   const contribution = sold * (net - unit) - labourWeek;
-  const fixedCost = s.company.engineers * engineerSalary(yf) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, m) => a + dealerUpkeep(s, m), 0);
+  const fixedCost = s.company.engineers * engineerSalary(yf) + overhead(yf, s.lines.length) + N.networkWeekly(s);
   const weeklyNet = contribution - fixedCost;
   const others = s.models.some((m) => m.status === 'active' && m.id !== p.replacesModelId);
   // With other cars on sale their profit already carries the fixed costs.

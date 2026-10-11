@@ -5,7 +5,7 @@ import { mainMarket } from './feedback';
 import { PRICE_REMARK, modelScores, playerOffer } from './market';
 import { makeRng, pick, type Rng } from './rng';
 import { defectText } from './testing';
-import type { AttrKey, CarModel, GameState, MarketId, NewsLetter, SegmentId } from './types';
+import type { AttrKey, CarModel, GameState, NewsLetter, SegmentId } from './types';
 import { lower, msg, t } from '../i18n';
 
 // Letters from owners: a name, a town, a trade and a few lines about the car.
@@ -78,29 +78,12 @@ const ROLES: Record<SegmentId, string[]> = {
   suv: [msg('ormancı'), msg('çiftlik sahibi'), msg('maden mühendisi'), msg('veteriner'), msg('avcı')],
 };
 
-// Places are names; the European ones are written the Turkish way (Brüksel, Viyana, Münih), so they are
-// marked for the translators too.
-const NAMES: Record<MarketId, { first: string[]; last: string[]; places: string[] }> = {
+// Owners are American: the American market is the one played.
+const NAMES: { usa: { first: string[]; last: string[]; places: string[] } } = {
   usa: {
     first: ['John', 'Mary', 'William', 'Margaret', 'James', 'Elizabeth', 'George', 'Helen', 'Frank', 'Ruth', 'Walter', 'Dorothy'],
     last: ['Miller', 'Carter', 'Hughes', 'Parker', 'Turner', 'Bennett', 'Foster', 'Hayes', 'Coleman', 'Reed', 'Morgan', 'Price'],
     places: ['Ohio', 'Kansas', 'Pennsylvania', 'Oregon', 'Georgia', 'Iowa', 'Texas', 'Vermont', 'Michigan', 'Nebraska'],
-  },
-  europe: {
-    first: ['Henri', 'Marie', 'Karl', 'Greta', 'Thomas', 'Edith', 'Luigi', 'Anna', 'Arthur', 'Louise', 'Hans', 'Clara'],
-    last: ['Dubois', 'Weber', 'Clarke', 'Rossi', 'Moreau', 'Schmidt', 'Hughes', 'Bianchi', 'Lefèvre', 'Wagner', 'Evans', 'Conti'],
-    places: [
-      'Lyon',
-      'Hamburg',
-      'Manchester',
-      msg('Torino'),
-      msg('Brüksel'),
-      msg('Viyana'),
-      'Bordeaux',
-      msg('Münih'),
-      'Leeds',
-      msg('Milano'),
-    ],
   },
 };
 
@@ -149,7 +132,7 @@ export function customerLetters(s: GameState, m: CarModel, count = 3, rng: Rng =
     return stateDef(owners[owners.length - 1].id).name;
   };
   for (let i = 0; i < count; i++) {
-    const names = NAMES[pick(rng, m.markets.length ? m.markets : [market])];
+    const names = NAMES.usa;
     const parts: string[] = [];
     let score = 3;
     const g = good.length > 0;

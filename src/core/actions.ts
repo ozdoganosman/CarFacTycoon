@@ -2,7 +2,7 @@ import { absorbDealers, homeState, openStates } from './network';
 import { stateDef } from '../data/states';
 import { costIndex, lineBuildWeeks, newLineCost, priceLevel, shopCost, slotCost, toolingMultiple, MAX_SLOTS } from '../data/economy';
 import { eventDef } from '../data/events';
-import { MARKETS, marketScale, MAX_DEALER_LEVEL } from '../data/markets';
+import { MARKETS, marketScale } from '../data/markets';
 import { segmentDef } from '../data/segments';
 import { STAGES, stationDef } from '../data/stations';
 import { CHASSIS, byId, maxGears } from '../data/tech';
@@ -16,7 +16,6 @@ import {
   shareEngineers,
   availableSegments,
   credit,
-  dealerUpgradeCost,
   engineersBusy,
   gates,
   materialUnitCost,
@@ -787,11 +786,6 @@ export function setModelPrice(s: GameState, id: string, price: number) {
   }
 }
 
-export function setModelMarkets(s: GameState, id: string, markets: MarketId[]) {
-  model(s, id).markets = markets.filter((m) => s.markets[m].unlocked && m === 'usa');
-  decide(s, 'markets:' + id, `${model(s, id).name}: pazarlar ${model(s, id).markets.join('+')}`);
-}
-
 export function setProductionRate(s: GameState, id: string, rate: number) {
   model(s, id).productionRate = clamp(rate, 0, 1);
   decide(s, 'rate:' + id, `${model(s, id).name}: üretim hızı %${Math.round(model(s, id).productionRate * 100)}`);
@@ -1026,20 +1020,6 @@ export function buildShop(s: GameState, comp: ComponentKey): ActionResult {
 }
 
 // ---------------- Markets ----------------
-
-export function upgradeDealers(s: GameState, market: MarketId): ActionResult {
-  if (market === 'usa') return fail(t('Bayiler eyalet eyalet açılır: haritadan bir eyalet seçip bayi ara.'));
-  const ms = s.markets[market];
-  if (!ms.unlocked) return fail(t('Bu pazar henüz açılmadı.'));
-  if (ms.dealerLevel >= MAX_DEALER_LEVEL) return fail(t('Bayi ağı en üst seviyede.'));
-  const cost = dealerUpgradeCost(s, market);
-  if (s.company.cash < cost) return fail(t('Bayi ağını büyütmek için {cost} gerekiyor.', { cost: money(cost) }));
-  spend(s, cost, 'investment');
-  ms.dealerLevel += 1;
-  ms.awareness = clamp(ms.awareness + 0.03, 0, 1);
-  decide(s, 'dealers:' + market, `${market} bayi seviyesi ${ms.dealerLevel} (${money(cost)})`);
-  return ok;
-}
 
 export function setAdBudget(s: GameState, market: MarketId, amount: number) {
   s.markets[market].adBudget = Math.max(0, amount);

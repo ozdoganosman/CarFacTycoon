@@ -19,7 +19,6 @@ import {
 import { scoreStats } from '../../core/scoring';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { formatDate, formatShort, yearFloat, yearOf } from '../../core/time';
-import { MARKETS } from '../../data/markets';
 import * as N from '../../core/network';
 import { RIVALS } from '../../data/rivals';
 import { segmentDef } from '../../data/segments';
@@ -44,7 +43,6 @@ export function ModelView({ modelId }: { modelId: string }) {
   const m = s.models.find((x) => x.id === modelId)!;
   const yf = yearFloat(s.week);
   const active = m.status === 'active';
-  const [market, setMarket] = useState<MarketId>(m.markets.includes(s.company.hq) ? s.company.hq : m.markets[0] ?? s.company.hq);
   const [draftPrice, setDraftPrice] = useState(Math.round(priceNow(m, s.week)));
   const lines = s.lines.filter((l) => l.modelId === m.id);
   const cap = lines.reduce((a, l) => a + lineReport(s, l, m.stats.complexity).throughput, 0);
@@ -286,7 +284,7 @@ export function ModelView({ modelId }: { modelId: string }) {
       </>
       )}
 
-      {tab === 'why' && active && m.markets.length > 0 && <Competition modelId={m.id} market={market} setMarket={setMarket} />}
+      {tab === 'why' && active && m.markets.length > 0 && <Competition modelId={m.id} />}
 
       {tab === 'car' && (
       <div className="grid-2">
@@ -397,9 +395,11 @@ const MODEL_TABS: { id: ModelTab; label: string }[] = [
   { id: 'ad', label: msg('İlan ve mektuplar') },
 ];
 
-function Competition({ modelId, market, setMarket }: { modelId: string; market: MarketId; setMarket: (m: MarketId) => void }) {
+function Competition({ modelId }: { modelId: string }) {
   const s = useGameState();
   const m = s.models.find((x) => x.id === modelId)!;
+  // The American market: the one played.
+  const market: MarketId = 'usa';
   const sm = segmentMarket(s, market, m.segment);
   const rows = [...sm.offers].sort((a, b) => b.weight - a.weight);
   const others = sm.othersWeight / sm.totalWeight;
@@ -422,15 +422,6 @@ function Competition({ modelId, market, setMarket }: { modelId: string; market: 
             )}
           </Info>
         </>
-      }
-      actions={
-        <div className="seg-toggle">
-          {m.markets.map((mk) => (
-            <button key={mk} type="button" className={`chip ${market === mk ? 'is-on' : ''}`} onClick={() => setMarket(mk)}>
-              {t(MARKETS.find((x) => x.id === mk)!.name)}
-            </button>
-          ))}
-        </div>
       }
     >
       {mine && (

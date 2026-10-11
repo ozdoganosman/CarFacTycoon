@@ -306,10 +306,7 @@ function LabShare() {
     <div className="lab-staff">
       <div className="lab-staff-text">
         <b>{t('Laboratuvar: {n} mühendis', { n: labEngineers(s) })}</b>
-        <span className="muted small">
-          {' '}
-          · {t('araştırma hızı ×{speed}, aynı anda {n} konu', { speed: dec(labSpeed(s), 1), n: labSlots(s) })}
-        </span>
+        <span className="muted small">{t('araştırma hızı ×{speed}, aynı anda {n} konu', { speed: dec(labSpeed(s), 1), n: labSlots(s) })}</span>
         <span className="small">{t('Laboratuvardaki mühendisler yalnızca araştırır: araba geliştirmezler, projeler geri kalanlarla yürür. Pay değişince süren araştırmalar da hızlanır ya da yavaşlar.')}</span>
       </div>
       <Choice

@@ -89,16 +89,11 @@ export const adWeight = (year: number) => interp([[1915, 0], [1925, 4], [1935, 8
 /** One-time investment to make a component in-house. */
 export const shopCost = (year: number) => interp([[1900, 4000], [1920, 20000], [1950, 60000]], year) * costIndex(year);
 
-/**
- * Corporate income tax on profits, roughly as the home country charged it: the United States from
- * 1909 (1%) to 52% in the fifties; Britain and France a little earlier and higher.
- */
-export function corporateTaxRate(year: number, hq: 'usa' | 'europe'): number {
-  if (hq === 'usa')
-    return year < 1909
-      ? 0
-      : interp([[1909, 0.01], [1916, 0.02], [1917, 0.06], [1918, 0.12], [1919, 0.1], [1922, 0.125], [1926, 0.135], [1929, 0.11], [1932, 0.1375], [1936, 0.15], [1938, 0.19], [1940, 0.24], [1942, 0.4], [1946, 0.38], [1950, 0.42], [1952, 0.52], [1960, 0.52]], year);
-  return interp([[1900, 0.05], [1914, 0.06], [1916, 0.2], [1919, 0.25], [1925, 0.2], [1939, 0.3], [1941, 0.45], [1946, 0.45], [1960, 0.5]], year);
+/** American corporate income tax on profits: from 1909 (1%) to 52% in the fifties. */
+export function corporateTaxRate(year: number): number {
+  return year < 1909
+    ? 0
+    : interp([[1909, 0.01], [1916, 0.02], [1917, 0.06], [1918, 0.12], [1919, 0.1], [1922, 0.125], [1926, 0.135], [1929, 0.11], [1932, 0.1375], [1936, 0.15], [1938, 0.19], [1940, 0.24], [1942, 0.4], [1946, 0.38], [1950, 0.42], [1952, 0.52], [1960, 0.52]], year);
 }
 
 /** Bank credit limit and interest. */

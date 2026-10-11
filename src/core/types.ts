@@ -387,9 +387,10 @@ export interface ProductionLine {
   nightShift?: Partial<Record<StageId, boolean>>;
 }
 
+/** The company in a market: only the American one is played (the European market is simulated for the rivals). */
 export interface MarketState {
-  unlocked: boolean;
-  dealerLevel: number;
+  /** Older saves: national dealer levels, turned into states on load (network.ts ensureNetwork). */
+  dealerLevel?: number;
   awareness: number;
   adBudget: number; // $ per week (in current money)
   /** Keep the budget at this many times what a maker of the company's size spends in the era (core/advertising.ts); unset: by hand. */

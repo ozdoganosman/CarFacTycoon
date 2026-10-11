@@ -28,7 +28,6 @@ interface Typical {
   cost: number;
   smooth: number;
   rel: number;
-  taxHpEurope: number;
 }
 
 const cache = new Map<string, Typical>();
@@ -53,7 +52,6 @@ function typical(year: number, segment: SegmentId): Typical {
     cost: avg((x) => x.cost),
     smooth: avg((x) => x.smoothness),
     rel: avg((x) => x.reliabilityPenalty),
-    taxHpEurope: stats[1].taxHp,
   };
   cache.set(key, out);
   return out;
@@ -66,8 +64,6 @@ export function engineNotes(e: EngineDesign, year: number, segment: SegmentId): 
   const x = computeEngine(e, year);
   const pros: string[] = [];
   const cons: string[] = [];
-  // Only the American market is played: the European horsepower tax does not apply.
-  const europeTax = false;
 
   const hp = x.powerHp / typ.hp;
   if (hp >= 1.15) pros.push(t('Tipik motordan {pct} güçlü: hızlanma ve son hız artar.', { pct: pct(hp) }));
@@ -118,12 +114,6 @@ export function engineNotes(e: EngineDesign, year: number, segment: SegmentId): 
   const cost = x.cost / typ.cost;
   if (cost >= 1.25) cons.push(t('Pahalı: tipik motordan {pct} fazla tutuyor, birim maliyet artar.', { pct: pct(cost) }));
   else if (cost <= 0.8) pros.push(t('Ucuz: tipik motordan {pct} az tutuyor.', { pct: pct(cost) }));
-
-  if (europeTax) {
-    const tax = x.taxHp / typ.taxHpEurope;
-    if (tax >= 1.25) cons.push(t('Avrupa’da vergi beygiri yüksek ({hp}): alıcı her yıl daha çok vergi öder. Vergi yalnızca çapa bakar.', { hp: dec(x.taxHp) }));
-    else if (tax <= 0.8) pros.push(t('Avrupa’da vergi beygiri düşük ({hp}): uzun strok vergide avantaj sağlıyor.', { hp: dec(x.taxHp) }));
-  }
 
   if (x.diesel) {
     pros.push(t('Dizel: çok az yakar ve uzun ömürlüdür.'));

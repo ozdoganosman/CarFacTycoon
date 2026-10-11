@@ -19,11 +19,11 @@ import {
   turnkeyQuote,
 } from './factory';
 import { DEALER_COMMISSION, slotCost } from '../data/economy';
-import { MARKET_IDS, modelDemand, priceNow, weeklySegmentDemand } from './market';
+import { modelDemand, priceNow, weeklySegmentDemand } from './market';
 import { boardVeto } from './shares';
 import { HIKE_TOLERANCE } from './actions';
 import { operatingWeekly } from './budget';
-import { dealerUpkeep } from './game';
+import { networkWeekly } from './network';
 import { yearFloat } from './time';
 import type { CarModel, GameState, ProductionLine, StageId } from './types';
 import { earn, financeNow, log, money, spend } from './util';
@@ -110,7 +110,7 @@ export function autoReserve(s: GameState): number {
 function fixedWeekly(s: GameState): number {
   const recent = s.finance.slice(-4);
   const paid = recent.length ? recent.reduce((a, f) => a + f.labor + f.salaries + f.interest, 0) / recent.length : 0;
-  return paid + overhead(yearFloat(s.week), s.lines.length) + MARKET_IDS.reduce((a, mk) => a + dealerUpkeep(s, mk), 0);
+  return paid + overhead(yearFloat(s.week), s.lines.length) + networkWeekly(s);
 }
 
 /** Cash doing nothing: what the till holds beyond the reserve and a year of the company's fixed costs. */

@@ -211,12 +211,10 @@ describe('state network', () => {
     const old = JSON.parse(serialize(s)) as GameState;
     delete old.network;
     old.company.hq = 'europe';
-    old.markets.europe.unlocked = true;
     old.markets.usa.dealerLevel = 3;
     for (const m of old.models) m.markets = ['usa', 'europe'];
     const loaded = deserialize(JSON.stringify(old));
     expect(loaded.company.hq).toBe('usa');
-    expect(loaded.markets.europe.unlocked).toBe(false);
     expect(loaded.models.every((m) => m.markets.join() === 'usa')).toBe(true);
     expect(N.openStates(loaded).length).toBeGreaterThan(5);
     expect(N.totalParc(loaded)).toBeGreaterThan(0);

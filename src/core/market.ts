@@ -2,7 +2,6 @@ import { costIndex, labourShare, priceLevel, priceMarkup } from '../data/economy
 import {
   MARKETS,
   activeTax,
-  dealerCoverage,
   marketDef,
   marketSize,
   othersMass,
@@ -122,9 +121,8 @@ export const brandTerm = (reputation: number, segment: SegmentId) => (reputation
 
 /** Share of the country's buyers our showrooms reach (the dealer network, state by state). */
 export function playerReach(state: GameState, market: MarketId): number {
-  if (market === 'usa') return nationalReach(state, yearFloat(state.week));
-  const m = state.markets[market];
-  return dealerCoverage(m.dealerLevel, market === state.company.hq) * (0.35 + 0.65 * m.awareness);
+  // The American market only is played: no dealers elsewhere.
+  return market === 'usa' ? nationalReach(state, yearFloat(state.week)) : 0;
 }
 
 /** A rival's reach: its own dealer network, plus the dealers it took over in mergers. */
@@ -350,7 +348,7 @@ export function segmentMarket(state: GameState, market: MarketId, segment: Segme
   const offers: Offer[] = [];
   const mine: Offer[] = [];
   for (const m of state.models) {
-    if (m.status === 'active' && m.segment === segment && m.markets.includes(market) && state.markets[market].unlocked) {
+    if (m.status === 'active' && m.segment === segment && m.markets.includes(market)) {
       const o = playerOffer(state, m, market);
       offers.push(o);
       mine.push(o);
