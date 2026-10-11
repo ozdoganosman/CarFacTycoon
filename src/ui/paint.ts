@@ -1,4 +1,4 @@
-import { PAINTS, paintDef, paintsIn, type PaintDef } from '../data/paints';
+import { PAINTS, eraPaint, paintDef, type PaintDef } from '../data/paints';
 import { stationDef } from '../data/stations';
 import { yearOf } from '../core/time';
 import type { CarDesign, CarModel, GameState } from '../core/types';
@@ -10,14 +10,6 @@ export interface CarPaint {
   roof?: PaintDef;
   /** Painted in a black japan oven: any colour so long as it is black. */
   japan?: boolean;
-}
-
-/** A car never given a colour gets one of its era's, the same every time (by its id). */
-function eraPaint(seed: string, year: number): PaintDef {
-  const pool = paintsIn(year);
-  let h = 7;
-  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return pool[h % pool.length] ?? PAINTS[0];
 }
 
 export function designPaint(design: Pick<CarDesign, 'paint' | 'roof'>, seed: string, year: number): CarPaint {

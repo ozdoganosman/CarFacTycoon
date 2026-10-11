@@ -37,3 +37,11 @@ export const paintDef = (id: string | undefined) => PAINTS.find((p) => p.id === 
 
 /** The paints a car can be ordered in, in a year. */
 export const paintsIn = (year: number) => PAINTS.filter((p) => p.year <= year);
+
+/** A car never given a colour gets one of its era's, the same every time (picked by its id). */
+export function eraPaint(seed: string, year: number): PaintDef {
+  const pool = paintsIn(year);
+  let h = 7;
+  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return pool[h % pool.length] ?? PAINTS[0];
+}

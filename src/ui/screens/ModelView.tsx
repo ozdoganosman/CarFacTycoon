@@ -18,7 +18,7 @@ import {
 } from '../../core/market';
 import { scoreStats } from '../../core/scoring';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
-import { formatDate, formatShort, yearFloat } from '../../core/time';
+import { formatDate, formatShort, yearFloat, yearOf } from '../../core/time';
 import { MARKETS } from '../../data/markets';
 import * as N from '../../core/network';
 import { RIVALS } from '../../data/rivals';
@@ -31,7 +31,8 @@ import { cars, dec, money, num, pct } from '../format';
 import { Badge, Button, Empty, NumberInput, Panel, Slider, Stat, Table, Toggle, ScoreBar, Info, SegmentLabel } from '../components/ui';
 import { StatsPanel } from '../components/StatsPanel';
 import { ModelCar } from '../components/ModelCar';
-import { modelPaint } from '../paint';
+import { designPaint, modelPaint } from '../paint';
+import { PaintPicker } from '../components/PaintPicker';
 import { LineChart } from '../viz/LineChart';
 import { weeklySold } from './HQ';
 import { lower, t } from '../../i18n';
@@ -114,6 +115,17 @@ export function ModelView({ modelId }: { modelId: string }) {
 
       <div className="model-hero">
         <ModelCar s={s} m={m} />
+        {active && (
+          <details className="hero-paint">
+            <summary>{t('Boyayı değiştir')}</summary>
+            <PaintPicker
+            paint={designPaint(m.design, m.id, yearOf(m.launchWeek))}
+            year={yf}
+            onChange={(p, roof) => store.try((st) => A.setModelPaint(st, m.id, p, roof))}
+            note={paint.japan ? t('Hatlarında siyah vernik fırını var: hangi rengi seçersen seç, araba siyah çıkar.') : undefined}
+            />
+          </details>
+        )}
         <div className="model-hero-tags">
           <span>{t('{gen}. kuşak', { gen: m.generation })}</span>
           {paint.japan ? (
