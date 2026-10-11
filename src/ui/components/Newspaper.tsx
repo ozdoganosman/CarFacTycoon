@@ -90,7 +90,8 @@ export function NewspaperHost() {
   if (!issue) return null;
   return (
     <div className="paper-backdrop" onClick={(e) => e.target === e.currentTarget && store.closeNews()}>
-      <div className="paper-wrap" role="dialog" aria-modal="true" aria-label={issue.lead.headline}>
+      {/* A record's front page spins in, as in the newsreels. */}
+      <div className={`paper-wrap ${issue.kind === 'boom' ? 'is-spin' : ''}`} role="dialog" aria-modal="true" aria-label={issue.lead.headline}>
         <button type="button" className="paper-close" onClick={() => store.closeNews()} aria-label={t('Gazeteyi kapat')}>
           ×
         </button>

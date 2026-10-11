@@ -66,6 +66,8 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
           <>
             <div className="launch-stage">
               <div className="launch-spot" />
+              {/* The press photographers' flash bulbs as the curtain opens. */}
+              <div className="launch-flash" aria-hidden />
               <ModelCar s={s} m={m} year={yearFloat(s.week)} className="launch-car" />
               <div className="curtain curtain-l" />
               <div className="curtain curtain-r" />
