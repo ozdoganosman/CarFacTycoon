@@ -25,6 +25,7 @@ import { devWeeksLeft } from '../../core/budget';
 import { teamOutput } from '../../core/development';
 import { engineeringCost, nextEngineering, ownsPlant, plantCoverage, plantStep, teamSpan } from '../../core/investments';
 import { adBrandTerm, adNorm } from '../../core/advertising';
+import { FactoryYard } from '../viz/FactoryYard';
 import { SUPPLIER_PLANTS } from '../../data/investments';
 import { t, msg, list } from '../../i18n';
 import { Icon, type IconName } from '../components/Icon';
@@ -407,6 +408,8 @@ export function HQ() {
           sub={idleEngineers(s) > 0 ? t('{n} kişi boşta', { n: idleEngineers(s) }) : t('projede · beceri {skill}', { skill: Math.round(s.company.skill) })}
         />
       </div>
+
+      <FactoryYard s={s} />
 
       <div className="grid-2">
         <Panel title={t('Yapılacaklar')} className="todo-panel">

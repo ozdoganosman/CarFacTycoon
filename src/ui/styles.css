@@ -5653,3 +5653,108 @@ details.how-folded[open] > summary h3::after {
   opacity: 0.85;
   margin-bottom: 4px;
 }
+
+/* ---------- The factory seen from the road (HQ) ---------- */
+:root {
+  --yard-sky: #dbe5e6;
+  --yard-window: #c4d3d8;
+  --yard-ground: #b8a888;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --yard-sky: #111a22;
+    --yard-window: #efc463;
+    --yard-ground: #3a342b;
+  }
+}
+:root[data-theme='dark'] {
+  --yard-sky: #111a22;
+  --yard-window: #efc463;
+  --yard-ground: #3a342b;
+}
+.yard {
+  margin: 14px 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--yard-sky);
+}
+.yard > svg {
+  display: block;
+  width: 100%;
+  height: clamp(110px, 14vw, 150px);
+}
+.yard-sky {
+  fill: var(--yard-sky);
+}
+.yard-ground {
+  fill: var(--yard-ground);
+}
+.yard-road {
+  fill: #57534d;
+}
+.yard-lane {
+  stroke: #e9e1cf;
+  stroke-width: 1.5;
+  stroke-dasharray: 14 10;
+}
+.yard-brick {
+  fill: #8c4a3a;
+}
+.yard-wood {
+  fill: #9a7a52;
+}
+.yard-roof {
+  fill: #4a4540;
+}
+.yard-window {
+  fill: var(--yard-window);
+}
+.yard-sign {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  fill: #f3ead8;
+}
+.yard-tower rect {
+  fill: #6b5f52;
+}
+.yard-smoke {
+  fill: rgba(120, 115, 110, 0.45);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: yard-smoke 3.3s linear infinite;
+}
+@keyframes yard-smoke {
+  from {
+    transform: translate(0, 0) scale(0.6);
+    opacity: 0.75;
+  }
+  to {
+    transform: translate(18px, -36px) scale(1.6);
+    opacity: 0;
+  }
+}
+/* Cars leave down the road; standing still (the clock stopped, or less motion preferred) they wait in line. */
+.yard-drive {
+  transform: translateX(var(--x, 300px));
+  animation: yard-drive 9s linear infinite;
+}
+@keyframes yard-drive {
+  from {
+    transform: translateX(-80px);
+  }
+  to {
+    transform: translateX(1180px);
+  }
+}
+.yard.is-still .yard-drive,
+.yard.is-still .yard-smoke {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .yard-drive,
+  .yard-smoke {
+    animation: none;
+  }
+}
