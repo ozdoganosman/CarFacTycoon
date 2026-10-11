@@ -4803,6 +4803,42 @@ button.topbar-date {
   background: var(--ink);
 }
 
+/* Finance: where spare money can go */
+.uses {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.use {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  text-align: start;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.use:hover {
+  border-color: var(--accent);
+}
+.use-body,
+.use-cost {
+  display: grid;
+  gap: 2px;
+}
+.use-cost {
+  text-align: end;
+  font-family: var(--font-mono);
+}
+
 /* HQ: the campaign (score now, the decade's goals) */
 .campaign-tier {
   margin: 0;

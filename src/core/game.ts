@@ -14,7 +14,7 @@ import { network, networkWeek, networkWeekly, noteStateSales, partsWeekly, recor
 import { cityDef, type CityId } from '../data/cities';
 import type { StateId } from '../data/states';
 import { makeRng, rand, stateRng } from './rng';
-import { updateRivals, initRivals } from './rivals';
+import { updateRivals, initRivals, type RivalNews } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
 import { autoDealers, autoService } from './autoservice';
 import { SEASONED_AFTER, autoAdvance, dropStaleNotes, phaseNote } from './autopilot';
@@ -374,7 +374,7 @@ export function tick(s: GameState): void {
   } else if (weekOfYear(s.week) % 13 === 0) payTaxInstalment(s);
   if (isMonthStart(s.week)) {
     checkStall(s);
-    for (const n of updateRivals(s, stateRng(s))) log(s, n.text, n.tone, 'rival');
+    rivalNews(s, updateRivals(s, stateRng(s)));
     rivalMovesMonth(s, stateRng(s));
   }
   advanceProjects(s);
@@ -399,6 +399,30 @@ export function tick(s: GameState): void {
   }
   checkSolvency(s);
   void yf;
+}
+
+/**
+ * The month's rival news: in full for the classes the company sells or designs in, the rest in one line
+ * (a bot's campaign had up to seventy rival lines a year, most about classes it never entered).
+ */
+export function rivalNews(s: GameState, news: RivalNews[]) {
+  const mine = new Set<SegmentId>([...s.models.filter((m) => m.status === 'active').map((m) => m.segment), ...s.projects.map((p) => p.segment)]);
+  const elsewhere = new Map<SegmentId, number>();
+  for (const n of news) {
+    if (!n.segment || mine.has(n.segment)) log(s, n.text, n.tone, 'rival');
+    else elsewhere.set(n.segment, (elsewhere.get(n.segment) ?? 0) + 1);
+  }
+  if (!elsewhere.size) return;
+  const total = [...elsewhere.values()].reduce((a, b) => a + b, 0);
+  log(
+    s,
+    t('Bu ay arabası olmadığın sınıflarda {n} yeni rakip modeli: {classes}.', {
+      n: total,
+      classes: [...elsewhere].map(([seg, k]) => `${t(SEGMENTS.find((x) => x.id === seg)!.name)} ${k}`).join(', '),
+    }),
+    'info',
+    'rival',
+  );
 }
 
 function fireEvents(s: GameState) {

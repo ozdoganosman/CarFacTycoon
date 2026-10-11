@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import * as A from '../src/core/actions';
 import { SEASONED_AFTER, setProjectAuto } from '../src/core/autopilot';
 import { CHAPTERS, chapterOf, goalStatus, goalsMet } from '../src/core/goals';
-import { finalScore, newGame, tick } from '../src/core/game';
+import { finalScore, newGame, rivalNews, tick } from '../src/core/game';
+import { moneyUses } from '../src/core/moneyUses';
 import { deserialize, serialize } from '../src/core/save';
 import { weekFor } from '../src/core/time';
 import { isBlockingModal } from '../src/core/util';
@@ -150,5 +151,40 @@ describe('the decade goals', () => {
     // Goals are looked at once a month.
     for (let i = 0; i < 5; i++) tick(s);
     expect(goalStatus(s).find((g) => g.id === 'buy-rival')?.done).toBe(true);
+  });
+});
+
+describe('spare money and the news', () => {
+  it('lists where spare money can go, what pays back fastest first', () => {
+    const s = seasonedCompany();
+    s.week = weekFor(1926, 0);
+    s.company.cash = 1e9;
+    const uses = moneyUses(s);
+    const kinds = uses.map((u) => u.kind);
+    expect(kinds).toContain('engineering');
+    expect(kinds).toContain('class');
+    const paid = uses.filter((u) => u.payback !== undefined && Number.isFinite(u.payback));
+    // Those with a payback lead, the fastest first; the rest follow.
+    expect(uses.slice(0, paid.length)).toEqual(paid);
+    for (let i = 1; i < paid.length; i++) expect(paid[i].payback!).toBeGreaterThanOrEqual(paid[i - 1].payback!);
+    expect(uses.every((u) => u.cost >= 0 && u.title.length > 0)).toBe(true);
+  });
+
+  it('rival news in full for the classes the company is in, the rest in one line a month', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 6 });
+    s.log = [];
+    newProject(s);
+    rivalNews(s, [
+      { text: 'family car', tone: 'info', segment: 'family' },
+      { text: 'luxury car', tone: 'info', segment: 'luxury' },
+      { text: 'sport car', tone: 'info', segment: 'sport' },
+      { text: 'closed', tone: 'warn' },
+    ]);
+    const texts = s.log.map((l) => l.text);
+    expect(texts).toContain('family car');
+    expect(texts).toContain('closed');
+    expect(texts).not.toContain('luxury car');
+    expect(texts.some((x) => /2/.test(x) && x !== 'family car' && x !== 'closed')).toBe(true);
+    expect(s.log).toHaveLength(3);
   });
 });

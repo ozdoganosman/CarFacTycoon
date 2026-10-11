@@ -7,6 +7,7 @@ import { store, useGameState } from '../store';
 import { COST_NAMES, INCOME_NAMES, money, pct, signedMoney } from '../format';
 import { Button, NumberInput, Panel, Stat, Table } from '../components/ui';
 import { BarChart } from '../viz/LineChart';
+import { MoneyUses } from '../components/MoneyUses';
 import { t } from '../../i18n';
 
 
@@ -32,6 +33,7 @@ export function Finance() {
         <Stat label={t('Kredi limiti')} value={money(Math.max(0, c.limit))} sub={t('varlık ve itibara bağlı')} />
         <Stat label={t('Son 52 hafta faaliyet kârı')} value={signedMoney(operating)} tone={operating < 0 ? 'bad' : 'good'} />
       </div>
+      <MoneyUses />
       <Panel title={t('Banka')}>
         <div className="price-row">
           <NumberInput label={t('Tutar')} prefix="$" value={loan} min={0} step={1000} onChange={setLoan} />

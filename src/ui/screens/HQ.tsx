@@ -293,10 +293,10 @@ function nextSteps(s: GameState): Step[] {
       ? {
       level: 'tip',
       icon: 'banknote',
-          text: t('Kasada {cash} boşta duruyor (yedek ve bir yıllık sabit gider dışında). Onu işe koş: talebi karşılamayan arabalara hat kur, yeni bir sınıfa araba çıkar, bayi ağını büyüt, kendi tedarik fabrikalarını kur, mühendislik teşkilatını büyüt, reklamı olağanın üstüne çıkar (itibar) ya da bir rakibi satın al.', {
+          text: t('Kasada {cash} boşta duruyor (yedek ve bir yıllık sabit gider dışında). Finans’taki Yatırımlar listesi nereye gidebileceğini, bedelini ve kaç yılda ödediğini gösterir.', {
             cash: money(spare),
           }),
-          go: () => store.go({ id: 'factory' }),
+          go: () => store.go({ id: 'finance' }),
         }
       : undefined;
   const moneyUses = out.length;

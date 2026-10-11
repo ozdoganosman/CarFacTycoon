@@ -155,6 +155,8 @@ function cycleYears(yf: number): number {
 export interface RivalNews {
   text: string;
   tone: 'info' | 'warn';
+  /** A new model's class (the news feed shows the player's classes in full, the rest in a monthly line). */
+  segment?: SegmentId;
 }
 
 /**
@@ -186,7 +188,7 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
         state.flags[key] = week;
         ownModels.filter((m) => m.segment === sp.seg).forEach((m) => (m.active = false));
         const rm = launchRivalModel(state, def, sp.seg, week, rng, { name: sp.name, priceMult: sp.priceMult });
-        news.push({ text: t('{company} {model} modelini tanıttı. {note}', { company: def.name, model: rm.name, note: t(sp.note) }), tone: 'warn' });
+        news.push({ text: t('{company} {model} modelini tanıttı. {note}', { company: def.name, model: rm.name, note: t(sp.note) }), tone: 'warn', segment: sp.seg });
       }
     }
 
@@ -207,8 +209,8 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
           const rm = launchRivalModel(state, def, entry.seg, week, rng);
           rm.launchWeek = launchWeek;
           if (!initial && def.founded < yf - 0.2)
-            news.push({ text: t('{company} yeni {segment} modelini çıkardı: {model}.', { company: def.name, segment: lower(t(segmentDef(entry.seg).name)), model: rm.name }), tone: 'info' });
-          else if (!initial) news.push({ text: t('{company} kuruldu. İlk modeli: {model}.', { company: def.name, model: rm.name }), tone: 'info' });
+            news.push({ text: t('{company} yeni {segment} modelini çıkardı: {model}.', { company: def.name, segment: lower(t(segmentDef(entry.seg).name)), model: rm.name }), tone: 'info', segment: entry.seg });
+          else if (!initial) news.push({ text: t('{company} kuruldu. İlk modeli: {model}.', { company: def.name, model: rm.name }), tone: 'info', segment: entry.seg });
         }
         continue;
       }
@@ -224,8 +226,9 @@ export function updateRivals(state: GameState, rng: Rng, initial = false): Rival
           news.push({
             text: t('{company}, {segment} pazarında kaybettiği alıcılar için {model} modelini erkenden çıkardı.', { company: def.name, segment: lower(t(segmentDef(entry.seg).name)), model: rm.name }),
             tone: 'warn',
+            segment: entry.seg,
           });
-        else news.push({ text: t('{company}, {old} modelinin yerine {model} modelini getirdi.', { company: def.name, old: newest.name, model: rm.name }), tone: 'info' });
+        else news.push({ text: t('{company}, {old} modelinin yerine {model} modelini getirdi.', { company: def.name, old: newest.name, model: rm.name }), tone: 'info', segment: entry.seg });
       }
     }
 
