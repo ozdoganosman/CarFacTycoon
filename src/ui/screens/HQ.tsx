@@ -37,6 +37,9 @@ export function weeklySold(m: CarModel, weeks = 4) {
   return h.length ? h.reduce((a, x) => a + x.sold, 0) / h.length : 0;
 }
 
+/** To-dos shown before "more". */
+const TODO_GLANCE = 3;
+
 /** How much a to-do matters: something going wrong now, a step waiting on the player, or advice. */
 type Level = 'urgent' | 'act' | 'tip';
 const LEVELS: Level[] = ['urgent', 'act', 'tip'];
@@ -78,6 +81,8 @@ function nextSteps(s: GameState): Step[] {
     if (p.phase === 'production' && p.productionReadyWeek === undefined) out.push({ level: 'act', icon: 'factory', text: t('{name}: tedarikçileri ve üretim hattını seç.', { name: p.name }), go: () => store.go({ id: 'project', projectId: p.id }) });
     if (p.phase === 'ready') out.push({ level: 'act', icon: 'rosette', text: t('{name}: lansman zamanı!', { name: p.name }), go: () => store.go({ id: 'project', projectId: p.id }) });
   }
+  /** Cars getting old: one line for all of them. */
+  const aging: CarModel[] = [];
   for (const m of s.models.filter((x) => x.status === 'active')) {
     const lines = s.lines.filter((l) => l.modelId === m.id);
     // With no line and nothing left in stock the model only occupies the list: offer to retire it.
@@ -107,14 +112,25 @@ function nextSteps(s: GameState): Step[] {
     const gap = classGap(priceNow(m, s.week), m.segment, yearFloat(s.week));
     if (gap > CLASS_GAP_WARN && lines.length && demand < 0.8 * cap)
       out.push({ level: 'act', icon: 'tag', text: t('{name} fiyatı sınıfın {gap} üstünde ve hatlar boş kalıyor. Fiyatı gözden geçir.', { name: m.name, gap: pct(gap, 0) }), go: () => store.go({ id: 'model', modelId: m.id }) });
-    if ((s.week - m.refreshWeek) / 52 > 3)
-      out.push({
-        level: 'tip',
-        icon: 'clock',
-        text: t('{name} {n} yaşında ve her yıl eskiyor; makyaj ya da yeni kuşak düşün.', { name: m.name, n: Math.floor((s.week - m.refreshWeek) / 52) }),
-        go: () => store.go({ id: 'model', modelId: m.id }),
-      });
+    if ((s.week - m.refreshWeek) / 52 > 3 && !s.projects.some((p) => p.replacesModelId === m.id)) aging.push(m);
   }
+  if (aging.length === 1) {
+    const m = aging[0];
+    out.push({
+      level: 'tip',
+      icon: 'clock',
+      text: t('{name} {n} yaşında ve her yıl eskiyor; makyaj ya da yeni kuşak düşün.', { name: m.name, n: Math.floor((s.week - m.refreshWeek) / 52) }),
+      go: () => store.go({ id: 'model', modelId: m.id }),
+    });
+  } else if (aging.length > 1)
+    out.push({
+      level: 'tip',
+      icon: 'clock',
+      text: t('{names} eskiyor; makyaj ya da yeni kuşak düşün.', {
+        names: list(aging.map((m) => t('{name} ({n} yaşında)', { name: m.name, n: Math.floor((s.week - m.refreshWeek) / 52) }))),
+      }),
+      go: () => store.go({ id: 'models' }),
+    });
   // The network: grow while it is small, look after the cars on the road, keep its cost in check.
   if (s.models.some((m) => m.status === 'active')) {
     const yf = yearFloat(s.week);
@@ -204,12 +220,16 @@ function nextSteps(s: GameState): Step[] {
         text: s.shares.ultimatum
           ? t('Yönetim kurulunun {year} hedefleri tutmayacak gibi ({what}). Güven {trust}/100: son uyarı.', p)
           : t('Yönetim kurulunun {year} hedefleri tutmayacak gibi ({what}). Güven {trust}/100.', p),
-        go: () => store.go({ id: 'company' }),
+        go: () => store.go({ id: 'company', tab: 'shares' }),
       });
     }
   }
   const veto = boardVeto(s);
-  if (veto) out.push({ level: 'urgent', icon: 'tophat', text: veto, go: () => store.go({ id: 'company' }) });
+  if (veto) out.push({ level: 'urgent', icon: 'tophat', text: veto, go: () => store.go({ id: 'company', tab: 'shares' }) });
+  // Engineers on salary with nothing to do (said with idle research when both: one thing to fix).
+  const idle = idleEngineers(s);
+  const idlePay = { n: idle, reason: idleReason(s), pay: money(idle * engineerSalary(yearFloat(s.week))) };
+  let idleSaid = false;
   // Research standing idle while rivals already build with technology the company has not learned.
   const r = s.research;
   const hold = queueHold(s, yearFloat(s.week));
@@ -226,18 +246,21 @@ function nextSteps(s: GameState): Step[] {
     const yf = yearFloat(s.week);
     const adoption = rivalAdoption(s);
     const behind = researchDefs().filter((d) => techState(s, d.id, yf) === 'available' && (adoption[d.id] ?? 0) >= 0.25);
-    if (behind.length)
+    if (behind.length) {
+      const techs = behind
+        .slice(0, 3)
+        .map((d) => t(d.name))
+        .join(', ');
+      idleSaid = idle > 0;
       out.push({
         level: 'act',
         icon: 'research',
-        text: t('Ar-Ge boşta. Rakiplerin çoğu kullanıyor, sen bilmiyorsun: {techs}.', {
-          techs: behind
-            .slice(0, 3)
-            .map((d) => t(d.name))
-            .join(', '),
-        }),
+        text: idleSaid
+          ? t('Ar-Ge boşta ve {n} mühendis haftada {pay} maaş alıp bekliyor. Rakiplerin çoğu kullanıyor, sen bilmiyorsun: {techs}.', { ...idlePay, techs })
+          : t('Ar-Ge boşta. Rakiplerin çoğu kullanıyor, sen bilmiyorsun: {techs}.', { techs }),
         go: () => store.go({ id: 'research' }),
       });
+    }
   }
   // A racing team burning money with a car that cannot win.
   const rt = s.racing;
@@ -252,37 +275,35 @@ function nextSteps(s: GameState): Step[] {
           n: Math.floor(o.age),
           podium: pct(o.podium, 0),
         }),
-        go: () => store.go({ id: 'company' }),
+        go: () => store.go({ id: 'company', tab: 'racing' }),
       });
   }
-  // Engineers on salary with nothing to do.
-  const idle = idleEngineers(s);
-  if (idle > 0 && s.models.length)
+  if (idle > 0 && s.models.length && !idleSaid)
     out.push({
       level: 'act',
       icon: 'hq',
-      text: t('{n} mühendis boşta ({reason}) ama haftada {pay} maaş alıyor: yeni bir proje ya da Ar-Ge başlat, gerekirse bir kısmını çıkar.', {
-        n: idle,
-        reason: idleReason(s),
-        pay: money(idle * engineerSalary(yearFloat(s.week))),
-      }),
+      text: t('{n} mühendis boşta ({reason}) ama haftada {pay} maaş alıyor: yeni bir proje ya da Ar-Ge başlat, gerekirse bir kısmını çıkar.', idlePay),
       go: () => store.go({ id: 'research' }),
     });
-  // Money doing nothing: more than a year of fixed costs spare in the till.
+  // Money doing nothing: more than a year of fixed costs spare in the till (pushed last: the general nudge,
+  // dropped when a specific use of the money is already on the list).
   const spare = idleCash(s);
-  if (spare > 0 && s.models.some((m) => m.status === 'active'))
-    out.push({
+  const spareStep: Step | undefined =
+    spare > 0 && s.models.some((m) => m.status === 'active')
+      ? {
       level: 'tip',
       icon: 'banknote',
-      text: t('Kasada {cash} boşta duruyor (yedek ve bir yıllık sabit gider dışında). Onu işe koş: talebi karşılamayan arabalara hat kur, yeni bir sınıfa araba çıkar, bayi ağını büyüt, kendi tedarik fabrikalarını kur, mühendislik teşkilatını büyüt, reklamı olağanın üstüne çıkar (itibar) ya da bir rakibi satın al.', {
-        cash: money(spare),
-      }),
-      go: () => store.go({ id: 'factory' }),
-    });
+          text: t('Kasada {cash} boşta duruyor (yedek ve bir yıllık sabit gider dışında). Onu işe koş: talebi karşılamayan arabalara hat kur, yeni bir sınıfa araba çıkar, bayi ağını büyüt, kendi tedarik fabrikalarını kur, mühendislik teşkilatını büyüt, reklamı olağanın üstüne çıkar (itibar) ya da bir rakibi satın al.', {
+            cash: money(spare),
+          }),
+          go: () => store.go({ id: 'factory' }),
+        }
+      : undefined;
+  const moneyUses = out.length;
   // A team bigger than its organisation can put to work: the next level, when it is open and affordable.
   const org = nextEngineering(s);
   const yf0 = yearFloat(s.week);
-  if (org && org.year <= yf0 && s.company.engineers >= 2 * teamSpan(s) && s.company.cash > engineeringCost(org, yf0))
+  if (org && org.year <= yf0 && idle === 0 && s.company.engineers >= 2 * teamSpan(s) && s.company.cash > engineeringCost(org, yf0))
     out.push({
       level: 'tip',
       icon: 'research',
@@ -292,7 +313,7 @@ function nextSteps(s: GameState): Step[] {
         name: t(org.name),
         cost: money(engineeringCost(org, yf0)),
       }),
-      go: () => store.go({ id: 'company' }),
+      go: () => store.go({ id: 'company', tab: 'general' }),
     });
   // A brand being forgotten: advertising well under the era's usual (core/advertising.ts).
   const forgotten = adBrandTerm(s, yf0);
@@ -304,7 +325,7 @@ function nextSteps(s: GameState): Step[] {
         norm: money(adNorm(s, yf0)),
         n: Math.round(-forgotten),
       }),
-      go: () => store.go({ id: 'markets' }),
+      go: () => store.go({ id: 'markets', tab: 'market' }),
     });
   // A supplier plant the company has outgrown, when growing it pays.
   for (const p of SUPPLIER_PLANTS) {
@@ -323,10 +344,11 @@ function nextSteps(s: GameState): Step[] {
         go: () => store.go({ id: 'factory' }),
       });
   }
+  if (spareStep && out.length === moneyUses) out.push(spareStep);
   if (heavy) out.unshift(heavy);
   if (s.company.cash < 0) out.unshift({ level: 'urgent', icon: 'alert', text: t('Kasa ekside! Kredi al ya da masrafları kıs.'), go: () => store.go({ id: 'finance' }) });
-  // The most pressing first (in the order found within a level), and only as many as a glance takes in.
-  return out.map((x, i) => ({ x, i })).sort((a, b) => LEVELS.indexOf(a.x.level) - LEVELS.indexOf(b.x.level) || a.i - b.i).map(({ x }) => x).slice(0, 7);
+  // The most pressing first (in the order found within a level); the panel shows the first few.
+  return out.map((x, i) => ({ x, i })).sort((a, b) => LEVELS.indexOf(a.x.level) - LEVELS.indexOf(b.x.level) || a.i - b.i).map(({ x }) => x);
 }
 
 const FEED_TABS: { id: 'all' | LogCategory; label: string }[] = [
@@ -380,7 +402,11 @@ export function HQ() {
   const thisYear = s.models.reduce((a, m) => a + m.history.filter((h) => yearOf(h.week) === year).reduce((b, h) => b + h.sold, 0), 0);
   const weekly = recentProfit(s, 4);
   const active = s.models.filter((m) => m.status === 'active');
-  const steps = nextSteps(s);
+  const allSteps = nextSteps(s);
+  // Three at a glance (every urgent one, however many), the rest a tap away.
+  const [allTodo, setAllTodo] = useState(false);
+  const glance = Math.max(TODO_GLANCE, allSteps.filter((x) => x.level === 'urgent').length);
+  const steps = allTodo ? allSteps : allSteps.slice(0, glance);
   const weeks = Math.min(104, s.week);
   const series = active.slice(0, 4).map((m, i) => {
     const pts = m.history.slice(-weeks).map((h) => ({ x: h.week, y: h.sold }));
@@ -443,6 +469,11 @@ export function HQ() {
             </ul>
           ) : (
             <Empty>{t('Her şey yolunda. Zamanı ilerlet (boşluk tuşu) ya da yeni bir proje düşün.')}</Empty>
+          )}
+          {allSteps.length > glance && (
+            <button type="button" className="link small todo-more" onClick={() => setAllTodo(!allTodo)}>
+              {allTodo ? t('Daha az göster') : t('{n} öneri daha', { n: allSteps.length - glance })}
+            </button>
           )}
         </Panel>
 

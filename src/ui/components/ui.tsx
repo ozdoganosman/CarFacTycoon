@@ -387,3 +387,41 @@ export function ScreenTitle({ id, title, intro }: { id: string; title: ReactNode
   );
 }
 
+
+/** The tab each screen was last left on (for this session), so coming back opens the same one. */
+const lastTab = new Map<string, string>();
+
+/**
+ * A long screen in tabs: one part shown at a time, so a phone does not scroll through five screens.
+ * `open` asks for a tab (a link from elsewhere: "the advertising budget on the Market screen").
+ */
+export function useScreenTabs<T extends string>(screen: string, tabs: { id: T; label: string }[], open?: string): [T, ReactNode] {
+  const ids = tabs.map((x) => x.id);
+  const pick = (want?: string) => (ids.includes(want as T) ? (want as T) : ids.includes(lastTab.get(screen) as T) ? (lastTab.get(screen) as T) : ids[0]);
+  const [tab, setTab] = useState<T>(() => pick(open));
+  useEffect(() => {
+    if (open && ids.includes(open as T)) setTab(open as T);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  const current = ids.includes(tab) ? tab : ids[0];
+  const bar =
+    tabs.length > 1 ? (
+      <div className="tabs screen-tabs" role="tablist">
+        {tabs.map((x) => (
+          <button
+            key={x.id}
+            type="button"
+            role="tab"
+            aria-selected={current === x.id}
+            className={`tab ${current === x.id ? 'is-on' : ''}`}
+            onClick={() => {
+              lastTab.set(screen, x.id);
+              setTab(x.id);
+            }}
+          >
+            {x.label}
+          </button>
+        ))}
+      </div>
+    ) : null;
+  return [current, bar];
+}

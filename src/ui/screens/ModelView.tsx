@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as A from '../../core/actions';
 import { autoHoldText, weeklyDemand } from '../../core/autocap';
 import { materialUnitCost } from '../../core/game';
@@ -36,7 +36,7 @@ import { PaintPicker } from '../components/PaintPicker';
 import { AdPoster } from '../components/AdPoster';
 import { LineChart } from '../viz/LineChart';
 import { weeklySold } from './HQ';
-import { lower, t } from '../../i18n';
+import { lower, msg, t } from '../../i18n';
 import { tx } from '../i18n';
 
 export function ModelView({ modelId }: { modelId: string }) {
@@ -55,6 +55,10 @@ export function ModelView({ modelId }: { modelId: string }) {
   const hasFacelift = s.projects.some((p) => p.replacesModelId === m.id);
   const { scores } = modelScores(s, m);
   const paint = modelPaint(s, m);
+  // The page in four tabs, so a phone does not scroll through six screens of it.
+  const tabs = MODEL_TABS.filter((x) => active || x.id === 'summary' || x.id === 'car');
+  const [tab, setTab] = useState<ModelTab>('summary');
+  useEffect(() => setTab('summary'), [modelId]);
 
   return (
     <div className="screen">
@@ -141,6 +145,16 @@ export function ModelView({ modelId }: { modelId: string }) {
         </div>
       </div>
 
+      <div className="tabs model-tabs" role="tablist">
+        {tabs.map((x) => (
+          <button key={x.id} type="button" role="tab" aria-selected={tab === x.id} className={`tab ${tab === x.id ? 'is-on' : ''}`} onClick={() => setTab(x.id)}>
+            {t(x.label)}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'summary' && (
+      <>
       <div className="stats-row">
         <Stat label={t('Haftalık satış')} value={cars(weeklySold(m))} sub={t('talep {demand}', { demand: cars(demand) })} />
         <Stat label={t('Stok')} value={num(m.inventory)} tone={m.inventory > demand * 12 && m.inventory > 10 ? 'warn' : undefined} />
@@ -269,8 +283,12 @@ export function ModelView({ modelId }: { modelId: string }) {
         )}
       </div>
 
-      {active && m.markets.length > 0 && <Competition modelId={m.id} market={market} setMarket={setMarket} />}
+      </>
+      )}
 
+      {tab === 'why' && active && m.markets.length > 0 && <Competition modelId={m.id} market={market} setMarket={setMarket} />}
+
+      {tab === 'car' && (
       <div className="grid-2">
         <Panel
           title={
@@ -299,22 +317,6 @@ export function ModelView({ modelId }: { modelId: string }) {
               <Empty>{t('Değerlendirme yok.')}</Empty>
             )}
           </Panel>
-          {active && (
-            <Panel
-              title={
-                <>
-                  {t('Gazete ilanı')} <Info>{t('Arabanın dönemin gazetelerine verilecek ilanı: en iyi üç yanı ve fiyatı. Resim olarak indirip paylaşabilirsin.')}</Info>
-                </>
-              }
-            >
-              <AdPoster s={s} m={m} />
-            </Panel>
-          )}
-          {m.status === 'active' && m.unitsSold > 0 && (
-            <Panel title={t('Müşteri mektupları')}>
-              <OwnerLetters s={s} m={m} />
-            </Panel>
-          )}
           <Panel title={t('Sahadaki kalite')}>
             <div className="quote">
               <div>
@@ -365,9 +367,35 @@ export function ModelView({ modelId }: { modelId: string }) {
           </Panel>
         </div>
       </div>
+      )}
+
+      {tab === 'ad' && active && (
+        <div className="grid-2">
+          <Panel
+            title={
+              <>
+                {t('Gazete ilanı')} <Info>{t('Arabanın dönemin gazetelerine verilecek ilanı: en iyi üç yanı ve fiyatı. Resim olarak indirip paylaşabilirsin.')}</Info>
+              </>
+            }
+          >
+            <AdPoster s={s} m={m} />
+          </Panel>
+          <Panel title={t('Müşteri mektupları')}>
+            {m.unitsSold > 0 ? <OwnerLetters s={s} m={m} /> : <Empty>{t('Henüz mektup yok: araba satıldıkça sahipleri yazar.')}</Empty>}
+          </Panel>
+        </div>
+      )}
     </div>
   );
 }
+
+type ModelTab = 'summary' | 'why' | 'car' | 'ad';
+const MODEL_TABS: { id: ModelTab; label: string }[] = [
+  { id: 'summary', label: msg('Özet') },
+  { id: 'why', label: msg('Neden satıyor?') },
+  { id: 'car', label: msg('Araç ve dergiler') },
+  { id: 'ad', label: msg('İlan ve mektuplar') },
+];
 
 function Competition({ modelId, market, setMarket }: { modelId: string; market: MarketId; setMarket: (m: MarketId) => void }) {
   const s = useGameState();
