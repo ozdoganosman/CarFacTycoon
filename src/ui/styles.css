@@ -4650,6 +4650,17 @@ button.topbar-date {
   gap: 6px;
   animation: year-card-in 0.35s ease-out;
 }
+.step-note {
+  border-inline-start-color: var(--brass);
+}
+.step-note-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.auto-steps {
+  margin: -6px 0 14px;
+}
 .research-card-list {
   margin: 0;
   padding-inline-start: 18px;

@@ -232,6 +232,8 @@ export interface Project {
   /** What the project has been waiting on the player for, and since when (for the standing-still warning). */
   waitKind?: 'design' | 'tested' | 'tooling' | 'launch';
   waitSince?: number;
+  /** Goes on by itself once in development: tests as planned, standard dies on its natural line; stops for the launch (autopilot.ts). */
+  auto?: boolean;
   engineers: number;
   dev: {
     required: number;
@@ -556,8 +558,13 @@ export type ModalItem =
   | { kind: 'service'; modelId: string; defectId: string }
   | { kind: 'reviews'; modelId: string }
   | { kind: 'launch'; modelId: string; venue: string; facelift?: boolean }
-  | { kind: 'launchReport'; modelId: string; report: LaunchReport }
-  | { kind: 'phase'; projectId: string; phase: ProjectPhase }
+  /** `quiet`: a corner note (from the third car on), opened by the player when they like. */
+  | { kind: 'launchReport'; modelId: string; report: LaunchReport; quiet?: boolean }
+  /**
+   * A project step finished. `quiet`: a corner note instead of a pop-up (from the third car on);
+   * `auto`: the project went on by itself (Project.auto); `stuck`: it could not, and says why.
+   */
+  | { kind: 'phase'; projectId: string; phase: ProjectPhase; quiet?: boolean; auto?: boolean; stuck?: 'line' | 'cash' }
   | { kind: 'yearReport'; year: number }
   | { kind: 'news'; newsId: string }
   | { kind: 'unlock'; title: string; body: string }

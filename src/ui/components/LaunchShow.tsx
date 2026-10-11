@@ -297,12 +297,14 @@ export function RivalComparison({ s, modelId, market }: { s: GameState; modelId:
   );
 }
 
-export function LaunchReportView({ s, modelId, report: r }: { s: GameState; modelId: string; report: LaunchReport }) {
+/** The first month's report; `onClose` when it was opened from its corner note rather than as a pop-up. */
+export function LaunchReportView({ s, modelId, report: r, onClose }: { s: GameState; modelId: string; report: LaunchReport; onClose?: () => void }) {
   const m = s.models.find((x) => x.id === modelId);
   if (!m) return null;
+  const drop = onClose ?? (() => store.act(A.dismissModal));
   // The launch is over: a natural break for an advertisement (src/ui/ads.ts decides).
   const close = () => {
-    store.act(A.dismissModal);
+    drop();
     void ads.breakpoint();
   };
   // "Leader" is judged as on the Company screen (rivalMoves.ts leadsClass); older reports by rank.
@@ -399,7 +401,7 @@ export function LaunchReportView({ s, modelId, report: r }: { s: GameState; mode
           <Button
             kind="ghost"
             onClick={() => {
-              store.act(A.dismissModal);
+              drop();
               store.go({ id: 'model', modelId: m.id });
             }}
           >

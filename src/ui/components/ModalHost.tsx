@@ -211,6 +211,33 @@ function ModalFor({ s, m }: { s: GameState; m: ModalItem }) {
     case 'phase': {
       const p = s.projects.find((x) => x.id === m.projectId);
       if (!p) return null;
+      if (m.stuck) {
+        return (
+          <Modal
+            title={p.name}
+            icon="alert"
+            actions={
+              <Button
+                kind="primary"
+                onClick={() => {
+                  store.keepPaused();
+                  store.act(A.dismissModal);
+                  store.go({ id: 'project', projectId: p.id });
+                }}
+              >
+                {p.phase === 'production' ? t('Üretim hazırlığına git') : t('Projeye bak')}
+              </Button>
+            }
+          >
+            <p>
+              {m.stuck === 'line'
+                ? t('Proje kendiliğinden ilerleyemedi: kalıpları sipariş edecek boşta bir hat yok. Yeni bir hat kur ya da hattı sen seç.')
+                : t('Proje kendiliğinden ilerleyemedi: kalıplara kasadaki para yetmiyor. Daha ucuz kalıp, kredi ya da vadeli sipariş seçeneklerine bak.')}
+            </p>
+            <p className="muted small">{t('Bu proje artık kendiliğinden ilerlemiyor; adımları sen atarsın.')}</p>
+          </Modal>
+        );
+      }
       const text =
         m.phase === 'development'
           ? t('Mühendisler temel geliştirmeyi bitirdi. Biraz daha cilalamak güvenilirliği artırır; ya da prototipleri yapıp teste geçebilirsin.')

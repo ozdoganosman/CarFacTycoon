@@ -8,6 +8,7 @@ import { Nav } from './components/Nav';
 import { ModalHost, YearCard } from './components/ModalHost';
 import { NewsCard, NewspaperHost } from './components/Newspaper';
 import { ResearchCard } from './components/ResearchCard';
+import { ProjectNotes } from './components/ProjectNotes';
 import { ConfirmHost } from './components/ConfirmHost';
 import { LaunchReadyBanner } from './components/PauseBanner';
 import { GuideBar } from './components/GuideBar';
@@ -125,6 +126,7 @@ export function App() {
         <YearCard />
         <NewsCard />
         <ResearchCard />
+        <ProjectNotes />
       </div>
       <NewspaperHost />
       <ModalHost />

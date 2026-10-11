@@ -25,6 +25,7 @@ import {
 import { datedPenalty, demandAtPrice, modelAgeYears, modelScores, priceNow, priceTerm, referencePrice } from './market';
 import { stateRng } from './rng';
 import { acquisitionTargets } from './acquisitions';
+import { autoByDefault } from './autopilot';
 import { boardVeto } from './shares';
 import { beginResearch, ensureResearch, knownKnowhow, labSlots, missingRequirements, pumpResearchQueue, researchCost, researchDef, researcherHireCost, restrictToKnown, unknownTech } from './research';
 import { experienceFactor, newEstimate } from './estimate';
@@ -195,6 +196,7 @@ export function startProject(s: GameState, o: StartProjectOptions): { ok: true; 
     suppliers: { engine: 'quality', gearbox: 'quality', electrics: 'quality' },
     estimate: newEstimate(stateRng(s), experienceFactor(s)),
     autoCapacity: true,
+    ...autoByDefault(s),
   };
   decide(s, 'project:' + id, `Yeni proje: ${p.name} (${o.segment}, hedef fiyat ${money(o.targetPrice)}${plat ? ', ortak platform' : ''}${eng ? ', ortak motor' : ''})`);
   s.projects.push(p);
@@ -257,6 +259,7 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
       return e;
     })(),
     lineId: s.lines.find((l) => l.modelId === m.id)?.id,
+    ...autoByDefault(s),
   });
   decide(s, 'project:' + id, `Makyaj projesi: ${m.name}`);
   return { ok: true, id };

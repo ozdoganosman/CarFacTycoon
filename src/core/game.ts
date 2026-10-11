@@ -17,6 +17,7 @@ import { makeRng, rand, stateRng } from './rng';
 import { updateRivals, initRivals } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
 import { autoDealers, autoService } from './autoservice';
+import { SEASONED_AFTER, autoAdvance, dropStaleNotes, phaseNote } from './autopilot';
 import { adBrandTerm, followAdNorm } from './advertising';
 import { engineeringUpkeep, investmentsValue, plantCut, teamSpan } from './investments';
 import { eraReference } from './scoring';
@@ -597,9 +598,9 @@ function advanceProjects(s: GameState) {
       const add = Math.min(work, Math.max(0, cap - p.dev.done));
       p.dev.done += add;
       for (const k of Object.keys(p.dev.points) as (keyof typeof p.dev.points)[]) p.dev.points[k] += add * p.dev.focus[k];
-      if (before < p.dev.required && p.dev.done >= p.dev.required) {
+      if (before < p.dev.required && p.dev.done >= p.dev.required && !p.auto) {
         log(s, t('{name}: geliştirme tamamlandı. İstersen biraz daha cilala ya da teste geç.', { name: p.name }), 'good');
-        pushModal(s, { kind: 'phase', projectId: p.id, phase: 'development' });
+        phaseNote(s, p, 'development');
       }
     } else if (p.phase === 'testing') {
       let running = false;
@@ -626,16 +627,18 @@ function advanceProjects(s: GameState) {
         p.bonus = withTuning(p.devBonus, p.tests);
       }
       const allDone = TESTS.every((t) => p.tests[t.id].done >= p.tests[t.id].planned);
-      if (running && allDone) {
+      if (running && allDone && !p.auto) {
         log(s, t('{name}: test programı bitti.', { name: p.name }), 'good');
-        pushModal(s, { kind: 'phase', projectId: p.id, phase: 'testing' });
+        phaseNote(s, p, 'testing');
       }
     } else if (p.phase === 'production' && p.productionReadyWeek !== undefined && s.week >= p.productionReadyWeek) {
       p.phase = 'ready';
       log(s, t('{name}: üretim hattı hazır. Lansman zamanı!', { name: p.name }), 'good');
-      pushModal(s, { kind: 'phase', projectId: p.id, phase: 'production' });
+      phaseNote(s, p, 'production');
     }
+    autoAdvance(s, p);
   }
+  dropStaleNotes(s);
 }
 
 function produce(s: GameState) {
@@ -762,7 +765,9 @@ function sell(s: GameState) {
 function launchReports(s: GameState) {
   for (const m of s.models) {
     if (m.status !== 'active' || m.launchReportWeek !== s.week) continue;
-    pushModal(s, { kind: 'launchReport', modelId: m.id, report: buildLaunchReport(s, m) });
+    // The first two cars' reports stop the clock (they teach the game); later ones wait in a corner.
+    const quiet = s.models.indexOf(m) >= SEASONED_AFTER;
+    pushModal(s, { kind: 'launchReport', modelId: m.id, report: buildLaunchReport(s, m), ...(quiet ? { quiet } : {}) });
   }
 }
 
