@@ -67,3 +67,6 @@ export const COST_NAMES: Record<Exclude<keyof FinanceWeek, 'week' | 'revenue' | 
   investment: msg('Yatırım (hat, kalıp, bayi)'),
   dividend: msg('Temettü ve hisse geri alımı'),
 };
+
+/** Cars (a week, a year): whole numbers ("936"), a fraction only below ten ("2,5"): early workshops build halves. */
+export const cars = (v: number) => dec(v, Math.abs(v) < 10 && !Number.isInteger(v) ? 1 : 0);

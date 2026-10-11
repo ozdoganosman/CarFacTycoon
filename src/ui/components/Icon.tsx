@@ -61,6 +61,8 @@ function car(body: [number, number][], glass: [number, number][][], wheels: [num
 
 const ICONS = {
   // ---- the menu ----
+  /** "Diğer": the rest of the menu, as the ruled lines of a ledger index. */
+  menu: [{ d: rect(4, 5.5, 16, 2.2) + rect(4, 10.9, 16, 2.2) + rect(4, 16.3, 16, 2.2) }],
   hq: [
     { d: rect(3, 8, 18, 1.6) },
     {

@@ -4,7 +4,8 @@ import { loadLocal, saveLocal } from '../core/save';
 import { syncTick } from './claudeLink';
 import { observeGame, trackScreen } from './analytics';
 import { isBlockingModal, recordError } from '../core/util';
-import { t } from '../i18n';
+import { areaSeen, updateAreas, type Area } from '../core/guide';
+import { list, msg, t } from '../i18n';
 import type { ModalItem } from '../core/types';
 
 /**
@@ -20,6 +21,15 @@ import type { GameState } from '../core/types';
 
 export type Speed = 0 | 1 | 2 | 3;
 const INTERVALS: Record<Exclude<Speed, 0>, number> = { 1: 900, 2: 400, 3: 150 };
+
+/** The menu names of the screens that open on the way to the first car (as in Nav). */
+const AREA_LABEL: Record<Area, string> = {
+  research: msg('Ar-Ge'),
+  finance: msg('Finans'),
+  factory: msg('Fabrika'),
+  markets: msg('Harita'),
+  company: msg('Şirket'),
+};
 
 export type Screen =
   | { id: 'hq' }
@@ -82,6 +92,12 @@ class GameStore {
   }
 
   notify() {
+    // On the way to the first car the menu opens screen by screen (core/guide.ts).
+    if (this.state) {
+      const fresh = updateAreas(this.state);
+      areaSeen(this.state, this.screen.id);
+      if (fresh.length) this.setToast(t('Menüde yeni: {names}', { names: list(fresh.map((a) => t(AREA_LABEL[a]))) }), 'good');
+    }
     this.version++;
     for (const l of this.listeners) l();
     // Only once the player has agreed to share (see analytics.ts); otherwise these return at once.
@@ -155,9 +171,13 @@ class GameStore {
   }
 
   showToast(text: string, tone: 'good' | 'bad' | 'info' = 'info') {
+    this.setToast(text, tone);
+    this.notify();
+  }
+
+  private setToast(text: string, tone: 'good' | 'bad' | 'info') {
     const id = Date.now();
     this.toast = { text, tone, id };
-    this.notify();
     setTimeout(() => {
       if (this.toast?.id === id) {
         this.toast = null;

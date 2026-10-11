@@ -65,6 +65,27 @@ export const priceMarkup = (year: number) => interp([[1900, 1.42], [1908, 1.32],
 /** Tooling (dies, jigs) cost as a multiple of the car's material cost. */
 export const toolingMultiple = (year: number) => interp([[1900, 6], [1910, 12], [1920, 25], [1950, 40]], year);
 
+/**
+ * Dies for volume, a car a year of capacity, in 1900 dollars. A set of steel dies presses only so many
+ * panels before it wears out, so a car built by the hundred thousand needs many sets and the presses
+ * to carry them: next to nothing for a coachbuilder's wooden bucks, a few percent of the car's price
+ * by the fifties (the all-steel body of the twenties, the yearly restyling of the thirties and fifties).
+ */
+export const dieCostPerCar = (year: number) => interp([[1900, 1], [1913, 4], [1925, 15], [1935, 35], [1950, 60], [1960, 70]], year);
+
+/**
+ * Advertising as a share of a maker's revenue (with the auto shows and the dealers' share of their
+ * advertising): little before the Great War, magazines and billboards in the twenties, radio in the
+ * thirties, television in the fifties.
+ */
+export const adShare = (year: number) => interp([[1910, 0.002], [1920, 0.008], [1930, 0.014], [1940, 0.018], [1950, 0.024], [1960, 0.03]], year);
+
+/**
+ * Reputation points a brand loses where its reputation is heading when it does not advertise at all
+ * (a known name kept people's trust by itself until mass advertising; then a silent brand was forgotten).
+ */
+export const adWeight = (year: number) => interp([[1915, 0], [1925, 4], [1935, 8], [1950, 12], [1960, 14]], year);
+
 /** One-time investment to make a component in-house. */
 export const shopCost = (year: number) => interp([[1900, 4000], [1920, 20000], [1950, 60000]], year) * costIndex(year);
 

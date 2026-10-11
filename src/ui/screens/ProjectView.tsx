@@ -25,7 +25,7 @@ import { TOOLING, toolingDef } from '../../data/tooling';
 import type { ComponentKey, GameState, MarketId, Project, ProjectPhase, StageId, TestId, ToolingTier } from '../../core/types';
 import { lower, msg, t } from '../../i18n';
 import { store, useGameState } from '../store';
-import { dec, money, num, pct as percent, pctOf, recentProfit } from '../format';
+import { cars, dec, money, num, pct as percent, pctOf, recentProfit } from '../format';
 import { inYear } from '../format';
 import { tx } from '../i18n';
 import { pctWith } from '../../core/turkish';
@@ -88,10 +88,13 @@ export function ProjectView({ projectId }: { projectId: string }) {
           {t('Projeyi iptal et')}
         </Button>
       </div>
-      <ol className="stepper">
+      <ol className="phase-steps" aria-label={t('Proje aşamaları')}>
         {STEPS.map((st, i) => (
-          <li key={st.label} className={i < idx ? 'is-done' : i === idx ? 'is-on' : ''}>
-            {t(st.label)}
+          <li key={st.label} className={i < idx ? 'is-done' : i === idx ? 'is-on' : ''} aria-current={i === idx ? 'step' : undefined}>
+            <span className="phase-dot" aria-hidden>
+              {i < idx ? '✓' : i + 1}
+            </span>
+            <span className="phase-label">{t(st.label)}</span>
           </li>
         ))}
       </ol>
@@ -224,14 +227,14 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
               llo: dec(dl / spread, 1),
               lhi: dec(dl * spread, 1),
               lasting: percent(dl / segWeekly, dl / segWeekly < 0.05 ? 1 : 0),
-              cap: dec(cap, 1),
+              cap: cars(cap),
             })
           : tx('Bu fiyatta tahmini talep: ilk ay <b>{lo}–{hi} araç/hafta</b>, heyecan geçince <b>{llo}–{lhi}</b> · hat {cap} araç/hafta.', {
               lo: dec(lo, 1),
               hi: dec(hi, 1),
               llo: dec(dl / spread, 1),
               lhi: dec(dl * spread, 1),
-              cap: dec(cap, 1),
+              cap: cars(cap),
             })}{' '}
         {verdict}
         {segWeekly > 0 &&
@@ -310,9 +313,16 @@ function FaceliftGain({ p }: { p: Project }) {
   const later = modelAgeYears(m, s.week + weeks);
   const change = o.demandNow > 0.05 ? o.demandAfter / o.demandNow - 1 : 0;
   const d = { now: dec(o.demandNow, 1), after: dec(o.demandAfter, 1), pct: percent(Math.abs(change), 0) };
+  const dies = p.lineId ? A.toolingQuote(s, p, p.lineId) : null;
   return (
     <Panel title={t('Makyajın getirisi')}>
       <div className="quote">
+        {dies && (
+          <div>
+            <span>{t('Makyaj kalıpları (testten sonra ödenir)')}</span>
+            <b>{t('{cost} · {n} hat', { cost: money(dies.cost), n: dies.lines })}</b>
+          </div>
+        )}
         <div>
           <span>{t('Alıcı gözünde yaşı')}</span>
           <b>{t('{now} → {after} yıl', { now: dec(o.ageNow, 1), after: dec(o.ageAfter, 1) })}</b>
@@ -355,7 +365,7 @@ function NextStep({ p }: { p: Project }) {
   return (
     <div className="next-step" role="status">
       <span>{tx('<b>Test programı bitti.</b> Sırada tedarikçiler ve üretim hattı var.')}</span>
-      <Button kind="primary" onClick={() => store.try((st) => A.finishTesting(st, p.id))}>
+      <Button kind="primary" guide="finish-tests" onClick={() => store.try((st) => A.finishTesting(st, p.id))}>
         {t('Üretim hazırlığına geç')}
       </Button>
     </div>
@@ -630,7 +640,7 @@ function Production({ p }: { p: Project }) {
                 <label key={l.id} className={`line-option ${lineId === l.id ? 'is-on' : ''} ${claimedBy ? 'is-off' : ''}`}>
                   <input type="radio" name="line" checked={lineId === l.id} disabled={!!claimedBy} onChange={() => setLineId(l.id)} />
                   <span>
-                    <b>{l.name}</b> · {t('{v} araç/hafta', { v: dec(r.throughput, 1) })}
+                    <b>{l.name}</b> · {t('{v} araç/hafta', { v: cars(r.throughput) })}
                     <br />
                     <span className="muted small">
                       {claimedBy
@@ -730,6 +740,10 @@ function Production({ p }: { p: Project }) {
               <b>{money(quote.cost)}</b>
             </div>
             <div>
+              <span>{t('Kalıp takımları')}</span>
+              <b>{t('{n} hat · yılda {count} araba', { n: quote.lines, count: num(Math.round(quote.carsPerYear)) })}</b>
+            </div>
+            <div>
               <span>{t('Üretime hazır')}</span>
               <b>{t('{n} hafta sonra', { n: readyWeeks })}</b>
             </div>
@@ -739,10 +753,13 @@ function Production({ p }: { p: Project }) {
             </div>
             <div>
               <span>{t('Hat kapasitesi')}</span>
-              <b>{report ? t('{v} araç/hf', { v: dec(report.throughput, 1) }) : '—'}</b>
+              <b>{report ? t('{v} araç/hf', { v: cars(report.throughput) }) : '—'}</b>
             </div>
             {quote.sharedPlatform && <Badge tone="good">{t('Aynı platform: kalıplar büyük ölçüde ortak')}</Badge>}
           </div>
+        )}
+        {quote && quote.lines > 1 && (
+          <p className="muted small">{t('Eski modelin hatları lansmanda yeni arabaya geçer. Kalıplar her hat için ayrı yapılır: hacim büyüdükçe takım sayısı ve bedeli artar.')}</p>
         )}
         {quote && quote.leadWeeks > quote.weeks && (
           <p className="muted small">{t('Hazırlık süresini parça tedarikçisinin teslimi belirliyor ({n} hafta).', { n: quote.leadWeeks })}</p>
@@ -751,14 +768,14 @@ function Production({ p }: { p: Project }) {
           checked={p.autoCapacity ?? true}
           onChange={(v) => store.act((st2) => A.setProjectAutoCapacity(st2, p.id, v))}
           label={t('Satışa çıkınca talebi otomatik karşıla')}
-          sub={t(
+          info={t(
             'Açıkken fabrika, alıcılar beklediği sürece darboğaza istasyon ekler, hattı genişletir ya da yeni hat kurar; talep düşerse üretimi kısar, uzun süre boş kalan hattı satar. Kasada her zaman birkaç haftalık gider kadar yedek bırakır. Sonradan Model ve Fabrika ekranlarından değiştirebilirsin.',
           )}
         />
         {!lineId && <p className="note">{t('Kalıpları sipariş etmek için önce arabanın üretileceği hattı seç.')}</p>}
         {lineId && quote && s.company.cash < quote.cost && <ToolingShort p={p} lineId={lineId} tier={tier} setTier={setTier} cost={quote.cost} />}
         <div className="row-end">
-          <Button kind="primary" disabled={!lineId || (quote ? s.company.cash < quote.cost : true)} onClick={() => lineId && store.try((st2) => A.startTooling(st2, p.id, lineId, tier))}>
+          <Button kind="primary" guide="order-tooling" disabled={!lineId || (quote ? s.company.cash < quote.cost : true)} onClick={() => lineId && store.try((st2) => A.startTooling(st2, p.id, lineId, tier))}>
             {quote
               ? t('{tooling}: sipariş et ({cost})', { tooling: t(toolingDef(tier).name), cost: money(quote.cost) })
               : t('{tooling}: sipariş et', { tooling: t(toolingDef(tier).name) })}
@@ -1004,7 +1021,7 @@ function Launch({ p }: { p: Project }) {
           </div>
           <div>
             <span>{t('Hat kapasitesi')}</span>
-            <b>{t('{v} araç/hafta', { v: dec(cap, 1) })}</b>
+            <b>{t('{v} araç/hafta', { v: cars(cap) })}</b>
           </div>
           <div>
             <span>{t('Malzeme / araç')}</span>
@@ -1020,12 +1037,12 @@ function Launch({ p }: { p: Project }) {
           </div>
           <div>
             <span>{t('Beklenen satış (orta tahmin)')}</span>
-            <b>{t('{v} araç/hafta', { v: dec(sold, 1) })}</b>
+            <b>{t('{v} araç/hafta', { v: cars(sold) })}</b>
           </div>
           {dec(lastingSold, 1) !== dec(sold, 1) && (
             <div>
               <span>{t('Heyecan geçince')}</span>
-              <b>{t('{v} araç/hafta', { v: dec(lastingSold, 1) })}</b>
+              <b>{t('{v} araç/hafta', { v: cars(lastingSold) })}</b>
             </div>
           )}
           <div>
@@ -1071,6 +1088,7 @@ function Launch({ p }: { p: Project }) {
         <div className="row-end">
           <Button
             kind="primary"
+            guide="launch"
             disabled={!markets.length}
             onClick={() => {
               const r = store.act((st2) => A.launchModel(st2, p.id, { price, markets, autoShow }));

@@ -387,6 +387,8 @@ export interface MarketState {
   dealerLevel: number;
   awareness: number;
   adBudget: number; // $ per week (in current money)
+  /** Keep the budget at this many times what a maker of the company's size spends in the era (core/advertising.ts); unset: by hand. */
+  adLevel?: number;
 }
 
 /** The company in one state: its dealers and service, and its cars on the road there. */
@@ -424,6 +426,8 @@ export interface NetworkState {
   year: number;
   /** "Otomatik servis": open service shops by itself every month where cars wait for repairs (new games start with it on). */
   autoService?: boolean;
+  /** "Otomatik bayi araması": start dealer searches in the neighbouring states by itself every month (new games start with it on). */
+  autoDealers?: boolean;
   /** The share of the service the cars need that the network is kept to (1, 0.9 or 0.8; unset in older saves: all of it). */
   serviceTarget?: number;
   /** Shops automatic service could not open last month for the cash reserve, and when it last said so. */
@@ -689,7 +693,21 @@ export interface GameState {
   /** Sponsor money for watching an advertisement (Android app): when it was last paid and how much in all. */
   sponsor?: SponsorState;
   /** modeChosen: the player picked the engine designer mode themselves (older saves defaulted to the simple one). */
-  settings: { engineerMode: boolean; autoPauseCards: boolean; modeChosen?: boolean; difficulty?: DifficultyId };
+  settings: {
+    engineerMode: boolean;
+    autoPauseCards: boolean;
+    modeChosen?: boolean;
+    difficulty?: DifficultyId;
+    /** The way to the first car is guided and the menu opens screen by screen (core/guide.ts); new games only. */
+    guided?: boolean;
+  };
+  /** Level of the engineering organisation (data/investments.ts ENGINEERING_LEVELS); unset: the workshop bench. */
+  engineering?: number;
+  /** The company's own supplier plants and the cars a year each can supply (data/investments.ts SUPPLIER_PLANTS). */
+  plants?: Partial<Record<'body' | 'tyres' | 'glass' | 'steel', number>>;
+  /** Screens opened on the way to the first car (core/guide.ts), and those not visited since. */
+  opened?: ('research' | 'finance' | 'factory' | 'markets' | 'company')[];
+  openedNew?: ('research' | 'finance' | 'factory' | 'markets' | 'company')[];
   gameOver?: { reason: 'bankrupt' | 'end' | 'ousted'; week: number };
   nextId: number;
   /** Number for the next line's name, so names are never reused. */

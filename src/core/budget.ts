@@ -1,5 +1,6 @@
 import { requiredWork, startProject as startProjectFn, toolingQuote } from './actions';
 import { devRate } from './development';
+import { teamSpan } from './investments';
 import { engineerSalary, lineBuildWeeks, overhead } from '../data/economy';
 import { suggestedLine, workshopLineCost } from './factory';
 import { researcherSalary } from './research';
@@ -8,6 +9,7 @@ import { MARKET_IDS } from './market';
 import { TESTS, testWeekCost } from './testing';
 import { yearFloat } from './time';
 import type { GameState, Project } from './types';
+import { clone } from './util';
 import { NO_BONUS, computeCarStats } from './vehicle';
 
 // "Can I finish this?" What a project will still cost before its car is on
@@ -45,7 +47,7 @@ export function operatingWeekly(s: GameState): number {
 export function devWeeksLeft(s: GameState, p: Project, extra = 0): number {
   if (p.phase !== 'design' && p.phase !== 'development') return 0;
   const sharing = s.projects.filter((x) => x.phase === 'development' && x.id !== p.id).length + 1;
-  const rate = devRate((s.company.engineers + extra) / sharing, s.company.skill);
+  const rate = devRate((s.company.engineers + extra) / sharing, s.company.skill, teamSpan(s));
   const required = p.phase === 'design' ? requiredWork(s, p) : p.dev.required;
   return Math.ceil(Math.max(0, required - p.dev.done) / Math.max(0.1, rate));
 }
@@ -96,7 +98,7 @@ export function budgetVerdict(b: LaunchBudget): 'ok' | 'credit' | 'short' {
 
 /** The budget of a project not started yet, as it would begin today (on a copy of the game). */
 export function newProjectBudget(s: GameState, segment: Project['segment'], replacesModelId?: string, start = startProjectFn): LaunchBudget | null {
-  const copy = structuredClone(s);
+  const copy = clone(s);
   const r = start(copy, { name: 'x', segment, targetPrice: 0, replacesModelId });
   if (!r.ok) return null;
   return launchBudget(copy, copy.projects.find((x) => x.id === r.id)!);

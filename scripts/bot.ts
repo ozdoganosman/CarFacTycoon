@@ -4,15 +4,18 @@ import { aiDesign } from '../src/core/ai';
 import { designTech, missingRequirements, researchCost, researchDefs, researchSlots, restrictToKnown } from '../src/core/research';
 import { maxGears } from '../src/data/tech';
 import { STATIONS } from '../src/data/stations';
-import { COST_KEYS, availableSegments, credit, materialUnitCost, tick } from '../src/core/game';
+import { availableSegments, credit, materialUnitCost, tick } from '../src/core/game';
 import * as N from '../src/core/network';
-import { stateWeights } from '../src/data/states';
-import { costIndex, newLineCost } from '../src/data/economy';
+import { adWeight, costIndex, newLineCost } from '../src/data/economy';
+import { adNorm } from '../src/core/advertising';
+import { idleCash } from '../src/core/autocap';
 import { lineReport, lineUpkeep, modernizeQuote, reservedLines, stationPrice, turnkeyLineCost, planBalancedLine, emptyLine } from '../src/core/factory';
 import { demandAtPrice, referencePrice } from '../src/core/market';
 import { MAX_SLOTS, DEALER_COMMISSION } from '../src/data/economy';
 import { eventDef } from '../src/data/events';
 import { isBlockingModal } from '../src/core/util';
+import { buildEngineering, buildPlant, companyWorkScale, engineeringCost, nextEngineering, plantStep } from '../src/core/investments';
+import { SUPPLIER_PLANTS } from '../src/data/investments';
 import { yearFloat } from '../src/core/time';
 import type { GameState, SegmentId } from '../src/core/types';
 
@@ -163,9 +166,29 @@ export function botStep(s: GameState, o: BotOptions = {}) {
     if (affordable(want, 0.15)) A.startResearch(s, want!.id);
     else if (affordable(other, 0.02)) A.startResearch(s, other!.id);
   }
-  // Engineers: grow with the company.
-  const wantEng = Math.min(60, 2 + Math.floor(s.company.cash / 40000));
-  if (s.company.engineers < wantEng && s.company.cash > 10000) A.hireEngineers(s, 1);
+  // Advertising: as much as the era expects once a silent brand is forgotten (core/advertising.ts).
+  // Money idle for a year buys a better name: twice or three times the usual once there is a year of
+  // it spare, kept up (a name is built over years) until the idle money is gone.
+  if (adWeight(yf) > 0 && (s.week % 13 === 0 || !s.markets.usa.adLevel)) {
+    const idle = idleCash(s);
+    const year = (k: number) => 52 * k * adNorm(s, yf);
+    const now = s.markets.usa.adLevel ?? 1;
+    const level = idle > year(3) ? 3 : idle > year(2) ? Math.max(2, now) : idle > 0 ? now : 1;
+    if (s.markets.usa.adLevel !== level) A.setAdLevel(s, level);
+  }
+  // Engineers: grow with the company; a bigger maker's cars need more of them (core/investments.ts).
+  const wantEng = Math.min(Math.round(60 * companyWorkScale(s)), 2 + Math.floor(s.company.cash / 40000));
+  if (s.company.engineers < wantEng && s.company.cash > 10000) A.hireEngineers(s, s.company.engineers > 60 ? 5 : 1);
+  // The engineering organisation when it costs little next to the till, then the company's own
+  // supplier plants, built and grown with the company while a step pays for itself within four years.
+  const next = nextEngineering(s);
+  if (next && next.year <= yf && engineeringCost(next, yf) < 0.05 * s.company.cash && s.company.engineers > next.span) buildEngineering(s);
+  if (s.week % 13 === 0) {
+    for (const p of SUPPLIER_PLANTS) {
+      const step = p.year <= yf ? plantStep(s, p, yf) : null;
+      if (step && step.cost < 0.3 * s.company.cash && step.payback < 4) buildPlant(s, p.id);
+    }
+  }
   // Credit when broke.
   if (s.company.cash < 0) {
     const room = credit(s).limit - s.company.loan;
@@ -240,7 +263,7 @@ function smartFactoryAndPrices(s: GameState) {
       let pick: { k: number; ratio: number; cost: number } | null = null;
       for (const k of [2, 3, 4, 6, MAX_SLOTS]) {
         const add = lineReport(s, { ...emptyLine('x', 'x'), slots: Math.max(3, k), stations: planBalancedLine(yf, true, k) }, m.stats.complexity).throughput;
-        const cost = turnkeyLineCost(s.week, true, k) + A.retoolCost(s, m);
+        const cost = turnkeyLineCost(s.week, true, k) + A.retoolCost(s, m, add);
         const gain = (profitWith(cap + add) - now) * 52;
         if (gain * 1.5 > cost && s.company.cash - (s.company.taxOwed ?? 0) > cost * 1.5 && (!pick || gain / cost > pick.ratio)) pick = { k, ratio: gain / cost, cost };
       }
@@ -259,35 +282,15 @@ function smartFactoryAndPrices(s: GameState) {
 }
 
 /**
- * The bot's network: once a car is on sale, look for dealers in the neighbouring state
- * with the most buyers per dollar of freight, and add dealers where a busy state is thinly
- * covered. Keeps a cash reserve. Service is left to "Otomatik servis", as a player would,
- * so that the balance runs pay what looking after every car on the road really costs.
+ * The bot's network: the game's own "Otomatik bayi araması" (core/autoservice.ts, the rule the bot
+ * used to run itself) and "Otomatik servis", as a player would, so that the balance runs pay what
+ * looking after every car on the road really costs. Too big a network is cut back here.
  */
 function growNetwork(s: GameState) {
   N.network(s).autoService = true;
+  N.network(s).autoDealers = true;
   if (s.week % 4 !== 0 || !s.models.some((m) => m.status === 'active')) return;
-  const yf = yearFloat(s.week);
-  shrinkNetwork(s, yf);
-  const w = stateWeights(yf);
-  const price = s.models.filter((m) => m.status === 'active').reduce((a, m) => a + m.price, 0) / Math.max(1, s.models.filter((m) => m.status === 'active').length);
-  const reserve = 8 * N.networkWeekly(s, yf) + 4000 * (1 + (yf - 1900) / 10);
-  // Grow only while the business pays, and only what the margin can carry.
-  const recent = s.finance.slice(-13);
-  const weeklyNet = recent.length ? recent.reduce((a, f) => a + f.revenue - COST_KEYS.filter((k) => k !== 'investment').reduce((b, k) => b + (f[k] ?? 0), 0), 0) / recent.length : 0;
-  // (The first few states are cheap and the home state alone does not pay: those come first.)
-  if (N.openStates(s).length >= 6 && weeklyNet < N.marginalWeekly(s, 1, 0, yf) * 2) return;
-  const value = (id: (typeof N.STATE_LIST)[number]) => w[id] * Math.max(0, 1 - N.freightPerCar(s, id, yf) / price);
-  // The bot keeps a careful pace (one search more per dozen dealers) although the game allows more at
-  // once: a scripted player that searched everywhere it could would outgrow its sales and go broke.
-  const searches = Math.min(N.maxSearches(s), 1 + Math.floor(N.totalDealers(s) / 12));
-  for (let tries = 0; tries < 3 && N.activeSearches(s) < searches; tries++) {
-    const frontier = N.frontier(s).filter((id) => N.canSearch(s, id).ok);
-    const thin = N.openStates(s).filter((id) => N.canSearch(s, id).ok && N.coverage(s, id, yf) < 0.45 && w[id] > 0.015);
-    const best = [...frontier.map((id) => ({ id, v: value(id) })), ...thin.map((id) => ({ id, v: value(id) * 0.8 * (1 - N.coverage(s, id, yf)) }))].sort((a, b) => b.v - a.v)[0];
-    if (!best || s.company.cash - (s.company.taxOwed ?? 0) < reserve + N.searchCost(s, best.id, yf) * 3) break;
-    N.startDealerSearch(s, best.id);
-  }
+  shrinkNetwork(s, yearFloat(s.week));
 }
 
 /**

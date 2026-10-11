@@ -28,6 +28,8 @@ export function Button(props: {
   title?: string;
   small?: boolean;
   type?: 'button' | 'submit';
+  /** The first-car guide points at this button (GuideBar). */
+  guide?: string;
 }) {
   return (
     <button
@@ -36,6 +38,7 @@ export function Button(props: {
       onClick={props.onClick}
       disabled={props.disabled}
       title={props.title}
+      data-guide={props.guide}
     >
       {props.children}
     </button>
@@ -113,13 +116,22 @@ export function Choice<T extends string | number>(props: {
   );
 }
 
-export function Toggle(props: { checked: boolean; onChange: (v: boolean) => void; label: ReactNode; sub?: ReactNode; disabled?: boolean; title?: string }) {
+/** A switch. `info` is the longer explanation, kept in an (i) bubble beside the label; `sub` a short line under it. */
+export function Toggle(props: { checked: boolean; onChange: (v: boolean) => void; label: ReactNode; sub?: ReactNode; info?: ReactNode; disabled?: boolean; title?: string }) {
   return (
     <label className={`toggle ${props.disabled ? 'is-disabled' : ''}`} title={props.title}>
       <input type="checkbox" checked={props.checked} disabled={props.disabled} onChange={(e) => props.onChange(e.target.checked)} />
       <span className="toggle-box" aria-hidden />
       <span className="toggle-text">
-        <span>{props.label}</span>
+        <span>
+          {props.label}
+          {props.info && (
+            <>
+              {' '}
+              <Info>{props.info}</Info>
+            </>
+          )}
+        </span>
         {props.sub && <small>{props.sub}</small>}
       </span>
     </label>

@@ -1,5 +1,5 @@
 import { cityDef } from '../data/cities';
-import { MAX_SLOTS, capexScale, costIndex, newLineCost, realWage, slotCost, toolingMultiple } from '../data/economy';
+import { MAX_SLOTS, capexScale, costIndex, dieCostPerCar, newLineCost, realWage, slotCost, toolingMultiple } from '../data/economy';
 import { STAGES, STATIONS, stationDef, type StationDef } from '../data/stations';
 import { CHASSIS, byId } from '../data/tech';
 import type { CarModel, GameState, ProductionLine, Project, StageId } from './types';
@@ -66,10 +66,14 @@ export function stationResale(id: string, week: number): number {
   return stationPrice(id, week) * 0.3;
 }
 
-/** Dies and fixtures to build a model on one more line (or to move it to another). */
-export function retoolCost(s: GameState, m: CarModel): number {
+/** Dies sized for the cars a week a line builds: what tooling costs a big maker (data/economy dieCostPerCar). */
+export const volumeDieCost = (yf: number, carsPerWeek: number, chassisTooling: number) => dieCostPerCar(yf) * costIndex(yf) * 52 * Math.max(0, carsPerWeek) * chassisTooling;
+
+/** Dies and fixtures to build a model on one more line (or to move it to another) that builds `carsPerWeek` of it. */
+export function retoolCost(s: GameState, m: CarModel, carsPerWeek = 0): number {
   const yf = yearFloat(s.week);
-  return Math.max(5, 0.5 * toolingMultiple(yf)) * m.stats.unitCost * costIndex(yf) * byId(CHASSIS, m.design.chassis).tooling;
+  const chassis = byId(CHASSIS, m.design.chassis).tooling;
+  return Math.max(5, 0.5 * toolingMultiple(yf)) * m.stats.unitCost * costIndex(yf) * chassis + volumeDieCost(yf, carsPerWeek, chassis);
 }
 
 /** A line builds nothing while it is being put up or retooled. */
@@ -182,6 +186,11 @@ export function workshopLineCost(week: number): number {
   return newLineCost(yearFloat(week)) + STAGES.reduce((a, st) => a + plan[st.id].reduce((b, id) => b + stationPrice(id, week), 0), 0);
 }
 
+/** Cars a week a new workshop line builds of a model. */
+export function workshopOutput(s: GameState, m: CarModel): number {
+  return lineReport(s, { ...emptyLine('x', 'x'), stations: workshopPlan(yearFloat(s.week)) }, m.stats.complexity).throughput;
+}
+
 /** Price of a new, fully equipped, balanced line of `slots` places per section (without tooling for a model). */
 export function turnkeyLineCost(week: number, allowBlack: boolean, slots = MAX_SLOTS): number {
   const yf = yearFloat(week);
@@ -213,7 +222,7 @@ export function turnkeyQuote(s: GameState, m: CarModel, allowBlack: boolean, slo
     slots,
     black: allowBlack,
     plan,
-    cost: turnkeyLineCost(s.week, allowBlack, slots) + retoolCost(s, m),
+    cost: turnkeyLineCost(s.week, allowBlack, slots) + retoolCost(s, m, output),
     output,
     labour: output > 0 ? lineUpkeep(s, line, 1) / output : 0,
   };

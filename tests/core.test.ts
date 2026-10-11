@@ -212,6 +212,8 @@ describe('game', () => {
   it('walks a project from design to launch', () => {
     const s = newGame({ companyName: 'Test', hq: 'usa', seed: 3 });
     s.modals = [];
+    // Dealers by hand: the home state stays the only one until a dealer opens elsewhere.
+    s.network!.autoDealers = false;
     const r = A.startProject(s, { name: 'Deneme', segment: 'family', targetPrice: 900 });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -347,7 +349,8 @@ describe('what the money is for', () => {
     expect(s.rivalModels.filter((m) => m.companyId === t.id && m.active)).toHaveLength(0);
     for (let i = 0; i < 60; i++) tick(s);
     expect(s.rivalModels.filter((m) => m.companyId === t.id && m.active)).toHaveLength(0);
-  }, 30_000);
+    // 18 years of the smart bot: about 30 s on a slow machine.
+  }, 90_000);
 
   it('difficulty sets the starting till and the bank', () => {
     const easy = newGame({ companyName: 'E', hq: 'usa', seed: 1, difficulty: 'easy' });

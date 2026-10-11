@@ -8,6 +8,8 @@ import { t } from '../../i18n';
 import { dec, money } from '../format';
 import { store, useGameState } from '../store';
 import { Button, Panel } from './ui';
+import { teamOutput } from '../../core/development';
+import { engineeringLevel, teamSpan } from '../../core/investments';
 import { tx } from '../i18n';
 
 /**
@@ -36,6 +38,15 @@ export function TeamPanel({ compact }: { compact?: boolean }) {
           · {t('maaşlar haftada {week} (yılda {year})', { week: money(n * salary), year: money(n * salary * 52) })}
         </span>
       </p>
+      {/* How much of the team's work gets done at once, with the organisation it has (core/investments.ts). */}
+      {n > 12 && (
+        <p className="small">
+          {tx('Teşkilat: <b>{org}</b> · {n} mühendis ~{output} kişilik iş çıkarıyor.', { org: t(engineeringLevel(s).name), n, output: dec(teamOutput(n, teamSpan(s)), 0) })}{' '}
+          <button type="button" className="link small" onClick={() => store.go({ id: 'company' })}>
+            {t('Teşkilatı büyüt')}
+          </button>
+        </p>
+      )}
       {project && now > 0 ? (
         <p className="small">
           {tx('<b>{name}</b> geliştirmesi şimdiki ekiple ~<b>{n} hafta</b>; +5 mühendisle ~<b>{with5}</b>, +10 ile ~<b>{with10}</b> hafta.', {

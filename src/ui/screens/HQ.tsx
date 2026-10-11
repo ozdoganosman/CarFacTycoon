@@ -14,7 +14,7 @@ import { segmentDef } from '../../data/segments';
 import type { CarModel, GameState, LogCategory } from '../../core/types';
 import { useState } from 'react';
 import { store, useGameState } from '../store';
-import { dec, money, num, pct, pctOf, recentProfit, signedMoney } from '../format';
+import { cars, dec, money, num, pct, pctOf, recentProfit, signedMoney } from '../format';
 import { Badge, Button, Empty, Panel, Progress, Stat, Table } from '../components/ui';
 import { LineChart } from '../viz/LineChart';
 import { NewsArchive } from '../components/Newspaper';
@@ -22,6 +22,10 @@ import { PHASE_LABEL, projectProgress } from './Projects';
 import { askCoverService, askSearchNeighbours } from './Markets';
 import { TeamPanel } from '../components/TeamPanel';
 import { devWeeksLeft } from '../../core/budget';
+import { teamOutput } from '../../core/development';
+import { engineeringCost, nextEngineering, ownsPlant, plantCoverage, plantStep, teamSpan } from '../../core/investments';
+import { adBrandTerm, adNorm } from '../../core/advertising';
+import { SUPPLIER_PLANTS } from '../../data/investments';
 import { t, msg, list } from '../../i18n';
 import { Icon, type IconName } from '../components/Icon';
 
@@ -267,11 +271,55 @@ function nextSteps(s: GameState): Step[] {
     out.push({
       level: 'tip',
       icon: 'banknote',
-      text: t('Kasada {cash} boşta duruyor (yedek ve bir yıllık sabit gider dışında). Onu işe koş: talebi karşılamayan arabalara hat kur, yeni bir sınıfa araba çıkar, bayi ağını büyüt ya da bir rakibi satın al.', {
+      text: t('Kasada {cash} boşta duruyor (yedek ve bir yıllık sabit gider dışında). Onu işe koş: talebi karşılamayan arabalara hat kur, yeni bir sınıfa araba çıkar, bayi ağını büyüt, kendi tedarik fabrikalarını kur, mühendislik teşkilatını büyüt, reklamı olağanın üstüne çıkar (itibar) ya da bir rakibi satın al.', {
         cash: money(spare),
       }),
       go: () => store.go({ id: 'factory' }),
     });
+  // A team bigger than its organisation can put to work: the next level, when it is open and affordable.
+  const org = nextEngineering(s);
+  const yf0 = yearFloat(s.week);
+  if (org && org.year <= yf0 && s.company.engineers >= 2 * teamSpan(s) && s.company.cash > engineeringCost(org, yf0))
+    out.push({
+      level: 'tip',
+      icon: 'research',
+      text: t('{n} mühendis ancak ~{output} kişilik iş çıkarıyor: teşkilat bu kadar büyük bir ekibi kaldırmıyor. {name} ({cost}) projeleri hızlandırır.', {
+        n: s.company.engineers,
+        output: dec(teamOutput(s.company.engineers, teamSpan(s)), 0),
+        name: t(org.name),
+        cost: money(engineeringCost(org, yf0)),
+      }),
+      go: () => store.go({ id: 'company' }),
+    });
+  // A brand being forgotten: advertising well under the era's usual (core/advertising.ts).
+  const forgotten = adBrandTerm(s, yf0);
+  if (forgotten <= -2 && s.models.some((m) => m.status === 'active'))
+    out.push({
+      level: 'tip',
+      icon: 'markets',
+      text: t('Markan unutuluyor: reklama dönemin olağanından az veriyorsun (haftada ~{norm} olmalı), itibarın zamanla ~{n} puan düşer. Pazar ekranında bütçeyi olağanda tut.', {
+        norm: money(adNorm(s, yf0)),
+        n: Math.round(-forgotten),
+      }),
+      go: () => store.go({ id: 'markets' }),
+    });
+  // A supplier plant the company has outgrown, when growing it pays.
+  for (const p of SUPPLIER_PLANTS) {
+    if (!ownsPlant(s, p.id) || plantCoverage(s, p.id) >= 0.8) continue;
+    const step = plantStep(s, p, yf0);
+    if (step && step.payback < 5 && s.company.cash > step.cost)
+      out.push({
+        level: 'tip',
+        icon: 'factory',
+        text: t('{name} arabalarının yalnızca {share} kadarına yetiyor: büyütürsen ({cost}) ~{years} yılda öder.', {
+          name: t(p.name),
+          share: pct(plantCoverage(s, p.id), 0),
+          cost: money(step.cost),
+          years: dec(step.payback, 1),
+        }),
+        go: () => store.go({ id: 'factory' }),
+      });
+  }
   if (heavy) out.unshift(heavy);
   if (s.company.cash < 0) out.unshift({ level: 'urgent', icon: 'alert', text: t('Kasa ekside! Kredi al ya da masrafları kıs.'), go: () => store.go({ id: 'finance' }) });
   // The most pressing first (in the order found within a level), and only as many as a glance takes in.
@@ -420,6 +468,8 @@ export function HQ() {
         </div>
       </div>
 
+      {/* Before the first car there is nothing to show here yet. */}
+      {s.models.length > 0 && (
       <Panel title={t('Satıştaki modeller')} actions={<Button small onClick={() => store.go({ id: 'models' })}>{t('Ayrıntılar')}</Button>}>
         {active.length ? (
           <>
@@ -431,7 +481,7 @@ export function HQ() {
                   {m.name}
                 </button>,
                 t(segmentDef(m.segment).name),
-                dec(weeklySold(m), 1),
+                cars(weeklySold(m)),
                 num(m.inventory),
                 money(m.price),
                 dec(m.reviewScore, 1),
@@ -450,10 +500,13 @@ export function HQ() {
           <Empty>{t('Henüz satışta bir modelin yok.')}</Empty>
         )}
       </Panel>
+      )}
 
-      <Panel title={t('Gazete arşivi')}>
-        <NewsArchive />
-      </Panel>
+      {(s.news?.length ?? 0) > 0 && (
+        <Panel title={t('Gazete arşivi')}>
+          <NewsArchive />
+        </Panel>
+      )}
       <NewsFeed />
     </div>
   );

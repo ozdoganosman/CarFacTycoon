@@ -12,9 +12,9 @@ import { list, t } from '../../i18n';
 import { tx } from '../i18n';
 
 /** What the money is for: a racing team, buying rivals, and the company's worth. */
-import { TeamPanel } from '../components/TeamPanel';
 import { RivalMovesPanel, SharesPanel } from '../components/BoardPanel';
-import { founderShare } from '../../core/shares';
+import { EngineeringPanel } from '../components/Investments';
+import { canGoPublic, founderShare } from '../../core/shares';
 
 export function Company() {
   const s = useGameState();
@@ -26,12 +26,21 @@ export function Company() {
   const paused = racingPaused(s.company.hq, yf);
   const outlook = racingOutlook(s, Math.max(1, r.level));
   const pct = (v: number) => fmtPct(v, 0);
+  // The stock market, the racing team and buying rivals open one by one as the company grows.
+  const ipo = canGoPublic(s);
+  const sharesOpen = !!s.shares || ipo.ok;
+  const buying = targets.length > 0 || (s.acquired?.length ?? 0) > 0;
+  const later = [
+    !sharesOpen && { key: 'shares', title: t('Borsa ve yönetim kurulu'), why: ipo.why ?? '' },
+    !racingOpen && { key: 'racing', title: t('Yarış takımı'), why: t('Otomobil yarışları {year}’dan itibaren bir markanın vitrini olur.', { year: RACING_YEAR }) },
+    !buying && { key: 'buy', title: t('Rakip satın al'), why: t('Şu an satılık rakip yok: senden küçük ve satış yapan bir üretici çıktığında burada görünür.') },
+  ].filter((x): x is { key: string; title: string; why: string } => !!x);
   return (
     <div className="screen">
       <div className="screen-head">
         <div>
           <h1>{t('Şirket')}</h1>
-          <p className="muted">{t('Mühendis al, kazandığın parayı markayı büyütmek için kullan: yarışlarda ün kazan, küçük rakipleri satın al, borsaya açıl.')}</p>
+          <p className="muted">{t('Kazandığın parayı markayı büyütmek için kullan: yarışlarda ün kazan, küçük rakipleri satın al, borsaya açıl.')}</p>
         </div>
       </div>
       <div className="stats-row">
@@ -55,22 +64,42 @@ export function Company() {
         <Stat label={t('Yarış ünü')} value={dec(r.fame, 1)} sub={t('bütün modellere prestij +{v}', { v: dec(racingPrestige(s), 1) })} />
         <Stat label={t('Yarış zaferi')} value={r.wins ?? 0} />
       </div>
-      <TeamPanel />
+      <EngineeringPanel />
+      {/* What is not open yet waits in one short list instead of a panel each. */}
+      {later.length > 0 && (
+        <Panel title={t('Daha sonra')} className="later-panel">
+          <ul className="later">
+            {later.map((x) => (
+              <li key={x.key}>
+                <b>{x.title}</b> <span className="muted small">{x.why}</span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
       <div className="grid-2">
-        <SharesPanel s={s} />
+        {sharesOpen && <SharesPanel s={s} />}
         <RivalMovesPanel s={s} />
       </div>
       <div className="grid-2">
-        <Panel title={t('Yarış takımı')} className="racing-panel">
+        {racingOpen && (
+        <Panel
+          title={
+            <>
+              {t('Yarış takımı')}{' '}
+              <Info>
+                {t(
+                  'Her yıl Eylül’de sezonun büyük yarışı koşulur. Sonucu en iyi arabanın hızı, yol tutuşu ve dayanıklılığı, mühendislerin becerisi ve takımın bütçesi belirler. Zaferler bütün modellerinin prestijini ve markanın bilinirliğini artırır; ün, yarışmayı bırakınca yavaş yavaş söner.',
+                )}
+              </Info>
+            </>
+          }
+          className="racing-panel"
+        >
           {!racingOpen ? (
             <Empty>{t('Otomobil yarışları {year}’dan itibaren bir markanın vitrini olur.', { year: RACING_YEAR })}</Empty>
           ) : (
             <>
-              <p className="muted small">
-                {t(
-                  'Her yıl Eylül’de sezonun büyük yarışı koşulur. Sonucu en iyi arabanın hızı, yol tutuşu ve dayanıklılığı, mühendislerin becerisi ve takımın bütçesi belirler. Zaferler bütün modellerinin prestijini ve markanın bilinirliğini artırır; ün, yarışmayı bırakınca yavaş yavaş söner.',
-                )}
-              </p>
               {paused && <p className="note">{t('Savaş sürüyor: yarışlar yapılmıyor. Takım bekler, bütçe harcanmaz.')}</p>}
               {outlook ? (
                 <p className={`small ${outlook.podium < 0.2 ? 'tone-bad' : ''}`}>
@@ -129,12 +158,20 @@ export function Company() {
             </>
           )}
         </Panel>
-        <Panel title={t('Rakip satın al')}>
-          <p className="muted small">
-            {t(
-              'Senden küçük üreticiler satılık. Satın aldığında modelleri piyasadan çekilir (müşterileri yeni bir marka arar), mühendisleri sana katılır, bayileri senin arabalarını satar: onun güçlü olduğu eyaletlerde, henüz satış yapmadıkların dahil, yeni bayilerin olur.',
-            )}
-          </p>
+        )}
+        {buying && (
+        <Panel
+          title={
+            <>
+              {t('Rakip satın al')}{' '}
+              <Info>
+                {t(
+                  'Senden küçük üreticiler satılık. Satın aldığında modelleri piyasadan çekilir (müşterileri yeni bir marka arar), mühendisleri sana katılır, bayileri senin arabalarını satar: onun güçlü olduğu eyaletlerde, henüz satış yapmadıkların dahil, yeni bayilerin olur.',
+                )}
+              </Info>
+            </>
+          }
+        >
           {targets.length ? (
             <Table
               head={[t('Şirket'), t('Geçen yıl'), t('Mühendis'), t('Bayi'), t('Bedel'), '']}
@@ -187,6 +224,7 @@ export function Company() {
           )}
           {(s.acquired?.length ?? 0) > 0 && <p className="small muted">{t('Şimdiye kadar {n} şirket satın aldın.', { n: s.acquired!.length })}</p>}
         </Panel>
+        )}
       </div>
     </div>
   );

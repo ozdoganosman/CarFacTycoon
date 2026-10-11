@@ -1,9 +1,11 @@
+import { guideStep } from '../../core/guide';
 import { isBlockingModal } from '../../core/util';
 import { t } from '../../i18n';
 import { tx } from '../i18n';
 import { store, useGameState } from '../store';
 import { Button } from './ui';
 import { Icon } from './Icon';
+import { hasKeyboard } from '../device';
 
 /**
  * A finished car waiting for its launch, on every screen but its own: pop-ups and the year report come
@@ -13,7 +15,8 @@ export function LaunchReadyBanner() {
   const s = useGameState();
   const sc = store.screen;
   const ready = s.projects.filter((p) => p.phase === 'ready' && !(sc.id === 'project' && sc.projectId === p.id));
-  if (!ready.length || s.gameOver) return null;
+  // On the way to the first car the guide says it (GuideBar).
+  if (!ready.length || s.gameOver || guideStep(s)) return null;
   return (
     <>
       {ready.map((p) => {
@@ -39,16 +42,18 @@ export function LaunchReadyBanner() {
 /** Reminds the player that nothing happens while the clock is stopped. */
 export function PauseBanner() {
   const s = useGameState();
-  if (store.speed !== 0 || s.modals.some(isBlockingModal) || s.gameOver) return null;
+  if (store.speed !== 0 || s.modals.some(isBlockingModal) || s.gameOver || guideStep(s)) return null;
   const waiting =
     s.projects.some((p) => p.phase === 'development' || p.phase === 'testing' || (p.phase === 'production' && p.productionReadyWeek !== undefined)) ||
     s.models.some((m) => m.status === 'active');
   if (!waiting) return null;
+  // A stamp and one line (on a phone the stamp alone), not a panel: the clock stops often.
   return (
-    <div className="pause-banner" role="status">
-      <span>{tx('<b>Oyun duraklatıldı.</b> Zaman akmadan mühendisler çalışmaz, testler ilerlemez, fabrika üretmez.')}</span>
+    <div className="pause-banner pause-stamp" role="status">
+      <span className="badge badge-info">{t('Duraklatıldı')}</span>
+      <span className="pause-text small">{t('Zaman akmadan mühendisler çalışmaz, testler ilerlemez, fabrika üretmez.')}</span>
       <Button kind="primary" small onClick={() => store.setSpeed(store.lastSpeed)}>
-        <Icon name="play" /> {t('Devam et (boşluk)')}
+        <Icon name="play" /> {hasKeyboard() ? t('Devam et (boşluk)') : t('Devam et')}
       </Button>
     </div>
   );

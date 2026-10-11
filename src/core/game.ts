@@ -16,7 +16,9 @@ import type { StateId } from '../data/states';
 import { makeRng, rand, stateRng } from './rng';
 import { updateRivals, initRivals } from './rivals';
 import { autoCapacity, autoProductionRates } from './autocap';
-import { autoService } from './autoservice';
+import { autoDealers, autoService } from './autoservice';
+import { adBrandTerm, followAdNorm } from './advertising';
+import { engineeringUpkeep, investmentsValue, plantCut, teamSpan } from './investments';
 import { eraReference } from './scoring';
 import { allTech, techName } from './techtree';
 import { knownKnowhow, labSpeed, noteResearch, pumpResearchQueue, researchDef, researcherSalary, startingKnowledge } from './research';
@@ -63,7 +65,8 @@ export function newGame(opts: NewGameOptions): GameState {
   const markets = {} as GameState['markets'];
   for (const m of MARKETS) {
     // The American market only: the factory sells in its own state first (see network.ts).
-    markets[m.id] = { unlocked: m.id === 'usa', dealerLevel: 0, awareness: m.id === 'usa' ? 0.15 : 0, adBudget: 0 };
+    // Advertising follows the era's usual for the company's size until the player sets it (core/advertising.ts).
+    markets[m.id] = { unlocked: m.id === 'usa', dealerLevel: 0, awareness: m.id === 'usa' ? 0.15 : 0, adBudget: 0, adLevel: m.id === 'usa' ? 1 : undefined };
   }
   const knowledge = {} as GameState['knowledge'];
   for (const s of SEGMENTS) knowledge[s.id] = {};
@@ -109,7 +112,7 @@ export function newGame(opts: NewGameOptions): GameState {
     research: { known: startingKnowledge(1900), active: [] },
     news: [],
     cardsSeen: CARDS.filter((c) => c.year <= 1900).map((c) => c.id),
-    settings: { engineerMode: true, autoPauseCards: true, modeChosen: false, difficulty: diff.id },
+    settings: { engineerMode: true, autoPauseCards: true, modeChosen: false, difficulty: diff.id, guided: true },
     nextId: 1,
     decisions: [],
     errors: [],
@@ -119,6 +122,7 @@ export function newGame(opts: NewGameOptions): GameState {
   // The factory's own state is the whole market at first. A new company opens service shops
   // by itself as its cars pile up (older saves keep it off until the player turns it on).
   network(state).autoService = true;
+  network(state).autoDealers = true;
   return state;
 }
 
@@ -242,7 +246,8 @@ export function materialUnitCost(s: GameState, model: Pick<CarModel, 'stats' | '
   const war = s.flags.materialsUntil && yf < s.flags.materialsUntil && yf >= 1914.6 ? 1.25 : 1;
   // Parts makers next door, or everything by train from the East.
   const local = cityDef(s.company.city).parts;
-  return cost * costIndex(yf) * learning * war * local;
+  // The company's own body plant, tyre plant, glass works and steel mill (core/investments.ts).
+  return cost * costIndex(yf) * learning * war * local * (1 - plantCut(s));
 }
 
 export function companyAssets(s: GameState): number {
@@ -251,7 +256,7 @@ export function companyAssets(s: GameState): number {
     0,
   );
   const inventory = s.models.reduce((a, m) => a + m.inventory * materialUnitCost(s, m), 0);
-  return lines + inventory + Math.max(0, s.company.cash);
+  return lines + inventory + investmentsValue(s) + Math.max(0, s.company.cash);
 }
 
 /**
@@ -374,6 +379,7 @@ export function tick(s: GameState): void {
     monthly(s);
     // Service first: a few shops cost little next to a new line, and waiting owners cost the name.
     autoService(s);
+    autoDealers(s);
     autoCapacity(s, (m) => materialUnitCost(s, m));
     checkBoom(s);
   }
@@ -585,7 +591,7 @@ function advanceProjects(s: GameState) {
   const rng = stateRng(s);
   for (const p of s.projects) {
     if (p.phase === 'development') {
-      const work = devRate(p.engineers, s.company.skill);
+      const work = devRate(p.engineers, s.company.skill, teamSpan(s));
       const before = p.dev.done;
       const cap = p.dev.required * 1.6;
       const add = Math.min(work, Math.max(0, cap - p.dev.done));
@@ -810,6 +816,10 @@ function fixedCosts(s: GameState) {
   spend(s, s.company.engineers * engineerSalary(yf) + (s.company.researchers ?? 0) * researcherSalary(yf), 'salaries');
   s.company.idleSalary = (s.company.idleSalary ?? 0) + idleEngineers(s) * engineerSalary(yf);
   spend(s, overhead(yf, s.lines.length), 'other');
+  // The engineering buildings: drawing office, proving ground, laboratories (core/investments.ts).
+  const lab = engineeringUpkeep(s, yf);
+  if (lab > 0) spend(s, lab, 'rnd');
+  followAdNorm(s, yf);
   for (const m of MARKET_IDS) {
     spend(s, dealerUpkeep(s, m), 'dealers');
     if (s.markets[m].adBudget > 0) spend(s, s.markets[m].adBudget, 'marketing');
@@ -839,7 +849,8 @@ function drift(s: GameState) {
     const sold = s.models.reduce((a, m) => a + m.unitsSold, 0);
     // Owners who wait weeks for a repair talk (once there are cars enough to matter).
     const service = totalParc(s) > 200 ? (serviceSatisfaction(s, yearFloat(s.week)) - 0.8) * 20 : 0;
-    const target = clamp(22 + review * 4 + rel * 0.35 + Math.min(15, Math.log1p(sold) * 1.3) + Math.min(0, service), 0, 100);
+    // A brand that advertises less than the era's usual is slowly forgotten (core/advertising.ts).
+    const target = clamp(22 + review * 4 + rel * 0.35 + Math.min(15, Math.log1p(sold) * 1.3) + Math.min(0, service) + adBrandTerm(s), 0, 100);
     s.company.reputation += (target - s.company.reputation) * 0.01;
   }
 }

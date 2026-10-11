@@ -1,5 +1,6 @@
 import * as A from '../../core/actions';
 import { devRate } from '../../core/development';
+import { companyWorkScale, teamSpan } from '../../core/investments';
 import { costIndex, engineerSalary } from '../../data/economy';
 import { yearFloat } from '../../core/time';
 import { classGap, gapNames, knownKnowhow, unknownTech } from '../../core/research';
@@ -10,7 +11,7 @@ import { tx } from '../i18n';
 import { BudgetLine } from '../components/BudgetLine';
 import type { Project } from '../../core/types';
 import { store, useGameState } from '../store';
-import { Button, Progress } from '../components/ui';
+import { Button, Info, Progress } from '../components/ui';
 import { Icon } from '../components/Icon';
 
 /** Team, time and the one action of the design step, kept above the designer so it never needs scrolling to. */
@@ -21,13 +22,15 @@ export function DevBar({ project: p }: { project: Project }) {
   const others = s.projects.filter((x) => x.phase === 'development' && x.id !== p.id).length;
   const eng = s.company.engineers / (others + 1);
   const required = developing ? p.dev.required : A.requiredWork(s, p);
-  const rate = devRate(eng, s.company.skill);
+  const span = teamSpan(s);
+  const rate = devRate(eng, s.company.skill, span);
   const remaining = Math.max(0, required - p.dev.done);
   // How much sooner the car would be ready with more engineers (they join all projects in development).
   const weeksNow = Math.ceil(remaining / Math.max(0.1, rate));
   const yf = yearFloat(s.week);
-  const faster = [3, 6, 12]
-    .map((n) => ({ n, weeks: Math.ceil(remaining / Math.max(0.1, devRate((s.company.engineers + n) / (others + 1), s.company.skill))) }))
+  // A large organisation puts large teams to work: bigger steps.
+  const faster = (span > 30 ? [10, 25, 50, 100] : [3, 6, 12])
+    .map((n) => ({ n, weeks: Math.ceil(remaining / Math.max(0.1, devRate((s.company.engineers + n) / (others + 1), s.company.skill, span))) }))
     .find((o) => o.weeks <= weeksNow * 0.75);
   const done = developing && p.dev.done >= p.dev.required;
   const progress = pct(required > 0 ? p.dev.done / required : 0, 0);
@@ -46,13 +49,24 @@ export function DevBar({ project: p }: { project: Project }) {
       <div className="dev-bar-text">
         {!developing ? (
           <>
-            {tx('<b>Geliştirme:</b> tahmini <b>~{n} hafta</b> · {team}', { n: Math.ceil(remaining / Math.max(0.1, rate)), team })}
-            {missing.length ? (
+            <span>
+              {tx('<b>Geliştirme:</b> tahmini <b>~{n} hafta</b> · {team}', { n: Math.ceil(remaining / Math.max(0.1, rate)), team })}{' '}
+              <Info>
+                {t('Aracı tasarla, mühendis tahmininden iki öncelik seç, sonra başlat. Başlayınca tasarım kilitlenir; öncelikler her zaman değişebilir.')}
+                {companyWorkScale(s) > 1.05 && (
+                  <>
+                    {' '}
+                    {t('Şirketin büyüklüğü bu arabanın mühendislik işini ×{x} yapıyor; Şirket ekranındaki mühendislik teşkilatı büyük ekiplerin birlikte çalışmasını sağlar.', {
+                      x: dec(companyWorkScale(s), 2),
+                    })}
+                  </>
+                )}
+              </Info>
+            </span>
+            {missing.length > 0 && (
               <span className="small tone-bad">
                 {t('Tasarımda henüz araştırılmamış teknoloji var: {tech}. Ar-Ge’de araştır ya da tasarımdan çıkar.', { tech: missing.map((x) => t(x)).join(', ') })}
               </span>
-            ) : (
-              <span className="muted small">{t('Aracı tasarla, mühendis tahmininden iki öncelik seç, sonra başlat. Başlayınca tasarım kilitlenir; öncelikler her zaman değişebilir.')}</span>
             )}
             {behind.length > 0 && (
               <span className="small tone-warn">{t('Sınıftaki arabaların çoğunda olan {list} bu tasarımda yok: aşağıdaki listeden ekle ya da araştır.', { list: gapNames(behind) })}</span>
@@ -85,7 +99,7 @@ export function DevBar({ project: p }: { project: Project }) {
                 })}
               </>
             ) : (
-              <>{t('Daha çok mühendis geliştirmeyi hızlandırır; bir arabada bir düzineden fazlası orantılı hızlandırmaz.')}</>
+              <Info>{t('Daha çok mühendis geliştirmeyi hızlandırır; bir arabada bir düzineden fazlası orantılı hızlandırmaz.')}</Info>
             )}
           </span>
           <span className="dev-bar-hire-btns">
@@ -113,6 +127,7 @@ export function DevBar({ project: p }: { project: Project }) {
         {!developing ? (
           <Button
             kind="primary"
+            guide="start-dev"
             disabled={missing.length > 0}
             onClick={async () => {
               // A project the company cannot see through to launch deserves a second thought.
@@ -135,7 +150,7 @@ export function DevBar({ project: p }: { project: Project }) {
             {t('Geliştirmeyi başlat')}
           </Button>
         ) : done ? (
-          <Button kind="primary" onClick={() => store.try((st) => A.finishDevelopment(st, p.id))}>
+          <Button kind="primary" guide="to-testing" onClick={() => store.try((st) => A.finishDevelopment(st, p.id))}>
             {t('Prototipleri yap, teste geç')}
           </Button>
         ) : paused ? (

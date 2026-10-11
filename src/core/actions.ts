@@ -11,7 +11,7 @@ import { aiDesign } from './ai';
 import { FOCUS_KEYS, MAX_PRIORITIES, SEGMENT_PRIORITIES, bonusFromPoints, normalizeFocus, priorityFocus } from './development';
 import { displacementCc } from './engine';
 import { writeReviews } from './feedback';
-import { emptyLine, lineReport, modernizeQuote, nextLineName, planBalancedLine, reservedLines, retoolCost, stationPrice, stationResale, turnkeyLineCost, workshopLineCost, workshopPlan } from './factory';
+import { emptyLine, lineReport, modernizeQuote, nextLineName, planBalancedLine, reservedLines, retoolCost, stationPrice, stationResale, turnkeyLineCost, turnkeyQuote, volumeDieCost, workshopLineCost, workshopOutput, workshopPlan } from './factory';
 import {
   shareEngineers,
   availableSegments,
@@ -38,6 +38,7 @@ import type {
   FocusKey,
   GameState,
   MarketId,
+  ProductionLine,
   Project,
   SegmentId,
   StageId,
@@ -46,7 +47,9 @@ import type {
   ToolingTier,
 } from './types';
 import { NO_BONUS, computeCarStats } from './vehicle';
-import { clamp, decide, earn, log, money, newId, shiftModal, spend } from './util';
+import { clamp, clone, decide, earn, log, money, newId, shiftModal, spend } from './util';
+import { companyWorkScale } from './investments';
+import { followAdNorm } from './advertising';
 import { list, t } from '../i18n';
 import { dec, fmtPercent } from '../i18n/format';
 
@@ -142,9 +145,9 @@ export function defaultDesign(s: GameState, segment: SegmentId, replacesModelId?
   void segment;
   const yf = yearFloat(s.week);
   const replaced = replacesModelId ? s.models.find((m) => m.id === replacesModelId) : undefined;
-  if (replaced) return structuredClone(replaced.design);
+  if (replaced) return clone(replaced.design);
   const latest = [...s.models].sort((a, b) => Math.max(b.launchWeek, b.refreshWeek) - Math.max(a.launchWeek, a.refreshWeek))[0];
-  if (latest) return structuredClone(latest.design);
+  if (latest) return clone(latest.design);
   const { design } = aiDesign('family', Math.floor(yf), { style: 'mass', skill: 40, market: s.company.hq }, () => 0.5);
   return restrictToKnown(s, { ...design, size: 0.4, styling: 0.3, interior: 0.3, suspBalance: 0.5 }, maxGears(yf));
 }
@@ -229,7 +232,7 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
     platformId: m.platformId,
     engineRefId: m.engineId,
     // A facelift also brings in whatever the engineers have learned since.
-    design: { ...structuredClone(m.design), knowhow: knownKnowhow(s) },
+    design: { ...clone(m.design), knowhow: knownKnowhow(s) },
     phase: 'design',
     createdWeek: s.week,
     engineers: Math.max(1, free),
@@ -286,7 +289,8 @@ export function renameProject(s: GameState, pid: string, name: string) {
 /** Engineering work needed, after platform / engine reuse discounts. */
 export function requiredWork(s: GameState, p: Project): number {
   const stats = computeCarStats(p.design, yearFloat(s.week));
-  let w = stats.devWork;
+  // A bigger maker's car takes more engineering (core/investments.ts).
+  let w = stats.devWork * companyWorkScale(s);
   if (p.kind === 'facelift') return w * 0.35;
   const plat = p.platformId && s.platforms.find((x) => x.id === p.platformId);
   if (plat && plat.chassis === p.design.chassis && plat.size === p.design.size && plat.suspension === p.design.suspension) w *= 0.7;
@@ -382,15 +386,16 @@ export function setTestPlan(s: GameState, pid: string, test: TestId, weeks: numb
 export function finishTesting(s: GameState, pid: string): ActionResult {
   const p = project(s, pid);
   if (p.phase !== 'testing') return fail(t('Proje testte değil.'));
+  // Facelifts rework the existing dies (on every line of the car); only a short changeover.
+  const facelift = p.kind === 'facelift' && p.lineId ? toolingQuote(s, p, p.lineId) : undefined;
+  if (facelift && s.company.cash < facelift.cost) return fail(t('Makyaj kalıpları için {cost} gerekiyor.', { cost: money(facelift.cost) }));
   for (const t of TESTS) p.tests[t.id].planned = p.tests[t.id].done;
   p.phase = 'production';
   if (!gates(s).suppliers) p.suppliers = { engine: 'quality', gearbox: 'quality', electrics: 'quality' };
-  if (p.kind === 'facelift' && p.lineId) {
-    // Facelifts reuse the existing tooling; only a short changeover.
-    const q = toolingQuote(s, p, p.lineId);
-    spend(s, q.cost, 'investment');
-    p.toolingCost = q.cost;
-    p.productionReadyWeek = s.week + q.weeks;
+  if (facelift) {
+    spend(s, facelift.cost, 'investment');
+    p.toolingCost = facelift.cost;
+    p.productionReadyWeek = s.week + facelift.weeks;
   }
   decide(s, 'tests:' + pid, `${p.name}: test bitti (${TESTS.map((t) => `${t.id} ${p.tests[t.id].done}hf`).join(', ')}; bulunamayan kusur ${p.defects.filter((d) => !d.found).length})`);
   return ok;
@@ -410,6 +415,19 @@ export interface ToolingQuote {
   weeks: number;
   leadWeeks: number;
   sharedPlatform: boolean;
+  /** Lines the dies are made for, and the cars a year they build. */
+  lines: number;
+  carsPerYear: number;
+  /** Of `cost`: the die sets for that volume. */
+  dies: number;
+}
+
+/**
+ * The lines a project's dies are made for: its own, and the lines of the car it replaces or refreshes
+ * (they switch over at launch, so each needs its set).
+ */
+export function tooledLines(s: GameState, p: Project, lineId: string): ProductionLine[] {
+  return s.lines.filter((l) => l.id === lineId || (p.replacesModelId !== undefined && l.modelId === p.replacesModelId && !l.military));
 }
 
 export function toolingQuote(s: GameState, p: Project, lineId: string, tier: ToolingTier = p.tooling ?? 'standard'): ToolingQuote {
@@ -426,10 +444,14 @@ export function toolingQuote(s: GameState, p: Project, lineId: string, tier: Too
     shared = true;
   } else if (p.platformId) factor = 0.7;
   const def = toolingDef(p.kind === 'facelift' ? 'standard' : tier);
-  const cost = toolingMultiple(yf) * stats.unitCost * costIndex(yf) * chassis.tooling * factor * def.costMult;
+  // A die set for every line the car will be built on, sized for what the line builds.
+  const lines = tooledLines(s, p, lineId);
+  const perWeek = lines.reduce((a, l) => a + lineReport(s, l, stats.complexity).throughput, 0);
+  const dies = volumeDieCost(yf, perWeek, chassis.tooling) * factor * def.costMult;
+  const cost = toolingMultiple(yf) * stats.unitCost * costIndex(yf) * chassis.tooling * factor * def.costMult + dies;
   const weeks = p.kind === 'facelift' ? 3 : Math.max(2, Math.round((5 + 4 * stats.complexity) * (factor < 1 ? 0.6 : 1) * def.weeksMult));
   const leadWeeks = Math.max(...(Object.keys(p.suppliers) as ComponentKey[]).map((k) => SUPPLIERS.find((x) => x.id === p.suppliers[k])!.leadWeeks));
-  return { cost, weeks, leadWeeks, sharedPlatform: shared };
+  return { cost, weeks, leadWeeks, sharedPlatform: shared, lines: lines.length, carsPerYear: perWeek * 52, dies };
 }
 
 /** Surcharge the die-makers ask to be paid later, out of sales. */
@@ -766,14 +788,12 @@ export function assignLine(s: GameState, lineId: string, modelId: string | undef
     return ok;
   }
   const m = model(s, modelId);
-  const yf = yearFloat(s.week);
-  const cost = retoolCost(s, m);
+  const cost = retoolCost(s, m, lineReport(s, line, m.stats.complexity).throughput);
   if (s.company.cash < cost) return fail(t('Hat değişimi için {cost} gerekiyor.', { cost: money(cost) }));
   spend(s, cost, 'investment');
   line.modelId = m.id;
   line.retoolUntilWeek = s.week + 3;
   line.military = false;
-  void yf;
   decide(s, 'line:' + lineId, `${line.name} → ${m.name} (kalıp ${money(cost)})`);
   return ok;
 }
@@ -844,7 +864,7 @@ export function sellStation(s: GameState, lineId: string, stage: StageId, index:
 /** Build `count` new lines, equipped and balanced (full size, or a smaller hall of `slots` places), and put `modelId` on them. */
 export function buildTurnkeyLines(s: GameState, count: number, modelId: string | undefined, allowBlack: boolean, slots = MAX_SLOTS): ActionResult {
   const m = modelId ? model(s, modelId) : undefined;
-  const each = turnkeyLineCost(s.week, allowBlack, slots) + (m ? retoolCost(s, m) : 0);
+  const each = m ? turnkeyQuote(s, m, allowBlack, slots).cost : turnkeyLineCost(s.week, allowBlack, slots);
   const total = each * count;
   if (count < 1) return fail(t('En az bir hat seç.'));
   const veto = boardVeto(s);
@@ -904,7 +924,7 @@ export function acquireRival(s: GameState, id: string): ActionResult {
 /** A cheap craft line for a young firm: slow, but a fraction of a modern line's price. */
 export function buildWorkshopLine(s: GameState, modelId: string | undefined): ActionResult {
   const m = modelId ? model(s, modelId) : undefined;
-  const cost = workshopLineCost(s.week) + (m ? retoolCost(s, m) : 0);
+  const cost = workshopLineCost(s.week) + (m ? retoolCost(s, m, workshopOutput(s, m)) : 0);
   if (s.company.cash < cost) return fail(t('Atölye hattı için {cost} gerekiyor.', { cost: money(cost) }));
   spend(s, cost, 'investment');
   const line = emptyLine(`L${s.nextId++}`, nextLineName(s, t('Atölye')));
@@ -999,6 +1019,14 @@ export function upgradeDealers(s: GameState, market: MarketId): ActionResult {
 
 export function setAdBudget(s: GameState, market: MarketId, amount: number) {
   s.markets[market].adBudget = Math.max(0, amount);
+  s.markets[market].adLevel = undefined;
+}
+
+/** Keep the American advertising budget at `level` times the era's usual for the company's size, or leave it as it is (core/advertising.ts). */
+export function setAdLevel(s: GameState, level: number | undefined) {
+  s.markets.usa.adLevel = level && level > 0 ? level : undefined;
+  followAdNorm(s);
+  decide(s, 'ads', level ? `Reklam bütçesi dönemin olağanının ${level} katı` : 'Reklam bütçesi elle');
 }
 
 export function marketResearchCost(s: GameState): number {

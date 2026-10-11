@@ -287,4 +287,31 @@ describe('play analytics', () => {
     a.trackScreen('models');
     expect(ph.capture).not.toHaveBeenCalled();
   });
+
+  it('reports each step on the way to the first car once, the skipped ones too', async () => {
+    const a = await import('../src/ui/analytics');
+    const A = await import('../src/core/actions');
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 7 });
+    await a.startAnalytics();
+    a.observeGame(s);
+    ph.capture.mockClear();
+    const r = A.startProject(s, { name: 'İlk', segment: 'city', targetPrice: 0 });
+    expect(r.ok).toBe(true);
+    a.observeGame(s);
+    a.observeGame(s);
+    const firsts = () => events().filter((e) => e.startsWith('first_'));
+    expect(firsts()).toEqual(['first_project']);
+    // Seen again only after the testing phase: the development step in between is still reported.
+    s.projects[0].phase = 'testing';
+    a.observeGame(s);
+    expect(firsts()).toEqual(['first_project', 'first_development', 'first_test']);
+    // A game loaded at a later step reports nothing it had already passed.
+    s.week += 30;
+    vi.resetModules();
+    ph.capture.mockClear();
+    const b = await import('../src/ui/analytics');
+    await b.startAnalytics();
+    b.observeGame(s);
+    expect(events()).toEqual(['game_resumed']);
+  });
 });

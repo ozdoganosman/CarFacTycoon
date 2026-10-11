@@ -6,7 +6,7 @@ import { yearFloat } from '../src/core/time';
 import { STATE_IDS, stateWeights } from '../src/data/states';
 import { NEIGHBOURS, STATE_SHAPES } from '../src/data/usmap';
 import { runBot } from '../scripts/bot';
-import { autoService } from '../src/core/autoservice';
+import { autoDealers, autoService, setAutoDealers } from '../src/core/autoservice';
 import { costIndex } from '../src/data/economy';
 import type { GameState } from '../src/core/types';
 
@@ -251,6 +251,36 @@ describe('network in bulk', () => {
     expect(N.searchNeighbours(s).ok).toBe(false);
     N.stateNet(s, 'MI').dealers = 1000;
     expect(N.maxSearches(s)).toBe(N.MAX_SEARCHES);
+  });
+
+  it('automatic dealer search starts searches next door once a car is on sale, above the cash reserve, at a careful pace', () => {
+    const s = game();
+    // New games start with it on; older saves (no setting) keep it off.
+    expect(s.network!.autoDealers).toBe(true);
+    const old = JSON.parse(serialize(s)) as GameState;
+    delete old.network!.autoDealers;
+    expect(deserialize(JSON.stringify(old)).network!.autoDealers).toBeFalsy();
+    N.stateNet(s, 'MI').dealers = 8;
+    // Nothing to sell yet: no searches.
+    autoDealers(s);
+    expect(N.activeSearches(s)).toBe(0);
+    runBot(s, 52 * 2, { segments: ['family'] });
+    for (const id of STATE_IDS) delete N.stateNet(s, id).search;
+    s.company.cash = 0;
+    autoDealers(s);
+    expect(N.activeSearches(s)).toBe(0);
+    s.company.cash = 1e7;
+    expect(N.nextSearches(s).length).toBeGreaterThan(1);
+    autoDealers(s);
+    // A careful pace: one search more per dozen dealers, not every free slot at once.
+    const pace = Math.min(N.maxSearches(s), 1 + Math.floor(N.totalDealers(s) / 12));
+    expect(N.activeSearches(s)).toBe(pace);
+    expect(pace).toBeLessThan(N.maxSearches(s));
+    expect(s.log.some((l) => l.text.startsWith('Otomatik bayi araması'))).toBe(true);
+    setAutoDealers(s, false);
+    for (const id of STATE_IDS) delete N.stateNet(s, id).search;
+    autoDealers(s);
+    expect(N.activeSearches(s)).toBe(0);
   });
 
   it('"Servisi yetir" opens every shop the cars need, the worst served first when cash is short', () => {

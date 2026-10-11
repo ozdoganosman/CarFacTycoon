@@ -1,3 +1,4 @@
+import { ENGINEERING_LEVELS } from '../data/investments';
 import { costIndex, engineerSalary, overhead } from '../data/economy';
 import { KNOWHOW, effectsText } from '../data/knowhow';
 import { ASPIRATIONS, CHASSIS, CYLINDER_OPTIONS, FEATURES, FUEL_SYSTEMS, GEARBOX_TYPES, SUSPENSIONS, VALVETRAINS } from '../data/tech';
@@ -212,8 +213,9 @@ export function researchReserve(s: GameState, yf: number): number {
 /** A bigger engineering department learns faster; dedicated research staff much more so. */
 export const researchSpeed = (engineers: number, researchers = 0) => 0.6 + Math.min(2.4, engineers / 10) + Math.min(3, researchers / 4);
 
-/** The company's research speed and subjects at once, with its research staff. */
-export const labSpeed = (s: GameState) => researchSpeed(s.company.engineers, s.company.researchers ?? 0);
+/** The company's research speed and subjects at once, with its research staff; the engineering organisation's laboratories speed it too (data/investments.ts). */
+export const labSpeed = (s: GameState) =>
+  researchSpeed(s.company.engineers, s.company.researchers ?? 0) * (1 + ENGINEERING_LEVELS[Math.min(ENGINEERING_LEVELS.length - 1, s.engineering ?? 0)].research);
 export const labSlots = (s: GameState) => researchSlots(s.company.engineers, s.company.researchers ?? 0);
 
 /** A researcher costs a third more than a design engineer. */

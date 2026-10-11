@@ -2,6 +2,7 @@ import type { PostHog } from 'posthog-js';
 import { finalScore } from '../core/game';
 import { yearFloat } from '../core/time';
 import type { GameState } from '../core/types';
+import { lastOf } from '../core/util';
 import { playerId } from './collector';
 
 // How people play the public build, in PostHog (EU region): the screens they visit,
@@ -112,8 +113,22 @@ interface Seen {
   lastError: object | null;
   year: number;
   over: boolean;
+  /** How far the company has come on the way to its first car (see FIRST_STEPS). */
+  step: number;
 }
 let seen: Seen | null = null;
+
+/**
+ * The way to the first car, one event each the first time it happens in a game (a funnel in
+ * PostHog: game_started → first_project → first_development → first_test → first_launch).
+ */
+const FIRST_STEPS = ['first_project', 'first_development', 'first_test', 'first_launch'] as const;
+const PHASE_STEP: Record<string, number> = { design: 1, development: 2, testing: 3, production: 3, ready: 3 };
+
+function firstStep(s: GameState): number {
+  if (s.models.length > 0) return 4;
+  return s.projects.reduce((n, p) => Math.max(n, PHASE_STEP[p.phase] ?? 0), 0);
+}
 
 const yearOf = (s: GameState) => Math.floor(yearFloat(s.week));
 
@@ -135,7 +150,7 @@ function glance(s: GameState) {
 
 /** The entries after `last` (all of them if nothing was sent yet; none if `last` is gone, i.e. the game was loaded again). */
 function newSince<T extends object>(list: T[], last: object | null): T[] {
-  if (list.at(-1) === last) return [];
+  if (lastOf(list) === last) return [];
   if (!last) return list;
   const i = list.lastIndexOf(last as T);
   return i < 0 ? [] : list.slice(i + 1);
@@ -153,13 +168,16 @@ export function observeGame(s: GameState | null) {
   const year = yearOf(s);
   if (!seen || seen.seed !== s.seed) {
     track(s.week <= 1 ? 'game_started' : 'game_resumed', glance(s));
-    seen = { seed: s.seed, lastDecision: decisions.at(-1) ?? null, lastError: errors.at(-1) ?? null, year, over: !!s.gameOver };
+    seen = { seed: s.seed, lastDecision: lastOf(decisions) ?? null, lastError: lastOf(errors) ?? null, year, over: !!s.gameOver, step: firstStep(s) };
     return;
   }
+  const step = firstStep(s);
+  for (let i = seen.step; i < step; i++) track(FIRST_STEPS[i], glance(s));
+  seen.step = Math.max(seen.step, step);
   for (const d of newSince(decisions, seen.lastDecision)) {
     track('decision', { kind: d.key.split(':')[0], key: d.key, text: d.text, game_year: Math.floor(yearFloat(d.week)) });
   }
-  seen.lastDecision = decisions.at(-1) ?? null;
+  seen.lastDecision = lastOf(decisions) ?? null;
   // An older save of the same game was loaded: pick up from there.
   if (year < seen.year) seen.year = year;
   if (!s.gameOver) seen.over = false;
@@ -169,7 +187,7 @@ export function observeGame(s: GameState | null) {
     seen.year = year;
   }
   for (const e of newSince(errors, seen.lastError)) track('game_error', { at: e.at, message: e.message, game_year: Math.floor(yearFloat(e.week)) });
-  seen.lastError = errors.at(-1) ?? null;
+  seen.lastError = lastOf(errors) ?? null;
   if (s.gameOver && !seen.over) {
     const score = s.gameOver.reason === 'end' ? finalScore(s) : null;
     track('game_over', { ...glance(s), reason: s.gameOver.reason, score: score?.total ?? null, tier: score?.tier ?? null, sales_rank: score?.rank ?? null });
