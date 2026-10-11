@@ -193,6 +193,10 @@
   "one": "Capacidad automática: bajó la demanda del {name}; se cerró una línea y se vendieron sus máquinas ({refund}).",
   "other": "Capacidad automática: bajó la demanda del {name}; se cerraron {n} líneas y se vendieron sus máquinas ({refund})."
  },
+ "15o6yk2": "{name}: no pudo avanzar solo; no hay ninguna línea libre.",
+ "8q7pqu": "{name}: no pudo avanzar solo; no alcanza el dinero para los troqueles.",
+ "xzevh1": "No se encontró el proyecto.",
+ "1kh6ium": "El auto está listo: el lanzamiento lo haces tú.",
  "m6or0y": {
   "one": "Servicio automático: se abrió {n} taller de servicio ({cost}): {states}.",
   "other": "Servicio automático: se abrieron {n} talleres de servicio ({cost}): {states}."
@@ -408,6 +412,11 @@
  "rtzocl": "Nota de la prensa, últimos diez años (media)",
  "lqpy6g": "Nota de la prensa de tu último auto (antiguo)",
  "10lwdh0": "Victorias en carreras, últimos veinte años",
+ "hksngu": "Objetivos de las décadas",
+ "mq4yhi": {
+  "one": "Este mes salió {n} modelo rival nuevo en un segmento donde no tienes autos: {classes}.",
+  "other": "Este mes salieron {n} modelos rivales nuevos en segmentos donde no tienes autos: {classes}."
+ },
  "1vw9ovk": "Nuevas tecnologías: {names}",
  "snerqm": "Surgieron nuevas tecnologías que puedes investigar en I+D: {names}",
  "zydhpn": "Impuesto de sociedades de {year}: {tax} ({rate} del beneficio imponible), pagadero en cuatro cuotas. Se dedujeron las pérdidas de años anteriores.",
@@ -423,6 +432,80 @@
   "one": "Último aviso: si la caja no sale de los números rojos en una semana, ¡quiebra!",
   "other": "Último aviso: si la caja no sale de los números rojos en {n} semanas, ¡quiebra!"
  },
+ "1lp6z6t": "Los años 1900",
+ "bzzf3i": "Del taller a la carretera",
+ "1us992c": "El automóvil es un juguete de ricos; los caminos son puro polvo y la gasolina se vende en la farmacia. Cada marca que nace en un taller intenta sacar su primer auto a la calle.",
+ "fy8gcd": "Lanza tu primer auto al mercado",
+ "j27d6k": "Inicia un proyecto nuevo en la pantalla Proyectos.",
+ "z2f1bm": {
+  "one": "Vende en {n} estado",
+  "other": "Vende en {n} estados"
+ },
+ "1e6f6pj": "En la pantalla Mapa, busca concesionarios en los estados vecinos.",
+ "1wvbwu5": {
+  "one": "Vende {n} auto en total",
+  "other": "Vende {n} autos en total"
+ },
+ "1g81v0o": "Produce lo suficiente para cubrir la demanda; consulta la guía de precios.",
+ "i2e96c": "Los años 1910",
+ "uhlakj": "La cadena de montaje",
+ "1yx3cbk": "La producción en serie pone el automóvil al alcance del pueblo. Las grandes fábricas dejan atrás a los pequeños talleres; la Gran Guerra encarecerá el acero.",
+ "varpgo": {
+  "one": "Vende {n} auto en un año",
+  "other": "Vende {n} autos en un año"
+ },
+ "1i47mmx": "Amplía tus líneas y extiende tu red de concesionarios.",
+ "kmwjki": {
+  "one": "Sé el mayor fabricante de Estados Unidos",
+  "other": "Sé uno de los {n} mayores fabricantes de Estados Unidos"
+ },
+ "14k0eom": "Cuenta según las ventas del año pasado.",
+ "wisw8g": "Sé líder de un segmento",
+ "9209lt": "Vende al menos un octavo del segmento y más que cada uno de los rivales.",
+ "sj1k7z": "Los años 1920",
+ "1656f2j": "Los locos años veinte",
+ "sbp24c": "Carrocería cerrada, venta a plazos y un modelo nuevo cada año: el automóvil ya es una moda. En las revistas y en las pistas de carreras se habla de marcas.",
+ "kzruac": "Lanza un auto con una nota de 8,5 o más en las revistas",
+ "4i7bbf": "Prioriza lo que más les importa a los compradores del segmento y haz buenas pruebas.",
+ "n6kmyp": {
+  "one": "Sube tu reputación a {n}",
+  "other": "Sube tu reputación a {n}"
+ },
+ "1uq69c3": "Buenos autos, servicio suficiente y publicidad por encima de lo habitual.",
+ "123nean": "Gana una carrera",
+ "50p8wi": "Forma un equipo de carreras en la pantalla Empresa; compite con un auto rápido y resistente.",
+ "14mf7z2": "Los años 1930",
+ "po3p9t": "Los años de la Depresión",
+ "1vp9fb2": "La bolsa se desplomó, los bancos cerraron el grifo del crédito y la demanda de lujo desapareció. Las marcas que sigan en pie se harán con sus rivales a precio de saldo.",
+ "ccnmam": "Cierra con beneficio los cuatro años de 1930-1933",
+ "1ifq0kk": "Ajusta el precio y la producción a la demanda, y vende las líneas inactivas.",
+ "17cuj4q": "Compra un rival",
+ "wleyya": "En la pantalla Empresa hay rivales más pequeños que tú a la venta.",
+ "1e42vhx": {
+  "one": "Vende autos en {n} segmento",
+  "other": "Vende autos en {n} segmentos distintos"
+ },
+ "17cox7i": "Lanza un auto en un segmento nuevo.",
+ "4ydq2t": "Los años 1940",
+ "6wzng3": "Guerra y paz",
+ "1u5j36l": "Las fábricas trabajarán para el Ejército y no se harán autos civiles. Cuando llegue la paz, todos querrán un auto nuevo.",
+ "hgje6v": {
+  "one": "Produce {n} vehículo para el Ejército",
+  "other": "Produce {n} vehículos para el Ejército"
+ },
+ "tpjb1p": "Acepta los contratos de guerra; en la pantalla Fábrica, las líneas se asignan al Ejército.",
+ "mttdl3": "Lanza un auto nuevo en los tres primeros años de paz (1945-1947)",
+ "1qjozr1": "Ten un proyecto listo para cuando termine la guerra.",
+ "1b9wfkz": "Lanza un auto en el segmento Todoterreno",
+ "b6vm2c": "El segmento Todoterreno se abre en 1946; la experiencia con jeeps ayuda.",
+ "i968s4": "Los años 1950",
+ "11e76iq": "La edad de oro",
+ "1kchg37": "Autopistas, suburbios, pintura bicolor y aletas traseras. Estados Unidos vive sobre ruedas; los grandes se hacen aún más grandes.",
+ "17e23hg": "Un auto actual en cada segmento y líneas suficientes.",
+ "n9kzfe": "Lanza un auto con pintura bicolor",
+ "1215g3d": "En el diseño, elige un segundo color para el techo.",
+ "11qh4ik": "ahora {rank}.º",
+ "c67opq": "Objetivo de la década cumplido: {goal}. +{points} a la puntuación final.",
  "82zg6c": "La organización de ingeniería está en su nivel más alto.",
  "1xad5zb": "{name} se puede construir a partir de {year}.",
  "16gd02d": "{name} en marcha: en un proyecto puede avanzar a la vez el trabajo de hasta {span} ingenieros.",
@@ -507,6 +590,25 @@
  "1jtny6f": "Por este dinero no hay nada mejor; ahorré dos meses de sueldo para comprarlo y no me arrepiento para nada.",
  "11nsjhi": "Eso sí, el precio está por las nubes; con ese dinero se compraban dos caballos y una carreta.",
  "1ife3gz": "Ahora veo en los caminos autos más nuevos y modernos; el nuestro ya se está quedando viejo.",
+ "1b2hemt": "Nueva línea para el {model}",
+ "1widpd0": "Los compradores quieren ~{gap} autos más por semana; la línea hace ~{output} por semana.",
+ "17ejbvi": "Un auto en un segmento nuevo",
+ "1xtpmjf": "Segmentos donde no tienes autos: {classes}.",
+ "whj7": "Concesionarios en estados nuevos",
+ "9udr44": "Los estados con más compradores donde no vendes o tienes pocos concesionarios: {states}.",
+ "v0f8b": "Para {count} autos al año; ahorra ~{saving} al año en materiales.",
+ "1jrot0o": "~{span} ingenieros pueden trabajar a la vez en un proyecto (ahora ~{now}); la investigación también se acelera.",
+ "bgw2tz": "Publicidad: sube a lo habitual de la época",
+ "9csi63": {
+  "one": "Publicidad: {n} vez lo habitual",
+  "other": "Publicidad: {n} veces lo habitual"
+ },
+ "1ixp33f": "El nivel al que tiende tu reputación sube ~{points} puntos.",
+ "hce40": "Comprar {company}",
+ "1jpn8jh": {
+  "one": "Se une {n} ingeniero y sus concesionarios venden tus autos en {dealers} estados.",
+  "other": "Se unen {n} ingenieros y sus concesionarios venden tus autos en {dealers} estados."
+ },
  "dhpqqe": "Aquí ya se está buscando concesionario.",
  "1auozi6": "Primero debes vender en un estado vecino: la red crece estado por estado.",
  "57a93p": {
@@ -537,6 +639,14 @@
  },
  "wdxb6x": "No se encontró concesionario en {state}: nadie quiso vender tu marca. Si lo vuelves a intentar tendrás más contactos, y será más fácil a medida que crezca tu reputación.",
  "2qhhu2": "{company} (ex concesionario)",
+ "1l6pk62": "{decade}: {name}",
+ "10lmtna": "Comienza una nueva década. {company} entra en ella como {tier}: {score} puntos.",
+ "1v82cl": "{company} {model}",
+ "1jk4gyy": {
+  "one": "{decade} cierran el boletín con {n} de los tres objetivos cumplido.",
+  "other": "{decade} cierran el boletín con {n} de los tres objetivos cumplidos."
+ },
+ "329wha": "Objetivo de la década",
  "ze6253": "El mercado de {market}: ventas del año pasado",
  "qzjf2q": "El año pasado se vendieron {count} automóviles nuevos en el mercado de {market}. {company} se llevó el {share}.",
  "w8hcn": "El año pasado se vendieron {count} automóviles nuevos en el mercado de {market}. Nuevas firmas intentan abrirse paso.",
@@ -1898,6 +2008,19 @@
  "1hlb7ji": "La caja alcanza.",
  "1cdcolz": "La caja no alcanza y necesitarás un préstamo: ten en cuenta los intereses.",
  "19lvbyg": "Ni la caja y el crédito juntos alcanzan: reduce el proyecto, acorta las pruebas, elige troqueles más baratos o gana dinero primero con los autos que ya vendes.",
+ "5nrn0p": "{score} puntos",
+ "2rtzs4": {
+  "one": "{n} punto más para {tier}",
+  "other": "{n} puntos más para {tier}"
+ },
+ "vgp3qt": "Objetivos de la década",
+ "10o5ntu": {
+  "one": "Queda {n} año",
+  "other": "Quedan {n} años"
+ },
+ "1x7tomf": "Aceptar",
+ "553j12": "En curso",
+ "6ne2q3": "Desglose de la puntuación",
  "p7cb6n": "Cancelar",
  "xmblx4": "Ruedas, frenos, dirección",
  "nhngkr": "Interior",
@@ -2082,7 +2205,6 @@
  "15kdqkt": "Ninguna queja seria.",
  "q030ih": "Notas del gerente de ventas",
  "16kl9vo": "Estos comentarios se agregaron a tu tabla de información del segmento.",
- "1x7tomf": "Aceptar",
  "1x90ri1": "¿Por qué funciona así? {title}",
  "1sd0v09": "Entendido",
  "1mxs3wj": "<b>En el juego:</b> {text}",
@@ -2104,11 +2226,15 @@
  },
  "yl1o7o": "¿Qué dicen las revistas del {name}?",
  "1dpxutj": "Media: {avg}/10. Las revistas suelen hablar de lo que les importa a los compradores de este segmento. Se actualizó tu tabla de información del segmento ({segment}).",
+ "18mbneu": "Ir a preparación de producción",
+ "16092jh": "Ver proyecto",
+ "us8f8k": "El proyecto no pudo avanzar solo: no hay ninguna línea libre para la que encargar los troqueles. Construye una línea nueva o elige tú la línea.",
+ "5z85m3": "El proyecto no pudo avanzar solo: el dinero en caja no alcanza para los troqueles. Mira las opciones de troqueles más baratos, un préstamo o el pedido a crédito.",
+ "7tsu9z": "Este proyecto ya no avanza solo; los pasos los das tú.",
  "16uzqj": "Los ingenieros terminaron el desarrollo básico. Pulirlo un poco más mejora la confiabilidad; o puedes fabricar los prototipos y pasar a las pruebas.",
  "o08a97": "El programa de pruebas terminó. Puedes pasar a la preparación de producción: elige los proveedores de piezas y la línea de producción.",
  "jlur88": "Los troqueles y las piezas están listos. ¡Fija el precio y los mercados, y lanza el auto!",
  "e6btst": "Seguir puliendo",
- "16092jh": "Ver proyecto",
  "j9aaic": "Fabricar prototipos y probar",
  "hqi8pz": "Pasar a preparación de producción",
  "138izfn": "¡Genial!",
@@ -2221,6 +2347,19 @@
  "1qys4zz": "Terminó el año {year}",
  "1kto54u": "Beneficio",
  "fh05kg": "Abrir informe",
+ "413oxh": {
+  "one": "Se paga en ~{n} mes",
+  "other": "Se paga en ~{n} meses"
+ },
+ "1caj05n": {
+  "one": "Se paga en ~{n} año",
+  "other": "Se paga en ~{n} años"
+ },
+ "y1pvwf": "Inversiones",
+ "1q6n92r": "Tienes <b>{cash}</b> parados en caja (aparte de la reserva y un año de costos fijos). Adónde puede ir ese dinero:",
+ "6hznvg": "No hay dinero parado: la caja está por debajo de la reserva más un año de costos fijos. Aun así, estas son las opciones:",
+ "1t0jhbt": "{cost} al año",
+ "1usnya4": "Ahora no hay ninguna inversión disponible.",
  "10xkb1f": "Sede",
  "ildfbo": "Proyectos",
  "ks5aq1": "I+D",
@@ -2243,6 +2382,7 @@
  "79ylsu": "Leer el periódico (el juego se pausa)",
  "egrytk": "Cerrar el periódico",
  "1uwmjpa": "EDICIÓN EXTRAORDINARIA",
+ "dq8pfs": "UNA NUEVA DÉCADA",
  "13zptiv": "Tiempo: despejado, caminos secos",
  "n0s4im": "Últimos telegramas en el interior",
  "1anqbkq": "Vol. {vol} · N.º {no}",
@@ -2256,6 +2396,31 @@
   "other": "<b>{name} está listo</b> y lleva {n} semanas esperando el lanzamiento: mientras tanto pagas sueldos, pero no vendes autos."
  },
  "1vgbwm6": "<b>{name} está listo:</b> elige el precio y lánzalo.",
+ "ppfd21": "{name} pasó a pruebas",
+ "1kd96go": "{name}: troqueles encargados",
+ "7i29s2": "Prototipos fabricados; las pruebas siguen según lo previsto.",
+ "wm50xg": {
+  "one": "Se están preparando los troqueles del rediseño; listo para el lanzamiento en {n} semana.",
+  "other": "Se están preparando los troqueles del rediseño; listo para el lanzamiento en {n} semanas."
+ },
+ "zkj2yi": {
+  "one": "{line} · {tooling} · listo para el lanzamiento en <b>{n} semana</b>.",
+  "other": "{line} · {tooling} · listo para el lanzamiento en <b>{n} semanas</b>."
+ },
+ "1k96lpn": "{name}: desarrollo terminado",
+ "1499tji": "Los ingenieros siguen puliendo el auto hasta que pases a las pruebas.",
+ "1jwn6g5": "Pasar a pruebas",
+ "1u7v4r1": "{name}: programa de pruebas terminado",
+ "zxz2k0": "Los troqueles del rediseño se renuevan en las líneas del auto.",
+ "14ljtfz": "Siguen los troqueles: {line}, {tooling}, {cost}.",
+ "1mo4olt": "Siguen los proveedores y la línea de producción.",
+ "1yrzcas": "Llevar el rediseño a producción",
+ "73fook": "Encargar los troqueles",
+ "12dg65m": "Informe del primer mes: {name}",
+ "6wd4o7": {
+  "one": "<b>{count} autos</b> en {n} semana · {rank} en el segmento · cuota {share}",
+  "other": "<b>{count} autos</b> en {n} semanas · {rank} en el segmento · cuota {share}"
+ },
  "1bttp5n": "I+D terminada",
  "h7z6ro": "Avanzó la cola de I+D",
  "1xt7ma7": "se incorpora automáticamente a los diseños nuevos",
@@ -2438,6 +2603,9 @@
  "9hc1u4": "A partir de {year}, las carreras de autos se convierten en la vitrina de una marca.",
  "e2svqw": "Comprar un rival",
  "8zu44k": "Ahora no hay rivales a la venta: cuando haya un fabricante más pequeño que tú que esté vendiendo autos, aparecerá aquí.",
+ "7hhhsc": "Organización",
+ "1gy4658": "Bolsa",
+ "ka8yd3": "Rivales",
  "pdqzue": "Usa el dinero que ganas para hacer crecer la marca: gana fama en las carreras, compra rivales más pequeños, sal a bolsa.",
  "3ox4h1": "Máquinas, stock y caja, menos la deuda; más la capacidad de ganancia de la marca (seis veces el beneficio operativo del último año).",
  "1urhbk9": "Cuenta para la puntuación final: solo tu parte ({share}).",
@@ -2883,6 +3051,11 @@
   "one": "{name} tiene {n} año y envejece cada año; piensa en un rediseño o en una nueva generación.",
   "other": "{name} tiene {n} años y envejece cada año; piensa en un rediseño o en una nueva generación."
  },
+ "10zw6vt": "{names} están envejeciendo; piensa en un rediseño o en una nueva generación.",
+ "10c86h2": {
+  "one": "{name} ({n} año)",
+  "other": "{name} ({n} años)"
+ },
  "ycppx6": "Tus autos solo se venden en el estado de la fábrica. Busca en el mapa un concesionario en un estado vecino.",
  "1q2so0b": {
   "one": "Ahora mismo no se está buscando concesionario en ningún estado (vendes en {n} estado). Expándete a un estado nuevo desde el mapa.",
@@ -2914,6 +3087,10 @@
  "1ha2in5": "Los objetivos del consejo para {year} parecen inalcanzables ({what}). Confianza {trust}/100: último aviso.",
  "8r8245": "Los objetivos del consejo para {year} parecen inalcanzables ({what}). Confianza {trust}/100.",
  "1vi2xx1": "La cola de I+D está en espera: {tech} cuesta más de la mitad de tu caja libre (la cola nunca toca el dinero de la fábrica). Puedes iniciarla a mano o esperar a que se acumule dinero.",
+ "1biif30": {
+  "one": "I+D está parado y {n} ingeniero cobra {pay} a la semana sin hacer nada. La mayoría de los rivales ya usan estas tecnologías y tú aún no las conoces: {techs}.",
+  "other": "I+D está parado y {n} ingenieros cobran {pay} a la semana sin hacer nada. La mayoría de los rivales ya usan estas tecnologías y tú aún no las conoces: {techs}."
+ },
  "1wzg23l": "I+D está parado. La mayoría de los rivales ya usan estas tecnologías y tú aún no las conoces: {techs}.",
  "o7zghr": {
   "one": "Tu equipo de carreras corre con el {model} ({n} año, probabilidad de podio {podium}): el presupuesto se está desperdiciando. Lanza un auto más potente o reduce el equipo.",
@@ -2923,7 +3100,7 @@
   "one": "{n} ingeniero está sin trabajo ({reason}) pero cobra {pay} a la semana: inicia un proyecto nuevo o una investigación de I+D, o despídelo si hace falta.",
   "other": "{n} ingenieros están sin trabajo ({reason}) pero cobran {pay} a la semana: inicia un proyecto nuevo o una investigación de I+D, o despide a algunos si hace falta."
  },
- "omrliy": "Tienes {cash} ociosos en caja (aparte de la reserva y un año de gastos fijos). Ponlos a trabajar: monta líneas para los autos que no cubren la demanda, lanza un auto en un segmento nuevo, amplía la red de concesionarios, construye tus propias fábricas de suministros, amplía la organización de ingeniería, anuncia por encima de lo habitual (reputación) o compra a un rival.",
+ "rvavtd": "Tienes {cash} parados en caja (aparte de la reserva y un año de costos fijos). La lista de Inversiones, en Finanzas, muestra adónde puede ir ese dinero, cuánto cuesta cada opción y en cuántos años se paga.",
  "myl93f": {
   "one": "{n} ingeniero solo rinde como ~{output}: la organización no da para un equipo tan grande. {name} ({cost}) aceleraría los proyectos.",
   "other": "{n} ingenieros solo rinden como ~{output}: la organización no da para un equipo tan grande. {name} ({cost}) aceleraría los proyectos."
@@ -2936,7 +3113,6 @@
  "rlwf6z": "¡La caja está en negativo! Pide un préstamo o recorta gastos.",
  "134thrc": "Mi empresa",
  "3l951u": "Clientes",
- "ka8yd3": "Rivales",
  "edr0go": "Tecnología",
  "1jn1lo4": "Todo",
  "jc8eqg": "Noticias e informes",
@@ -2950,6 +3126,11 @@
  "50f40g": "en proyectos · habilidad {skill}",
  "mmr0av": "Pendientes",
  "tbrbxc": "Todo va bien. Deja correr el tiempo (barra espaciadora) o piensa en un proyecto nuevo.",
+ "1sietqt": "Mostrar menos",
+ "d2u6nb": {
+  "one": "{n} sugerencia más",
+  "other": "{n} sugerencias más"
+ },
  "1xkznir": "No hay proyectos activos.",
  "16j2wbc": "Nuevo proyecto",
  "u5kmg0": "Modelos a la venta",
@@ -2963,6 +3144,9 @@
  "57wta3": "Gráfico de ventas semanales por modelo",
  "gqnx2r": "Todavía no tienes modelos a la venta.",
  "1v3wtoz": "Archivo de periódicos",
+ "41vvch": "Concesionarios y servicio",
+ "uvus6g": "Mercado y publicidad",
+ "1u0qsuq": "Compradores",
  "1xahij4": "Mercado y red de concesionarios",
  "o0ln45": "reputación ±0",
  "1dxr4nw": "reputación {v}",
@@ -3203,9 +3387,6 @@
  "1o5j4fl": "Las notas se comparan con la media actual del segmento. A medida que el modelo envejece, los rivales mejoran y sus notas bajan.",
  "6bpa2n": "Revistas",
  "hhcprd": "Sin reseñas.",
- "izowxi": "Anuncio de prensa",
- "baacb1": "El anuncio del auto para los periódicos de la época: sus tres mejores cualidades y su precio. Puedes guardarlo como imagen y compartirlo.",
- "bq7dsv": "Cartas de los dueños",
  "12k1h8n": "Calidad en la calle",
  "16ly4m5": "Tiempo de pruebas",
  "16rnmvr": {
@@ -3221,6 +3402,14 @@
  "13xawf7": "Encubierto",
  "10fn6r5": "Abierto",
  "680zad": "{severity} · defecto de {area}: {defect}",
+ "izowxi": "Anuncio de prensa",
+ "baacb1": "El anuncio del auto para los periódicos de la época: sus tres mejores cualidades y su precio. Puedes guardarlo como imagen y compartirlo.",
+ "bq7dsv": "Cartas de los dueños",
+ "129d1sz": "Aún no hay cartas: los dueños escribirán a medida que se vendan autos.",
+ "k3cwq8": "Resumen",
+ "tsibtl": "¿Por qué se vende?",
+ "18gnnxj": "Auto y revistas",
+ "7yqvno": "Anuncio y cartas",
  "1no87ob": "¿Por qué estas ventas? Mercado: {segment}",
  "1tr8th6": "Los compradores sopesan cada auto según su atractivo (puntos de diseño × prioridades ocultas del segmento), su precio, la marca y su antigüedad: desde su primer año, el diseño pierde ~{slow} puntos al año por antigüedad, y a partir de los {old} años, ~{fast} puntos al año (como máximo −{max}); un rediseño borra tres cuartas partes de la antigüedad acumulada hasta ese día. Tu red de concesionarios y tu reconocimiento determinan cuántos compradores pueden ver tu auto. Total del segmento: {demand} autos/semana.",
  "1ywdimb": "Efecto del precio",
@@ -3291,6 +3480,8 @@
   "other": "El rediseño hace que el auto parezca más nuevo: hoy aparenta {now} años; justo después del rediseño, {after}. Tarda ~{n} semanas en salir a la venta; sin rediseño, para entonces aparentará {later} años."
  },
  "13xzqpg": "Lo que esperan tus ingenieros con las prioridades y el plan de pruebas actuales, sin contar el entusiasmo del lanzamiento. El veredicto final lo dan las revistas en el lanzamiento.",
+ "nvets5": "Que avance solo",
+ "1a8qae8": "Al terminar el desarrollo pasa a pruebas, y al terminar las pruebas, a la línea del auto con troqueles estándar. Solo se detiene en el lanzamiento, para que fijes el precio.",
  "19siuhf": "<b>Programa de pruebas terminado.</b> Lo siguiente: proveedores y línea de producción.",
  "1akrla8": "Programa de pruebas",
  "1js6jm1": "Las pruebas avanzan en paralelo cada semana y los defectos que encuentran se corrigen de inmediato. Si recortas semanas de pruebas, el auto sale antes, pero los defectos ocultos estallan en la calle.",

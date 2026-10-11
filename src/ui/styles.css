@@ -4856,6 +4856,7 @@ button.topbar-date {
 }
 .campaign .score-scale span {
   white-space: normal;
+  overflow-wrap: anywhere;
   line-height: 1.15;
 }
 .campaign-head {
