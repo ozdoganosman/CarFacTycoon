@@ -132,7 +132,7 @@ export function Research() {
       <LabShare />
 
       <div className="research-layout">
-        <div className="research-main">
+        <div className="research-main" data-guide="research-list">
           <div className="rfilters" role="tablist" aria-label={t('Süzgeç')}>
             {FILTERS.map((f) => (
               <button key={f.id} type="button" role="tab" aria-selected={filter === f.id} title={t(f.hint)} className={`rchip ${filter === f.id ? 'is-on' : ''}`} onClick={() => setFilter(f.id)}>
@@ -303,7 +303,7 @@ function LabShare() {
   const e = s.company.engineers;
   const share = s.company.labShare ?? 0;
   return (
-    <div className="lab-staff">
+    <div className="lab-staff" data-guide="lab-share">
       <div className="lab-staff-text">
         <b>{t('Laboratuvar: {n} mühendis', { n: labEngineers(s) })}</b>
         <span className="muted small">{t('araştırma hızı ×{speed}, aynı anda {n} konu', { speed: dec(labSpeed(s), 1), n: labSlots(s) })}</span>

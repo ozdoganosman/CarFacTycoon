@@ -128,6 +128,7 @@ export function Company() {
                 <p className="small muted">{t('Satışta araban yok: yarışacak bir araba gerekiyor.')}</p>
               )}
               <Choice
+                guide="racing-level"
                 value={r.level}
                 onChange={(v) => store.try((st) => setRacingLevel(st, v))}
                 options={RACING_LEVELS.map((l, i) => {
@@ -170,6 +171,7 @@ export function Company() {
         <RivalMovesPanel s={s} />
         {buying && (
         <Panel
+          guide="acquire"
           title={
             <>
               {t('Rakip satın al')}{' '}

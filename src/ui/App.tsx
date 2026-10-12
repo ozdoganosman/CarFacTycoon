@@ -12,6 +12,7 @@ import { ProjectNotes } from './components/ProjectNotes';
 import { ConfirmHost } from './components/ConfirmHost';
 import { LaunchReadyBanner } from './components/PauseBanner';
 import { GuideBar } from './components/GuideBar';
+import { CoachMark, LessonBar } from './components/Lessons';
 import { HQ } from './screens/HQ';
 import { Projects } from './screens/Projects';
 import { Research } from './screens/Research';
@@ -117,6 +118,7 @@ export function App() {
         <main className="main" ref={mainRef}>
           <ShareBar />
           <GuideBar />
+          <LessonBar />
           <LaunchReadyBanner />
           {body}
         </main>
@@ -129,6 +131,7 @@ export function App() {
         <ProjectNotes />
       </div>
       <NewspaperHost />
+      <CoachMark />
       <ModalHost />
       <ConfirmHost />
       {store.toast && (

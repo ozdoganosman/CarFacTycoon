@@ -59,14 +59,14 @@ export function TeamPanel({ compact }: { compact?: boolean }) {
       ) : (
         !compact && (
           <p className="small muted">
-            {t('Geliştirmede proje yok. Mühendisler Ar-Ge’de çalışır: araştırma hızı ×{speed}, {n} araştırma yeri (Ar-Ge ekranından ayrıca Ar-Ge uzmanı alınabilir).', {
+            {t('Geliştirmede proje yok. Mühendisler Ar-Ge’de çalışır: araştırma hızı ×{speed}, {n} araştırma yeri (Ar-Ge ekranında mühendislerin bir payı laboratuvara verilebilir).', {
               speed: dec(labSpeed(s), 1),
               n: labSlots(s),
             })}
           </p>
         )
       )}
-      <div className="team-actions">
+      <div className="team-actions" data-guide="hire">
         <Button kind="primary" disabled={s.company.cash < hireCost} onClick={() => hire(1)}>
           {t('+1 mühendis al')}
         </Button>

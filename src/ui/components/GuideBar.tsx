@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 import { GUIDE_STEPS, guideStep, type GuideStep } from '../../core/guide';
+import { guideLessons } from '../../core/lessons';
 import { t } from '../../i18n';
 import { tx } from '../i18n';
 import { store, useGameState } from '../store';
 import { Icon, type IconName } from './Icon';
+import { LessonChips } from './Lessons';
 import { Button } from './ui';
 
 /**
@@ -54,6 +56,7 @@ export function GuideBar() {
           </Button>
         )}
       </div>
+      <LessonChips lessons={guideLessons(s, g.kind)} />
     </div>
   );
 }
@@ -72,8 +75,12 @@ function describe(g: GuideStep, onProject: boolean, onProjects: boolean, paused:
   switch (g.kind) {
     case 'newProject':
       return onProjects
-        ? { icon: 'projects', text: tx('Arabanın sınıfını seç ve <b>Tasarıma başla</b>’ya bas: mühendisler ilk araban için sade bir tasarım hazırlar.') }
-        : { icon: 'projects', text: tx('Şirketin ilk arabasını yap: bir proje aç ve sınıfını seç.'), action: { label: t('Proje aç'), run: () => store.go({ id: 'projects' }) } };
+        ? {
+            icon: 'projects',
+            text: tx('Arabanın sınıfını seç ve <b>Tasarıma başla</b>’ya bas: mühendisler ilk araban için sade bir tasarım hazırlar.'),
+            action: { label: t('Göster'), run: () => store.point({ place: { id: 'projects' }, target: 'start-project' }) },
+          }
+        : { icon: 'projects', text: tx('Şirketin ilk arabasını yap: bir proje aç ve sınıfını seç.'), action: { label: t('Proje aç'), run: () => store.point({ place: { id: 'projects' }, target: 'start-project' }) } };
     case 'design':
       return {
         icon: 'projects',
@@ -117,16 +124,5 @@ function describe(g: GuideStep, onProject: boolean, onProjects: boolean, paused:
 
 /** Open the project and bring the button to press into view, with a short pulse. */
 function pointAt(projectId: string, target: string) {
-  const sc = store.screen;
-  if (!(sc.id === 'project' && sc.projectId === projectId)) store.go({ id: 'project', projectId });
-  // After the screen has drawn.
-  setTimeout(() => {
-    const el = document.querySelector<HTMLElement>(`[data-guide="${target}"]`);
-    if (!el) return;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    el.classList.remove('guide-pulse');
-    void el.offsetWidth;
-    el.classList.add('guide-pulse');
-    setTimeout(() => el.classList.remove('guide-pulse'), 2600);
-  }, 80);
+  store.point({ place: { id: 'project', projectId }, target });
 }

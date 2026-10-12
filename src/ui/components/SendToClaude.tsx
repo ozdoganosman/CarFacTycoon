@@ -192,7 +192,7 @@ export function SendToClaude() {
 
   return (
     <>
-      <button type="button" className="nav-item nav-claude" onClick={() => setOpen(true)} title={statusText(st, kind)}>
+      <button type="button" className="nav-item nav-claude" data-guide="feedback" onClick={() => setOpen(true)} title={statusText(st, kind)}>
         <span className="nav-icon" aria-hidden>
           <Icon name="envelope" size={20} />
         </span>

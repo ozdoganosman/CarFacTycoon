@@ -58,7 +58,7 @@ export function TopBar() {
           <b>{Math.round(s.company.reputation)}</b>
         </div>
       </div>
-      <div className="speed" role="group" aria-label={t('Oyun hızı')}>
+      <div className="speed" role="group" aria-label={t('Oyun hızı')} data-guide="speed">
         {SPEEDS.map((x) => (
           <button
             key={x.s}

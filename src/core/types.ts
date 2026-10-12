@@ -724,7 +724,16 @@ export interface GameState {
     difficulty?: DifficultyId;
     /** The way to the first car is guided and the menu opens screen by screen (core/guide.ts); new games only. */
     guided?: boolean;
+    /** The master's notebook offers its lessons (core/lessons.ts); unset: yes. */
+    lessons?: boolean;
   };
+  /**
+   * What the player has used, by kind (the part of a decision's key before ':', or a mark the screens
+   * leave, like a tab opened): the week it was last used. Lessons read it (core/lessons.ts).
+   */
+  used?: Record<string, number>;
+  /** The master's notebook: lessons done (id → week), skipped, the one on offer and when the last one ended. */
+  lessons?: { done: Record<string, number>; skipped: string[]; active?: string; lastWeek?: number };
   /** Level of the engineering organisation (data/investments.ts ENGINEERING_LEVELS); unset: the workshop bench. */
   engineering?: number;
   /** The company's own supplier plants and the cars a year each can supply (data/investments.ts SUPPLIER_PLANTS). */

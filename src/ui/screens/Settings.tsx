@@ -7,6 +7,7 @@ import { AdSettings } from '../components/Sponsor';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { ads } from '../ads';
 import { hasKeyboard } from '../device';
+import { lessonsOn, setLessonsOn } from '../../core/lessons';
 import { t, tc } from '../../i18n';
 
 type Theme = 'system' | 'light' | 'dark';
@@ -65,6 +66,7 @@ export function Settings() {
       </Panel>
       <Panel title={t('Oynanış')}>
         <Toggle
+          guide="engineer-mode"
           checked={s.settings.engineerMode}
           onChange={(v) => store.act((st) => A.setEngineerMode(st, v))}
           label={t('Mühendis modu')}
@@ -85,6 +87,12 @@ export function Settings() {
           onChange={(v) => store.act((st) => A.setAutoPauseCards(st, v))}
           label={t('Yeni teknoloji kartlarını göster')}
           sub={t('Yeni bir teknoloji açıldığında “Neden böyle çalışıyor?” kartı açılır ve oyun durur.')}
+        />
+        <Toggle
+          checked={lessonsOn(s)}
+          onChange={(v) => store.act((st) => setLessonsOn(st, v))}
+          label={t('Usta defteri dersleri')}
+          sub={t('Açıkken oyunun her özelliği için sırası gelince bir ders, ekranın üstünde önerilir. Defter Merkez’de.')}
         />
         {hasKeyboard() && <p className="muted small">{t('Kısayollar: boşluk = duraklat/devam, 1-2-3 = hız.')}</p>}
       </Panel>
@@ -107,7 +115,7 @@ export function Settings() {
           <AdSettings />
         </Panel>
       )}
-      <Panel title={t('Kayıt')}>
+      <Panel title={t('Kayıt')} guide="save-code">
         <p className="muted small">
           {t(
             'Oyun her çeyrek otomatik olarak bu tarayıcıya kaydedilir. Başka bir cihazda devam etmek için kayıt kodunu kopyala ve orada yapıştırıp yükle ya da bir kayıt dosyası seç.',

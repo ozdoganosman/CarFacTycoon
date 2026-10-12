@@ -184,7 +184,7 @@ export function Projects() {
     <ol className="steps">
       <li>
         {tx(
-          '<b>Tasarım ve geliştirme:</b> Aracı kimin için yaptığına sen karar ver: modülleri seç, mühendislerini ata, mühendis tahmininden iki öncelik seç (performans, verim, konfor, güvenlik, maliyet, kalite…). Öncelikler aracı gerçekten değiştirir.',
+          '<b>Tasarım ve geliştirme:</b> Aracı kimin için yaptığına sen karar ver: modülleri seç, mühendis tahmininden iki öncelik seç (performans, verim, konfor, güvenlik, maliyet, kalite…). Öncelikler aracı gerçekten değiştirir.',
         )}
       </li>
       <li>
@@ -199,7 +199,7 @@ export function Projects() {
       <div className="screen-head">
         <h1>{t('Projeler')}</h1>
         {!creating && (
-          <Button kind="primary" onClick={() => setCreating(true)}>
+          <Button kind="primary" guide="new-project" onClick={() => setCreating(true)}>
             + {t('Yeni proje')}
           </Button>
         )}
@@ -229,7 +229,7 @@ export function Projects() {
             </div>
             <p>{t('Çizim masası boş. Sıradaki arabanı tasarla: yeni bir sınıf, bir yeni kuşak ya da bir makyaj.')}</p>
             {!creating && (
-              <Button kind="primary" onClick={() => setCreating(true)}>
+              <Button kind="primary" guide="new-project" onClick={() => setCreating(true)}>
                 + {t('Yeni proje')}
               </Button>
             )}

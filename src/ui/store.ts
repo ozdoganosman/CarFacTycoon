@@ -5,6 +5,7 @@ import { syncTick } from './claudeLink';
 import { observeGame, trackScreen } from './analytics';
 import { isBlockingModal, recordError } from '../core/util';
 import { areaSeen, updateAreas, type Area } from '../core/guide';
+import { LESSON_CHAPTERS, checkLessons, chapterProgress, lessonById, lessonProgress, noteUse, startLesson, type LessonAt } from '../core/lessons';
 import { list, msg, t } from '../i18n';
 import type { ModalItem } from '../core/types';
 
@@ -35,9 +36,9 @@ export type Screen =
   | { id: 'hq' }
   | { id: 'projects' }
   | { id: 'research' }
-  | { id: 'project'; projectId: string }
+  | { id: 'project'; projectId: string; tab?: string }
   | { id: 'models' }
-  | { id: 'model'; modelId: string }
+  | { id: 'model'; modelId: string; tab?: string }
   | { id: 'factory' }
   | { id: 'markets'; tab?: string }
   | { id: 'finance' }
@@ -55,6 +56,11 @@ class GameStore {
   question: { title: string; body: string; confirm: string; danger?: boolean; resolve: (ok: boolean) => void } | null = null;
   /** The newspaper issue open in the reader (not part of the saved game). */
   newsOpen: string | null = null;
+  /**
+   * A bubble beside a control, saying what to do there (a lesson, or a step of the first-car guide).
+   * `meet`: the lesson only shows the place; reading it is enough. Not part of the saved game.
+   */
+  coach: { target?: string; title?: string; text: string; lessonId?: string; meet?: boolean; screen: Screen['id']; id: number } | null = null;
   version = 0;
   private listeners = new Set<() => void>();
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -97,12 +103,65 @@ class GameStore {
       const fresh = updateAreas(this.state);
       areaSeen(this.state, this.screen.id);
       if (fresh.length) this.setToast(t('Menüde yeni: {names}', { names: list(fresh.map((a) => t(AREA_LABEL[a]))) }), 'good');
+      this.lessons(this.state);
     }
     this.version++;
     for (const l of this.listeners) l();
     // Only once the player has agreed to share (see analytics.ts); otherwise these return at once.
     trackScreen(this.state ? this.screen.id : 'start');
     observeGame(this.state);
+  }
+
+  /** Lessons the game shows done: a word for the one the player was doing, and for a chapter finished. */
+  private lessons(s: GameState) {
+    const complete = (id: number) => {
+      const p = chapterProgress(s, id);
+      return p.done === p.total;
+    };
+    const before = LESSON_CHAPTERS.filter((c) => complete(c.id)).map((c) => c.id);
+    const fresh = checkLessons(s);
+    if (!fresh.length) return;
+    if (this.coach?.lessonId && fresh.includes(this.coach.lessonId)) this.coach = null;
+    // An older save counts many at once: that is no news.
+    if (fresh.length > 3) return;
+    const chapter = LESSON_CHAPTERS.find((c) => !before.includes(c.id) && complete(c.id));
+    if (chapter) {
+      this.setToast(t('Usta defteri: “{chapter}” bölümü tamam. Unvanın: {tier}.', { chapter: t(chapter.name), tier: t(lessonProgress(s).tier) }), 'good');
+      return;
+    }
+    const shown = fresh.map((id) => lessonById(id)!).filter((l) => !l.passive);
+    if (shown.length) this.setToast(t('Ders tamam: {title}', { title: t(shown[shown.length - 1].title) }), 'good');
+  }
+
+  /**
+   * Take the player to a place and point at a control there: the screen (and tab) first, then, once it
+   * has drawn, the control scrolled into view with a pulse and the bubble beside it.
+   */
+  point(at: LessonAt, bubble?: { title?: string; text: string; lessonId?: string; meet?: boolean }) {
+    const sc = this.screen;
+    const place = at.place as Screen;
+    const same = sc.id === place.id && JSON.stringify(sc) === JSON.stringify(place);
+    if (!same) this.go(place);
+    if (bubble?.lessonId && this.state) startLesson(this.state, bubble.lessonId);
+    this.coach = bubble ? { ...bubble, target: at.target, screen: place.id, id: Date.now() } : null;
+    this.notify();
+    // After the screen (and a tab) has drawn.
+    setTimeout(() => {
+      const el = findTarget(at.target);
+      if (!el) return;
+      // A tall panel shows from its top (its title), a button sits in the middle of the screen.
+      el.scrollIntoView({ behavior: 'smooth', block: el.offsetHeight > window.innerHeight * 0.5 ? 'start' : 'center' });
+      el.classList.remove('guide-pulse');
+      void el.offsetWidth;
+      el.classList.add('guide-pulse');
+      setTimeout(() => el.classList.remove('guide-pulse'), 2600);
+      this.notify();
+    }, 120);
+  }
+
+  closeCoach() {
+    this.coach = null;
+    this.notify();
   }
 
   start(opts: NewGameOptions) {
@@ -202,6 +261,8 @@ class GameStore {
 
   go(screen: Screen) {
     this.screen = screen;
+    // The bubble belongs to the screen it points at.
+    if (this.coach && this.coach.screen !== screen.id) this.coach = null;
     this.notify();
   }
 
@@ -224,6 +285,7 @@ class GameStore {
 
   /** The player's own choice of speed (also cancels a pending auto-resume). */
   setSpeed(speed: Speed) {
+    if (speed === 3 && this.state) noteUse(this.state, 'speed3');
     this.resumeSpeed = null;
     this.newsResume = null;
     this.run(speed);
@@ -290,6 +352,18 @@ class GameStore {
 }
 
 export const store = new GameStore();
+
+/** The first control on screen among 'a|b|c' (data-guide), or none. */
+export function findTarget(target?: string): HTMLElement | null {
+  if (!target || typeof document === 'undefined') return null;
+  for (const id of target.split('|')) {
+    for (const el of document.querySelectorAll<HTMLElement>(`[data-guide="${id}"]`)) {
+      const r = el.getBoundingClientRect();
+      if (r.width > 0 || r.height > 0) return el;
+    }
+  }
+  return null;
+}
 
 /** Re-render on every store change; returns the (mutable) game state. */
 export function useGame(): { state: GameState | null; version: number } {

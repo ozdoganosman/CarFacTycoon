@@ -291,6 +291,7 @@ export function setProjectPaint(s: GameState, pid: string, paint?: string, roof?
   const bad = paintAllowed(s, paint, roof);
   if (bad) return fail(bad);
   p.design = { ...p.design, paint, roof };
+  decide(s, 'paint:' + pid, `${p.name}: boya ${paint ?? '-'}${roof ? ` / tavan ${roof}` : ''}`);
   return ok;
 }
 
@@ -401,7 +402,7 @@ export function setTestPlan(s: GameState, pid: string, test: TestId, weeks: numb
   const def = TESTS.find((x) => x.id === test)!;
   if (def.year > yearFloat(s.week)) return fail(t('{test} henüz yapılamıyor.', { test: t(def.name) }));
   p.tests[test].planned = Math.max(p.tests[test].done, Math.round(weeks));
-  decide(s, 'tests:' + pid, `${p.name}: test planı ${TESTS.map((t) => `${t.id} ${p.tests[t.id].planned}hf`).join(', ')}`);
+  decide(s, 'testplan:' + pid, `${p.name}: test planı ${TESTS.map((t) => `${t.id} ${p.tests[t.id].planned}hf`).join(', ')}`);
   return ok;
 }
 
@@ -706,7 +707,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
       kind: 'unlock',
       title: t('Yeni imkânlar açıldı'),
       body:
-        t('Bayi ağı: Arabaların şimdilik yalnızca {state} eyaletinde satılıyor. Pazarlar ekranındaki haritadan komşu eyaletlerde bayi arayabilirsin; eyalet dışına giden her araba için demiryolu nakliyesi ödersin, yoldaki arabaların için de servis gerekir.', {
+        t('Bayi ağı: Arabaların şimdilik yalnızca {state} eyaletinde satılıyor. Harita ekranından komşu eyaletlerde bayi arayabilirsin; eyalet dışına giden her araba için demiryolu nakliyesi ödersin, yoldaki arabaların için de servis gerekir.', {
           state: stateDef(homeState(s)).name,
         }) +
         '\n\n' +
@@ -784,6 +785,13 @@ export function setModelPrice(s: GameState, id: string, price: number) {
       'warn',
     );
   }
+}
+
+/** Let a car's price follow its class (inflation and the class's own moves) by itself. */
+export function setModelIndexPrice(s: GameState, id: string, on: boolean) {
+  const m = model(s, id);
+  m.indexPrice = on;
+  decide(s, 'index:' + id, `${m.name}: fiyat sınıfa endeksli ${on ? 'evet' : 'hayır'}`);
 }
 
 export function setProductionRate(s: GameState, id: string, rate: number) {
@@ -1005,7 +1013,9 @@ export function setModelAutoCapacity(s: GameState, id: string, on: boolean) {
 
 export function setLineMilitary(s: GameState, lineId: string, military: boolean): ActionResult {
   if (military && !((s.flags.militaryUntil ?? 0) > yearFloat(s.week))) return fail(t('Aktif bir askeri sözleşme yok.'));
-  s.lines.find((l) => l.id === lineId)!.military = military;
+  const line = s.lines.find((l) => l.id === lineId)!;
+  line.military = military;
+  decide(s, 'military:' + lineId, `${line.name}: askeri üretim ${military ? 'açık' : 'kapalı'}`);
   return ok;
 }
 
@@ -1045,7 +1055,7 @@ export function marketResearch(s: GameState, segment: SegmentId): ActionResult {
   const k = s.knowledge[segment];
   for (const key of Object.keys(segmentDef(segment).weights) as (keyof typeof k)[]) k[key] = 2;
   log(s, t('{segment} pazar araştırması tamamlandı.', { segment: t(segmentDef(segment).name) }), 'good');
-  decide(s, 'research', `Pazar araştırması (${money(cost)})`);
+  decide(s, 'market:' + segment, `Pazar araştırması: ${segment} (${money(cost)})`);
   return ok;
 }
 

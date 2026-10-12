@@ -24,6 +24,7 @@ import { TOOLING, toolingDef } from '../../data/tooling';
 import type { ComponentKey, GameState, MarketId, Project, ProjectPhase, StageId, TestId, ToolingTier } from '../../core/types';
 import { lower, msg, t } from '../../i18n';
 import { store, useGameState } from '../store';
+import { noteUse } from '../../core/lessons';
 import { cars, dec, money, num, pct as percent, pctOf, recentProfit } from '../format';
 import { inYear } from '../format';
 import { tx } from '../i18n';
@@ -208,7 +209,7 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
     return v < 0 ? `−${percent(-v / 100, 0)}` : `+${percent(v / 100, 0)}`;
   };
   return (
-    <div className="price-guide">
+    <div className="price-guide" data-guide="price-guide">
       <h4>{t('Fiyat rehberi')}</h4>
       {rivalPrices.length > 0 && (
         <p className="small">
@@ -265,7 +266,14 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
             return (
               <tr key={pr} className={Math.abs(pr - price) < 5 ? 'is-mine' : ''}>
                 <td>
-                  <button type="button" className="link-btn" onClick={() => setPrice(pr)}>
+                  <button
+                    type="button"
+                    className="link-btn"
+                    onClick={() => {
+                      setPrice(pr);
+                      store.act((st) => noteUse(st, 'priceGuide'));
+                    }}
+                  >
                     {money(pr)}
                   </button>{' '}
                   <span className="muted small">
@@ -368,6 +376,7 @@ function AutoSteps({ p }: { p: Project }) {
   return (
     <div className="auto-steps">
       <Toggle
+        guide="auto"
         checked={!!p.auto}
         onChange={(v) => store.try((st) => setProjectAuto(st, p.id, v))}
         label={t('Kendiliğinden ilerlesin')}
@@ -413,7 +422,7 @@ function Testing({ p }: { p: Project }) {
   const weeklyCost = TESTS.filter((t) => p.tests[t.id].done < p.tests[t.id].planned).reduce((a, t) => a + weekCost(t), 0);
   return (
     <div className="grid-2 wide-left">
-      <Panel title={t('Test programı')}>
+      <Panel title={t('Test programı')} guide="test-plan">
         <BudgetLine b={launchBudget(s, p)} />
         <p className="muted small">
           {t('Testler her hafta paralel ilerler ve bulunan kusurlar hemen giderilir. Test haftalarını azaltırsan araç daha erken çıkar ama gizli kusurlar sahada patlar.')}
@@ -608,7 +617,7 @@ function Production({ p }: { p: Project }) {
         </div>
       </div>
       <div className="grid-2">
-        <Panel title={t('1 · Parçalar: yap ya da al')}>
+        <Panel title={t('1 · Parçalar: yap ya da al')} guide="parts">
           {!g.suppliers ? (
             <p className="muted">
               {t(

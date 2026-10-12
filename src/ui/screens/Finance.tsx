@@ -34,7 +34,7 @@ export function Finance() {
         <Stat label={t('Son 52 hafta faaliyet kârı')} value={signedMoney(operating)} tone={operating < 0 ? 'bad' : 'good'} />
       </div>
       <MoneyUses />
-      <Panel title={t('Banka')}>
+      <Panel title={t('Banka')} guide="bank">
         <div className="price-row">
           <NumberInput label={t('Tutar')} prefix="$" value={loan} min={0} step={1000} onChange={setLoan} />
           <Button kind="primary" onClick={() => store.try((st) => A.takeLoan(st, loan), t('Kredi alındı'))}>

@@ -503,7 +503,7 @@ function Stall({ s, reason, projectId }: { s: GameState; reason: Extract<ModalIt
             { name: p?.name ?? t('Proje'), n: weeks },
           )}
         </p>
-        <p>{tx('Tasarımı bitir ve <b>Geliştirmeyi başlat</b>’a bas. Odak dağılımı geliştirme sırasında da değiştirilebilir.')}</p>
+        <p>{tx('Tasarımı bitir ve <b>Geliştirmeyi başlat</b>’a bas. Öncelikler geliştirme sırasında da değiştirilebilir.')}</p>
         {newest && age >= 3 && <p className="muted small">{t('Bu arada satıştaki en yeni araban {name} {n} yaşında.', { name: newest.name, n: age })}</p>}
       </Modal>
     );

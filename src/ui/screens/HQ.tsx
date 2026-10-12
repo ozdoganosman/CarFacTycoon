@@ -27,6 +27,7 @@ import { engineeringCost, nextEngineering, ownsPlant, plantCoverage, plantStep, 
 import { adBrandTerm, adNorm } from '../../core/advertising';
 import { FactoryYard } from '../viz/FactoryYard';
 import { CampaignPanel } from '../components/Campaign';
+import { LessonBook } from '../components/Lessons';
 import { guideStep } from '../../core/guide';
 import { SUPPLIER_PLANTS } from '../../data/investments';
 import { t, msg, list } from '../../i18n';
@@ -503,6 +504,8 @@ export function HQ() {
           )}
         </Panel>
         <TeamPanel compact />
+        {/* The master's notebook (core/lessons.ts), once the guided first car is out. */}
+        {!guideStep(s) && <LessonBook />}
         </div>
       </div>
 

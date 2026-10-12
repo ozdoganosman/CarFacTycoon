@@ -6,7 +6,7 @@ import { rand } from './rng';
 import { boardVeto } from './shares';
 import { weekOfYear, yearFloat, yearOf } from './time';
 import type { CarModel, GameState, MarketId } from './types';
-import { clamp, log, money, spend } from './util';
+import { clamp, decide, log, money, spend } from './util';
 import { msg, t } from '../i18n';
 
 // A racing team: money that buys fame. Each season the team's best car and
@@ -189,6 +189,7 @@ export function setRacingLevel(s: GameState, level: number): { ok: boolean; erro
   const veto = next > s.racing.level ? boardVeto(s) : undefined;
   if (veto) return { ok: false, error: veto };
   s.racing.level = next;
+  decide(s, 'racing', `Yarış seviyesi ${next}`);
   log(
     s,
     s.racing.level

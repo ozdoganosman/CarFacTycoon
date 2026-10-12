@@ -32,11 +32,21 @@ export function areaOpen(s: GameState, a: Area): boolean {
   return !guided(s) || (s.opened ?? []).includes(a) || areasDue(s).includes(a);
 }
 
-/** Open what has become due; returns the areas opened just now (shown as new until visited). */
+/**
+ * Open what has become due; returns the areas opened just now (shown as new until visited). The rest
+ * (the map and the company) open with the first launch, marked new too; a game that turned the guide
+ * off, or an older save, has everything open and nothing new.
+ */
 export function updateAreas(s: GameState): Area[] {
-  if (!guided(s)) return [];
+  if (s.settings.guided !== true) return [];
   const opened = (s.opened ??= []);
   const fresh = areasDue(s).filter((a) => !opened.includes(a));
+  // A save from before this was added, long past its first car: open them without a fuss.
+  const launched = s.models.reduce((w, m) => Math.min(w, m.launchWeek), Infinity);
+  if (fresh.length && s.week - launched > 26) {
+    opened.push(...fresh);
+    return [];
+  }
   if (fresh.length) {
     opened.push(...fresh);
     (s.openedNew ??= []).push(...fresh);

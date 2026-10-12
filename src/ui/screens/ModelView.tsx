@@ -55,8 +55,11 @@ export function ModelView({ modelId }: { modelId: string }) {
   const paint = modelPaint(s, m);
   // The page in four tabs, so a phone does not scroll through six screens of it.
   const tabs = MODEL_TABS.filter((x) => active || x.id === 'summary' || x.id === 'car');
-  const [tab, setTab] = useState<ModelTab>('summary');
-  useEffect(() => setTab('summary'), [modelId]);
+  // A lesson (or a link) can ask for a tab.
+  const sc = store.screen;
+  const asked = sc.id === 'model' && sc.modelId === modelId && MODEL_TABS.some((x) => x.id === sc.tab) ? (sc.tab as ModelTab) : undefined;
+  const [tab, setTab] = useState<ModelTab>(asked ?? 'summary');
+  useEffect(() => setTab(asked ?? 'summary'), [modelId, asked]);
 
   return (
     <div className="screen">
@@ -74,7 +77,7 @@ export function ModelView({ modelId }: { modelId: string }) {
           </p>
         </div>
         {active && (
-          <div className="head-actions">
+          <div className="head-actions" data-guide="refresh">
             <Button
               disabled={hasFacelift}
               title={t('Kısa bir proje: tasarım, donanım ve ayar güncellemesi')}
@@ -100,6 +103,7 @@ export function ModelView({ modelId }: { modelId: string }) {
             </Button>
             <Button
               kind="danger"
+              guide="retire"
               onClick={async () => {
                 const ok = await store.ask({
                   title: t('{model} üretimden kaldırılsın mı?', { model: m.name }),
@@ -226,7 +230,7 @@ export function ModelView({ modelId }: { modelId: string }) {
         </Panel>
 
         {active ? (
-          <Panel title={t('Fiyat ve pazarlar')}>
+          <Panel title={t('Fiyat ve pazarlar')} guide="model-price">
             <div className="price-row">
               <NumberInput label={t('Fabrika çıkış fiyatı')} prefix="$" value={draftPrice} min={1} step={10} onChange={setDraftPrice} />
               <Button kind="primary" small onClick={() => store.act((st) => A.setModelPrice(st, m.id, draftPrice))}>
@@ -257,7 +261,7 @@ export function ModelView({ modelId }: { modelId: string }) {
             )}
             <Toggle
               checked={m.indexPrice}
-              onChange={(v) => store.act(() => void (m.indexPrice = v))}
+              onChange={(v) => store.act((st) => A.setModelIndexPrice(st, m.id, v))}
               label={t('Fiyatı sınıfa endeksle')}
               info={t('Açıkken fiyat, sınıfın tipik fiyatıyla birlikte değişir: enflasyon, incelen kâr payları ve ucuzlayan seri üretim dahil.')}
             />
@@ -376,7 +380,9 @@ export function ModelView({ modelId }: { modelId: string }) {
               </>
             }
           >
-            <AdPoster s={s} m={m} />
+            <div data-guide="poster">
+              <AdPoster s={s} m={m} />
+            </div>
           </Panel>
           <Panel title={t('Müşteri mektupları')}>
             {m.unitsSold > 0 ? <OwnerLetters s={s} m={m} /> : <Empty>{t('Henüz mektup yok: araba satıldıkça sahipleri yazar.')}</Empty>}
@@ -406,6 +412,7 @@ function Competition({ modelId }: { modelId: string }) {
   const mine = rows.find((o) => o.id === m.id);
   return (
     <Panel
+      guide="competition"
       title={
         <>
           {t('Neden bu kadar satıyor? {segment} pazarı', { segment: t(segmentDef(m.segment).name) })}{' '}
