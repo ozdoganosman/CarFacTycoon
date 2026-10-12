@@ -2,7 +2,7 @@ import { CARDS } from '../data/cards';
 import { costIndex, corporateTaxRate, engineerSalary, overhead, creditTerms, DEALER_COMMISSION } from '../data/economy';
 import { pctWith } from './turkish';
 import { EVENTS } from '../data/events';
-import { MARKETS, marketScale } from '../data/markets';
+import { MARKETS } from '../data/markets';
 import { SEGMENTS } from '../data/segments';
 import { difficultyDef, type DifficultyId } from '../data/difficulty';
 import { toolingDef } from '../data/tooling';
@@ -22,7 +22,7 @@ import { adBrandTerm, followAdNorm } from './advertising';
 import { engineeringUpkeep, investmentsValue, plantCut, teamSpan } from './investments';
 import { eraReference } from './scoring';
 import { allTech, techName } from './techtree';
-import { knownKnowhow, labSpeed, noteResearch, pumpResearchQueue, researchDef, researcherSalary, startingKnowledge } from './research';
+import { designEngineers, knownKnowhow, labSpeed, noteResearch, pumpResearchQueue, researchDef, startingKnowledge } from './research';
 import { chapterIssue, checkBoom, publish, techIssue } from './news';
 import { GOAL_POINTS, checkGoals, goalsMet, openChapter } from './goals';
 import { racingWeek } from './racing';
@@ -68,7 +68,7 @@ export function newGame(opts: NewGameOptions): GameState {
   for (const m of MARKETS) {
     // The American market only: the factory sells in its own state first (see network.ts).
     // Advertising follows the era's usual for the company's size until the player sets it (core/advertising.ts).
-    markets[m.id] = { unlocked: m.id === 'usa', dealerLevel: 0, awareness: m.id === 'usa' ? 0.15 : 0, adBudget: 0, adLevel: m.id === 'usa' ? 1 : undefined };
+    markets[m.id] = { awareness: m.id === 'usa' ? 0.15 : 0, adBudget: 0, adLevel: m.id === 'usa' ? 1 : undefined };
   }
   const knowledge = {} as GameState['knowledge'];
   for (const s of SEGMENTS) knowledge[s.id] = {};
@@ -228,7 +228,8 @@ export function rescueLoan(s: GameState): number {
 /** Every engineer works: projects in development share the whole team equally. */
 export function shareEngineers(s: GameState) {
   const dev = s.projects.filter((p) => p.phase === 'development');
-  for (const p of dev) p.engineers = s.company.engineers / dev.length;
+  const team = designEngineers(s);
+  for (const p of dev) p.engineers = team / dev.length;
 }
 
 /** Unit cost of the prototypes under test, in 1900 dollars (older saves did not store it). */
@@ -323,20 +324,6 @@ export function credit(s: GameState) {
   return { ...c, limit: c.limit * difficultyDef(s.settings.difficulty).credit };
 }
 
-/** Weekly cost of the dealer network (the American one is state by state: network.ts). */
-export function dealerUpkeep(s: GameState, market: MarketId): number {
-  if (market === 'usa') return networkWeekly(s);
-  const lvl = s.markets[market].dealerLevel;
-  if (lvl <= 0) return 0;
-  const yf = yearFloat(s.week);
-  return 12 * Math.pow(lvl, 1.3) * marketScale(market, yf) * costIndex(yf);
-}
-
-export function dealerUpgradeCost(s: GameState, market: MarketId): number {
-  const yf = yearFloat(s.week);
-  const next = s.markets[market].dealerLevel + 1;
-  return 800 * Math.pow(next, 1.6) * marketScale(market, yf) * costIndex(yf);
-}
 
 function modelFieldUnits(model: CarModel, weeks: number): number {
   let n = 0;
@@ -534,6 +521,14 @@ function checkStall(s: GameState) {
   if (s.projects.length) return;
   // While the lines work for the army there is no civilian car to bring out.
   if ((s.flags.militaryUntil ?? 0) > yearFloat(s.week)) return;
+  // The first car is out and nothing follows it: once, a quarter after the launch, while there is
+  // still money to start the next one (the warning below comes only when the car is four years old).
+  const first = s.models.length === 1 ? s.models[0] : undefined;
+  if (first?.status === 'active' && s.week - first.launchWeek >= 13 && !s.flags.stallNext) {
+    s.flags.stallNext = s.week;
+    pushModal(s, { kind: 'stall', reason: 'next' });
+    return;
+  }
   const active = s.models.filter((m) => m.status === 'active');
   const newest = active.length ? Math.max(...active.map((m) => m.refreshWeek)) : -1;
   const aging = active.length ? s.week - newest >= 4 * 52 : s.week >= 13;
@@ -564,7 +559,7 @@ function payCorporateTax(s: GameState, year: number, taxable: number) {
   }
   const base = Math.max(0, taxable - carry);
   s.company.lossCarry = Math.max(0, carry - taxable);
-  const rate = corporateTaxRate(year, s.company.hq);
+  const rate = corporateTaxRate(year);
   const tax = base * rate;
   if (tax < 1) return;
   s.company.taxBill = { year, amount: tax };
@@ -725,9 +720,7 @@ function sell(s: GameState) {
   const demand = new Map<string, Record<MarketId, number>>();
   /** Our buyers state by state (American market). */
   const where = new Map<string, Partial<Record<StateId, number>>>();
-  const soldThisWeek = {} as Record<MarketId, number>;
   for (const market of MARKET_IDS) {
-    soldThisWeek[market] = 0;
     for (const seg of SEGMENT_IDS) {
       const sm = segmentMarket(s, market, seg);
       if (sm.demand <= 0) continue;
@@ -777,13 +770,8 @@ function sell(s: GameState) {
           h.cost += recordStateSales(s, id, sent, yf);
           noteStateSales(s, id, sent);
         }
-      } else if (m !== s.company.hq) {
-        const ship = units * (MARKETS.find((x) => x.id === m)!.shipping * costIndex(yf));
-        spend(s, ship, 'other');
-        h.cost += ship;
       }
       model.soldByMarket[m] = (model.soldByMarket[m] ?? 0) + units;
-      soldThisWeek[m] += units;
       const pk = `${year}:${m}:${model.segment}:p`;
       s.segmentSales[pk] = (s.segmentSales[pk] ?? 0) + units;
     }
@@ -794,12 +782,6 @@ function sell(s: GameState) {
     // Unsold cars cost storage and tie up money.
     const holding = model.inventory * materialUnitCost(s, model) * 0.003;
     spend(s, holding, 'other');
-  }
-  for (const m of MARKET_IDS) {
-    // The American market's awareness is the states' (network.ts).
-    if (m === 'usa') continue;
-    const ms = s.markets[m];
-    ms.awareness = clamp(ms.awareness * 0.996 + 0.0025 * Math.log1p(soldThisWeek[m]), 0, 1);
   }
 }
 
@@ -859,17 +841,16 @@ function field(s: GameState) {
 
 function fixedCosts(s: GameState) {
   const yf = yearFloat(s.week);
-  spend(s, s.company.engineers * engineerSalary(yf) + (s.company.researchers ?? 0) * researcherSalary(yf), 'salaries');
+  spend(s, s.company.engineers * engineerSalary(yf), 'salaries');
   s.company.idleSalary = (s.company.idleSalary ?? 0) + idleEngineers(s) * engineerSalary(yf);
   spend(s, overhead(yf, s.lines.length), 'other');
   // The engineering buildings: drawing office, proving ground, laboratories (core/investments.ts).
   const lab = engineeringUpkeep(s, yf);
   if (lab > 0) spend(s, lab, 'rnd');
   followAdNorm(s, yf);
-  for (const m of MARKET_IDS) {
-    spend(s, dealerUpkeep(s, m), 'dealers');
-    if (s.markets[m].adBudget > 0) spend(s, s.markets[m].adBudget, 'marketing');
-  }
+  // The dealer and service network, and the advertising (the American market only: it is the one played).
+  spend(s, networkWeekly(s, yf), 'dealers');
+  if (s.markets.usa.adBudget > 0) spend(s, s.markets.usa.adBudget, 'marketing');
   // The service shops' parts counters and repair bays (network.ts).
   const parts = partsWeekly(s, yf);
   if (parts > 0) earn(s, parts, 'parts');
@@ -877,15 +858,7 @@ function fixedCosts(s: GameState) {
 }
 
 function drift(s: GameState) {
-  const yf = yearFloat(s.week);
-  for (const m of MARKET_IDS) {
-    const ms = s.markets[m];
-    // American advertising works state by state (network.ts).
-    if (m !== 'usa' && ms.adBudget > 0) {
-      const eff = 0.004 * Math.sqrt(ms.adBudget / (50 * marketScale(m, yf) * costIndex(yf)));
-      ms.awareness = clamp(ms.awareness + eff, 0, 1);
-    }
-  }
+  // Advertising works state by state (network.ts).
   const active = s.models.filter((m) => m.status === 'active');
   for (const m of active) m.hype *= 0.975;
   if (active.length) {
@@ -945,6 +918,5 @@ export function availableSegments(s: GameState): SegmentId[] {
 /** Unlock gates for the mid-game systems. */
 export const gates = (s: GameState) => ({
   suppliers: s.company.modelsLaunched >= 1,
-  export: s.company.modelsLaunched >= 1,
   platforms: s.company.modelsLaunched >= 2,
 });

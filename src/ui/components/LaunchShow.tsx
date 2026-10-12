@@ -37,7 +37,7 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
   const [stage, setStage] = useState<Stage>('reveal');
   const [shown, setShown] = useState(0);
   const [showCrowd, setShowCrowd] = useState(false);
-  const [market, setMarket] = useState<MarketId>(m ? mainMarket(s, m) : s.company.hq);
+  const market: MarketId = m ? mainMarket(s, m) : s.company.hq;
 
   useEffect(() => {
     const timer = setTimeout(() => setShowCrowd(true), 1400);
@@ -117,15 +117,6 @@ export function LaunchShow({ s, modelId, venue, facelift }: { s: GameState; mode
 
         {stage === 'rivals' && (
           <>
-            {m.markets.length > 1 && (
-              <div className="seg-toggle">
-                {m.markets.map((mk) => (
-                  <button key={mk} type="button" className={`chip ${market === mk ? 'is-on' : ''}`} onClick={() => setMarket(mk)}>
-                    {t(MARKETS.find((x) => x.id === mk)!.name)}
-                  </button>
-                ))}
-              </div>
-            )}
             <RivalComparison s={s} modelId={m.id} market={market} />
             <div className="modal-actions">
               <Button

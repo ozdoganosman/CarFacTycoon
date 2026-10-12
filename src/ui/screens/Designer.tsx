@@ -4,7 +4,7 @@ import { enginePresets, withStrokeRatio } from '../../core/ai';
 import { DIESEL_COMPRESSION, DIESEL_YEAR, displacementCc, eraRpmCap, isDiesel, knockLimit } from '../../core/engine';
 import { newEstimate } from '../../core/estimate';
 import { engineNotes, gearboxNotes, suspensionNotes, typicalSuspBalance } from '../../core/engineNotes';
-import { classGap, knownKnowhow, knownMaxGears, researchCost, researchDef, researchWeeks, techState, unknownTech, type ClassGapItem } from '../../core/research';
+import { classGap, knownKnowhow, knownMaxGears, labEngineers, researchCost, researchDef, researchWeeks, techState, unknownTech, type ClassGapItem } from '../../core/research';
 import { effectsText, knowhowDef } from '../../data/knowhow';
 import { yearFloat } from '../../core/time';
 import { engineCurve, gearSpeeds, tractionCurves, rollingResistance } from '../../core/vehicle';
@@ -190,7 +190,7 @@ function ClassGapList({ project, platformLocked, set }: { project: Project; plat
         return (
           <>
             <span className="muted">
-              {money(researchCost(def, yf, s))} · {t('{n} hf', { n: researchWeeks(def, yf, s.company.engineers, s.company.researchers ?? 0) })}
+              {money(researchCost(def, yf, s))} · {t('{n} hf', { n: researchWeeks(def, yf, s.company.engineers, labEngineers(s)) })}
             </span>
             <Button small onClick={() => store.try((st) => A.queueResearch(st, x.id), t('{tech} sıraya eklendi', { tech: t(def.name) }))}>
               {t('+ Sıra')}

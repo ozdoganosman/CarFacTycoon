@@ -112,12 +112,10 @@ export const EVENTS: GameEventDef[] = [
     month: 7,
     title: msg('Avrupa’da savaş'),
     icon: 'swords',
-    body: (s) =>
+    body: () =>
       t('Büyük Savaş başladı. Avrupa’da sivil otomobil satışları çöktü, çelik fiyatları yükseliyor (malzeme maliyeti +%25).') +
       '\n\n' +
-      (s.company.hq === 'europe'
-        ? t('Ordu kamyon ve ambulans siparişi teklif ediyor. Kabul edersen hatların askeri üretime geçer: garantili ama sınırlı kâr.')
-        : t('Müttefik ordular Amerikan fabrikalarından kamyon ve ambulans sipariş ediyor. Kabul edersen hatların askeri üretime geçer.')),
+      t('Müttefik ordular Amerikan fabrikalarından kamyon ve ambulans sipariş ediyor. Kabul edersen hatların askeri üretime geçer.'),
     apply: (s) => {
       s.flags.materialsUntil = 1919;
     },
@@ -207,10 +205,10 @@ export const EVENTS: GameEventDef[] = [
     month: 8,
     title: msg('İkinci Dünya Savaşı'),
     icon: 'swords',
-    body: (s) =>
+    body: () =>
       t('Avrupa yeniden savaşta. Avrupa’da sivil araç satışı neredeyse duracak.') +
       '\n\n' +
-      (s.company.hq === 'europe' ? t('Hükümet fabrikanı askeri üretime çağırıyor.') : t('ABD şimdilik tarafsız; ama bu uzun sürmeyebilir.')),
+      t('ABD şimdilik tarafsız; ama bu uzun sürmeyebilir.'),
     choices: [
       {
         id: 'accept',

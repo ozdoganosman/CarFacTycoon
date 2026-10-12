@@ -7,6 +7,7 @@ import { segmentDef } from '../../data/segments';
 import { cashReport, companyValue, finalScore, idleEngineers, idleReason, modelMargins, rescueLoan, type CashReport } from '../../core/game';
 import { AREA_NAMES, SEVERITY_NAMES, defectText } from '../../core/testing';
 import { allTech, techName } from '../../core/techtree';
+import { designEngineers } from '../../core/research';
 import { yearOf as yearOfWeek } from '../../core/time';
 import { isBlockingModal } from '../../core/util';
 import type { GameState, ModalItem } from '../../core/types';
@@ -376,7 +377,7 @@ function CashFacts({ r, s }: { r: CashReport; s: GameState }) {
 }
 
 /** The company stands still: a design waiting on the desk, or no successor while the cars age. */
-function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idle' | 'polish' | 'tested' | 'tooling' | 'launch'; projectId?: string }) {
+function Stall({ s, reason, projectId }: { s: GameState; reason: Extract<ModalItem, { kind: 'stall' }>['reason']; projectId?: string }) {
   const close = () => store.act(A.dismissModal);
   const go = (to: Parameters<typeof store.go>[0]) => {
     store.keepPaused();
@@ -504,6 +505,42 @@ function Stall({ s, reason, projectId }: { s: GameState; reason: 'design' | 'idl
         </p>
         <p>{tx('Tasarımı bitir ve <b>Geliştirmeyi başlat</b>’a bas. Odak dağılımı geliştirme sırasında da değiştirilebilir.')}</p>
         {newest && age >= 3 && <p className="muted small">{t('Bu arada satıştaki en yeni araban {name} {n} yaşında.', { name: newest.name, n: age })}</p>}
+      </Modal>
+    );
+  }
+  if (reason === 'next' && newest) {
+    const crew = designEngineers(s);
+    return (
+      <Modal
+        title={t('Sıradaki arabaya şimdiden başla')}
+        icon="projects"
+        actions={
+          <>
+            <Button kind="primary" onClick={() => go({ id: 'projects' })}>
+              {t('Yeni proje başlat')}
+            </Button>
+            <Button kind="ghost" onClick={close}>
+              {t('Sonra')}
+            </Button>
+          </>
+        }
+      >
+        <p>
+          {tx('<b>{name}</b> {n} haftadır satışta ve şimdiye kadar <b>{count}</b> araç sattı.', {
+            name: newest.name,
+            n: s.week - newest.launchWeek,
+            count: num(newest.unitsSold),
+          })}
+        </p>
+        <p>{tx('Yeni bir araba bir iki yılda hazır olur. O sürede {name} eskir, rakipler yenisini çıkarır ve satışı erir: sıradakine şimdi başlarsan yerine yenisi zamanında gelir.', { name: newest.name })}</p>
+        <ul className="cash-facts">
+          <li>
+            {crew > 0
+              ? tx('Kasada <b>{cash}</b>. <b>{n}</b> mühendisin maaşı ödeniyor ama şu an hiçbiri bir araba üzerinde çalışmıyor.', { cash: money(s.company.cash), n: crew })
+              : tx('Kasada <b>{cash}</b>.', { cash: money(s.company.cash) })}
+          </li>
+        </ul>
+        <p className="muted small">{t('Bu uyarı bir kez gelir. Oyun sen devam ettirene kadar durur.')}</p>
       </Modal>
     );
   }

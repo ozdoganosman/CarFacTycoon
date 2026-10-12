@@ -2,7 +2,7 @@
  "1474961": "Perfekt ausgewuchtet",
  "1693539": "Um jede Einstellung einzeln vorzunehmen, schalte in den Einstellungen den „Ingenieursmodus“ ein.",
  "bv08ei": "Nicht genug Geld.",
- "yi7oqo": "So viele Forscher hast du nicht.",
+ "qmbbhx": "Diesen Anteil gibt es nicht.",
  "12z0hcp": "Mindestens ein Ingenieur muss bleiben.",
  "1lriiny": "Diese Klasse ist noch nicht freigeschaltet.",
  "1nt679y": "Projekt {no}",
@@ -96,10 +96,6 @@
  "kch9fc": "Kein aktiver Militärauftrag.",
  "1n6c3nh": "Diese Werkstatt hast du bereits.",
  "135m93v": "Für die Werkstatt brauchst du {cost}.",
- "qtwoer": "Händler werden Bundesstaat für Bundesstaat eröffnet: Wähle auf der Karte einen Bundesstaat und suche dort einen Händler.",
- "pmu97f": "Dieser Markt ist noch nicht offen.",
- "16x9lz1": "Das Händlernetz ist bereits auf der höchsten Stufe.",
- "ukjrzn": "Um das Händlernetz auszubauen, brauchst du {cost}.",
  "1l25fm6": "Für die Marktforschung brauchst du {cost}.",
  "gfcvjc": "Marktforschung zur Klasse {segment} abgeschlossen.",
  "1j520ux": "Die Bank leiht dir höchstens noch {amount}.",
@@ -265,8 +261,6 @@
  "hyondh": "Leicht ({kg} kg): Auch der Rest des Autos kann leichter werden.",
  "eu3oy6": "Teuer: kostet {pct} mehr als der typische Motor und erhöht die Stückkosten.",
  "lmda8l": "Günstig: kostet {pct} weniger als der typische Motor.",
- "1w34vac": "Hohe Steuer-PS in Europa ({hp}): Die Halter zahlen jedes Jahr mehr Steuern. Die Steuer richtet sich nur nach der Bohrung.",
- "1bmot1z": "Niedrige Steuer-PS in Europa ({hp}): Der lange Hub zahlt sich bei der Steuer aus.",
  "pfu6xl": "Diesel: sehr sparsam und langlebig.",
  "1y5u8wc": "Diesel: schwer, laut und niedrigdrehend; Käufer finden ihn nicht prestigeträchtig.",
  "18pmu3c": "~{l} L, ~{hp} PS",
@@ -582,11 +576,6 @@
  "1nmzjil": "Bergbauingenieur",
  "1h82dqz": "Tierarzt",
  "1bwgq2a": "Jäger",
- "1wn1ts6": "Turin",
- "1y0w8go": "Brüssel",
- "oa1837": "Wien",
- "nc44v": "München",
- "1cq0l3n": "Mailand",
  "1jkp3ee": "Einen Kummer habe ich aber: {defect}. Der Händler sagte nur „wissen wir“ und hat mich abgewimmelt.",
  "1jtny6f": "Für das Geld gibt es nichts Besseres; ich habe zwei Monatslöhne gespart, um ihn zu kaufen, und bereue es kein bisschen.",
  "11nsjhi": "Nur der Preis ist gesalzen; für das Geld bekäme man zwei Pferde und einen Wagen.",
@@ -959,7 +948,6 @@
  "1nv2zbv": "Die Kosten bleiben gleich.",
  "1hj4a8m": "Krieg in Europa",
  "132t995": "Der Große Krieg hat begonnen. In Europa ist der Verkauf ziviler Autos eingebrochen, und die Stahlpreise steigen (Materialkosten +25 %).",
- "1btoaw3": "Die Armee bietet Aufträge für Lastwagen und Sanitätswagen an. Nimmst du an, stellen deine Linien auf Militärproduktion um: garantierter, aber begrenzter Gewinn.",
  "l0hhyi": "Die alliierten Armeen bestellen Lastwagen und Sanitätswagen bei amerikanischen Fabriken. Nimmst du an, stellen deine Linien auf Militärproduktion um.",
  "12uhwo5": "Auftrag annehmen",
  "1yk9ibm": "Bis Kriegsende bauen die Linien Militärfahrzeuge (Linie für Linie umkehrbar).",
@@ -981,7 +969,6 @@
  "1926pmu": "Die Wirtschaft erholt sich langsam. Dieses Jahr bringt zwei große Neuerungen: die selbsttragende Karosserie und die Einzelradaufhängung vorn. Außerdem haben die Ingenieure mit den ersten Crashtests begonnen.",
  "11twsbs": "Zweiter Weltkrieg",
  "7eu6uu": "Europa ist wieder im Krieg. Der Verkauf ziviler Autos in Europa wird fast völlig zum Erliegen kommen.",
- "wl4jpj": "Die Regierung ruft deine Fabrik zur Militärproduktion auf.",
  "11lp81i": "Die USA sind vorerst neutral; doch das muss nicht lange so bleiben.",
  "15jwi5x": "Auf Militärproduktion umstellen",
  "c3qy9b": "Bis Kriegsende bauen die Linien Militärfahrzeuge.",
@@ -2273,8 +2260,21 @@
   "one": "Unterdessen ist dein neuestes Auto im Verkauf, {name}, schon {n} Jahr alt.",
   "other": "Unterdessen ist dein neuestes Auto im Verkauf, {name}, schon {n} Jahre alt."
  },
- "nznzvc": "Kein neues Auto in Arbeit",
+ "17820dk": "Fang jetzt mit dem nächsten Auto an",
  "mh3jfv": "Neues Projekt starten",
+ "qeq8f2": "Später",
+ "kzx20d": {
+  "one": "<b>{name}</b> ist seit {n} Woche im Handel und hat bisher <b>{count}</b> Autos verkauft.",
+  "other": "<b>{name}</b> ist seit {n} Wochen im Handel und hat bisher <b>{count}</b> Autos verkauft."
+ },
+ "h5rodw": "Ein neues Auto braucht ein bis zwei Jahre, bis es fertig ist. In der Zeit altert {name}, die Konkurrenz bringt neuere Autos und der Absatz schmilzt: Fängst du jetzt mit dem nächsten an, kommt der Nachfolger rechtzeitig.",
+ "eqfl7g": {
+  "one": "<b>{cash}</b> in der Kasse. Du bezahlst <b>{n}</b> Ingenieur, aber gerade arbeitet er an keinem Auto.",
+  "other": "<b>{cash}</b> in der Kasse. Du bezahlst <b>{n}</b> Ingenieure, aber gerade arbeitet keiner von ihnen an einem Auto."
+ },
+ "15mvlo4": "<b>{cash}</b> in der Kasse.",
+ "k5ktwz": "Diese Warnung kommt nur einmal. Das Spiel bleibt pausiert, bis du weitermachst.",
+ "nznzvc": "Kein neues Auto in Arbeit",
  "1s8jxfc": "{name}: Facelift oder neue Generation",
  "rdop88": {
   "one": "Dein neuestes Auto, <b>{name}</b>, ist {n} Jahr alt, und kein Projekt folgt ihm nach. Die Konkurrenz bringt alle vier bis sechs Jahre eine neue Generation oder ein Facelift; die Verkäufe eines alten Autos schmelzen jedes Jahr ein Stück weiter dahin.",
@@ -3658,9 +3658,9 @@
  "1fez2hd": "Kommt in den nächsten zehn Jahren.",
  "1rc7l7f": "Neue Technik kommt in der Welt auf; bevor du sie in einem Entwurf nutzen kannst, müssen deine Ingenieure sie lernen. Was du einreihst, startet von selbst, der Reihe nach.",
  "1o64tq": "Forschungsplätze",
- "vqjgxt": "Je 15 Ingenieure oder 6 Forscher können ein weiteres Thema bearbeiten.",
+ "15f5rfk": "Je 15 Ingenieure können ein Thema mehr bearbeiten; je 6 Ingenieure im Labor noch eines mehr.",
  "1th2kmz": "Forschungstempo",
- "1a8ss0b": "{engineers} Ingenieure · {researchers} Forscher",
+ "bf7f3": "{engineers} Ingenieure · {lab} im Labor",
  "19w0ij0": "Prototypen, Tests und F&E der letzten 52 Wochen",
  "ukwk4d": "Ausgaben für Forschung, Prototypen und Tests zusammen: Auch eine Firma, die gar nicht forscht, gibt Geld für Prototypen und Tests aus. Eine große Firma forscht auch im großen Stil: Ein wichtiges Thema kostet ein paar Prozent des Umsatzes.",
  "3t201w": "{share} des Umsatzes",
@@ -3695,18 +3695,21 @@
  "lw6l4x": "<b>Wirkung:</b> {effects}",
  "1rd3lyf": "Sobald erlernt, fließt es automatisch in jeden neuen Entwurf und jedes Facelift ein.",
  "uiwk7h": "Sobald erlernt, kannst du es im Entwurfsbildschirm auswählen.",
- "864o5": "{n} Forscher eingestellt",
- "1i5riws": "Forscher: {n}",
- "1izznjr": {
-  "one": "Forschungstempo ×{speed}, {n} Thema gleichzeitig · Gehälter {pay} pro Woche",
-  "other": "Forschungstempo ×{speed}, {n} Themen gleichzeitig · Gehälter {pay} pro Woche"
+ "1k4453e": {
+  "one": "Labor: {n} Ingenieur",
+  "other": "Labor: {n} Ingenieure"
  },
- "1v23cj6": {
-  "one": "Mit 4 Forschern mehr: Tempo ×{speed}, {n} Thema. Forscher forschen nur (sie entwickeln keine Autos); ihre Einstellung beschleunigt auch laufende Forschung. Einstellung {hire} pro Person, Gehalt {pay} pro Woche.",
-  "other": "Mit 4 Forschern mehr: Tempo ×{speed}, {n} Themen. Forscher forschen nur (sie entwickeln keine Autos); ihre Einstellung beschleunigt auch laufende Forschung. Einstellung {hire} pro Person, Gehalt {pay} pro Woche."
+ "13anp2x": {
+  "one": "Forschungstempo ×{speed}, {n} Thema gleichzeitig",
+  "other": "Forschungstempo ×{speed}, {n} Themen gleichzeitig"
  },
- "hlse6y": "+1 Forscher einstellen",
- "1mxtclm": "Ein Forscher ist gegangen",
+ "1mpqt3h": "Ingenieure im Labor forschen nur: Sie entwickeln keine Autos, die Projekte laufen mit den übrigen weiter. Ändert sich der Anteil, werden auch die laufenden Themen schneller oder langsamer.",
+ "195waml": "Kein Labor",
+ "1ixkicg": "{share} der Ingenieure",
+ "1lnk20s": {
+  "one": "{n} Ingenieur · Tempo ×{speed} · {slots} Themen",
+  "other": "{n} Ingenieure · Tempo ×{speed} · {slots} Themen"
+ },
  "uaf5pz": "Wird gerade erforscht",
  "o0cndl": "Deine Ingenieure erforschen gerade nichts.",
  "1q0ndpf": "Warteschlange ({n})",

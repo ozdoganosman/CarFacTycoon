@@ -3,7 +3,7 @@ import { devRate } from '../../core/development';
 import { companyWorkScale, teamSpan } from '../../core/investments';
 import { costIndex, engineerSalary } from '../../data/economy';
 import { yearFloat } from '../../core/time';
-import { classGap, gapNames, knownKnowhow, unknownTech } from '../../core/research';
+import { classGap, designEngineers, gapNames, knownKnowhow, unknownTech } from '../../core/research';
 import { budgetVerdict, launchBudget } from '../../core/budget';
 import { t } from '../../i18n';
 import { dec, money, pct } from '../format';
@@ -18,9 +18,10 @@ import { Icon } from '../components/Icon';
 export function DevBar({ project: p }: { project: Project }) {
   const s = useGameState();
   const developing = p.phase === 'development';
-  // Every engineer works: projects in development share the whole team.
+  // Every engineer outside the laboratory works: projects in development share the team.
   const others = s.projects.filter((x) => x.phase === 'development' && x.id !== p.id).length;
-  const eng = s.company.engineers / (others + 1);
+  const crew = designEngineers(s);
+  const eng = crew / (others + 1);
   const required = developing ? p.dev.required : A.requiredWork(s, p);
   const span = teamSpan(s);
   const rate = devRate(eng, s.company.skill, span);
@@ -30,7 +31,7 @@ export function DevBar({ project: p }: { project: Project }) {
   const yf = yearFloat(s.week);
   // A large organisation puts large teams to work: bigger steps.
   const faster = (span > 30 ? [10, 25, 50, 100] : [3, 6, 12])
-    .map((n) => ({ n, weeks: Math.ceil(remaining / Math.max(0.1, devRate((s.company.engineers + n) / (others + 1), s.company.skill, span))) }))
+    .map((n) => ({ n, weeks: Math.ceil(remaining / Math.max(0.1, devRate((crew + n) / (others + 1), s.company.skill, span))) }))
     .find((o) => o.weeks <= weeksNow * 0.75);
   const done = developing && p.dev.done >= p.dev.required;
   const progress = pct(required > 0 ? p.dev.done / required : 0, 0);
@@ -41,8 +42,8 @@ export function DevBar({ project: p }: { project: Project }) {
   // Said next to the button that locks the design: what most of the class has and this car would not.
   const behind = developing ? [] : classGap(s, { ...p.design, knowhow: knownKnowhow(s) }, p.segment, yf).items;
   const team = others
-    ? t('{n} mühendis {projects} projeye bölünüyor (bu projede ~{share})', { n: s.company.engineers, projects: others + 1, share: dec(eng, 1) })
-    : t('{n} mühendisin hepsi bu projede', { n: s.company.engineers });
+    ? t('{n} mühendis {projects} projeye bölünüyor (bu projede ~{share})', { n: crew, projects: others + 1, share: dec(eng, 1) })
+    : t('{n} mühendisin hepsi bu projede', { n: crew });
 
   return (
     <div className={`dev-bar ${done ? 'is-done' : ''}`}>
@@ -88,7 +89,7 @@ export function DevBar({ project: p }: { project: Project }) {
       {!done && (
         <div className="dev-bar-hire small">
           <span>
-            <b>{t('Ekip: {n} mühendis.', { n: s.company.engineers })}</b>{' '}
+            <b>{t('Ekip: {n} mühendis.', { n: crew })}</b>{' '}
             {faster && weeksNow >= 8 ? (
               <>
                 {t('+{n} mühendisle ~{weeks} hafta ({now} yerine); maaşları yılda ~{salaries}.', {

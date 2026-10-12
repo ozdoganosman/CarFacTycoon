@@ -1,7 +1,7 @@
 import { SAVE_VERSION } from './game';
 import { ensureNetwork } from './network';
 import { ensureRivals } from './rivals';
-import { ensureResearch } from './research';
+import { LAB_SHARES, ensureResearch } from './research';
 import { yearFloat } from './time';
 import type { GameState } from './types';
 import { t } from '../i18n';
@@ -39,6 +39,15 @@ function migrate(s: GameState) {
   if (!s.settings.modeChosen) s.settings.engineerMode = true;
   // The American market only, state by state (older saves had national dealer levels).
   ensureNetwork(s);
+  // Research staff hired apart became a share of the engineers in the laboratory: they join the
+  // engineers, and the nearest share keeps them there.
+  const staff = s.company.researchers ?? 0;
+  if (staff > 0) {
+    s.company.engineers += staff;
+    const share = staff / s.company.engineers;
+    s.company.labShare = LAB_SHARES.reduce<number>((a, b) => (Math.abs(b - share) < Math.abs(a - share) ? b : a), 0);
+  }
+  delete s.company.researchers;
 }
 
 /** Browser storage can be unavailable (private mode, blocked site data); never let that break the game. */

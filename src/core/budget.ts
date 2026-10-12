@@ -3,9 +3,9 @@ import { devRate } from './development';
 import { teamSpan } from './investments';
 import { engineerSalary, lineBuildWeeks, overhead } from '../data/economy';
 import { suggestedLine, workshopLineCost } from './factory';
-import { researcherSalary } from './research';
-import { COST_KEYS, credit, dealerUpkeep, materialUnitCost } from './game';
-import { MARKET_IDS } from './market';
+import { designEngineers } from './research';
+import { COST_KEYS, credit, materialUnitCost } from './game';
+import { networkWeekly } from './network';
 import { TESTS, testWeekCost } from './testing';
 import { yearFloat } from './time';
 import type { GameState, Project } from './types';
@@ -37,7 +37,7 @@ export function operatingWeekly(s: GameState): number {
   // A new company has no books yet: its salaries, rent and agents are the whole story.
   if (recent.length < 4) {
     const yf = yearFloat(s.week);
-    return -(s.company.engineers * engineerSalary(yf) + (s.company.researchers ?? 0) * researcherSalary(yf) + overhead(yf, s.lines.length) + MARKET_IDS.reduce((a, m) => a + dealerUpkeep(s, m), 0));
+    return -(s.company.engineers * engineerSalary(yf) + overhead(yf, s.lines.length) + networkWeekly(s));
   }
   const keys = COST_KEYS.filter((k) => k !== 'investment' && k !== 'rnd' && k !== 'tax');
   return recent.reduce((a, f) => a + f.revenue - keys.reduce((b, k) => b + (f[k] ?? 0), 0), 0) / recent.length;
@@ -47,7 +47,7 @@ export function operatingWeekly(s: GameState): number {
 export function devWeeksLeft(s: GameState, p: Project, extra = 0): number {
   if (p.phase !== 'design' && p.phase !== 'development') return 0;
   const sharing = s.projects.filter((x) => x.phase === 'development' && x.id !== p.id).length + 1;
-  const rate = devRate((s.company.engineers + extra) / sharing, s.company.skill, teamSpan(s));
+  const rate = devRate((designEngineers(s) + extra) / sharing, s.company.skill, teamSpan(s));
   const required = p.phase === 'design' ? requiredWork(s, p) : p.dev.required;
   return Math.ceil(Math.max(0, required - p.dev.done) / Math.max(0.1, rate));
 }

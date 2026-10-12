@@ -118,14 +118,6 @@ export function activeTax(id: MarketId, year: number): TaxRule | undefined {
   return marketDef(id).taxes.find((t) => year >= t.from && year <= t.to);
 }
 
-/** Dealer network coverage by level (share of buyers who can reach you). */
-export function dealerCoverage(level: number, isHome: boolean): number {
-  if (level <= 0) return isHome ? 0.12 : 0.02;
-  return 1 - 0.75 * Math.pow(0.8, level) - 0.03;
-}
-
-export const MAX_DEALER_LEVEL = 10;
-
 /** Scale factor for dealer costs: bigger markets need bigger networks. */
 export function marketScale(id: MarketId, year: number): number {
   return Math.max(0.5, Math.sqrt(marketSize(id, Math.max(1900, year)) / 10000));

@@ -757,8 +757,6 @@ export function ensureNetwork(s: GameState) {
   if (s.network) return;
   s.company.hq = 'usa';
   s.company.city ??= 'detroit';
-  if (s.markets.europe) s.markets.europe.unlocked = false;
-  if (s.markets.usa) s.markets.usa.unlocked = true;
   for (const m of s.models) m.markets = ['usa'];
   const yf = yearFloat(s.week);
   const level = s.markets.usa?.dealerLevel ?? 1;

@@ -2,7 +2,7 @@
  "1474961": "Perfectamente equilibrado",
  "1693539": "Para ajustar cada parámetro por separado, activa el “Modo ingeniero” en Ajustes.",
  "bv08ei": "No tienes suficiente dinero.",
- "yi7oqo": "No tienes tantos investigadores.",
+ "qmbbhx": "No existe esa proporción.",
  "12z0hcp": "Debe quedar al menos un ingeniero.",
  "1lriiny": "Este segmento aún no está disponible.",
  "1nt679y": "Proyecto {no}",
@@ -96,10 +96,6 @@
  "kch9fc": "No hay ningún contrato militar activo.",
  "1n6c3nh": "Ya tienes este taller.",
  "135m93v": "Necesitas {cost} para el taller.",
- "qtwoer": "Los concesionarios se abren estado por estado: elige un estado en el mapa y busca un concesionario.",
- "pmu97f": "Este mercado aún no está abierto.",
- "16x9lz1": "La red de concesionarios ya está al máximo nivel.",
- "ukjrzn": "Necesitas {cost} para ampliar la red de concesionarios.",
  "1l25fm6": "Necesitas {cost} para la investigación.",
  "gfcvjc": "Estudio de mercado completado: {segment}.",
  "1j520ux": "El banco te presta como máximo {amount} más.",
@@ -265,8 +261,6 @@
  "hyondh": "Ligero ({kg} kg): el resto del auto también puede aligerarse.",
  "eu3oy6": "Caro: cuesta {pct} más que el motor típico y eleva el costo unitario.",
  "lmda8l": "Barato: cuesta {pct} menos que el motor típico.",
- "1w34vac": "Caballos fiscales altos en Europa ({hp}): los dueños pagan más impuestos cada año. El impuesto solo tiene en cuenta el diámetro.",
- "1bmot1z": "Caballos fiscales bajos en Europa ({hp}): la carrera larga sale a cuenta a la hora de pagar impuestos.",
  "pfu6xl": "Diésel: gasta muy poco y dura mucho.",
  "1y5u8wc": "Diésel: pesado, ruidoso y de pocas revoluciones; a los compradores no les parece prestigioso.",
  "18pmu3c": "~{l} L, ~{hp} hp",
@@ -582,11 +576,6 @@
  "1nmzjil": "ingeniero de minas",
  "1h82dqz": "veterinario",
  "1bwgq2a": "cazador",
- "1wn1ts6": "Turín",
- "1y0w8go": "Bruselas",
- "oa1837": "Viena",
- "nc44v": "Múnich",
- "1cq0l3n": "Milán",
  "1jkp3ee": "Tengo una queja: {defect}. En el concesionario solo me dijeron “ya lo sabemos” y me despacharon.",
  "1jtny6f": "Por este dinero no hay nada mejor; ahorré dos meses de sueldo para comprarlo y no me arrepiento para nada.",
  "11nsjhi": "Eso sí, el precio está por las nubes; con ese dinero se compraban dos caballos y una carreta.",
@@ -962,7 +951,6 @@
  "1nv2zbv": "Los costos no cambian.",
  "1hj4a8m": "Guerra en Europa",
  "132t995": "Estalló la Gran Guerra. Las ventas de autos civiles en Europa se desplomaron y el precio del acero sube (costo de materiales +25 %).",
- "1btoaw3": "El Ejército ofrece pedidos de camiones y ambulancias. Si aceptas, tus líneas pasarán a la producción militar: beneficio garantizado pero limitado.",
  "l0hhyi": "Los ejércitos aliados encargan camiones y ambulancias a las fábricas estadounidenses. Si aceptas, tus líneas pasarán a la producción militar.",
  "12uhwo5": "Aceptar el pedido",
  "1yk9ibm": "Hasta que termine la guerra, las líneas fabrican vehículos militares (se puede revertir línea por línea).",
@@ -984,7 +972,6 @@
  "1926pmu": "La economía se recupera lentamente. Este año trae dos grandes innovaciones: la carrocería monocasco y la suspensión delantera independiente. Además, los ingenieros comenzaron a hacer las primeras pruebas de choque.",
  "11twsbs": "Segunda Guerra Mundial",
  "7eu6uu": "Europa vuelve a estar en guerra. La venta de autos civiles en Europa casi se detendrá.",
- "wl4jpj": "El gobierno llama a tu fábrica a la producción militar.",
  "11lp81i": "EE. UU. es neutral por ahora, pero eso quizá no dure mucho.",
  "15jwi5x": "Pasar a producción militar",
  "c3qy9b": "Hasta que termine la guerra, las líneas fabrican vehículos militares.",
@@ -2288,8 +2275,21 @@
   "one": "Mientras tanto, tu auto más nuevo a la venta, {name}, tiene {n} año.",
   "other": "Mientras tanto, tu auto más nuevo a la venta, {name}, tiene {n} años."
  },
- "nznzvc": "No hay ningún auto nuevo en camino",
+ "17820dk": "Empieza ya el próximo coche",
  "mh3jfv": "Iniciar proyecto nuevo",
+ "qeq8f2": "Más tarde",
+ "kzx20d": {
+  "one": "<b>{name}</b> lleva {n} semana a la venta y ha vendido <b>{count}</b> coches hasta ahora.",
+  "other": "<b>{name}</b> lleva {n} semanas a la venta y ha vendido <b>{count}</b> coches hasta ahora."
+ },
+ "h5rodw": "Un coche nuevo tarda uno o dos años en estar listo. Mientras tanto {name} envejece, los rivales sacan coches más nuevos y sus ventas se derriten: si empiezas el próximo ahora, su sucesor llegará a tiempo.",
+ "eqfl7g": {
+  "one": "<b>{cash}</b> en caja. Pagas a <b>{n}</b> ingeniero, pero ahora mismo no trabaja en ningún coche.",
+  "other": "<b>{cash}</b> en caja. Pagas a <b>{n}</b> ingenieros, pero ahora mismo ninguno trabaja en un coche."
+ },
+ "15mvlo4": "<b>{cash}</b> en caja.",
+ "k5ktwz": "Este aviso aparece una sola vez. El juego queda en pausa hasta que lo reanudes.",
+ "nznzvc": "No hay ningún auto nuevo en camino",
  "1s8jxfc": "{name}: rediseño o nueva generación",
  "rdop88": {
   "one": "Tu auto más nuevo, <b>{name}</b>, tiene {n} año y no hay ningún proyecto detrás de él. Los rivales sacan una nueva generación o un rediseño cada cuatro a seis años; las ventas de un auto viejo se derriten un poco más cada año.",
@@ -3670,9 +3670,9 @@
  "1fez2hd": "Aparecerán en los próximos diez años.",
  "1rc7l7f": "Las tecnologías nuevas aparecen en el mundo; antes de poder usarlas en un diseño, tus ingenieros tienen que aprenderlas. Lo que pongas en la cola empieza solo, por orden.",
  "1o64tq": "Cupos de investigación",
- "vqjgxt": "Cada 15 ingenieros o 6 investigadores pueden llevar un tema más.",
+ "15f5rfk": "Cada 15 ingenieros pueden llevar un tema más; cada 6 ingenieros en el laboratorio, otro más.",
  "1th2kmz": "Velocidad de investigación",
- "1a8ss0b": "{engineers} ingenieros · {researchers} investigadores",
+ "bf7f3": "{engineers} ingenieros · {lab} en el laboratorio",
  "19w0ij0": "Prototipos, pruebas e I+D, últimas 52 semanas",
  "ukwk4d": "Gasto en investigación, prototipos y pruebas, todo junto: incluso una empresa que no investiga nada gasta dinero en prototipos y pruebas. La investigación de una empresa grande también es grande: un tema importante cuesta un pequeño porcentaje de los ingresos.",
  "3t201w": "{share} de los ingresos",
@@ -3707,21 +3707,21 @@
  "lw6l4x": "<b>Efecto:</b> {effects}",
  "1rd3lyf": "Una vez aprendida, entra automáticamente en todos los diseños y rediseños nuevos.",
  "uiwk7h": "Una vez aprendida, puedes elegirla en la pantalla de diseño.",
- "864o5": {
-  "one": "{n} investigador contratado",
-  "other": "{n} investigadores contratados"
+ "1k4453e": {
+  "one": "Laboratorio: {n} ingeniero",
+  "other": "Laboratorio: {n} ingenieros"
  },
- "1i5riws": "Investigadores: {n}",
- "1izznjr": {
-  "one": "velocidad de investigación ×{speed}, {n} tema a la vez · sueldos: {pay} por semana",
-  "other": "velocidad de investigación ×{speed}, {n} temas a la vez · sueldos: {pay} por semana"
+ "13anp2x": {
+  "one": "velocidad de investigación ×{speed}, {n} tema a la vez",
+  "other": "velocidad de investigación ×{speed}, {n} temas a la vez"
  },
- "1v23cj6": {
-  "one": "Con 4 investigadores más: velocidad ×{speed}, {n} tema. Los investigadores solo investigan (no desarrollan autos); al contratarlos también se aceleran las investigaciones en curso. Contratar cuesta {hire} por persona; el sueldo, {pay} por semana.",
-  "other": "Con 4 investigadores más: velocidad ×{speed}, {n} temas. Los investigadores solo investigan (no desarrollan autos); al contratarlos también se aceleran las investigaciones en curso. Contratar cuesta {hire} por persona; el sueldo, {pay} por semana."
+ "1mpqt3h": "Los ingenieros del laboratorio solo investigan: no desarrollan autos y los proyectos siguen con el resto. Si cambia la proporción, los temas en curso también se aceleran o se frenan.",
+ "195waml": "Sin laboratorio",
+ "1ixkicg": "El {share} de los ingenieros",
+ "1lnk20s": {
+  "one": "{n} ingeniero · velocidad ×{speed} · {slots} temas",
+  "other": "{n} ingenieros · velocidad ×{speed} · {slots} temas"
  },
- "hlse6y": "Contratar +1 investigador",
- "1mxtclm": "Un investigador se fue",
  "uaf5pz": "En investigación",
  "o0cndl": "Tus ingenieros no están investigando nada ahora mismo.",
  "1q0ndpf": "Cola ({n})",

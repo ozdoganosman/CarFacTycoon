@@ -2,7 +2,7 @@
  "1474961": "Perfectly balanced",
  "1693539": "To adjust each setting separately, turn on “Engineer mode” in Settings.",
  "bv08ei": "Not enough money.",
- "yi7oqo": "You don’t have that many researchers.",
+ "qmbbhx": "No such share.",
  "12z0hcp": "At least one engineer has to stay.",
  "1lriiny": "This class isn’t open yet.",
  "1nt679y": "Project {no}",
@@ -96,10 +96,6 @@
  "kch9fc": "No active military contract.",
  "1n6c3nh": "You already have this workshop.",
  "135m93v": "You need {cost} for the workshop.",
- "qtwoer": "Dealers open state by state: pick a state on the map and look for a dealer.",
- "pmu97f": "This market isn’t open yet.",
- "16x9lz1": "The dealer network is at its top level.",
- "ukjrzn": "You need {cost} to grow the dealer network.",
  "1l25fm6": "You need {cost} for the research.",
  "gfcvjc": "{segment} market research complete.",
  "1j520ux": "The bank will lend at most {amount} more.",
@@ -265,8 +261,6 @@
  "hyondh": "Light ({kg} kg): the rest of the car can be lighter too.",
  "eu3oy6": "Expensive: costs {pct} more than the typical engine, raising the unit cost.",
  "lmda8l": "Cheap: costs {pct} less than the typical engine.",
- "1w34vac": "High fiscal horsepower in Europe ({hp}): owners pay more tax every year. The tax only looks at the bore.",
- "1bmot1z": "Low fiscal horsepower in Europe ({hp}): the long stroke pays off at tax time.",
  "pfu6xl": "Diesel: very frugal and long-lived.",
  "1y5u8wc": "Diesel: heavy, noisy and slow-revving; buyers don’t find it prestigious.",
  "18pmu3c": "~{l} L, ~{hp} hp",
@@ -582,11 +576,6 @@
  "1nmzjil": "mining engineer",
  "1h82dqz": "veterinarian",
  "1bwgq2a": "hunter",
- "1wn1ts6": "Turin",
- "1y0w8go": "Brussels",
- "oa1837": "Vienna",
- "nc44v": "Munich",
- "1cq0l3n": "Milan",
  "1jkp3ee": "I do have one gripe: {defect}. The dealer just said “we know” and brushed me off.",
  "1jtny6f": "You can’t do better for the money; I saved up two months’ wages to buy it and I don’t regret it one bit.",
  "11nsjhi": "Only the price is awfully steep; for that money you could buy two horses and a wagon.",
@@ -959,7 +948,6 @@
  "1nv2zbv": "Costs stay the same.",
  "1hj4a8m": "War in Europe",
  "132t995": "The Great War has begun. Civilian car sales in Europe have collapsed, and steel prices are climbing (material costs +25%).",
- "1btoaw3": "The Army is offering orders for trucks and ambulances. If you accept, your lines switch to military production: guaranteed but limited profit.",
  "l0hhyi": "Allied armies are ordering trucks and ambulances from American factories. If you accept, your lines switch to military production.",
  "12uhwo5": "Accept the order",
  "1yk9ibm": "Until the war ends, the lines build military vehicles (can be switched back line by line).",
@@ -981,7 +969,6 @@
  "1926pmu": "The economy is slowly recovering. This year brings two big innovations: the monocoque body and independent front suspension. Engineers have also begun running the first crash tests.",
  "11twsbs": "World War II",
  "7eu6uu": "Europe is at war again. Civilian car sales in Europe will all but stop.",
- "wl4jpj": "The government is calling on your factory for military production.",
  "11lp81i": "The U.S. is neutral for now; but that may not last long.",
  "15jwi5x": "Switch to military production",
  "c3qy9b": "Until the war ends, the lines build military vehicles.",
@@ -2282,8 +2269,21 @@
   "one": "Meanwhile, your newest car on sale, {name}, is {n} year old.",
   "other": "Meanwhile, your newest car on sale, {name}, is {n} years old."
  },
- "nznzvc": "No new car in the pipeline",
+ "17820dk": "Start on the next car now",
  "mh3jfv": "Start a new project",
+ "qeq8f2": "Later",
+ "kzx20d": {
+  "one": "<b>{name}</b> has been on sale for {n} week and has sold <b>{count}</b> cars so far.",
+  "other": "<b>{name}</b> has been on sale for {n} weeks and has sold <b>{count}</b> cars so far."
+ },
+ "h5rodw": "A new car takes a year or two to get ready. Meanwhile {name} ages, rivals bring out newer cars and its sales melt away: start the next one now and its successor arrives in time.",
+ "eqfl7g": {
+  "one": "<b>{cash}</b> in cash. You pay <b>{n}</b> engineer, but right now they are not working on a car.",
+  "other": "<b>{cash}</b> in cash. You pay <b>{n}</b> engineers, but right now none of them is working on a car."
+ },
+ "15mvlo4": "<b>{cash}</b> in cash.",
+ "k5ktwz": "This warning comes only once. The game stays paused until you resume.",
+ "nznzvc": "No new car in the pipeline",
  "1s8jxfc": "{name}: facelift or new generation",
  "rdop88": {
   "one": "Your newest car, <b>{name}</b>, is {n} year old, and there’s no project coming up behind it. Rivals bring out a new generation or a facelift every four to six years; an old car’s sales melt away a little more each year.",
@@ -3655,9 +3655,9 @@
  "1fez2hd": "Will appear in the next ten years.",
  "1rc7l7f": "New technology appears in the world; before you can use it in a design, your engineers have to learn it. Whatever you queue starts on its own, in order.",
  "1o64tq": "Research slots",
- "vqjgxt": "Every 15 engineers or 6 researchers can run one more topic.",
+ "15f5rfk": "Every 15 engineers can run one more subject; every 6 engineers in the laboratory one more again.",
  "1th2kmz": "Research speed",
- "1a8ss0b": "{engineers} engineers · {researchers} researchers",
+ "bf7f3": "{engineers} engineers · {lab} in the laboratory",
  "19w0ij0": "Prototypes, tests and R&D, last 52 weeks",
  "ukwk4d": "Research, prototype and testing spending combined: even a company that does no research spends money on prototypes and tests. A big company’s research is big too: an important topic costs a few percent of revenue.",
  "3t201w": "{share} of revenue",
@@ -3692,21 +3692,21 @@
  "lw6l4x": "<b>Effect:</b> {effects}",
  "1rd3lyf": "Once learned, it goes into every new design and facelift automatically.",
  "uiwk7h": "Once learned, you can pick it on the design screen.",
- "864o5": {
-  "one": "Hired {n} researcher",
-  "other": "Hired {n} researchers"
+ "1k4453e": {
+  "one": "Laboratory: {n} engineer",
+  "other": "Laboratory: {n} engineers"
  },
- "1i5riws": "Researchers: {n}",
- "1izznjr": {
-  "one": "research speed ×{speed}, {n} topic at a time · salaries {pay} a week",
-  "other": "research speed ×{speed}, {n} topics at a time · salaries {pay} a week"
+ "13anp2x": {
+  "one": "research speed ×{speed}, {n} subject at once",
+  "other": "research speed ×{speed}, {n} subjects at once"
  },
- "1v23cj6": {
-  "one": "With 4 more researchers: speed ×{speed}, {n} topic. Researchers only do research (they don’t develop cars); hiring them also speeds up research in progress. Hiring costs {hire} per person, salary {pay} a week.",
-  "other": "With 4 more researchers: speed ×{speed}, {n} topics. Researchers only do research (they don’t develop cars); hiring them also speeds up research in progress. Hiring costs {hire} per person, salary {pay} a week."
+ "1mpqt3h": "Engineers in the laboratory only do research: they develop no cars, and the projects go on with the rest. When the share changes, the subjects under way speed up or slow down too.",
+ "195waml": "No laboratory",
+ "1ixkicg": "{share} of the engineers",
+ "1lnk20s": {
+  "one": "{n} engineer · speed ×{speed} · {slots} subjects",
+  "other": "{n} engineers · speed ×{speed} · {slots} subjects"
  },
- "hlse6y": "Hire +1 researcher",
- "1mxtclm": "A researcher has left",
  "uaf5pz": "Researching now",
  "o0cndl": "Your engineers aren’t researching anything right now.",
  "1q0ndpf": "Queue ({n})",

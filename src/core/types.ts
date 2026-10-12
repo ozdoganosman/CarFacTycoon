@@ -387,9 +387,10 @@ export interface ProductionLine {
   nightShift?: Partial<Record<StageId, boolean>>;
 }
 
+/** The company in a market: only the American one is played (the European market is simulated for the rivals). */
 export interface MarketState {
-  unlocked: boolean;
-  dealerLevel: number;
+  /** Older saves: national dealer levels, turned into states on load (network.ts ensureNetwork). */
+  dealerLevel?: number;
   awareness: number;
   adBudget: number; // $ per week (in current money)
   /** Keep the budget at this many times what a maker of the company's size spends in the era (core/advertising.ts); unset: by hand. */
@@ -569,8 +570,8 @@ export type ModalItem =
   | { kind: 'news'; newsId: string }
   | { kind: 'unlock'; title: string; body: string }
   | { kind: 'insolvency'; stage: 'first' | 'last' }
-  /** The company stands still: a design left on the desk, or no new car coming while the range ages. Stops the clock. */
-  | { kind: 'stall'; reason: 'design' | 'idle' | 'polish' | 'tested' | 'tooling' | 'launch'; projectId?: string }
+  /** The company stands still: a design left on the desk, no new car coming while the range ages, or nothing after the first car (`next`). Stops the clock. */
+  | { kind: 'stall'; reason: 'design' | 'idle' | 'next' | 'polish' | 'tested' | 'tooling' | 'launch'; projectId?: string }
   /** Research finished (and what started next from the queue): a corner note that does not stop the clock. */
   | { kind: 'research'; done: string[]; started: string[] }
   | { kind: 'gameOver' };
@@ -649,7 +650,9 @@ export interface Company {
   loan: number;
   reputation: number; // 0..100
   engineers: number;
-  /** Research staff: learn new technology faster (they do not develop cars). */
+  /** The share of the engineers working in the laboratory (research.ts LAB_SHARES): they research, and develop no cars. */
+  labShare?: number;
+  /** Older saves: research staff hired apart (they join the engineers on load). */
   researchers?: number;
   skill: number; // engineering skill 0..100
   shops: Record<ComponentKey, boolean>;

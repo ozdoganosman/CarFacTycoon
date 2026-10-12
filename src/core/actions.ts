@@ -2,7 +2,7 @@ import { absorbDealers, homeState, openStates } from './network';
 import { stateDef } from '../data/states';
 import { costIndex, lineBuildWeeks, newLineCost, priceLevel, shopCost, slotCost, toolingMultiple, MAX_SLOTS } from '../data/economy';
 import { eventDef } from '../data/events';
-import { MARKETS, marketScale, MAX_DEALER_LEVEL } from '../data/markets';
+import { MARKETS, marketScale } from '../data/markets';
 import { segmentDef } from '../data/segments';
 import { STAGES, stationDef } from '../data/stations';
 import { CHASSIS, byId, maxGears } from '../data/tech';
@@ -16,7 +16,6 @@ import {
   shareEngineers,
   availableSegments,
   credit,
-  dealerUpgradeCost,
   engineersBusy,
   gates,
   materialUnitCost,
@@ -27,7 +26,7 @@ import { stateRng } from './rng';
 import { acquisitionTargets } from './acquisitions';
 import { autoByDefault } from './autopilot';
 import { boardVeto } from './shares';
-import { beginResearch, ensureResearch, knownKnowhow, labSlots, missingRequirements, pumpResearchQueue, researchCost, researchDef, researcherHireCost, restrictToKnown, unknownTech } from './research';
+import { LAB_SHARES, beginResearch, designEngineers, ensureResearch, knownKnowhow, labEngineers, labSlots, missingRequirements, pumpResearchQueue, researchCost, researchDef, restrictToKnown, unknownTech } from './research';
 import { experienceFactor, newEstimate } from './estimate';
 import { TESTS, SUPPLIERS, expectedDefects, generateDefects, withTuning } from './testing';
 import { yearFloat } from './time';
@@ -87,22 +86,12 @@ export function hireEngineers(s: GameState, n: number): ActionResult {
   return ok;
 }
 
-/** Research staff: they only learn new technology, and faster than design engineers. */
-export function hireResearchers(s: GameState, n: number): ActionResult {
-  const cost = n * researcherHireCost(yearFloat(s.week));
-  if (s.company.cash < cost) return fail(t('Yeterli para yok.'));
-  spend(s, cost, 'other');
-  s.company.researchers = (s.company.researchers ?? 0) + n;
-  decide(s, 'researchers', `${n} Ar-Ge uzmanı işe alındı (toplam ${s.company.researchers})`);
-  return ok;
-}
-
-export function fireResearchers(s: GameState, n: number): ActionResult {
-  const have = s.company.researchers ?? 0;
-  if (have < n) return fail(t('Bu kadar Ar-Ge uzmanı yok.'));
-  s.company.researchers = have - n;
-  s.company.reputation = clamp(s.company.reputation - 0.1 * n, 0, 100);
-  decide(s, 'researchers', `${n} Ar-Ge uzmanı çıkarıldı (toplam ${s.company.researchers})`);
+/** Put a share of the engineers in the laboratory (research.ts LAB_SHARES): research speeds up at once, the projects lose them. */
+export function setLabShare(s: GameState, share: number): ActionResult {
+  if (!LAB_SHARES.includes(share as (typeof LAB_SHARES)[number])) return fail(t('Böyle bir pay yok.'));
+  s.company.labShare = share;
+  shareEngineers(s);
+  decide(s, 'lab', `Laboratuvar: mühendislerin %${Math.round(share * 100)}'i (${labEngineers(s)} kişi)`);
   return ok;
 }
 
@@ -168,7 +157,7 @@ export function startProject(s: GameState, o: StartProjectOptions): { ok: true; 
   if (eng) design.engine = { ...eng.design };
   design.knowhow = knownKnowhow(s);
   const id = newId(s, 'p');
-  const free = s.company.engineers - engineersBusy(s);
+  const free = designEngineers(s) - engineersBusy(s);
   const p: Project = {
     id,
     name: o.name.trim() || t('Proje {no}', { no: id.slice(1) }),
@@ -225,7 +214,7 @@ export function startFacelift(s: GameState, modelId: string): { ok: true; id: st
   const m = model(s, modelId);
   if (s.projects.some((p) => p.replacesModelId === modelId && p.kind === 'facelift')) return { ok: false, error: t('Bu model için zaten bir makyaj projesi var.') };
   const id = newId(s, 'p');
-  const free = s.company.engineers - engineersBusy(s);
+  const free = designEngineers(s) - engineersBusy(s);
   s.projects.push({
     id,
     name: t('{name} (makyaj)', { name: m.name }),
@@ -797,11 +786,6 @@ export function setModelPrice(s: GameState, id: string, price: number) {
   }
 }
 
-export function setModelMarkets(s: GameState, id: string, markets: MarketId[]) {
-  model(s, id).markets = markets.filter((m) => s.markets[m].unlocked && m === 'usa');
-  decide(s, 'markets:' + id, `${model(s, id).name}: pazarlar ${model(s, id).markets.join('+')}`);
-}
-
 export function setProductionRate(s: GameState, id: string, rate: number) {
   model(s, id).productionRate = clamp(rate, 0, 1);
   decide(s, 'rate:' + id, `${model(s, id).name}: üretim hızı %${Math.round(model(s, id).productionRate * 100)}`);
@@ -1036,20 +1020,6 @@ export function buildShop(s: GameState, comp: ComponentKey): ActionResult {
 }
 
 // ---------------- Markets ----------------
-
-export function upgradeDealers(s: GameState, market: MarketId): ActionResult {
-  if (market === 'usa') return fail(t('Bayiler eyalet eyalet açılır: haritadan bir eyalet seçip bayi ara.'));
-  const ms = s.markets[market];
-  if (!ms.unlocked) return fail(t('Bu pazar henüz açılmadı.'));
-  if (ms.dealerLevel >= MAX_DEALER_LEVEL) return fail(t('Bayi ağı en üst seviyede.'));
-  const cost = dealerUpgradeCost(s, market);
-  if (s.company.cash < cost) return fail(t('Bayi ağını büyütmek için {cost} gerekiyor.', { cost: money(cost) }));
-  spend(s, cost, 'investment');
-  ms.dealerLevel += 1;
-  ms.awareness = clamp(ms.awareness + 0.03, 0, 1);
-  decide(s, 'dealers:' + market, `${market} bayi seviyesi ${ms.dealerLevel} (${money(cost)})`);
-  return ok;
-}
 
 export function setAdBudget(s: GameState, market: MarketId, amount: number) {
   s.markets[market].adBudget = Math.max(0, amount);
