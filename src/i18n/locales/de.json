@@ -2260,8 +2260,21 @@
   "one": "Unterdessen ist dein neuestes Auto im Verkauf, {name}, schon {n} Jahr alt.",
   "other": "Unterdessen ist dein neuestes Auto im Verkauf, {name}, schon {n} Jahre alt."
  },
- "nznzvc": "Kein neues Auto in Arbeit",
+ "17820dk": "Fang jetzt mit dem nächsten Auto an",
  "mh3jfv": "Neues Projekt starten",
+ "qeq8f2": "Später",
+ "kzx20d": {
+  "one": "<b>{name}</b> ist seit {n} Woche im Handel und hat bisher <b>{count}</b> Autos verkauft.",
+  "other": "<b>{name}</b> ist seit {n} Wochen im Handel und hat bisher <b>{count}</b> Autos verkauft."
+ },
+ "h5rodw": "Ein neues Auto braucht ein bis zwei Jahre, bis es fertig ist. In der Zeit altert {name}, die Konkurrenz bringt neuere Autos und der Absatz schmilzt: Fängst du jetzt mit dem nächsten an, kommt der Nachfolger rechtzeitig.",
+ "eqfl7g": {
+  "one": "<b>{cash}</b> in der Kasse. Du bezahlst <b>{n}</b> Ingenieur, aber gerade arbeitet er an keinem Auto.",
+  "other": "<b>{cash}</b> in der Kasse. Du bezahlst <b>{n}</b> Ingenieure, aber gerade arbeitet keiner von ihnen an einem Auto."
+ },
+ "15mvlo4": "<b>{cash}</b> in der Kasse.",
+ "k5ktwz": "Diese Warnung kommt nur einmal. Das Spiel bleibt pausiert, bis du weitermachst.",
+ "nznzvc": "Kein neues Auto in Arbeit",
  "1s8jxfc": "{name}: Facelift oder neue Generation",
  "rdop88": {
   "one": "Dein neuestes Auto, <b>{name}</b>, ist {n} Jahr alt, und kein Projekt folgt ihm nach. Die Konkurrenz bringt alle vier bis sechs Jahre eine neue Generation oder ein Facelift; die Verkäufe eines alten Autos schmelzen jedes Jahr ein Stück weiter dahin.",

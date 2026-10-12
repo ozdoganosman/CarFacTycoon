@@ -521,6 +521,14 @@ function checkStall(s: GameState) {
   if (s.projects.length) return;
   // While the lines work for the army there is no civilian car to bring out.
   if ((s.flags.militaryUntil ?? 0) > yearFloat(s.week)) return;
+  // The first car is out and nothing follows it: once, a quarter after the launch, while there is
+  // still money to start the next one (the warning below comes only when the car is four years old).
+  const first = s.models.length === 1 ? s.models[0] : undefined;
+  if (first?.status === 'active' && s.week - first.launchWeek >= 13 && !s.flags.stallNext) {
+    s.flags.stallNext = s.week;
+    pushModal(s, { kind: 'stall', reason: 'next' });
+    return;
+  }
   const active = s.models.filter((m) => m.status === 'active');
   const newest = active.length ? Math.max(...active.map((m) => m.refreshWeek)) : -1;
   const aging = active.length ? s.week - newest >= 4 * 52 : s.week >= 13;

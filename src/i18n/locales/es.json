@@ -2275,8 +2275,21 @@
   "one": "Mientras tanto, tu auto más nuevo a la venta, {name}, tiene {n} año.",
   "other": "Mientras tanto, tu auto más nuevo a la venta, {name}, tiene {n} años."
  },
- "nznzvc": "No hay ningún auto nuevo en camino",
+ "17820dk": "Empieza ya el próximo coche",
  "mh3jfv": "Iniciar proyecto nuevo",
+ "qeq8f2": "Más tarde",
+ "kzx20d": {
+  "one": "<b>{name}</b> lleva {n} semana a la venta y ha vendido <b>{count}</b> coches hasta ahora.",
+  "other": "<b>{name}</b> lleva {n} semanas a la venta y ha vendido <b>{count}</b> coches hasta ahora."
+ },
+ "h5rodw": "Un coche nuevo tarda uno o dos años en estar listo. Mientras tanto {name} envejece, los rivales sacan coches más nuevos y sus ventas se derriten: si empiezas el próximo ahora, su sucesor llegará a tiempo.",
+ "eqfl7g": {
+  "one": "<b>{cash}</b> en caja. Pagas a <b>{n}</b> ingeniero, pero ahora mismo no trabaja en ningún coche.",
+  "other": "<b>{cash}</b> en caja. Pagas a <b>{n}</b> ingenieros, pero ahora mismo ninguno trabaja en un coche."
+ },
+ "15mvlo4": "<b>{cash}</b> en caja.",
+ "k5ktwz": "Este aviso aparece una sola vez. El juego queda en pausa hasta que lo reanudes.",
+ "nznzvc": "No hay ningún auto nuevo en camino",
  "1s8jxfc": "{name}: rediseño o nueva generación",
  "rdop88": {
   "one": "Tu auto más nuevo, <b>{name}</b>, tiene {n} año y no hay ningún proyecto detrás de él. Los rivales sacan una nueva generación o un rediseño cada cuatro a seis años; las ventas de un auto viejo se derriten un poco más cada año.",

@@ -785,6 +785,31 @@ describe('money that matters', () => {
     expect(s.modals.some((m) => m.kind === 'stall' && m.reason === 'design')).toBe(true);
   });
 
+  it('nothing on the board a quarter after the first car brings one warning, once', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 27 });
+    for (let i = 0; i < 52 * 5 && s.models.length === 0; i++) runBot(s, 1, { segments: ['family'] });
+    expect(s.models).toHaveLength(1);
+    const first = s.models[0];
+    s.projects = [];
+    s.modals = [];
+    const next = () => s.modals.some((m) => m.kind === 'stall' && m.reason === 'next');
+    while (s.week - first.launchWeek < 12) tick(s);
+    expect(next()).toBe(false);
+    for (let i = 0; i < 5; i++) tick(s);
+    expect(next()).toBe(true);
+    s.modals = [];
+    for (let i = 0; i < 52; i++) tick(s);
+    expect(next()).toBe(false);
+
+    // A company already at work on the next car is not told.
+    const busy = newGame({ companyName: 'Test', hq: 'usa', seed: 27 });
+    for (let i = 0; i < 52 * 5 && busy.models.length === 0; i++) runBot(busy, 1, { segments: ['family'] });
+    busy.modals = [];
+    if (!busy.projects.length) expect(A.startProject(busy, { name: 'İkinci', segment: 'family', targetPrice: 0 }).ok).toBe(true);
+    for (let i = 0; i < 20; i++) tick(busy);
+    expect(busy.modals.some((m) => m.kind === 'stall' && m.reason === 'next')).toBe(false);
+  });
+
   it('the sales rank keeps counting beyond the top ten', () => {
     const s = newGame({ companyName: 'Test', hq: 'usa', seed: 28 });
     runBot(s, 52 * 3, { segments: ['family'] });

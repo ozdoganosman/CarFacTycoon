@@ -1357,43 +1357,43 @@
  },
  "zydhpn": {
   "tr": "{year} kurumlar vergisi: {tax} (vergilenen kârın {rate}), dört taksitte ödenecek. Önceki yılların zararı düşüldü.",
-  "at": "src/core/game.ts:567"
+  "at": "src/core/game.ts:575"
  },
  "sn5g7b": {
   "tr": "{year} kurumlar vergisi: {tax} (vergilenen kârın {rate}), dört taksitte ödenecek.",
-  "at": "src/core/game.ts:568"
+  "at": "src/core/game.ts:576"
  },
  "1tl8rje": {
   "tr": "Ar-Ge tamamlandı: {name} bundan sonraki bütün tasarımlara kendiliğinden girer.",
-  "at": "src/core/game.ts:602"
+  "at": "src/core/game.ts:610"
  },
  "1227rgv": {
   "tr": "Ar-Ge tamamlandı: {name} artık tasarımlarda kullanılabilir.",
-  "at": "src/core/game.ts:603"
+  "at": "src/core/game.ts:611"
  },
  "14kgqdm": {
   "tr": "{name}: geliştirme tamamlandı. İstersen biraz daha cilala ya da teste geç.",
-  "at": "src/core/game.ts:626"
+  "at": "src/core/game.ts:634"
  },
  "15elkk9": {
   "tr": "{name}: test programı bitti.",
-  "at": "src/core/game.ts:655"
+  "at": "src/core/game.ts:663"
  },
  "1czydbg": {
   "tr": "{name}: üretim hattı hazır. Lansman zamanı!",
-  "at": "src/core/game.ts:660"
+  "at": "src/core/game.ts:668"
  },
  "psx13f": {
   "tr": "SKANDAL: {name}’deki bilinen kusuru gizlediğin ortaya çıktı. Davalar ve zorunlu geri çağırma: {cost}. İtibar −15.",
-  "at": "src/core/game.ts:828"
+  "at": "src/core/game.ts:836"
  },
  "1oyrjra": {
   "tr": "Kasa eksiye düştü! 12 hafta içinde toparlanmazsan şirket iflas eder. Banka kredisi alabilir, masrafları kısabilirsin.",
-  "at": "src/core/game.ts:891"
+  "at": "src/core/game.ts:899"
  },
  "rmcw96": {
   "tr": "Son uyarı: {n} hafta içinde kasa artıya geçmezse iflas!",
-  "at": "src/core/game.ts:895"
+  "at": "src/core/game.ts:903"
  },
  "1lp6z6t": {
   "tr": "1900’ler",
@@ -7985,415 +7985,443 @@
  },
  "1x90ri1": {
   "tr": "Neden böyle çalışıyor? {title}",
-  "at": "src/ui/components/ModalHost.tsx:110"
+  "at": "src/ui/components/ModalHost.tsx:111"
  },
  "1sd0v09": {
   "tr": "Anladım",
-  "at": "src/ui/components/ModalHost.tsx:115"
+  "at": "src/ui/components/ModalHost.tsx:116"
  },
  "1mxs3wj": {
   "tr": "<b>Oyunda:</b> {text}",
-  "at": "src/ui/components/ModalHost.tsx:121"
+  "at": "src/ui/components/ModalHost.tsx:122"
  },
  "49en7h": {
   "tr": "Kusur",
-  "at": "src/ui/components/ModalHost.tsx:131"
+  "at": "src/ui/components/ModalHost.tsx:132"
  },
  "14746sx": {
   "tr": "Kayıt bulunamadı.",
-  "at": "src/ui/components/ModalHost.tsx:132"
+  "at": "src/ui/components/ModalHost.tsx:133"
  },
  "85owv8": {
   "tr": "Kritik kusur: {name}",
-  "at": "src/ui/components/ModalHost.tsx:140"
+  "at": "src/ui/components/ModalHost.tsx:141"
  },
  "1b3ehll": {
   "tr": "Servis şikâyetleri: {name}",
-  "at": "src/ui/components/ModalHost.tsx:140"
+  "at": "src/ui/components/ModalHost.tsx:141"
  },
  "1gce50m": {
   "tr": "Geri çağır",
-  "at": "src/ui/components/ModalHost.tsx:145"
+  "at": "src/ui/components/ModalHost.tsx:146"
  },
  "1s589h2": {
   "tr": "Servis kampanyası başlat",
-  "at": "src/ui/components/ModalHost.tsx:145"
+  "at": "src/ui/components/ModalHost.tsx:146"
  },
  "alzhyb": {
   "tr": "{cost} · itibar −{rep} · kusur giderilir",
-  "at": "src/ui/components/ModalHost.tsx:147"
+  "at": "src/ui/components/ModalHost.tsx:148"
  },
  "1leno4o": {
   "tr": "Sessiz kal",
-  "at": "src/ui/components/ModalHost.tsx:151"
+  "at": "src/ui/components/ModalHost.tsx:152"
  },
  "1g9ygbp": {
   "tr": "Görmezden gel",
-  "at": "src/ui/components/ModalHost.tsx:151"
+  "at": "src/ui/components/ModalHost.tsx:152"
  },
  "1pjvmo6": {
   "tr": "Bedava… şimdilik. Ortaya çıkarsa büyük skandal, dava ve itibar kaybı.",
-  "at": "src/ui/components/ModalHost.tsx:154"
+  "at": "src/ui/components/ModalHost.tsx:155"
  },
  "1ja3icg": {
   "tr": "Güvenilirlik algısı düşer, arıza masrafı sürer.",
-  "at": "src/ui/components/ModalHost.tsx:155"
+  "at": "src/ui/components/ModalHost.tsx:156"
  },
  "1cjvuxw": {
   "tr": "Sahadaki {name} araçlarında <b>{area}</b> kaynaklı {severity} bir kusur ortaya çıktı: <b>{defect}</b>. Yola çıkmış {count} araç etkileniyor.",
-  "at": "src/ui/components/ModalHost.tsx:162"
+  "at": "src/ui/components/ModalHost.tsx:163"
  },
  "14ro6fr": {
   "tr": "Bu kusur testlerde bulunamadı. Test süresini kısa tutmak lansmanı hızlandırır ama bu tür sürprizleri artırır ({n} hafta test yapılmıştı).",
-  "at": "src/ui/components/ModalHost.tsx:171"
+  "at": "src/ui/components/ModalHost.tsx:172"
  },
  "yl1o7o": {
   "tr": "Dergiler {name} için ne diyor?",
-  "at": "src/ui/components/ModalHost.tsx:183"
+  "at": "src/ui/components/ModalHost.tsx:184"
  },
  "1dpxutj": {
   "tr": "Ortalama {avg}/10. Dergiler genelde bu sınıfın alıcılarının önem verdiği özellikleri konuşur. {segment} bilgi tablon güncellendi.",
-  "at": "src/ui/components/ModalHost.tsx:204"
+  "at": "src/ui/components/ModalHost.tsx:205"
  },
  "18mbneu": {
   "tr": "Üretim hazırlığına git",
-  "at": "src/ui/components/ModalHost.tsx:229"
+  "at": "src/ui/components/ModalHost.tsx:230"
  },
  "16092jh": {
   "tr": "Projeye bak",
-  "at": "src/ui/components/ModalHost.tsx:229"
+  "at": "src/ui/components/ModalHost.tsx:230"
  },
  "us8f8k": {
   "tr": "Proje kendiliğinden ilerleyemedi: kalıpları sipariş edecek boşta bir hat yok. Yeni bir hat kur ya da hattı sen seç.",
-  "at": "src/ui/components/ModalHost.tsx:235"
+  "at": "src/ui/components/ModalHost.tsx:236"
  },
  "5z85m3": {
   "tr": "Proje kendiliğinden ilerleyemedi: kalıplara kasadaki para yetmiyor. Daha ucuz kalıp, kredi ya da vadeli sipariş seçeneklerine bak.",
-  "at": "src/ui/components/ModalHost.tsx:236"
+  "at": "src/ui/components/ModalHost.tsx:237"
  },
  "7tsu9z": {
   "tr": "Bu proje artık kendiliğinden ilerlemiyor; adımları sen atarsın.",
-  "at": "src/ui/components/ModalHost.tsx:238"
+  "at": "src/ui/components/ModalHost.tsx:239"
  },
  "16uzqj": {
   "tr": "Mühendisler temel geliştirmeyi bitirdi. Biraz daha cilalamak güvenilirliği artırır; ya da prototipleri yapıp teste geçebilirsin.",
-  "at": "src/ui/components/ModalHost.tsx:244"
+  "at": "src/ui/components/ModalHost.tsx:245"
  },
  "o08a97": {
   "tr": "Test programı tamamlandı. Üretim hazırlığına geçebilirsin: parça tedarikçilerini ve üretim hattını seç.",
-  "at": "src/ui/components/ModalHost.tsx:246"
+  "at": "src/ui/components/ModalHost.tsx:247"
  },
  "jlur88": {
   "tr": "Kalıplar ve parçalar hazır. Fiyatı ve pazarları belirleyip lansmanı yap!",
-  "at": "src/ui/components/ModalHost.tsx:247"
+  "at": "src/ui/components/ModalHost.tsx:248"
  },
  "e6btst": {
   "tr": "Cilalamaya devam et",
-  "at": "src/ui/components/ModalHost.tsx:256"
+  "at": "src/ui/components/ModalHost.tsx:257"
  },
  "j9aaic": {
   "tr": "Prototipleri yap, teste geç",
-  "at": "src/ui/components/ModalHost.tsx:282"
+  "at": "src/ui/components/ModalHost.tsx:283"
  },
  "hqi8pz": {
   "tr": "Üretim hazırlığına geç",
-  "at": "src/ui/components/ModalHost.tsx:282"
+  "at": "src/ui/components/ModalHost.tsx:283"
  },
  "138izfn": {
   "tr": "Harika",
-  "at": "src/ui/components/ModalHost.tsx:302"
+  "at": "src/ui/components/ModalHost.tsx:303"
  },
  "1dupbw7": {
   "tr": "Son 8 haftada kasa haftada ortalama <tone>{net}</tone> değişti.",
-  "at": "src/ui/components/ModalHost.tsx:324"
+  "at": "src/ui/components/ModalHost.tsx:325"
  },
  "y40cyd": {
   "tr": "Son 52 haftanın en büyük giderleri (ciro {revenue}): {costs}.",
-  "at": "src/ui/components/ModalHost.tsx:332"
+  "at": "src/ui/components/ModalHost.tsx:333"
  },
  "9huadt": {
   "tr": "Bankanın hâlâ verebileceği kredi: <b>{room}</b> (yıllık faiz {rate}).",
-  "at": "src/ui/components/ModalHost.tsx:344"
+  "at": "src/ui/components/ModalHost.tsx:345"
  },
  "2n8top": {
   "tr": "<b>{name}</b> araç başına <b>{loss}</b> zarar ediyor: bayiden sonra {net} kalıyor, malzeme {material}, işçilik {labour} (haftada {built} araç).",
-  "at": "src/ui/components/ModalHost.tsx:350"
+  "at": "src/ui/components/ModalHost.tsx:351"
  },
  "1eh86bf": {
   "tr": "<b>{name}</b> üretilmiyor ama hattı haftada {cost} işçilik gideri çıkarıyor.",
-  "at": "src/ui/components/ModalHost.tsx:361"
+  "at": "src/ui/components/ModalHost.tsx:362"
  },
  "pzo9oa": {
   "tr": "{n} mühendis boşta ({reason}), ama haftada {salary} maaş alıyorlar.",
-  "at": "src/ui/components/ModalHost.tsx:367"
+  "at": "src/ui/components/ModalHost.tsx:368"
  },
  "1lugnvl": {
   "tr": "Şirket boyunca boştaki mühendislere toplam {salary} maaş ödendi.",
-  "at": "src/ui/components/ModalHost.tsx:371"
+  "at": "src/ui/components/ModalHost.tsx:372"
  },
  "qksts9": {
   "tr": "Proje",
-  "at": "src/ui/components/ModalHost.tsx:398"
+  "at": "src/ui/components/ModalHost.tsx:399"
  },
  "1ndwq5y": {
   "tr": "Testler bitti, sıradaki adım bekliyor",
-  "at": "src/ui/components/ModalHost.tsx:401"
+  "at": "src/ui/components/ModalHost.tsx:402"
  },
  "xk3hud": {
   "tr": "<b>{name}</b> {n} haftadır testleri bitti ama üretim hazırlığına geçilmedi.",
-  "at": "src/ui/components/ModalHost.tsx:402"
+  "at": "src/ui/components/ModalHost.tsx:403"
  },
  "1spkixk": {
   "tr": "Projede “Üretim hazırlığına geç”e bas, sonra hattı ve kalıpları seç.",
-  "at": "src/ui/components/ModalHost.tsx:403"
+  "at": "src/ui/components/ModalHost.tsx:404"
  },
  "mhnlhb": {
   "tr": "Kalıplar için para yok",
-  "at": "src/ui/components/ModalHost.tsx:407"
+  "at": "src/ui/components/ModalHost.tsx:408"
  },
  "pfy11e": {
   "tr": "<b>{name}</b> {n} haftadır üretim hazırlığında bekliyor: en ucuz kalıplar bile {dies} tutuyor, kasada {cash} var.",
-  "at": "src/ui/components/ModalHost.tsx:408"
+  "at": "src/ui/components/ModalHost.tsx:409"
  },
  "173fcl7": {
   "tr": "Bankadan kredi al (Finans), ya da projede kalıpçıya vadeli sipariş ver: bedel %15 fazlasıyla borca eklenir.",
-  "at": "src/ui/components/ModalHost.tsx:414"
+  "at": "src/ui/components/ModalHost.tsx:415"
  },
  "19kw19b": {
   "tr": "Kalıplar sipariş edilmedi",
-  "at": "src/ui/components/ModalHost.tsx:417"
+  "at": "src/ui/components/ModalHost.tsx:418"
  },
  "1xkjo6y": {
   "tr": "<b>{name}</b> {n} haftadır üretim hazırlığında bekliyor: hat seçilip kalıplar sipariş edilmedi.",
-  "at": "src/ui/components/ModalHost.tsx:418"
+  "at": "src/ui/components/ModalHost.tsx:419"
  },
  "l6sh4": {
   "tr": "Projede hattı seç (boşta hat yoksa küçük bir atölye hattı kur) ve kalıpları sipariş et.",
-  "at": "src/ui/components/ModalHost.tsx:419"
+  "at": "src/ui/components/ModalHost.tsx:420"
  },
  "1ea701x": {
   "tr": "Araba hazır, lansman bekliyor",
-  "at": "src/ui/components/ModalHost.tsx:422"
+  "at": "src/ui/components/ModalHost.tsx:423"
  },
  "10so1kc": {
   "tr": "<b>{name}</b> {n} haftadır hazır ama satışa çıkmadı.",
-  "at": "src/ui/components/ModalHost.tsx:423"
+  "at": "src/ui/components/ModalHost.tsx:424"
  },
  "1bpukdo": {
   "tr": "Projede fiyatı ve pazarları seçip lansmanı yap.",
-  "at": "src/ui/components/ModalHost.tsx:424"
+  "at": "src/ui/components/ModalHost.tsx:425"
  },
  "1m28q35": {
   "tr": "Bu sürede maaşlar ve kira ödeniyor ama araba satılmıyor.",
-  "at": "src/ui/components/ModalHost.tsx:445"
+  "at": "src/ui/components/ModalHost.tsx:446"
  },
  "4felex": {
   "tr": "Cilalama sınıra ulaştı",
-  "at": "src/ui/components/ModalHost.tsx:455"
+  "at": "src/ui/components/ModalHost.tsx:456"
  },
  "e5rysv": {
   "tr": "<b>{name}</b> hedeflenen işin %160’ına ulaştı. Bundan sonrası arabaya bir şey katmaz; mühendisler boşuna çalışıyor ve lansman gecikiyor.",
-  "at": "src/ui/components/ModalHost.tsx:471"
+  "at": "src/ui/components/ModalHost.tsx:472"
  },
  "1vzxmi": {
   "tr": "Projede <b>Prototipleri yap, teste geç</b>’e bas.",
-  "at": "src/ui/components/ModalHost.tsx:475"
+  "at": "src/ui/components/ModalHost.tsx:476"
  },
  "1vwfmxc": {
   "tr": "Proje tasarım masasında bekliyor",
-  "at": "src/ui/components/ModalHost.tsx:484"
+  "at": "src/ui/components/ModalHost.tsx:485"
  },
  "2jyjjx": {
   "tr": "<b>{name}</b> {n} haftadır tasarım aşamasında. Geliştirme başlamadıkça mühendisler bu arabada çalışmaz: zaman geçiyor ama araba ilerlemiyor.",
-  "at": "src/ui/components/ModalHost.tsx:500"
+  "at": "src/ui/components/ModalHost.tsx:501"
  },
  "1u2sgpr": {
   "tr": "Tasarımı bitir ve <b>Geliştirmeyi başlat</b>’a bas. Odak dağılımı geliştirme sırasında da değiştirilebilir.",
-  "at": "src/ui/components/ModalHost.tsx:505"
+  "at": "src/ui/components/ModalHost.tsx:506"
  },
  "1av6anv": {
   "tr": "Bu arada satıştaki en yeni araban {name} {n} yaşında.",
-  "at": "src/ui/components/ModalHost.tsx:506"
+  "at": "src/ui/components/ModalHost.tsx:507"
  },
- "nznzvc": {
-  "tr": "Yolda yeni bir araba yok",
-  "at": "src/ui/components/ModalHost.tsx:512"
+ "17820dk": {
+  "tr": "Sıradaki arabaya şimdiden başla",
+  "at": "src/ui/components/ModalHost.tsx:515"
  },
  "mh3jfv": {
   "tr": "Yeni proje başlat",
-  "at": "src/ui/components/ModalHost.tsx:517"
+  "at": "src/ui/components/ModalHost.tsx:520"
+ },
+ "qeq8f2": {
+  "tr": "Sonra",
+  "at": "src/ui/components/ModalHost.tsx:523"
+ },
+ "kzx20d": {
+  "tr": "<b>{name}</b> {n} haftadır satışta ve şimdiye kadar <b>{count}</b> araç sattı.",
+  "at": "src/ui/components/ModalHost.tsx:529"
+ },
+ "h5rodw": {
+  "tr": "Yeni bir araba bir iki yılda hazır olur. O sürede {name} eskir, rakipler yenisini çıkarır ve satışı erir: sıradakine şimdi başlarsan yerine yenisi zamanında gelir.",
+  "at": "src/ui/components/ModalHost.tsx:535"
+ },
+ "eqfl7g": {
+  "tr": "Kasada <b>{cash}</b>. <b>{n}</b> mühendisin maaşı ödeniyor ama şu an hiçbiri bir araba üzerinde çalışmıyor.",
+  "at": "src/ui/components/ModalHost.tsx:539"
+ },
+ "15mvlo4": {
+  "tr": "Kasada <b>{cash}</b>.",
+  "at": "src/ui/components/ModalHost.tsx:540"
+ },
+ "k5ktwz": {
+  "tr": "Bu uyarı bir kez gelir. Oyun sen devam ettirene kadar durur.",
+  "at": "src/ui/components/ModalHost.tsx:543"
+ },
+ "nznzvc": {
+  "tr": "Yolda yeni bir araba yok",
+  "at": "src/ui/components/ModalHost.tsx:549"
  },
  "1s8jxfc": {
   "tr": "{name}: makyaj ya da yeni kuşak",
-  "at": "src/ui/components/ModalHost.tsx:519"
+  "at": "src/ui/components/ModalHost.tsx:556"
  },
  "rdop88": {
   "tr": "En yeni araban <b>{name}</b> {n} yaşında ve arkasından gelen bir proje yok. Rakipler her dört-altı yılda yeni kuşak ya da makyaj çıkarır; eski arabanın satışı her yıl biraz daha erir.",
-  "at": "src/ui/components/ModalHost.tsx:528"
+  "at": "src/ui/components/ModalHost.tsx:565"
  },
  "4amh45": {
   "tr": "Satışta araban yok ve üzerinde çalışılan bir proje de yok.",
-  "at": "src/ui/components/ModalHost.tsx:534"
+  "at": "src/ui/components/ModalHost.tsx:571"
  },
  "1kz77ez": {
   "tr": "Geçen yıl <b>{count}</b> araç satıldı; en iyi yılında {best}.",
-  "at": "src/ui/components/ModalHost.tsx:540"
+  "at": "src/ui/components/ModalHost.tsx:577"
  },
  "1xuqm4a": {
   "tr": "Geçen yıl <b>{count}</b> araç satıldı.",
-  "at": "src/ui/components/ModalHost.tsx:541"
+  "at": "src/ui/components/ModalHost.tsx:578"
  },
  "1uh5pr3": {
   "tr": "Kasada <b>{cash}</b>, <b>{n}</b> mühendis boşta bekliyor.",
-  "at": "src/ui/components/ModalHost.tsx:546"
+  "at": "src/ui/components/ModalHost.tsx:583"
  },
  "avukup": {
   "tr": "Kasada <b>{cash}</b>, <b>{n}</b> mühendis.",
-  "at": "src/ui/components/ModalHost.tsx:547"
+  "at": "src/ui/components/ModalHost.tsx:584"
  },
  "1emtpuu": {
   "tr": "Geliştirme bir iki yıl sürer; daha çok mühendis işi hızlandırır. Oyun sen devam ettirene kadar durur.",
-  "at": "src/ui/components/ModalHost.tsx:550"
+  "at": "src/ui/components/ModalHost.tsx:587"
  },
  "iftcxs": {
   "tr": "Kasa eksiye düştü",
-  "at": "src/ui/components/ModalHost.tsx:560"
+  "at": "src/ui/components/ModalHost.tsx:597"
  },
  "1px46jt": {
   "tr": "Son uyarı: iflasa {n} hafta",
-  "at": "src/ui/components/ModalHost.tsx:560"
+  "at": "src/ui/components/ModalHost.tsx:597"
  },
  "1t8kbcv": {
   "tr": "Açığı kapatacak kadar kredi al ({loan})",
-  "at": "src/ui/components/ModalHost.tsx:574"
+  "at": "src/ui/components/ModalHost.tsx:611"
  },
  "1btovbz": {
   "tr": "Finans ekranına git",
-  "at": "src/ui/components/ModalHost.tsx:584"
+  "at": "src/ui/components/ModalHost.tsx:621"
  },
  "1qdg5io": {
   "tr": "Kendim hallederim",
-  "at": "src/ui/components/ModalHost.tsx:587"
+  "at": "src/ui/components/ModalHost.tsx:624"
  },
  "m4emb1": {
   "tr": "Kasa <bad>{cash}</bad>. {n} hafta içinde artıya geçmezse bankalar kapıyı kapatır ve şirket iflas eder.",
-  "at": "src/ui/components/ModalHost.tsx:593"
+  "at": "src/ui/components/ModalHost.tsx:630"
  },
  "v2jswx": {
   "tr": "Kredi zaman kazandırır ama zararı durdurmaz: fiyatı, üretim hızını ve boştaki hatları da gözden geçir. Oyun sen devam ettirene kadar durur.",
-  "at": "src/ui/components/ModalHost.tsx:600"
+  "at": "src/ui/components/ModalHost.tsx:637"
  },
  "1wi72g4": {
   "tr": "CarFacTycoon 1960 · {company}: {count} araç, şirket değeri {value}, itibar {rep}, puan {score}/{max} ({tier}).",
-  "at": "src/ui/components/ModalHost.tsx:613"
+  "at": "src/ui/components/ModalHost.tsx:650"
  },
  "18runu3": {
   "tr": "Şirket iflas etti",
-  "at": "src/ui/components/ModalHost.tsx:628"
+  "at": "src/ui/components/ModalHost.tsx:665"
  },
  "13bc38o": {
   "tr": "Görevden alındın: {year}",
-  "at": "src/ui/components/ModalHost.tsx:628"
+  "at": "src/ui/components/ModalHost.tsx:665"
  },
  "xmvzc9": {
   "tr": "Kampanya tamamlandı: 1960",
-  "at": "src/ui/components/ModalHost.tsx:628"
+  "at": "src/ui/components/ModalHost.tsx:665"
  },
  "2ckc3f": {
   "tr": "Ana menü",
-  "at": "src/ui/components/ModalHost.tsx:634"
+  "at": "src/ui/components/ModalHost.tsx:671"
  },
  "1pcpbw8": {
   "tr": "Şirkete son bir kez bak",
-  "at": "src/ui/components/ModalHost.tsx:637"
+  "at": "src/ui/components/ModalHost.tsx:674"
  },
  "1l4tzkx": {
   "tr": "Kasa 12 hafta boyunca ekside kaldı ve bankalar kapıyı kapattı. Paranın nereye gittiği:",
-  "at": "src/ui/components/ModalHost.tsx:644"
+  "at": "src/ui/components/ModalHost.tsx:681"
  },
  "1hu5n5k": {
   "tr": "Hissedarların sabrı tükendi: yönetim kurulu seni görevden aldı ve şirketi başka birine verdi. Ayrılırken şirket {count} araç satmıştı, değeri {value}.",
-  "at": "src/ui/components/ModalHost.tsx:646"
+  "at": "src/ui/components/ModalHost.tsx:683"
  },
  "39liec": {
   "tr": "Unvanın: {tier}. Toplam {count} araç sattın; şirket değeri {value}.",
-  "at": "src/ui/components/ModalHost.tsx:650"
+  "at": "src/ui/components/ModalHost.tsx:687"
  },
  "1l78q4v": {
   "tr": "Ciro büyümesi",
-  "at": "src/ui/components/ModalHost.tsx:657"
+  "at": "src/ui/components/ModalHost.tsx:694"
  },
  "h9r37w": {
   "tr": "Oyun sonu puanı: {total} / {max} · {tier}",
-  "at": "src/ui/components/ModalHost.tsx:682"
+  "at": "src/ui/components/ModalHost.tsx:719"
  },
  "qiecx1": {
   "tr": "Sonuç panoya kopyalandı",
-  "at": "src/ui/components/ModalHost.tsx:704"
+  "at": "src/ui/components/ModalHost.tsx:741"
  },
  "y18ns5": {
   "tr": "Sonucu kopyala",
-  "at": "src/ui/components/ModalHost.tsx:709"
+  "at": "src/ui/components/ModalHost.tsx:746"
  },
  "golymz": {
   "tr": "Tüm zamanların satış sıralaması",
-  "at": "src/ui/components/ModalHost.tsx:712"
+  "at": "src/ui/components/ModalHost.tsx:749"
  },
  "1sb49th": {
   "tr": "1961’de Türkiye’de “Devrim” projesi başlıyor. Türkiye senaryosu ve sonraki dönemler (petrol krizi, emisyon kuralları, elektrikli araçlar) genişleme olarak gelecek.",
-  "at": "src/ui/components/ModalHost.tsx:721"
+  "at": "src/ui/components/ModalHost.tsx:758"
  },
  "1p8t76f": {
   "tr": "Satış",
-  "at": "src/ui/components/ModalHost.tsx:746"
+  "at": "src/ui/components/ModalHost.tsx:783"
  },
  "bu8kvy": {
   "tr": "Faaliyet kârı",
-  "at": "src/ui/components/ModalHost.tsx:760"
+  "at": "src/ui/components/ModalHost.tsx:797"
  },
  "7xt68q": {
   "tr": "{market} payı",
-  "at": "src/ui/components/ModalHost.tsx:766"
+  "at": "src/ui/components/ModalHost.tsx:803"
  },
  "1y5c6dh": {
   "tr": "Yönetim kurulu: ciro {growth} (hedef {targetGrowth}), temettü {dividend} (hedef {targetDividend}).",
-  "at": "src/ui/components/ModalHost.tsx:775"
+  "at": "src/ui/components/ModalHost.tsx:812"
  },
  "11wicnc": {
   "tr": "Hedefler tuttu, güven {v}/100.",
-  "at": "src/ui/components/ModalHost.tsx:782"
+  "at": "src/ui/components/ModalHost.tsx:819"
  },
  "zxu8e6": {
   "tr": "Hedefler tutmadı, güven {v}/100.",
-  "at": "src/ui/components/ModalHost.tsx:783"
+  "at": "src/ui/components/ModalHost.tsx:820"
  },
  "84lsr4": {
   "tr": "En çok satan rakipler",
-  "at": "src/ui/components/ModalHost.tsx:788"
+  "at": "src/ui/components/ModalHost.tsx:825"
  },
  "1bkqppp": {
   "tr": "{year} yılında gelen yenilikler",
-  "at": "src/ui/components/ModalHost.tsx:800"
+  "at": "src/ui/components/ModalHost.tsx:837"
  },
  "3hlexw": {
   "tr": "{year} yılı raporu",
-  "at": "src/ui/components/ModalHost.tsx:832"
+  "at": "src/ui/components/ModalHost.tsx:869"
  },
  "sjm0py": {
   "tr": "Kapat",
-  "at": "src/ui/components/ModalHost.tsx:836"
+  "at": "src/ui/components/ModalHost.tsx:873"
  },
  "1qys4zz": {
   "tr": "{year} yılı kapandı",
-  "at": "src/ui/components/ModalHost.tsx:849"
+  "at": "src/ui/components/ModalHost.tsx:886"
  },
  "1kto54u": {
   "tr": "Kâr",
-  "at": "src/ui/components/ModalHost.tsx:860"
+  "at": "src/ui/components/ModalHost.tsx:897"
  },
  "fh05kg": {
   "tr": "Raporu aç",
-  "at": "src/ui/components/ModalHost.tsx:865"
+  "at": "src/ui/components/ModalHost.tsx:902"
  },
  "413oxh": {
   "tr": "~{n} ayda öder",
@@ -12698,63 +12726,63 @@
  },
  "13anp2x": {
   "tr": "araştırma hızı ×{speed}, aynı anda {n} konu",
-  "at": "src/ui/screens/Research.tsx:311"
+  "at": "src/ui/screens/Research.tsx:309"
  },
  "1mpqt3h": {
   "tr": "Laboratuvardaki mühendisler yalnızca araştırır: araba geliştirmezler, projeler geri kalanlarla yürür. Pay değişince süren araştırmalar da hızlanır ya da yavaşlar.",
-  "at": "src/ui/screens/Research.tsx:313"
+  "at": "src/ui/screens/Research.tsx:310"
  },
  "195waml": {
   "tr": "Laboratuvar yok",
-  "at": "src/ui/screens/Research.tsx:322"
+  "at": "src/ui/screens/Research.tsx:319"
  },
  "1ixkicg": {
   "tr": "Mühendislerin {share}",
-  "at": "src/ui/screens/Research.tsx:322"
+  "at": "src/ui/screens/Research.tsx:319"
  },
  "1lnk20s": {
   "tr": "{n} mühendis · hız ×{speed} · {slots} konu",
-  "at": "src/ui/screens/Research.tsx:323"
+  "at": "src/ui/screens/Research.tsx:320"
  },
  "uaf5pz": {
   "tr": "Şu an araştırılan",
-  "at": "src/ui/screens/Research.tsx:340"
+  "at": "src/ui/screens/Research.tsx:337"
  },
  "o0cndl": {
   "tr": "Mühendisler şu an bir şey araştırmıyor.",
-  "at": "src/ui/screens/Research.tsx:352"
+  "at": "src/ui/screens/Research.tsx:349"
  },
  "1q0ndpf": {
   "tr": "Sıra ({n})",
-  "at": "src/ui/screens/Research.tsx:355"
+  "at": "src/ui/screens/Research.tsx:352"
  },
  "1jco00w": {
   "tr": "Sıra",
-  "at": "src/ui/screens/Research.tsx:355"
+  "at": "src/ui/screens/Research.tsx:352"
  },
  "ghzi6q": {
   "tr": "kasa bekliyor",
-  "at": "src/ui/screens/Research.tsx:365"
+  "at": "src/ui/screens/Research.tsx:362"
  },
  "1q6f41": {
   "tr": "Yukarı taşı",
-  "at": "src/ui/screens/Research.tsx:382"
+  "at": "src/ui/screens/Research.tsx:379"
  },
  "1fknqjz": {
   "tr": "Aşağı taşı",
-  "at": "src/ui/screens/Research.tsx:385"
+  "at": "src/ui/screens/Research.tsx:382"
  },
  "10yhxqd": {
   "tr": "Sıradan çıkar",
-  "at": "src/ui/screens/Research.tsx:388"
+  "at": "src/ui/screens/Research.tsx:385"
  },
  "fmxsa9": {
   "tr": "Yer açılınca sıradaki kendiliğinden başlar ve bedeli o an ödenir. Sıra, birkaç haftalık gideri ayırdıktan sonra kalan kasanın en fazla yarısını harcar (fabrikanın büyümesi için para kalsın); daha pahalı bir konuyu “Araştır” ile elle başlatabilirsin. Önkoşulunu bekleyenin yerine arkasındaki başlar.",
-  "at": "src/ui/screens/Research.tsx:397"
+  "at": "src/ui/screens/Research.tsx:394"
  },
  "11jyhee": {
   "tr": "Sıra boş. Listeden “+ Sıra” ile ekle; eksik önkoşullar kendiliğinden öne girer.",
-  "at": "src/ui/screens/Research.tsx:403"
+  "at": "src/ui/screens/Research.tsx:400"
  },
  "9wfkyg": {
   "tr": "Kayıt kodu panoya kopyalandı",

@@ -570,8 +570,8 @@ export type ModalItem =
   | { kind: 'news'; newsId: string }
   | { kind: 'unlock'; title: string; body: string }
   | { kind: 'insolvency'; stage: 'first' | 'last' }
-  /** The company stands still: a design left on the desk, or no new car coming while the range ages. Stops the clock. */
-  | { kind: 'stall'; reason: 'design' | 'idle' | 'polish' | 'tested' | 'tooling' | 'launch'; projectId?: string }
+  /** The company stands still: a design left on the desk, no new car coming while the range ages, or nothing after the first car (`next`). Stops the clock. */
+  | { kind: 'stall'; reason: 'design' | 'idle' | 'next' | 'polish' | 'tested' | 'tooling' | 'launch'; projectId?: string }
   /** Research finished (and what started next from the queue): a corner note that does not stop the clock. */
   | { kind: 'research'; done: string[]; started: string[] }
   | { kind: 'gameOver' };

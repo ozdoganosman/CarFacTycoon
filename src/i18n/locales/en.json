@@ -2269,8 +2269,21 @@
   "one": "Meanwhile, your newest car on sale, {name}, is {n} year old.",
   "other": "Meanwhile, your newest car on sale, {name}, is {n} years old."
  },
- "nznzvc": "No new car in the pipeline",
+ "17820dk": "Start on the next car now",
  "mh3jfv": "Start a new project",
+ "qeq8f2": "Later",
+ "kzx20d": {
+  "one": "<b>{name}</b> has been on sale for {n} week and has sold <b>{count}</b> cars so far.",
+  "other": "<b>{name}</b> has been on sale for {n} weeks and has sold <b>{count}</b> cars so far."
+ },
+ "h5rodw": "A new car takes a year or two to get ready. Meanwhile {name} ages, rivals bring out newer cars and its sales melt away: start the next one now and its successor arrives in time.",
+ "eqfl7g": {
+  "one": "<b>{cash}</b> in cash. You pay <b>{n}</b> engineer, but right now they are not working on a car.",
+  "other": "<b>{cash}</b> in cash. You pay <b>{n}</b> engineers, but right now none of them is working on a car."
+ },
+ "15mvlo4": "<b>{cash}</b> in cash.",
+ "k5ktwz": "This warning comes only once. The game stays paused until you resume.",
+ "nznzvc": "No new car in the pipeline",
  "1s8jxfc": "{name}: facelift or new generation",
  "rdop88": {
   "one": "Your newest car, <b>{name}</b>, is {n} year old, and there’s no project coming up behind it. Rivals bring out a new generation or a facelift every four to six years; an old car’s sales melt away a little more each year.",
