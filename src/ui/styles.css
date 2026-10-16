@@ -2785,6 +2785,164 @@ button.topbar-date {
 .guide-pulse {
   animation: guide-pulse 0.9s ease-out 3;
 }
+/* The master's notebook (Lessons.tsx): the lesson on offer, a slim slip under the guide's place. */
+.lesson-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px 12px;
+  max-width: 1280px;
+  margin: 0 auto 14px;
+  padding: 6px 12px;
+  background: var(--panel);
+  border: 1px dashed var(--brass);
+  border-radius: var(--radius);
+}
+.lesson-icon {
+  flex: none;
+  color: var(--brass);
+}
+.lesson-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.lesson-chapter {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.lesson-btns {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+.lesson-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dotted var(--line);
+}
+.lesson-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border: 1px solid var(--brass);
+  border-radius: 999px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.lesson-chip .icon {
+  color: var(--brass);
+}
+.lesson-chip.is-done {
+  border-style: dashed;
+  color: var(--muted);
+  text-decoration: line-through;
+}
+/* The bubble beside the control a lesson points at. */
+.coach {
+  position: fixed;
+  z-index: 60;
+  padding: 10px 12px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--brass);
+  border-top: 3px solid var(--brass);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 18px rgba(40, 30, 10, 0.25);
+  font-size: 0.92rem;
+}
+.coach p {
+  margin: 4px 0 8px;
+}
+.coach-title {
+  font-family: var(--font-display);
+}
+.coach-btns {
+  display: flex;
+  justify-content: flex-end;
+}
+.coach-target {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+  border-radius: var(--radius);
+}
+/* The notebook on HQ. */
+.lesson-tier {
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.lesson-chapters > summary,
+.lesson-part > summary {
+  cursor: pointer;
+  padding: 6px 0;
+}
+.lesson-chapters {
+  margin: 10px 0;
+}
+.lesson-part > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px dotted var(--line);
+}
+.lesson-list {
+  list-style: none;
+  margin: 4px 0 8px;
+  padding: 0;
+}
+.lesson-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+.lesson-list .lesson-name {
+  flex: 1;
+}
+.lesson-list li.is-done .icon {
+  color: var(--good);
+}
+.lesson-list li.is-open .icon {
+  color: var(--brass);
+}
+.lesson-list li.is-closed,
+.lesson-list li.is-skipped {
+  color: var(--muted);
+}
+.lesson-stamp {
+  padding: 1px 8px;
+  border: 2px solid var(--good);
+  border-radius: 4px;
+  color: var(--good);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transform: rotate(-4deg);
+}
+@media (max-width: 640px) {
+  .lesson-bar {
+    flex-wrap: wrap;
+  }
+  .lesson-btns {
+    margin-inline-start: auto;
+  }
+}
 .nav-badge.nav-new {
   background: var(--brass);
   text-transform: lowercase;

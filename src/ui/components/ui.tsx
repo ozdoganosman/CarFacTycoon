@@ -6,9 +6,10 @@ import { segmentDef } from '../../data/segments';
 import type { SegmentId } from '../../core/types';
 import { Icon } from './Icon';
 
-export function Panel(props: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; tight?: boolean }) {
+/** `guide`: a lesson or the first-car guide points here (data-guide). */
+export function Panel(props: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; tight?: boolean; guide?: string }) {
   return (
-    <section className={`panel ${props.tight ? 'panel-tight' : ''} ${props.className ?? ''}`}>
+    <section className={`panel ${props.tight ? 'panel-tight' : ''} ${props.className ?? ''}`} data-guide={props.guide}>
       {(props.title || props.actions) && (
         <header className="panel-head">
           {props.title && <h3>{props.title}</h3>}
@@ -28,7 +29,7 @@ export function Button(props: {
   title?: string;
   small?: boolean;
   type?: 'button' | 'submit';
-  /** The first-car guide points at this button (GuideBar). */
+  /** A lesson or the first-car guide points at this button (data-guide). */
   guide?: string;
 }) {
   return (
@@ -92,9 +93,11 @@ export function Choice<T extends string | number>(props: {
   onChange: (v: T) => void;
   cols?: number;
   compact?: boolean;
+  guide?: string;
 }) {
   return (
     <div
+      data-guide={props.guide}
       className={`choice ${props.compact ? 'choice-compact' : ''}`}
       style={props.cols ? { gridTemplateColumns: `repeat(auto-fill, minmax(${Math.floor(560 / props.cols)}px, 1fr))` } : undefined}
     >
@@ -117,9 +120,9 @@ export function Choice<T extends string | number>(props: {
 }
 
 /** A switch. `info` is the longer explanation, kept in an (i) bubble beside the label; `sub` a short line under it. */
-export function Toggle(props: { checked: boolean; onChange: (v: boolean) => void; label: ReactNode; sub?: ReactNode; info?: ReactNode; disabled?: boolean; title?: string }) {
+export function Toggle(props: { checked: boolean; onChange: (v: boolean) => void; label: ReactNode; sub?: ReactNode; info?: ReactNode; disabled?: boolean; title?: string; guide?: string }) {
   return (
-    <label className={`toggle ${props.disabled ? 'is-disabled' : ''}`} title={props.title}>
+    <label className={`toggle ${props.disabled ? 'is-disabled' : ''}`} title={props.title} data-guide={props.guide}>
       <input type="checkbox" checked={props.checked} disabled={props.disabled} onChange={(e) => props.onChange(e.target.checked)} />
       <span className="toggle-box" aria-hidden />
       <span className="toggle-text">

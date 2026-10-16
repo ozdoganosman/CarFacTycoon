@@ -1,7 +1,8 @@
 import * as A from '../../core/actions';
 import { devRate } from '../../core/development';
 import { companyWorkScale, teamSpan } from '../../core/investments';
-import { costIndex, engineerSalary } from '../../data/economy';
+import { engineerSalary } from '../../data/economy';
+import { cashRunway, hireEngineers } from '../components/TeamPanel';
 import { yearFloat } from '../../core/time';
 import { classGap, designEngineers, gapNames, knownKnowhow, unknownTech } from '../../core/research';
 import { budgetVerdict, launchBudget } from '../../core/budget';
@@ -33,6 +34,7 @@ export function DevBar({ project: p }: { project: Project }) {
   const faster = (span > 30 ? [10, 25, 50, 100] : [3, 6, 12])
     .map((n) => ({ n, weeks: Math.ceil(remaining / Math.max(0.1, devRate((crew + n) / (others + 1), s.company.skill, span))) }))
     .find((o) => o.weeks <= weeksNow * 0.75);
+  const runway = cashRunway(s, [faster?.n ?? 5]);
   const done = developing && p.dev.done >= p.dev.required;
   const progress = pct(required > 0 ? p.dev.done / required : 0, 0);
   const bonus = A.projectedBonus(s, p);
@@ -102,16 +104,17 @@ export function DevBar({ project: p }: { project: Project }) {
             ) : (
               <Info>{t('Daha çok mühendis geliştirmeyi hızlandırır; bir arabada bir düzineden fazlası orantılı hızlandırmaz.')}</Info>
             )}
+            {runway && <span className="muted"> {runway}</span>}
           </span>
           <span className="dev-bar-hire-btns">
-            <Button small disabled={s.company.cash < 40 * costIndex(yf)} onClick={() => store.try((st) => A.hireEngineers(st, 1), t('{n} mühendis işe alındı', { n: 1 }))}>
+            <Button small disabled={s.company.cash < A.hireCost(yf)} onClick={() => hireEngineers(s, 1)}>
               {t('+1 mühendis al')}
             </Button>
             <Button
               small
               kind={faster && weeksNow >= 8 ? 'primary' : undefined}
-              disabled={s.company.cash < (faster?.n ?? 5) * 40 * costIndex(yf)}
-              onClick={() => store.try((st) => A.hireEngineers(st, faster?.n ?? 5), t('{n} mühendis işe alındı', { n: faster?.n ?? 5 }))}
+              disabled={s.company.cash < (faster?.n ?? 5) * A.hireCost(yf)}
+              onClick={() => hireEngineers(s, faster?.n ?? 5)}
             >
               +{faster?.n ?? 5}
             </Button>

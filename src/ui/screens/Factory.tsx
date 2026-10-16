@@ -63,7 +63,7 @@ export function Factory() {
         </p>
       )}
       {!few && <FloorPlan military={military} onPick={pick} />}
-      <Panel title={t('Kapasite')} className="planner">
+      <Panel title={t('Kapasite')} className="planner" guide="capacity">
         {active.length ? (
           active.map((m, i) => <ModelCapacity key={m.id} m={m} color={modelColor(i)} />)
         ) : (
@@ -283,7 +283,7 @@ function ModelCapacity({ m, color }: { m: CarModel; color: string }) {
       )}
       {auto ? (
         <>
-          <button type="button" className="link small" onClick={() => setPlan(!plan)} aria-expanded={plan}>
+          <button type="button" className="link small" data-guide="planner" onClick={() => setPlan(!plan)} aria-expanded={plan}>
             {plan ? '▾' : '▸'} {t('Elle hat kur')}
           </button>
           {plan && <PlannerForm m={m} />}
@@ -330,7 +330,7 @@ function PlannerForm({ m }: { m: CarModel }) {
   const paybackSold = quote ? paybackYears(each, quote.output, margin, gap) : Infinity;
   const build = lineBuildWeeks(yf);
   return (
-    <div className="planner-form">
+    <div className="planner-form" data-guide="planner">
       <p>
         {tx(
           '<b>Anahtar teslim hat:</b> bugünün en iyi makineleriyle ve dengeli kurulur (hiçbir bölüm darboğazın besleyebileceğinden fazla makine almaz). {model} için {size} yerli hat başına <b>+{output} araç/hf</b>, kalıp dahil <b>{cost}</b>. Binası ve makineleri <b>{n} haftada</b> kurulur.',
@@ -496,7 +496,7 @@ function ModernizeAll() {
   return (
     <>
       {upgrades.length > 0 && (
-        <div className="planner-upgrade">
+        <div className="planner-upgrade" data-guide="renew-all">
           <span>
             {tx('<b>{n} hat eski makinelerle çalışıyor.</b> Hepsini bugünün makineleriyle yenile: net {cost} (eski makineler satılır), 2 hafta kurulum.', {
               n: upgrades.length,
@@ -554,7 +554,7 @@ function LineGroup(props: { title: string; color?: string; lines: ProductionLine
       </button>
       {open &&
         lines.map((l) => (
-          <div key={l.id + (focus === l.id ? ':focus' : '')} id={`line-${l.id}`}>
+          <div key={l.id + (focus === l.id ? ':focus' : '')} id={`line-${l.id}`} data-guide="line-panel">
             <LinePanel line={l} military={props.military} defaultOpen={props.few || focus === l.id} />
           </div>
         ))}
@@ -630,7 +630,7 @@ function LinePanel({ line, military, defaultOpen }: { line: ProductionLine; mili
               </option>
             ))}
           </select>
-          {military && <Toggle checked={!!line.military} onChange={(v) => store.try((st) => A.setLineMilitary(st, line.id, v))} label={t('Askeri üretim')} />}
+          {military && <Toggle guide="military" checked={!!line.military} onChange={(v) => store.try((st) => A.setLineMilitary(st, line.id, v))} label={t('Askeri üretim')} />}
         </div>
       }
     >
@@ -694,7 +694,7 @@ function StageColumn({ line, stage, bottleneck, capacity, wage }: { line: Produc
     else groups.push({ id, count: 1 });
   }
   return (
-    <div className={`stage ${bottleneck ? 'is-bottleneck' : ''}`}>
+    <div className={`stage ${bottleneck ? 'is-bottleneck' : ''}`} data-guide={bottleneck ? 'bottleneck' : undefined}>
       <div className="stage-head">
         <b>{t(def.name)}</b>
         <span className={bottleneck ? 'tone-bad' : 'muted'}>{t('{v}/hf', { v: cars(capacity) })}</span>

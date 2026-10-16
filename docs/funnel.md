@@ -60,6 +60,14 @@ oynanan bir kampanya on sekiz hedefin aşağı yukarı üçte ikisini tutturur (
 almaz, 1934'ten önce hiçbir sınıfın lideri olmaz): gerçek oyuncuların bundan çok aşağıda kaldığı bir
 hedef ya çok zor ya da ekranda yeterince görünmüyor demektir.
 
+## Usta defteri: dersler
+
+Her ders (`src/core/lessons.ts`) üç olayla ölçülür: `lesson_shown` (şeritte önerildi), `lesson_done` ve
+`lesson_skipped` (her biri oyun başına bir kez; `lesson`, `chapter`, `game_year` ile). **Funnel** ya da
+**Trends → Breakdown by `lesson`**: hangi dersin önerildiği halde yapılmadığı, hangisinin atlandığı. Planın
+ölçütü: oyuncuların %40'ından fazlasının atladığı ders yeniden yazılır. Bölüm bölüm ilerleme
+`lesson_done`'ın `chapter` dağılımıdır.
+
 ## Durum: 11 Ekim 2026
 
 7 kayıt, 6 oyuncu (30 Eylül - 10 Ekim): hâlâ **hiçbirinde piyasaya çıkmış araba yok**. Eski

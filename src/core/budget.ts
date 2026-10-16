@@ -1,4 +1,4 @@
-import { requiredWork, startProject as startProjectFn, toolingQuote } from './actions';
+import { hireCost, requiredWork, startProject as startProjectFn, toolingQuote } from './actions';
 import { devRate } from './development';
 import { teamSpan } from './investments';
 import { engineerSalary, lineBuildWeeks, overhead } from '../data/economy';
@@ -41,6 +41,26 @@ export function operatingWeekly(s: GameState): number {
   }
   const keys = COST_KEYS.filter((k) => k !== 'investment' && k !== 'rnd' && k !== 'tax');
   return recent.reduce((a, f) => a + f.revenue - keys.reduce((b, k) => b + (f[k] ?? 0), 0), 0) / recent.length;
+}
+
+/** Below this many weeks of cash after a hire (a year: a first car rarely pays a big team), the hire is asked about first. */
+export const SHORT_CASH_WEEKS = 52;
+
+/**
+ * Weeks the cash lasts at the company's operating cash flow with `extra` engineers hired now, once the
+ * projects under way are paid for (Infinity while the company earns more than it spends). Players hired 24 and 38 engineers with no car on sale and ran
+ * out of money (October 2026).
+ */
+export function cashWeeks(s: GameState, extra = 0): number {
+  const yf = yearFloat(s.week);
+  const burn = extra * engineerSalary(yf) - operatingWeekly(s);
+  if (burn <= 0) return Infinity;
+  // What the cars under way still cost before they sell (prototypes, tests, tooling) is spoken for.
+  const committed = s.projects.reduce((a, p) => {
+    const b = launchBudget(s, p);
+    return a + b.protos + b.tests + b.tooling + b.line;
+  }, 0);
+  return Math.max(0, s.company.cash - committed - extra * hireCost(yf)) / burn;
 }
 
 /** Weeks of development left for a project, with `extra` engineers hired (the whole team shares the projects in development). */

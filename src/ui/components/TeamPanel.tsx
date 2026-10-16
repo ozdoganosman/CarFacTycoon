@@ -1,9 +1,10 @@
 import * as A from '../../core/actions';
-import { devWeeksLeft } from '../../core/budget';
+import { SHORT_CASH_WEEKS, cashWeeks, devWeeksLeft } from '../../core/budget';
 import { engineersBusy, idleEngineers } from '../../core/game';
 import { designEngineers, labSlots, labSpeed } from '../../core/research';
 import { yearFloat } from '../../core/time';
-import { costIndex, engineerSalary } from '../../data/economy';
+import { engineerSalary } from '../../data/economy';
+import type { GameState } from '../../core/types';
 import { t } from '../../i18n';
 import { dec, money } from '../format';
 import { store, useGameState } from '../store';
@@ -11,6 +12,39 @@ import { Button, Panel } from './ui';
 import { teamOutput } from '../../core/development';
 import { engineeringLevel, teamSpan } from '../../core/investments';
 import { tx } from '../i18n';
+
+/**
+ * Hire engineers; a hire that leaves the cash for less than a year is asked about first (players
+ * hired dozens with no car on sale and went bankrupt, October 2026).
+ */
+export async function hireEngineers(s: GameState, k: number) {
+  const weeks = cashWeeks(s, k);
+  if (weeks < SHORT_CASH_WEEKS) {
+    const now = cashWeeks(s);
+    const ok = await store.ask({
+      title: t('Kasa çabuk tükenebilir'),
+      body:
+        t('Bu alımdan ve projelerin kalan masraflarından (prototip, test, kalıp) sonra kasa şimdiki giderle ~{n} hafta yeter.', { n: Math.floor(weeks) }) +
+        ' ' +
+        (Number.isFinite(now) ? t('Alım olmadan ~{n} hafta yeterdi.', { n: Math.floor(now) }) + ' ' : '') +
+        t('Her mühendis satış olsa da olmasa da maaş alır; para araba satışa çıkmadan biterse kredi gerekir, o da biterse şirket batar.'),
+      confirm: t('Yine de al'),
+      danger: true,
+    });
+    if (!ok) return;
+  }
+  store.try((st) => A.hireEngineers(st, k), t('{n} mühendis işe alındı', { n: k }));
+}
+
+/** How long the cash lasts, now and with the hires on offer; nothing while the company earns its keep. */
+export function cashRunway(s: GameState, offers: number[]): string | null {
+  const now = cashWeeks(s);
+  if (!Number.isFinite(now)) return null;
+  const w = (k: number) => Math.floor(cashWeeks(s, k));
+  return offers.length >= 2
+    ? t('Projelerin kalan masrafları çıkınca kasa şimdiki giderle ~{n} hafta yeter; +{a} mühendisle ~{wa}, +{b} ile ~{wb} hafta.', { n: Math.floor(now), a: offers[0], wa: w(offers[0]), b: offers[1], wb: w(offers[1]) })
+    : t('Projelerin kalan masrafları çıkınca kasa şimdiki giderle ~{n} hafta yeter; +{a} mühendisle ~{wa} hafta.', { n: Math.floor(now), a: offers[0], wa: w(offers[0]) });
+}
 
 /**
  * The engineering team, where the player looks for it: how many, what they cost, how much sooner the
@@ -21,13 +55,14 @@ export function TeamPanel({ compact }: { compact?: boolean }) {
   const yf = yearFloat(s.week);
   const n = s.company.engineers;
   const salary = engineerSalary(yf);
-  const hireCost = 40 * costIndex(yf);
+  const hireCost = A.hireCost(yf);
   const idle = idleEngineers(s);
   const project = s.projects.find((p) => p.phase === 'development') ?? s.projects.find((p) => p.phase === 'design');
   const now = project ? devWeeksLeft(s, project) : 0;
   const with5 = project ? devWeeksLeft(s, project, 5) : 0;
   const with10 = project ? devWeeksLeft(s, project, 10) : 0;
-  const hire = (k: number) => store.try((st) => A.hireEngineers(st, k), t('{n} mühendis işe alındı', { n: k }));
+  const hire = (k: number) => hireEngineers(s, k);
+  const runway = cashRunway(s, [5, 10]);
   return (
     <Panel title={t('Mühendislik ekibi')} className="team-panel">
       <p className="team-head">
@@ -59,14 +94,15 @@ export function TeamPanel({ compact }: { compact?: boolean }) {
       ) : (
         !compact && (
           <p className="small muted">
-            {t('Geliştirmede proje yok. Mühendisler Ar-Ge’de çalışır: araştırma hızı ×{speed}, {n} araştırma yeri (Ar-Ge ekranından ayrıca Ar-Ge uzmanı alınabilir).', {
+            {t('Geliştirmede proje yok. Mühendisler Ar-Ge’de çalışır: araştırma hızı ×{speed}, {n} araştırma yeri (Ar-Ge ekranında mühendislerin bir payı laboratuvara verilebilir).', {
               speed: dec(labSpeed(s), 1),
               n: labSlots(s),
             })}
           </p>
         )
       )}
-      <div className="team-actions">
+      {runway && <p className={`small ${cashWeeks(s, 5) < SHORT_CASH_WEEKS ? 'tone-warn' : 'muted'}`}>{runway}</p>}
+      <div className="team-actions" data-guide="hire">
         <Button kind="primary" disabled={s.company.cash < hireCost} onClick={() => hire(1)}>
           {t('+1 mühendis al')}
         </Button>

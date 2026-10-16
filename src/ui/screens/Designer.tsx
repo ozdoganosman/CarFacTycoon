@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as A from '../../core/actions';
 import { enginePresets, withStrokeRatio } from '../../core/ai';
 import { DIESEL_COMPRESSION, DIESEL_YEAR, displacementCc, eraRpmCap, isDiesel, knockLimit } from '../../core/engine';
@@ -25,6 +25,7 @@ import type { CarDesign, EngineDesign, FeatureId, GearboxTypeId, Project, Suspen
 import { isTurkish, msg, t, tc } from '../../i18n';
 import { fmtNumber } from '../../i18n/format';
 import { store, useGameState } from '../store';
+import { noteUse } from '../../core/lessons';
 import { dec, kmh, litres, money, secs } from '../format';
 import { inYear } from '../format';
 import { tx } from '../i18n';
@@ -251,6 +252,12 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
   const s = useGameState();
   const yf = yearFloat(s.week);
   const [tab, setTab] = useState<Tab>('body');
+  // A lesson can ask for a tab (the engine, to hear it).
+  const sc = store.screen;
+  const asked = sc.id === 'project' && sc.projectId === project.id ? sc.tab : undefined;
+  useEffect(() => {
+    if (asked && TABS.some((x) => x.id === asked)) setTab(asked as Tab);
+  }, [asked]);
   const d = project.design;
   const facelift = project.kind === 'facelift';
   const platformLocked = !!project.platformId || facelift;
@@ -278,12 +285,14 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
           <div className="designer-car">
             <CarSVG body={d.body} size={d.size} year={yf} cylinders={d.engine.cylinders} styling={d.styling} color={paint.body.color} roof={paint.roof?.color} />
           </div>
-          <PaintPicker
-            paint={paint}
-            year={yf}
-            onChange={(p, roof) => store.try((st) => A.setProjectPaint(st, project.id, p, roof))}
-            note={japan && paint.body.id !== 'black' ? t('Bu arabanın hattında siyah vernik fırını var: hangi rengi seçersen seç, araba siyah çıkar.') : undefined}
-          />
+          <div data-guide="paint">
+            <PaintPicker
+              paint={paint}
+              year={yf}
+              onChange={(p, roof) => store.try((st) => A.setProjectPaint(st, project.id, p, roof))}
+              note={japan && paint.body.id !== 'black' ? t('Bu arabanın hattında siyah vernik fırını var: hangi rengi seçersen seç, araba siyah çıkar.') : undefined}
+            />
+          </div>
           <div className="tabs" role="tablist">
             {TABS.map((x) => (
               <button key={x.id} type="button" role="tab" data-tab={x.id} aria-selected={tab === x.id} className={`tab ${tab === x.id ? 'is-on' : ''}`} onClick={() => setTab(x.id)}>
@@ -298,7 +307,7 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
             {tab === 'chassis' && (
               <>
                 {platformLocked && (
-                  <p className="note">
+                  <p className="note" data-guide="platform">
                     {facelift ? t('Makyajda şasi değişmez.') : t('Mevcut bir platformu kullanıyorsun: şasi, boyut ve süspansiyon sabit. Geliştirme ve kalıp maliyeti düşük.')}
                     {!facelift && !readOnly && (
                       <>
@@ -311,7 +320,7 @@ export function Designer({ project, readOnly, below }: { project: Project; readO
                   </p>
                 )}
                 {!platformLocked && !readOnly && oldPlatform && (
-                  <p className="note">
+                  <p className="note" data-guide="platform">
                     {t('Yeni bir platform: şasi, boyut ve süspansiyon serbest, ama geliştirme ve kalıplar daha pahalı.')}{' '}
                     <Button small kind="ghost" onClick={() => store.try((st) => A.setProjectPlatform(st, project.id, oldPlatform.id))}>
                       {t('{name} ile devam et', { name: oldPlatform.name })}
@@ -474,6 +483,11 @@ function EngineTab({
   const eu = false;
   const diesel = isDiesel(e);
   const [soundOn, setSoundOn] = useState(false);
+  // Hearing the engine is a lesson (core/lessons.ts): noted once it runs.
+  const onSound = useCallback((on: boolean) => {
+    setSoundOn(on);
+    if (on) store.act((st) => noteUse(st, 'sound'));
+  }, []);
   const year = Math.floor(yf);
   const sound = useMemo(() => soundSpec(e, es, year, d.features), [e, es, year, d.features]);
 
@@ -852,7 +866,9 @@ function EngineTab({
           <b>{money(es.cost)}</b>
         </div>
       </div>
-      <EngineSound spec={sound} onRunning={setSoundOn} />
+      <div data-guide="engine-sound">
+        <EngineSound spec={sound} onRunning={onSound} />
+      </div>
       <EngineBlock
         cylinders={e.cylinders}
         layout={e.layout}

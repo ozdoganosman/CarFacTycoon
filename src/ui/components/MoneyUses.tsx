@@ -28,7 +28,7 @@ export function MoneyUses() {
   const spare = spareMoney(s);
   const uses = moneyUses(s);
   return (
-    <Panel title={t('Yatırımlar')} className="money-uses">
+    <Panel title={t('Yatırımlar')} className="money-uses" guide="money-uses">
       <p className="small">
         {spare > 0
           ? tx('Kasada <b>{cash}</b> boşta duruyor (yedek ve bir yıllık sabit gider dışında). Nereye gidebileceği:', { cash: money(spare) })

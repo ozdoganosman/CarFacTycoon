@@ -74,6 +74,7 @@ export function SharesPanel({ s }: { s: GameState }) {
     const can = canGoPublic(s);
     return (
       <Panel
+        guide="ipo"
         title={
           <>
             {t('Borsa ve yönetim kurulu')}
@@ -131,6 +132,7 @@ export function SharesPanel({ s }: { s: GameState }) {
   const slice = Math.min(step, free);
   return (
     <Panel
+      guide="ipo"
       title={
         <>
           {t('Borsa ve yönetim kurulu')}
@@ -314,6 +316,7 @@ export function RivalMovesPanel({ s }: { s: GameState }) {
   const wars = s.rivalModels.filter((m) => m.active && m.priceCut && s.week < m.priceCut.until);
   return (
     <Panel
+      guide="rival-moves"
       title={
         <>
           {t('Rakip hamleleri')}

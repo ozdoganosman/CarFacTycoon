@@ -1,4 +1,5 @@
 import { formatDate } from '../../core/time';
+import { timeLocked } from '../../core/guide';
 import { msg, t } from '../../i18n';
 import { store, useGameState, type Speed } from '../store';
 import { money, recentProfit, signedMoney } from '../format';
@@ -58,12 +59,12 @@ export function TopBar() {
           <b>{Math.round(s.company.reputation)}</b>
         </div>
       </div>
-      <div className="speed" role="group" aria-label={t('Oyun hızı')}>
+      <div className="speed" role="group" aria-label={t('Oyun hızı')} data-guide="speed">
         {SPEEDS.map((x) => (
           <button
             key={x.s}
             type="button"
-            className={`speed-btn ${store.speed === x.s ? 'is-on' : ''} ${paused && x.s === store.lastSpeed ? 'is-hint' : ''}`}
+            className={`speed-btn ${store.speed === x.s ? 'is-on' : ''} ${paused && !timeLocked(s) && x.s === store.lastSpeed ? 'is-hint' : ''}`}
             onClick={() => store.setSpeed(x.s)}
             title={t(x.title)}
             aria-pressed={store.speed === x.s}

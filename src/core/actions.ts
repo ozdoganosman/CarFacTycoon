@@ -7,10 +7,10 @@ import { segmentDef } from '../data/segments';
 import { STAGES, stationDef } from '../data/stations';
 import { CHASSIS, byId, maxGears } from '../data/tech';
 import { toolingDef } from '../data/tooling';
-import { aiDesign } from './ai';
+import { aiDesign, type AiOptions } from './ai';
 import { FOCUS_KEYS, MAX_PRIORITIES, SEGMENT_PRIORITIES, bonusFromPoints, normalizeFocus, priorityFocus } from './development';
 import { displacementCc } from './engine';
-import { writeReviews } from './feedback';
+import { HIKE_TOLERANCE, HIKE_WEEKS, acceptedCeiling, forgiveHike, isHike, writeReviews } from './feedback';
 import { emptyLine, lineReport, modernizeQuote, nextLineName, planBalancedLine, reservedLines, retoolCost, stationPrice, stationResale, turnkeyLineCost, turnkeyQuote, volumeDieCost, workshopLineCost, workshopOutput, workshopPlan } from './factory';
 import {
   shareEngineers,
@@ -52,7 +52,7 @@ import { companyWorkScale } from './investments';
 import { TWO_TONE_YEAR, eraPaint, paintDef } from '../data/paints';
 import { followAdNorm } from './advertising';
 import { list, t } from '../i18n';
-import { dec, fmtPercent } from '../i18n/format';
+import { dec } from '../i18n/format';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 const ok: ActionResult = { ok: true };
@@ -72,9 +72,12 @@ function model(s: GameState, id: string): CarModel {
 
 // ---------------- Staff ----------------
 
+/** What hiring one engineer costs (the agency and the move). */
+export const hireCost = (yf: number) => 40 * costIndex(yf);
+
 export function hireEngineers(s: GameState, n: number): ActionResult {
   const yf = yearFloat(s.week);
-  const cost = n * 40 * costIndex(yf);
+  const cost = n * hireCost(yf);
   if (s.company.cash < cost) return fail(t('Yeterli para yok.'));
   spend(s, cost, 'other');
   s.company.engineers += n;
@@ -132,16 +135,26 @@ export function designSummary(d: CarDesign): string {
  * Where a new design starts: a new generation from the car it replaces (as last updated by its
  * facelifts), anything else from the company's most recently updated car.
  */
+/** The maker style a class's first sketch is drawn in (core/ai.ts). */
+const SKETCH_STYLE: Record<SegmentId, AiOptions['style']> = { city: 'mass', family: 'mass', luxury: 'premium', sport: 'sport', pickup: 'utility', suv: 'utility' };
+
 export function defaultDesign(s: GameState, segment: SegmentId, replacesModelId?: string): CarDesign {
-  void segment;
   const yf = yearFloat(s.week);
   const replaced = replacesModelId ? s.models.find((m) => m.id === replacesModelId) : undefined;
   if (replaced) return clone(replaced.design);
-  const latest = [...s.models].sort((a, b) => Math.max(b.launchWeek, b.refreshWeek) - Math.max(a.launchWeek, a.refreshWeek))[0];
-  // A new car starts from the latest one's engineering, not its paint.
+  // A new car starts from the latest one of its class's engineering, not its paint. Another class
+  // starts from a sketch of its own: a luxury car drawn on a family car's lines got 1/10 from every
+  // magazine (players' games, October 2026).
+  const latest = s.models.filter((m) => m.segment === segment).sort((a, b) => Math.max(b.launchWeek, b.refreshWeek) - Math.max(a.launchWeek, a.refreshWeek))[0];
   if (latest) return { ...clone(latest.design), paint: undefined, roof: undefined };
-  const { design } = aiDesign('family', Math.floor(yf), { style: 'mass', skill: 40, market: s.company.hq }, () => 0.5);
-  return restrictToKnown(s, { ...design, size: 0.4, styling: 0.3, interior: 0.3, suspBalance: 0.5 }, maxGears(yf));
+  // A city car does best as a plain, roomy little car (6.9 against 4.4 for the city sketch); the
+  // other classes as their own makers draw them.
+  if (segment === 'city') {
+    const { design } = aiDesign('family', Math.floor(yf), { style: 'mass', skill: 40, market: s.company.hq }, () => 0.5);
+    return restrictToKnown(s, { ...design, size: 0.4, styling: 0.3, interior: 0.3, suspBalance: 0.5 }, maxGears(yf));
+  }
+  const { design } = aiDesign(segment, Math.floor(yf), { style: SKETCH_STYLE[segment], skill: 40, market: s.company.hq }, () => 0.5);
+  return restrictToKnown(s, design, maxGears(yf));
 }
 
 export function startProject(s: GameState, o: StartProjectOptions): { ok: true; id: string } | { ok: false; error: string } {
@@ -291,6 +304,7 @@ export function setProjectPaint(s: GameState, pid: string, paint?: string, roof?
   const bad = paintAllowed(s, paint, roof);
   if (bad) return fail(bad);
   p.design = { ...p.design, paint, roof };
+  decide(s, 'paint:' + pid, `${p.name}: boya ${paint ?? '-'}${roof ? ` / tavan ${roof}` : ''}`);
   return ok;
 }
 
@@ -401,7 +415,7 @@ export function setTestPlan(s: GameState, pid: string, test: TestId, weeks: numb
   const def = TESTS.find((x) => x.id === test)!;
   if (def.year > yearFloat(s.week)) return fail(t('{test} henüz yapılamıyor.', { test: t(def.name) }));
   p.tests[test].planned = Math.max(p.tests[test].done, Math.round(weeks));
-  decide(s, 'tests:' + pid, `${p.name}: test planı ${TESTS.map((t) => `${t.id} ${p.tests[t.id].planned}hf`).join(', ')}`);
+  decide(s, 'testplan:' + pid, `${p.name}: test planı ${TESTS.map((t) => `${t.id} ${p.tests[t.id].planned}hf`).join(', ')}`);
   return ok;
 }
 
@@ -706,7 +720,7 @@ export function launchModel(s: GameState, pid: string, o: LaunchOptions): { ok: 
       kind: 'unlock',
       title: t('Yeni imkânlar açıldı'),
       body:
-        t('Bayi ağı: Arabaların şimdilik yalnızca {state} eyaletinde satılıyor. Pazarlar ekranındaki haritadan komşu eyaletlerde bayi arayabilirsin; eyalet dışına giden her araba için demiryolu nakliyesi ödersin, yoldaki arabaların için de servis gerekir.', {
+        t('Bayi ağı: Arabaların şimdilik yalnızca {state} eyaletinde satılıyor. Harita ekranından komşu eyaletlerde bayi arayabilirsin; eyalet dışına giden her araba için demiryolu nakliyesi ödersin, yoldaki arabaların için de servis gerekir.', {
           state: stateDef(homeState(s)).name,
         }) +
         '\n\n' +
@@ -748,8 +762,7 @@ function retire(s: GameState, m: CarModel, reason: 'successor' | 'withdrawn') {
 
 // ---------------- Models on sale ----------------
 
-/** Price rise above the launch level (after inflation) that the press lets pass in a car's first years. */
-export const HIKE_TOLERANCE = 0.08;
+export { HIKE_TOLERANCE };
 
 export function setModelPrice(s: GameState, id: string, price: number) {
   const m = model(s, id);
@@ -759,31 +772,37 @@ export function setModelPrice(s: GameState, id: string, price: number) {
   m.price = Math.max(1, price);
   m.priceWeek = s.week;
   decide(s, 'price:' + id, `${m.name}: fiyat ${money(m.price)} (sınıf ${money(referencePrice(s.company.hq, m.segment, yearFloat(s.week)))})`);
-  // Launching cheap for good reviews and raising the price later is noticed.
-  const ceiling = m.priceCeiling ?? before / ci;
+  // Launching cheap for good reviews and raising the price later is noticed, but only a price that
+  // stays: the press judges a hike once it has lasted HIKE_WEEKS (core/feedback.ts judgePriceHikes).
+  // Players trying a price for a moment kept 1/10 reviews for good (October 2026).
+  const base = acceptedCeiling(m) ?? before / ci;
   const real = m.price / ci;
-  if ((s.week - m.launchWeek) / 52 < 3 && real > ceiling * (1 + HIKE_TOLERANCE)) {
-    m.priceCeiling = real;
-    const old = m.reviewScore;
-    const reviews = writeReviews(s, m, stateRng(s));
-    const fresh = reviews.reduce((a, r) => a + r.score, 0) / reviews.length;
-    if (fresh < old) {
-      m.reviews = reviews;
-      m.reviewScore = fresh;
-    }
-    s.company.reputation = clamp(s.company.reputation - Math.max(0.5, (old - m.reviewScore) * 1.5), 0, 100);
-    m.hype = 0;
-    log(
-      s,
-      t('Basın {name} modeline gelen {rise} zammı eleştirdi: dergi ortalaması {old} → {now}. Lansman heyecanı söndü.', {
-        name: m.name,
-        rise: fmtPercent(real / ceiling - 1, 0),
-        old: dec(old, 1),
-        now: dec(m.reviewScore, 1),
-      }),
-      'warn',
-    );
+  // Back to a price the press accepts: the reviews it gave before the hike count again.
+  if (!isHike(real, base)) {
+    if (m.hike) forgiveHike(s, m);
+  } else if (isHikeAge(s, m) && (!m.hike || (m.hike.judged && isHike(real, m.priceCeiling ?? base)))) {
+    // A first hike, or a judged one raised again, is watched afresh.
+    m.hike = { since: s.week, before: m.hike?.before };
+    log(s, t('Basın {name} modeline gelen zammı izliyor: fiyat {n} haftadan uzun bu düzeyde kalırsa dergiler arabayı yeniden değerlendirir.', { name: m.name, n: HIKE_WEEKS }), 'warn');
   }
+}
+
+/** A car in the years after launch when a hike is news. */
+export const isHikeAge = (s: GameState, m: CarModel) => (s.week - m.launchWeek) / 52 < 3;
+
+/** The price (in today's money) above which a car's next price change is a hike the press watches, if it is one. */
+export function hikeLimit(s: GameState, m: CarModel): number | undefined {
+  if (!isHikeAge(s, m)) return undefined;
+  const ci = priceLevel(yearFloat(s.week));
+  const ceiling = m.hike?.judged ? m.priceCeiling : acceptedCeiling(m);
+  return ceiling === undefined ? undefined : ceiling * ci * (1 + HIKE_TOLERANCE);
+}
+
+/** Let a car's price follow its class (inflation and the class's own moves) by itself. */
+export function setModelIndexPrice(s: GameState, id: string, on: boolean) {
+  const m = model(s, id);
+  m.indexPrice = on;
+  decide(s, 'index:' + id, `${m.name}: fiyat sınıfa endeksli ${on ? 'evet' : 'hayır'}`);
 }
 
 export function setProductionRate(s: GameState, id: string, rate: number) {
@@ -1005,7 +1024,9 @@ export function setModelAutoCapacity(s: GameState, id: string, on: boolean) {
 
 export function setLineMilitary(s: GameState, lineId: string, military: boolean): ActionResult {
   if (military && !((s.flags.militaryUntil ?? 0) > yearFloat(s.week))) return fail(t('Aktif bir askeri sözleşme yok.'));
-  s.lines.find((l) => l.id === lineId)!.military = military;
+  const line = s.lines.find((l) => l.id === lineId)!;
+  line.military = military;
+  decide(s, 'military:' + lineId, `${line.name}: askeri üretim ${military ? 'açık' : 'kapalı'}`);
   return ok;
 }
 
@@ -1045,7 +1066,7 @@ export function marketResearch(s: GameState, segment: SegmentId): ActionResult {
   const k = s.knowledge[segment];
   for (const key of Object.keys(segmentDef(segment).weights) as (keyof typeof k)[]) k[key] = 2;
   log(s, t('{segment} pazar araştırması tamamlandı.', { segment: t(segmentDef(segment).name) }), 'good');
-  decide(s, 'research', `Pazar araştırması (${money(cost)})`);
+  decide(s, 'market:' + segment, `Pazar araştırması: ${segment} (${money(cost)})`);
   return ok;
 }
 

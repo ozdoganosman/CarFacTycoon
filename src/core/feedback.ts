@@ -1,12 +1,15 @@
 import { openStates, underServed } from './network';
 import { stateDef } from '../data/states';
 import { ATTRS, ATTR_NAMES, segmentDef } from '../data/segments';
-import { PRICE_REMARK, modelScores, playerOffer, rivalScores, segmentMarket } from './market';
+import { PRICE_REMARK, modelScores, playerOffer, priceNow, rivalScores, segmentMarket } from './market';
 import { lineReport } from './factory';
 import { leadsClass } from './rivalMoves';
-import type { Rng } from './rng';
+import { stateRng, type Rng } from './rng';
 import { segmentWeights } from './scoring';
 import { yearFloat } from './time';
+import { priceLevel } from '../data/economy';
+import { clamp, log } from './util';
+import { dec, fmtPercent } from '../i18n/format';
 import type { AttrKey, CarModel, GameState, LaunchReport, MarketId, Review } from './types';
 import { isTurkish, list, lower, msg, t } from '../i18n';
 
@@ -57,6 +60,71 @@ export function rivalAverageAppeal(state: GameState, model: CarModel, market: Ma
   const rivals = state.rivalModels.filter((r) => r.active && r.segment === model.segment && r.markets.includes(market));
   if (!rivals.length) return 50;
   return rivals.reduce((s, r) => s + rivalScores(state, r).appeal[market], 0) / rivals.length;
+}
+
+/** Price rise above the launch level (after inflation) that the press lets pass in a car's first years. */
+export const HIKE_TOLERANCE = 0.08;
+
+/** Weeks a hike has to last before the press judges it (a price tried for a moment is not news). */
+export const HIKE_WEEKS = 4;
+
+/** The real price (in 1900 money) the press accepted before any hike it is watching or has judged. */
+export const acceptedCeiling = (m: CarModel) => m.hike?.before?.ceiling ?? m.priceCeiling;
+
+/** Whether a real price is a hike over a ceiling. */
+export const isHike = (real: number, ceiling: number) => real > ceiling * (1 + HIKE_TOLERANCE);
+
+/** A price back where the press accepted it: the hike is forgotten and the reviews from before it count again. */
+export function forgiveHike(s: GameState, m: CarModel) {
+  const was = m.hike?.before;
+  delete m.hike;
+  if (!was) return;
+  m.reviews = was.reviews;
+  m.reviewScore = was.score;
+  m.priceCeiling = was.ceiling;
+  log(s, t('{name} eski fiyatına döndü: dergiler zamdan önceki değerlendirmelerine döndü ({score}).', { name: m.name, score: dec(m.reviewScore, 1) }), 'good');
+}
+
+/**
+ * Weekly: a hike that has lasted HIKE_WEEKS is judged. The magazines write again at the new price
+ * (the worse reviews stay), the launch buzz is gone and the brand loses standing. The reviews from
+ * before are kept: a price back down brings them back (actions.ts setModelPrice).
+ */
+export function judgePriceHikes(s: GameState) {
+  for (const m of s.models) {
+    if (m.status !== 'active' || !m.hike || m.hike.judged || s.week - m.hike.since < HIKE_WEEKS) continue;
+    const ci = priceLevel(yearFloat(s.week));
+    const real = priceNow(m, s.week) / ci;
+    // Lowered meanwhile without a new price of the player's (a price war matched): nothing to judge.
+    const accepted = acceptedCeiling(m);
+    if (accepted !== undefined && !isHike(real, accepted)) {
+      forgiveHike(s, m);
+      continue;
+    }
+    const ceiling = m.priceCeiling ?? real;
+    m.hike.before ??= { reviews: m.reviews, score: m.reviewScore, ceiling };
+    m.hike.judged = true;
+    m.priceCeiling = real;
+    const old = m.reviewScore;
+    const reviews = writeReviews(s, m, stateRng(s));
+    const fresh = reviews.reduce((a, r) => a + r.score, 0) / reviews.length;
+    if (fresh < old) {
+      m.reviews = reviews;
+      m.reviewScore = fresh;
+    }
+    s.company.reputation = clamp(s.company.reputation - Math.max(0.5, (old - m.reviewScore) * 1.5), 0, 100);
+    m.hype = 0;
+    log(
+      s,
+      t('Basın {name} modeline gelen {rise} zammı eleştirdi: dergi ortalaması {old} → {now}. Lansman heyecanı söndü. Fiyat eski düzeyine inerse eski değerlendirmeler geri gelir.', {
+        name: m.name,
+        rise: fmtPercent(real / ceiling - 1, 0),
+        old: dec(old, 1),
+        now: dec(m.reviewScore, 1),
+      }),
+      'warn',
+    );
+  }
 }
 
 export function writeReviews(state: GameState, model: CarModel, rng: Rng): Review[] {

@@ -132,7 +132,7 @@ export function StatsPanel(props: {
             )}
             {props.note && <div className="muted small">{props.note}</div>}
             {prio && (
-              <div className="sp-prio-hint small">
+              <div className="sp-prio-hint small" data-guide="priorities">
                 {tx('<b>İki öncelik seç:</b> mühendisler zamanlarının {share} kadarını onlara verir.', { share: pct(2 * PRIORITY_SHARE, 0) })}
               </div>
             )}

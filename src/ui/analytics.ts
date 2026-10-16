@@ -1,6 +1,7 @@
 import type { PostHog } from 'posthog-js';
 import { finalScore } from '../core/game';
 import { chapterOf } from '../core/goals';
+import { lessonById } from '../core/lessons';
 import { yearFloat } from '../core/time';
 import type { GameState } from '../core/types';
 import { lastOf } from '../core/util';
@@ -118,6 +119,8 @@ interface Seen {
   step: number;
   /** Decade goals already sent (goal_met). */
   goals: number;
+  /** Lessons already sent as done or skipped (core/lessons.ts). */
+  lessons: Set<string>;
 }
 
 /** The decade goals met, in the order they were met. */
@@ -174,8 +177,26 @@ export function observeGame(s: GameState | null) {
   const year = yearOf(s);
   if (!seen || seen.seed !== s.seed) {
     track(s.week <= 1 ? 'game_started' : 'game_resumed', glance(s));
-    seen = { seed: s.seed, lastDecision: lastOf(decisions) ?? null, lastError: lastOf(errors) ?? null, year, over: !!s.gameOver, step: firstStep(s), goals: goalsDone(s).length };
+    seen = {
+      seed: s.seed,
+      lastDecision: lastOf(decisions) ?? null,
+      lastError: lastOf(errors) ?? null,
+      year,
+      over: !!s.gameOver,
+      step: firstStep(s),
+      goals: goalsDone(s).length,
+      lessons: new Set([...Object.keys(s.lessons?.done ?? {}), ...(s.lessons?.skipped ?? [])]),
+    };
     return;
+  }
+  // The master's notebook: each lesson once, done or skipped (a funnel of lessons in PostHog).
+  for (const [id, outcome] of [
+    ...Object.keys(s.lessons?.done ?? {}).map((id) => [id, 'lesson_done'] as const),
+    ...(s.lessons?.skipped ?? []).map((id) => [id, 'lesson_skipped'] as const),
+  ]) {
+    if (seen.lessons.has(id)) continue;
+    seen.lessons.add(id);
+    track(outcome, { lesson: id, chapter: lessonById(id)?.chapter, game_year: year });
   }
   const step = firstStep(s);
   for (let i = seen.step; i < step; i++) track(FIRST_STEPS[i], glance(s));

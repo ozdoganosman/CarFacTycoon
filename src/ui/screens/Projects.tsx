@@ -6,7 +6,7 @@ import * as A from '../../core/actions';
 import { availableSegments, gates } from '../../core/game';
 import { referencePrice, weeklySegmentDemand } from '../../core/market';
 import { yearFloat } from '../../core/time';
-import { SEGMENTS } from '../../data/segments';
+import { SEGMENTS, segmentDef } from '../../data/segments';
 import type { GameState, Project, ProjectPhase, SegmentId } from '../../core/types';
 import { msg, t } from '../../i18n';
 import { store, useGameState } from '../store';
@@ -44,6 +44,9 @@ export function projectProgress(s: GameState, p: Project): number {
   }
 }
 
+/** Classes a first car does badly in: costly to make, slow to get ready, few buyers at the start. */
+const HARD_FIRST: SegmentId[] = ['luxury', 'sport'];
+
 function NewProject({ onDone }: { onDone: () => void }) {
   const s = useGameState();
   const yf = yearFloat(s.week);
@@ -54,6 +57,8 @@ function NewProject({ onDone }: { onDone: () => void }) {
   const [engineId, setEngineId] = useState('');
   const [replaces, setReplaces] = useState('');
   const g = gates(s);
+  // The company's first car: the class that forgives most is marked, the hard ones are said to be hard.
+  const first = s.models.length === 0;
   const sameSeg = s.models.filter((m) => m.status === 'active' && m.segment === segment);
   // What such a project would cost before launch, worked out on a copy of the game.
   const budget = useMemo(() => newProjectBudget(s, segment, replaces || undefined), [segment, replaces, s.week]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -83,7 +88,10 @@ function NewProject({ onDone }: { onDone: () => void }) {
               value: seg.id,
               disabled: !open,
               label: (
-                <SegmentLabel id={seg.id} />
+                <>
+                  <SegmentLabel id={seg.id} />
+                  {first && seg.id === 'family' && open && <Badge tone="good">{t('İlk araba için önerilen')}</Badge>}
+                </>
               ),
               sub: open ? (
                 <>
@@ -103,6 +111,14 @@ function NewProject({ onDone }: { onDone: () => void }) {
             };
           })}
         />
+        {first && HARD_FIRST.includes(segment) && (
+          <p className="note small tone-warn">
+            {tx(
+              '<b>İlk araba için zor bir sınıf.</b> {buyers} çok şey ister: araba pahalıya mal olur, daha uzun sürede hazır olur ve ilk yıllarda az satar. İlk araba için aile ya da şehir arabası daha güvenli bir başlangıçtır.',
+              { buyers: t(segmentDef(segment).buyers) },
+            )}
+          </p>
+        )}
       </div>
       {g.platforms ? (
         <div className="form-grid">
@@ -147,7 +163,11 @@ function NewProject({ onDone }: { onDone: () => void }) {
       )}
       {budget && (
         <>
-          <p className="muted small">{t('Şirketin son arabasına benzer bir tasarımla ve varsayılan test planıyla bu proje:')}</p>
+          <p className="muted small">
+            {s.models.some((m) => m.segment === segment)
+              ? t('Bu sınıftaki son arabana benzer bir tasarımla ve varsayılan test planıyla bu proje:')
+              : t('Bu sınıfın tipik bir tasarımıyla ve varsayılan test planıyla bu proje:')}
+          </p>
           <BudgetLine b={budget} />
         </>
       )}
@@ -184,7 +204,7 @@ export function Projects() {
     <ol className="steps">
       <li>
         {tx(
-          '<b>Tasarım ve geliştirme:</b> Aracı kimin için yaptığına sen karar ver: modülleri seç, mühendislerini ata, mühendis tahmininden iki öncelik seç (performans, verim, konfor, güvenlik, maliyet, kalite…). Öncelikler aracı gerçekten değiştirir.',
+          '<b>Tasarım ve geliştirme:</b> Aracı kimin için yaptığına sen karar ver: modülleri seç, mühendis tahmininden iki öncelik seç (performans, verim, konfor, güvenlik, maliyet, kalite…). Öncelikler aracı gerçekten değiştirir.',
         )}
       </li>
       <li>
@@ -199,7 +219,7 @@ export function Projects() {
       <div className="screen-head">
         <h1>{t('Projeler')}</h1>
         {!creating && (
-          <Button kind="primary" onClick={() => setCreating(true)}>
+          <Button kind="primary" guide="new-project" onClick={() => setCreating(true)}>
             + {t('Yeni proje')}
           </Button>
         )}
@@ -229,7 +249,7 @@ export function Projects() {
             </div>
             <p>{t('Çizim masası boş. Sıradaki arabanı tasarla: yeni bir sınıf, bir yeni kuşak ya da bir makyaj.')}</p>
             {!creating && (
-              <Button kind="primary" onClick={() => setCreating(true)}>
+              <Button kind="primary" guide="new-project" onClick={() => setCreating(true)}>
                 + {t('Yeni proje')}
               </Button>
             )}

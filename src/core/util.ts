@@ -111,6 +111,8 @@ export function num(v: number): string {
  * thing in the same week (a price slider) collapse into one entry.
  */
 export function decide(state: GameState, key: string, text: string) {
+  // The kind of decision, kept for good (the list below is trimmed): the lessons read it.
+  (state.used ??= {})[key.split(':')[0]] = state.week;
   const list = (state.decisions ??= []);
   const last = list[list.length - 1];
   if (last && last.key === key && last.week === state.week) last.text = text;

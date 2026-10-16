@@ -337,6 +337,12 @@ export interface CarModel {
   reviews: Review[];
   reviewScore: number;
   hype: number;
+  /**
+   * A price raised past what the press accepts in the car's first years: since when, whether the press
+   * has judged it yet (core/feedback.ts judgePriceHikes), and the reviews and ceiling the car had
+   * before its first judged hike, which come back with the old price.
+   */
+  hike?: { since: number; judged?: boolean; before?: { reviews: Review[]; score: number; ceiling: number } };
   /** What buyers believe about reliability; drifts toward the real value as cars age in the field. */
   perceivedReliability: number;
   fieldFailures: number;
@@ -724,7 +730,16 @@ export interface GameState {
     difficulty?: DifficultyId;
     /** The way to the first car is guided and the menu opens screen by screen (core/guide.ts); new games only. */
     guided?: boolean;
+    /** The master's notebook offers its lessons (core/lessons.ts); unset: yes. */
+    lessons?: boolean;
   };
+  /**
+   * What the player has used, by kind (the part of a decision's key before ':', or a mark the screens
+   * leave, like a tab opened): the week it was last used. Lessons read it (core/lessons.ts).
+   */
+  used?: Record<string, number>;
+  /** The master's notebook: lessons done (id → week), skipped, the one on offer and when the last one ended. */
+  lessons?: { done: Record<string, number>; skipped: string[]; active?: string; lastWeek?: number };
   /** Level of the engineering organisation (data/investments.ts ENGINEERING_LEVELS); unset: the workshop bench. */
   engineering?: number;
   /** The company's own supplier plants and the cars a year each can supply (data/investments.ts SUPPLIER_PLANTS). */

@@ -48,6 +48,11 @@ function migrate(s: GameState) {
     s.company.labShare = LAB_SHARES.reduce<number>((a, b) => (Math.abs(b - share) < Math.abs(a - share) ? b : a), 0);
   }
   delete s.company.researchers;
+  // What the player has used (the lessons read it) began later: rebuild it from the decisions kept.
+  if (!s.used) {
+    s.used = {};
+    for (const d of s.decisions ?? []) s.used[d.key.split(':')[0]] = d.week;
+  }
 }
 
 /** Browser storage can be unavailable (private mode, blocked site data); never let that break the game. */

@@ -66,6 +66,7 @@ function AdPanel() {
   };
   return (
     <Panel
+      guide="ad-level"
       title={
         <>
           {t('Reklam')}{' '}
@@ -373,7 +374,7 @@ function NetworkControls() {
   const gap = { parc: num(N.totalParc(s)), shops: num(N.totalService(s)), n: plan.count, target: pct(target, 0) };
   return (
     <div className="net-controls">
-      <div className="net-autos">
+      <div className="net-autos" data-guide="auto-network">
         <Toggle
           checked={auto}
           onChange={(v) => store.act((st) => N.setAutoService(st, v))}
@@ -718,7 +719,7 @@ function Knowledge() {
   const yf = yearFloat(s.week);
   const cost = A.marketResearchCost(s);
   return (
-    <Panel title={t('Segment bilgisi: alıcılar neye önem veriyor?')}>
+    <Panel title={t('Segment bilgisi: alıcılar neye önem veriyor?')} guide="market-research">
       <p className="muted small">
         {t('Tablo, dergi yorumları ve müşteri geri bildirimleriyle zamanla dolar. ● sayısı önemi gösterir; “?” henüz bilinmiyor demek. Pazar araştırması tüm satırı hemen açar.')}
       </p>

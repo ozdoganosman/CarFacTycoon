@@ -63,6 +63,7 @@ export function Nav() {
       <button
         type="button"
         className={`nav-item nav-more ${rest.some((it) => active(it.id)) ? 'is-on' : ''}`}
+        data-guide="nav-more"
         aria-expanded={more}
         onClick={() => setMore(!more)}
       >

@@ -6,7 +6,7 @@ import { MARKETS } from '../data/markets';
 import { SEGMENTS } from '../data/segments';
 import { difficultyDef, type DifficultyId } from '../data/difficulty';
 import { toolingDef } from '../data/tooling';
-import { buildLaunchReport, customerFeedback } from './feedback';
+import { buildLaunchReport, customerFeedback, judgePriceHikes } from './feedback';
 import { ensureEstimate, narrowForTest } from './estimate';
 import { MILITARY_COMPLEXITY, emptyLine, lineOffline, lineReport, lineUpkeep, militaryMargin, stationPrice } from './factory';
 import { MARKET_IDS, SEGMENT_IDS, modelScores, priceNow, segmentMarket } from './market';
@@ -338,6 +338,7 @@ export function tick(s: GameState): void {
   s.week += 1;
   const yf = yearFloat(s.week);
   financeNow(s);
+  judgePriceHikes(s);
 
   if (s.week >= s.endWeek) {
     closeYear(s, yearOf(s.week) - 1);

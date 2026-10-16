@@ -42,6 +42,7 @@ export function EngineeringPanel() {
   const open = next && next.year <= yf;
   return (
     <Panel
+      guide="engineering"
       title={
         <>
           {t('Mühendislik teşkilatı')}{' '}
@@ -109,6 +110,7 @@ export function PlantsPanel() {
   const yf = yearFloat(s.week);
   return (
     <Panel
+      guide="plants"
       title={
         <>
           {t('Tedarik fabrikaları')}{' '}
