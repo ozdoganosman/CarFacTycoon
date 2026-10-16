@@ -4,7 +4,7 @@ import { loadLocal, saveLocal } from '../core/save';
 import { syncTick } from './claudeLink';
 import { observeGame, trackScreen } from './analytics';
 import { isBlockingModal, recordError } from '../core/util';
-import { areaSeen, updateAreas, type Area } from '../core/guide';
+import { areaSeen, timeLocked, updateAreas, type Area } from '../core/guide';
 import { LESSON_CHAPTERS, checkLessons, chapterProgress, lessonById, lessonProgress, noteUse, startLesson, type LessonAt } from '../core/lessons';
 import { list, msg, t } from '../i18n';
 import type { ModalItem } from '../core/types';
@@ -285,6 +285,11 @@ class GameStore {
 
   /** The player's own choice of speed (also cancels a pending auto-resume). */
   setSpeed(speed: Speed) {
+    if (speed !== 0 && this.state && timeLocked(this.state)) {
+      this.showToast(t('Önce ilk arabanın projesini aç: proje yokken zaman yalnızca maaş yer.'));
+      this.point({ place: { id: 'projects' }, target: 'start-project|new-project' });
+      return;
+    }
     if (speed === 3 && this.state) noteUse(this.state, 'speed3');
     this.resumeSpeed = null;
     this.newsResume = null;
@@ -329,6 +334,11 @@ class GameStore {
     if (!s) return;
     if (s.gameOver) {
       this.setSpeed(0);
+      return;
+    }
+    // The only project given up: time waits for the next one.
+    if (timeLocked(s)) {
+      this.run(0);
       return;
     }
     // Decisions pause the clock; the year report only waits in a corner.

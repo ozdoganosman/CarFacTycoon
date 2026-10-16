@@ -60,7 +60,11 @@
  },
  "4up2ie": "El {name} salió de producción y deja paso a la nueva generación.",
  "7m1046": "El {name} salió de producción y se retiró de la venta.",
- "1n85dh": "La prensa criticó duramente la subida de {rise} en el precio del {name}: nota media de la prensa {old} → {now}. El entusiasmo del lanzamiento se apagó.",
+ "beuj1v": "El {name} vuelve a su precio anterior: las críticas de las revistas de antes de la subida vuelven a contar ({score}).",
+ "qtii3r": {
+  "one": "La prensa vigila la subida de precio del {name}: si el precio se mantiene en este nivel más de {n} semana, las revistas volverán a evaluar el auto.",
+  "other": "La prensa vigila la subida de precio del {name}: si el precio se mantiene en este nivel más de {n} semanas, las revistas volverán a evaluar el auto."
+ },
  "140l0hi": "Necesitas {cost} para adaptar la línea.",
  "1ebxnwy": "Esta línea está reservada para otro proyecto.",
  "6mqcn2": "Necesitas {cost} para una línea nueva.",
@@ -366,6 +370,7 @@
  "jg3b3f": "El Correo del Motor",
  "b6we5i": "Ruta y Velocidad",
  "1e98ff4": "La Gaceta del Motor",
+ "xyep3c": "La prensa criticó duramente la subida de {rise} en el precio del {name}: nota media de la prensa {old} → {now}. El entusiasmo del lanzamiento se apagó. Si el precio vuelve a su nivel anterior, vuelven las críticas anteriores.",
  "6e3vs3": "Pero {text}",
  "1w953d3": "Cuesta distinguirlo de sus modelos hermanos: ¡todos son el mismo auto!",
  "115j275": "El precio es demasiado ambicioso.",
@@ -544,7 +549,7 @@
  "s2ku8f": "Aquí se compara tu auto con los rivales de su segmento en cada área: si te quedas atrás en lo que les importa a los compradores, por ahí se te escapan las ventas.",
  "1inprmb": "cuando el primer auto salga a la venta",
  "f69oy5": "Ajusta el precio",
- "1qidsoo": "Cambia el precio o activa <b>Indexar el precio al segmento</b>. En los tres primeros años, una subida de más del 8 % provoca críticas en la prensa.",
+ "1t7u6r2": "Cambia el precio o activa <b>Indexar el precio al segmento</b>. En los tres primeros años, una subida de más del 8 % que dure más de un mes provoca críticas en la prensa.",
  "xml4ly": "¿La fábrica da abasto?",
  "66euhe": "La fábrica muestra una fila por auto: demanda, producción y número de líneas. Con <b>Automático</b>, la fábrica crece y se achica sola según la demanda; si eliges <b>A mano</b>, tú montas las líneas.",
  "fwd1z1": "Red de concesionarios",
@@ -2669,9 +2674,28 @@
  "16gzx2s": "Dificultad de fabricación",
  "m3740k": "Según los ingenieros, podría quedar por debajo de la media del segmento en: <b>{attrs}</b>.",
  "1gr3kwe": "Según los ingenieros, supera la media del segmento en: <b>{attrs}</b>.",
+ "jpm6os": "La caja podría vaciarse pronto",
+ "1grzwv8": {
+  "one": "Tras esta contratación y los costes pendientes de los proyectos (prototipos, pruebas, troqueles), la caja dura ~{n} semana al gasto actual.",
+  "other": "Tras esta contratación y los costes pendientes de los proyectos (prototipos, pruebas, troqueles), la caja dura ~{n} semanas al gasto actual."
+ },
+ "6s879o": {
+  "one": "Sin la contratación duraría ~{n} semana.",
+  "other": "Sin la contratación duraría ~{n} semanas."
+ },
+ "ke2os1": "Cada ingeniero cobra su sueldo, se venda algo o no; si el dinero se acaba antes de que el auto salga a la venta necesitarás un crédito, y si también se acaba, la empresa quiebra.",
+ "rxt29q": "Contratar igualmente",
  "2co5sz": {
   "one": "{n} ingeniero contratado",
   "other": "{n} ingenieros contratados"
+ },
+ "dodrwf": {
+  "one": "Pagados los costes pendientes de los proyectos, la caja dura ~{n} semana al gasto actual; ~{wa} con +{a} ingenieros, ~{wb} con +{b}.",
+  "other": "Pagados los costes pendientes de los proyectos, la caja dura ~{n} semanas al gasto actual; ~{wa} con +{a} ingenieros, ~{wb} con +{b}."
+ },
+ "164fkhx": {
+  "one": "Pagados los costes pendientes de los proyectos, la caja dura ~{n} semana al gasto actual; ~{wa} con +{a} ingenieros.",
+  "other": "Pagados los costes pendientes de los proyectos, la caja dura ~{n} semanas al gasto actual; ~{wa} con +{a} ingenieros."
  },
  "12j6jzd": "Equipo de ingeniería",
  "bor2vm": {
@@ -3506,7 +3530,6 @@
  "1cqe902": "Precio actual {price} · precio del segmento {classPrice} · materiales por auto {material}",
  "1ydzv96": "El precio supera en {gap} al precio del segmento: a los compradores les parece caro.",
  "1ope6cy": "El precio está {gap} por debajo del precio del segmento: el beneficio por auto queda bajo.",
- "1jhz3ub": "Es una subida de más del {limit} sobre su precio más alto desde el lanzamiento (sin contar la inflación). La prensa lo notará: las revistas reescriben sus notas, se apaga el entusiasmo del lanzamiento y cae tu reputación.",
  "w5bfxw": "Indexar el precio al segmento",
  "enjy8n": "Si está activado, el precio se mueve con el precio típico del segmento: con la inflación, los márgenes cada vez más finos y el abaratamiento de la producción en serie incluidos.",
  "16sbcxz": {
@@ -3540,6 +3563,21 @@
  "129d1sz": "Aún no hay cartas: los dueños escribirán a medida que se vendan autos.",
  "k3cwq8": "Resumen",
  "18gnnxj": "Auto y revistas",
+ "wut52q": "La prensa vigilará esta subida de precio",
+ "h6aqd5": {
+  "one": "Es una subida de más del {limit} sobre su precio más alto desde el lanzamiento (sin contar la inflación). Si el precio se mantiene en este nivel más de {n} semana, las revistas volverán a evaluar el auto, se apaga el entusiasmo del lanzamiento y cae tu reputación. Si vuelves a bajar el precio, vuelven las críticas anteriores.",
+  "other": "Es una subida de más del {limit} sobre su precio más alto desde el lanzamiento (sin contar la inflación). Si el precio se mantiene en este nivel más de {n} semanas, las revistas volverán a evaluar el auto, se apaga el entusiasmo del lanzamiento y cae tu reputación. Si vuelves a bajar el precio, vuelven las críticas anteriores."
+ },
+ "1v8aamu": "Subir el precio",
+ "j4q6tj": "Las revistas volvieron a evaluar el auto tras la subida de precio. Si el precio baja a {price} o menos, vuelven las críticas de antes de la subida ({score}).",
+ "p6wsw": {
+  "one": "La prensa vigila la subida de precio: si en {n} semana el precio no baja a {price} o menos, las revistas volverán a evaluar el auto.",
+  "other": "La prensa vigila la subida de precio: si en {n} semanas el precio no baja a {price} o menos, las revistas volverán a evaluar el auto."
+ },
+ "1ut70q2": {
+  "one": "Es una subida de más del {limit} sobre su precio más alto desde el lanzamiento (sin contar la inflación). Si se mantiene así más de {n} semana, la prensa lo notará: las revistas reescriben sus notas, se apaga el entusiasmo del lanzamiento y cae tu reputación.",
+  "other": "Es una subida de más del {limit} sobre su precio más alto desde el lanzamiento (sin contar la inflación). Si se mantiene así más de {n} semanas, la prensa lo notará: las revistas reescriben sus notas, se apaga el entusiasmo del lanzamiento y cae tu reputación."
+ },
  "1no87ob": "¿Por qué estas ventas? Mercado: {segment}",
  "1tr8th6": "Los compradores sopesan cada auto según su atractivo (puntos de diseño × prioridades ocultas del segmento), su precio, la marca y su antigüedad: desde su primer año, el diseño pierde ~{slow} puntos al año por antigüedad, y a partir de los {old} años, ~{fast} puntos al año (como máximo −{max}); un rediseño borra tres cuartas partes de la antigüedad acumulada hasta ese día. Tu red de concesionarios y tu reconocimiento determinan cuántos compradores pueden ver tu auto. Total del segmento: {demand} autos/semana.",
  "1ywdimb": "Efecto del precio",
@@ -3589,7 +3627,7 @@
  "1q1k1e4": "más rentable si agregas líneas (~{profit}/sem.)",
  "18hhnsp": "las revistas lo llaman “ambicioso”",
  "xcibi4": "<b>Estás cerca del techo:</b> el auto ya capta toda la cuota que puede entre los compradores a los que llegan sus concesionarios; bajar del precio del segmento no trae ventas, solo resta beneficio. La cuota crece con la red de concesionarios y la reputación.",
- "11lwnpe": "Los compradores se van mucho más rápido cuando el precio supera el del segmento en más del {over}. Las revistas valoran el precio según el segmento: cuanto más por encima del precio del segmento, más baja la nota, poco a poco, y en este segmento, a más del {steep} por encima, lo llaman “ambicioso”; una nota baja también reduce el público del lanzamiento. Empezar barato y subir el precio después no funciona: en los tres años posteriores al lanzamiento, una subida de más del {hike} hace que las revistas reescriban sus reseñas y te cuesta reputación.",
+ "1fk3vcf": "Los compradores se van mucho más rápido cuando el precio supera el del segmento en más del {over}. Las revistas valoran el precio según el segmento: cuanto más por encima del precio del segmento, más baja la nota, poco a poco, y en este segmento, a más del {steep} por encima, lo llaman “ambicioso”; una nota baja también reduce el público del lanzamiento. Empezar barato y subir el precio después no funciona: en los tres años posteriores al lanzamiento, una subida de más del {hike} que dure más de un mes hace que las revistas reescriban sus reseñas y te cuesta reputación.",
  "1p535an": "Lo que aporta el rediseño",
  "1dd8n5a": "Troqueles del rediseño (se pagan tras las pruebas)",
  "lewz0q": {
@@ -3764,8 +3802,10 @@
  "1ajzw1u": "Diseño",
  "eo0uak": "Desarrollo",
  "1de1wte": "Listo para lanzar",
+ "10knr7l": "Recomendado para el primer auto",
  "12jj5bo": "Segmento ({market}): {count} autos/año · precio típico {price}",
  "1uldueg": "Disponible en {year}",
+ "1f9tp2p": "<b>Una clase difícil para el primer auto.</b> {buyers} exigen mucho: el auto cuesta más de fabricar, tarda más en estar listo y se vende poco en sus primeros años. Un auto familiar o urbano es un comienzo más seguro.",
  "1xfd6q9": "Plataforma (chasis + tamaño + suspensión)",
  "juq4ft": {
   "one": "{name} ({n} modelo activo)",
@@ -3775,7 +3815,8 @@
  "19p9c7f": "¿Este proyecto es una nueva generación de un modelo existente?",
  "2ex6x1": "No, un modelo nuevo",
  "vvhuov": "Reemplazar a {name} (se queda con sus líneas)",
- "32ae9k": "Con un diseño parecido al último auto de la empresa y el plan de pruebas predeterminado, este proyecto se ve así:",
+ "mrl7up": "Con un diseño parecido a tu último auto de esta clase y el plan de pruebas predeterminado, este proyecto se ve así:",
+ "1haacji": "Con un diseño típico de esta clase y el plan de pruebas predeterminado, este proyecto se ve así:",
  "shtwno": "Empezar a diseñar",
  "vp13l4": "<b>Diseño y desarrollo:</b> tú decides para quién haces el auto: elige los módulos y dos prioridades en la estimación de los ingenieros (desempeño, eficiencia, confort, seguridad, costo, calidad…). Las prioridades cambian el auto de verdad.",
  "18vi4nh": "<b>Pruebas:</b> Las pruebas de dinamómetro, carretera, durabilidad y (desde 1934) choque encuentran defectos y ajustan el auto. Si las acortas, los defectos estallan en la calle.",
@@ -3899,6 +3940,7 @@
  "1drh907": "Libro del maestro: capítulo “{chapter}” completado. Tu título: {tier}.",
  "1cz9rwx": "Lección completada: {title}",
  "kzs36z": "No funcionó.",
+ "v6de5r": "Primero abre el proyecto de tu primer auto: sin proyecto, el tiempo solo se come los sueldos.",
  "lnlxx6": "Algo salió mal y el juego se detuvo. El error quedó registrado y se enviará a Claude.",
  "ve6mvq": "Dibujo de un auto con carrocería: {body}",
  "75qpkk": {

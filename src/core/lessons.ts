@@ -225,7 +225,7 @@ export const LESSONS: Lesson[] = [
     chapter: 2,
     kind: 'do',
     title: msg('Fiyatı ayarla'),
-    text: msg('Fiyatı değiştir ya da <b>Fiyatı sınıfa endeksle</b>’yi aç. İlk üç yılda %8’den büyük bir zam basında tepki çeker.'),
+    text: msg('Fiyatı değiştir ya da <b>Fiyatı sınıfa endeksle</b>’yi aç. İlk üç yılda %8’den büyük bir zam bir aydan uzun sürerse basında tepki çeker.'),
     where: (s) => toModel(newest(s), 'model-price', 'summary'),
     open: hasCar,
     waits: msg('ilk araba satışa çıkınca'),

@@ -60,7 +60,11 @@
  },
  "4up2ie": "The {name} is out of production, making way for the new generation.",
  "7m1046": "The {name} is out of production and withdrawn from sale.",
- "1n85dh": "The press slammed the {rise} price hike on the {name}: magazine average {old} → {now}. The launch buzz has fizzled out.",
+ "beuj1v": "The {name} is back at its old price: the magazines’ reviews from before the price hike count again ({score}).",
+ "qtii3r": {
+  "one": "The press is watching the price hike on the {name}: if the price stays at this level for more than {n} week, the magazines will review the car again.",
+  "other": "The press is watching the price hike on the {name}: if the price stays at this level for more than {n} weeks, the magazines will review the car again."
+ },
  "140l0hi": "You need {cost} to retool the line.",
  "1ebxnwy": "This line is reserved for another project.",
  "6mqcn2": "You need {cost} for a new line.",
@@ -366,6 +370,7 @@
  "jg3b3f": "Motor Post",
  "b6we5i": "Road & Speed",
  "1e98ff4": "The Motor Gazette",
+ "xyep3c": "The press slammed the {rise} price hike on the {name}: magazine average {old} → {now}. The launch buzz has fizzled out. If the price goes back to its old level, the old reviews come back.",
  "6e3vs3": "But {text}",
  "1w953d3": "Hard to tell apart from its sister models: they’re all the same car!",
  "115j275": "The price is too ambitious.",
@@ -544,7 +549,7 @@
  "s2ku8f": "Here your car is compared with its class rivals in every area: wherever you fall behind on what buyers care about, that’s where sales slip away.",
  "1inprmb": "once the first car is on sale",
  "f69oy5": "Adjust the price",
- "1qidsoo": "Change the price or turn on <b>Index price to class</b>. In the first three years, a price hike of more than 8% draws fire in the press.",
+ "1t7u6r2": "Change the price or turn on <b>Index price to class</b>. In the first three years, a price hike of more than 8% that lasts over a month draws fire in the press.",
  "xml4ly": "Can the factory keep up?",
  "66euhe": "The Factory has one row per car: demand, output, number of lines. With <b>Auto</b> selected, the factory grows and shrinks with demand on its own; choose <b>By hand</b> and you build the lines yourself.",
  "fwd1z1": "Dealer network",
@@ -2663,9 +2668,28 @@
  "16gzx2s": "Build difficulty",
  "m3740k": "Engineers think it may trail the class average in: <b>{attrs}</b>.",
  "1gr3kwe": "Engineers think it’s ahead of the class average in: <b>{attrs}</b>.",
+ "jpm6os": "The cash could run out soon",
+ "1grzwv8": {
+  "one": "After this hire and the projects’ remaining costs (prototypes, tests, dies), the cash lasts ~{n} week at current spending.",
+  "other": "After this hire and the projects’ remaining costs (prototypes, tests, dies), the cash lasts ~{n} weeks at current spending."
+ },
+ "6s879o": {
+  "one": "Without the hire it would last ~{n} week.",
+  "other": "Without the hire it would last ~{n} weeks."
+ },
+ "ke2os1": "Every engineer is paid whether anything sells or not; if the money runs out before the car is on sale you will need a loan, and if that runs out too the company goes bankrupt.",
+ "rxt29q": "Hire anyway",
  "2co5sz": {
   "one": "{n} engineer hired",
   "other": "{n} engineers hired"
+ },
+ "dodrwf": {
+  "one": "Once the projects’ remaining costs are paid, the cash lasts ~{n} week at current spending; ~{wa} with +{a} engineers, ~{wb} with +{b}.",
+  "other": "Once the projects’ remaining costs are paid, the cash lasts ~{n} weeks at current spending; ~{wa} with +{a} engineers, ~{wb} with +{b}."
+ },
+ "164fkhx": {
+  "one": "Once the projects’ remaining costs are paid, the cash lasts ~{n} week at current spending; ~{wa} with +{a} engineers.",
+  "other": "Once the projects’ remaining costs are paid, the cash lasts ~{n} weeks at current spending; ~{wa} with +{a} engineers."
  },
  "12j6jzd": "Engineering team",
  "bor2vm": {
@@ -3491,7 +3515,6 @@
  "1cqe902": "Current price {price} · class price {classPrice} · materials per car {material}",
  "1ydzv96": "Price is {gap} above the class: buyers find it expensive.",
  "1ope6cy": "Price is {gap} below the class: profit per car stays low.",
- "1jhz3ub": "That’s a price rise of more than {limit} over its highest price since launch (not counting inflation). The press will notice: magazines rewrite their scores, the launch buzz fades and your reputation drops.",
  "w5bfxw": "Index price to class",
  "enjy8n": "When on, the price moves with the class’s typical price: inflation, thinning margins and cheaper mass production included.",
  "16sbcxz": {
@@ -3525,6 +3548,21 @@
  "129d1sz": "No letters yet: owners will write in as the car sells.",
  "k3cwq8": "Summary",
  "18gnnxj": "Car and magazines",
+ "wut52q": "The press will watch this price hike",
+ "h6aqd5": {
+  "one": "That’s a price rise of more than {limit} over its highest price since launch (not counting inflation). If the price stays at this level for more than {n} week, the magazines will review the car again, the launch buzz fades and your reputation drops. Lower the price again and the old reviews come back.",
+  "other": "That’s a price rise of more than {limit} over its highest price since launch (not counting inflation). If the price stays at this level for more than {n} weeks, the magazines will review the car again, the launch buzz fades and your reputation drops. Lower the price again and the old reviews come back."
+ },
+ "1v8aamu": "Raise the price",
+ "j4q6tj": "The magazines reviewed the car again after the price hike. If the price comes down to {price} or less, the reviews from before the hike ({score}) come back.",
+ "p6wsw": {
+  "one": "The press is watching the price hike: if the price is not down to {price} or less within {n} week, the magazines will review the car again.",
+  "other": "The press is watching the price hike: if the price is not down to {price} or less within {n} weeks, the magazines will review the car again."
+ },
+ "1ut70q2": {
+  "one": "That’s a price rise of more than {limit} over its highest price since launch (not counting inflation). If it stays like this for more than {n} week, the press will notice: magazines rewrite their scores, the launch buzz fades and your reputation drops.",
+  "other": "That’s a price rise of more than {limit} over its highest price since launch (not counting inflation). If it stays like this for more than {n} weeks, the press will notice: magazines rewrite their scores, the launch buzz fades and your reputation drops."
+ },
  "1no87ob": "Why these sales? {segment} market",
  "1tr8th6": "Buyers weigh each car by its appeal (design scores × the class’s hidden priorities), price, brand and age: a design loses ~{slow} points a year from its first year on sale, and ~{fast} points a year once it is {old} years old (at most −{max}); a facelift wipes out three quarters of the age built up so far. Your dealer network and awareness decide how many buyers can see your car. Class total: {demand} cars/week.",
  "1ywdimb": "Price effect",
@@ -3574,7 +3612,7 @@
  "1q1k1e4": "most profitable with more lines (~{profit}/wk)",
  "18hhnsp": "magazines call it “ambitious”",
  "xcibi4": "<b>You’re near the ceiling:</b> the car already takes all the share it can of the buyers its dealers reach; going below the class price won’t bring sales, it only costs profit. The dealer network and reputation grow the share.",
- "11lwnpe": "Buyers walk away much faster once the price is more than {over} above the class price. Magazines weigh the price against the class: the higher above the class price, the more the score slips, bit by bit, and in this class, at more than {steep} above it, they call it “ambitious”; a low score also shrinks the launch crowd. Starting cheap and raising the price later doesn’t work: in the three years after launch, a hike of more than {hike} makes the magazines rewrite their reviews and costs you reputation.",
+ "1fk3vcf": "Buyers walk away much faster once the price is more than {over} above the class price. Magazines weigh the price against the class: the higher above the class price, the more the score slips, bit by bit, and in this class, at more than {steep} above it, they call it “ambitious”; a low score also shrinks the launch crowd. Starting cheap and raising the price later doesn’t work: in the three years after launch, a hike of more than {hike} that lasts over a month makes the magazines rewrite their reviews and costs you reputation.",
  "1p535an": "What the facelift brings",
  "1dd8n5a": "Facelift dies (paid after testing)",
  "lewz0q": {
@@ -3749,8 +3787,10 @@
  "1ajzw1u": "Design",
  "eo0uak": "Development",
  "1de1wte": "Ready to launch",
+ "10knr7l": "Recommended for a first car",
  "12jj5bo": "Class ({market}): {count} cars/yr · typical price {price}",
  "1uldueg": "Opens in {year}",
+ "1f9tp2p": "<b>A hard class for a first car.</b> {buyers} want a lot: the car costs more to build, takes longer to get ready and sells little in its first years. A family or city car is a safer start for a first car.",
  "1xfd6q9": "Platform (chassis + size + suspension)",
  "juq4ft": {
   "one": "{name} ({n} active model)",
@@ -3760,7 +3800,8 @@
  "19p9c7f": "Is this project a new generation of an existing model?",
  "2ex6x1": "No, a new model",
  "vvhuov": "Replace {name} (takes over its lines)",
- "32ae9k": "With a design like the company’s latest car and the default test plan, this project looks like this:",
+ "mrl7up": "With a design like your latest car in this class and the default test plan, this project looks like this:",
+ "1haacji": "With a typical design for this class and the default test plan, this project looks like this:",
  "shtwno": "Start designing",
  "vp13l4": "<b>Design and development:</b> You decide who the car is for: pick the modules, then pick two priorities in the engineers’ estimate (performance, efficiency, comfort, safety, cost, quality…). Priorities really change the car.",
  "18vi4nh": "<b>Testing:</b> Dynamometer, road, durability and (after 1934) crash tests find defects and tune the car. Cut them short and defects blow up in the field.",
@@ -3884,6 +3925,7 @@
  "1drh907": "Master’s notebook: “{chapter}” chapter complete. Your title: {tier}.",
  "1cz9rwx": "Lesson complete: {title}",
  "kzs36z": "That didn’t work.",
+ "v6de5r": "Open your first car’s project first: with no project, time only eats wages.",
  "lnlxx6": "Something went wrong and the game stopped. The error was logged and will be sent to Claude.",
  "ve6mvq": "Drawing of a car with a {body} body",
  "75qpkk": {

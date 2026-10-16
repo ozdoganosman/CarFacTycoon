@@ -337,6 +337,12 @@ export interface CarModel {
   reviews: Review[];
   reviewScore: number;
   hype: number;
+  /**
+   * A price raised past what the press accepts in the car's first years: since when, whether the press
+   * has judged it yet (core/feedback.ts judgePriceHikes), and the reviews and ceiling the car had
+   * before its first judged hike, which come back with the old price.
+   */
+  hike?: { since: number; judged?: boolean; before?: { reviews: Review[]; score: number; ceiling: number } };
   /** What buyers believe about reliability; drifts toward the real value as cars age in the field. */
   perceivedReliability: number;
   fieldFailures: number;

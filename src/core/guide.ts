@@ -14,6 +14,12 @@ const ORDER: Record<ProjectPhase, number> = { design: 1, development: 2, testing
 
 export const guided = (s: GameState) => s.settings.guided === true && s.models.length === 0;
 
+/**
+ * Time waits for the first project: with nothing being designed, weeks only cost wages. About half the
+ * players of October 2026 ran the clock for months without ever opening one.
+ */
+export const timeLocked = (s: GameState) => !s.gameOver && s.models.length === 0 && s.projects.length === 0;
+
 /** The areas the company's progress calls for. */
 function areasDue(s: GameState): Area[] {
   if (!guided(s)) return AREAS;

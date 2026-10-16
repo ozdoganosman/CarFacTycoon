@@ -299,7 +299,7 @@ function PriceGuide(props: { p: Project; price: number; setPrice: (v: number) =>
       )}
       <p className="muted small">
         {t(
-          'Alıcılar sınıf fiyatının {over} üstünden sonra çok daha hızlı kaçar. Dergiler fiyatı sınıfa göre tartar: sınıf fiyatının üstüne çıktıkça puan azar azar düşer, bu sınıfta {steep} üstünde “iddialı” derler; düşük puan lansman kalabalığını da küçültür. Ucuz başlayıp sonra zam yapmak işe yaramaz: lansmandan sonraki üç yılda {hike}’den büyük bir zam dergilerin yeniden yazmasına ve itibar kaybına yol açar.',
+          'Alıcılar sınıf fiyatının {over} üstünden sonra çok daha hızlı kaçar. Dergiler fiyatı sınıfa göre tartar: sınıf fiyatının üstüne çıktıkça puan azar azar düşer, bu sınıfta {steep} üstünde “iddialı” derler; düşük puan lansman kalabalığını da küçültür. Ucuz başlayıp sonra zam yapmak işe yaramaz: lansmandan sonraki üç yılda {hike}’den büyük bir zam bir aydan uzun sürerse dergiler yeniden yazar ve itibar düşer.',
           { over: percent(PRICE_OVER_FROM, 0), steep: percent(steep - 1, 0), hike: percent(A.HIKE_TOLERANCE, 0) },
         )}
       </p>

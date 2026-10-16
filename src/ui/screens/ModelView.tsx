@@ -23,7 +23,8 @@ import * as N from '../../core/network';
 import { RIVALS } from '../../data/rivals';
 import { segmentDef } from '../../data/segments';
 import { priceLevel } from '../../data/economy';
-import type { CarModel, MarketId } from '../../core/types';
+import type { CarModel, GameState, MarketId } from '../../core/types';
+import { HIKE_WEEKS, acceptedCeiling } from '../../core/feedback';
 import { store, useGameState } from '../store';
 import { customerLetters } from '../../core/letters';
 import { cars, dec, money, num, pct } from '../format';
@@ -233,7 +234,7 @@ export function ModelView({ modelId }: { modelId: string }) {
           <Panel title={t('Fiyat ve pazarlar')} guide="model-price">
             <div className="price-row">
               <NumberInput label={t('Fabrika çıkış fiyatı')} prefix="$" value={draftPrice} min={1} step={10} onChange={setDraftPrice} />
-              <Button kind="primary" small onClick={() => store.act((st) => A.setModelPrice(st, m.id, draftPrice))}>
+              <Button kind="primary" small onClick={() => applyPrice(s, m, draftPrice)}>
                 {t('Uygula')}
               </Button>
             </div>
@@ -251,14 +252,7 @@ export function ModelView({ modelId }: { modelId: string }) {
                   : t('Fiyat sınıfın {gap} altında: araba başına kâr düşük kalıyor.', { gap: pct(Math.abs(classGap(priceNow(m, s.week), m.segment, yearFloat(s.week))), 0) })}
               </p>
             )}
-            {(s.week - m.launchWeek) / 52 < 3 && m.priceCeiling !== undefined && draftPrice > m.priceCeiling * priceLevel(yearFloat(s.week)) * (1 + A.HIKE_TOLERANCE) && (
-              <p className="small tone-warn">
-                {t(
-                  'Bu, lansmandan beri en yüksek fiyatına göre {limit}’den büyük bir zam (enflasyon hariç). Basın bunu fark eder: dergiler puanı yeniden yazar, lansman heyecanı söner, itibar düşer.',
-                  { limit: pct(A.HIKE_TOLERANCE, 0) },
-                )}
-              </p>
-            )}
+            <HikeNote m={m} draftPrice={draftPrice} />
             <Toggle
               checked={m.indexPrice}
               onChange={(v) => store.act((st) => A.setModelIndexPrice(st, m.id, v))}
@@ -400,6 +394,62 @@ const MODEL_TABS: { id: ModelTab; label: string }[] = [
   { id: 'car', label: msg('Araç ve dergiler') },
   { id: 'ad', label: msg('İlan ve mektuplar') },
 ];
+
+/** The price the press accepted before any hike (today's money): at or below it, a hike is forgiven. */
+function acceptedPrice(s: GameState, m: CarModel): number | undefined {
+  const ceiling = acceptedCeiling(m);
+  return ceiling === undefined ? undefined : Math.floor(ceiling * priceLevel(yearFloat(s.week)) * (1 + A.HIKE_TOLERANCE));
+}
+
+/** A big hike is asked about first: players trying a price for a moment lost their reviews (October 2026). */
+async function applyPrice(s: GameState, m: CarModel, price: number) {
+  const limit = A.hikeLimit(s, m);
+  const watched = !!m.hike && !m.hike.judged;
+  if (limit !== undefined && price > limit && !watched) {
+    const ok = await store.ask({
+      title: t('Basın bu zammı izleyecek'),
+      body: t(
+        'Bu, lansmandan beri en yüksek fiyatına göre {limit}’den büyük bir zam (enflasyon hariç). Fiyat {n} haftadan uzun bu düzeyde kalırsa dergiler arabayı yeniden değerlendirir, lansman heyecanı söner ve itibar düşer. Fiyatı geri indirirsen eski değerlendirmeler geri gelir.',
+        { limit: pct(A.HIKE_TOLERANCE, 0), n: HIKE_WEEKS },
+      ),
+      confirm: t('Zammı uygula'),
+    });
+    if (!ok) return;
+  }
+  store.act((st) => A.setModelPrice(st, m.id, price));
+}
+
+/** Where the car's price stands with the press: a hike being watched, one judged, or the draft about to be one. */
+function HikeNote({ m, draftPrice }: { m: CarModel; draftPrice: number }) {
+  const s = useGameState();
+  const back = acceptedPrice(s, m);
+  if (m.hike && back !== undefined) {
+    const left = HIKE_WEEKS - (s.week - m.hike.since);
+    return (
+      <p className="small tone-warn">
+        {m.hike.judged
+          ? t('Dergiler zamdan sonra arabayı yeniden değerlendirdi. Fiyat {price} ya da altına inerse zamdan önceki değerlendirmeleri ({score}) geri gelir.', {
+              price: money(back),
+              score: dec(m.hike.before?.score ?? m.reviewScore, 1),
+            })
+          : t('Basın zammı izliyor: fiyat {n} hafta içinde {price} ya da altına inmezse dergiler arabayı yeniden değerlendirir.', {
+              n: Math.max(1, left),
+              price: money(back),
+            })}
+      </p>
+    );
+  }
+  const limit = A.hikeLimit(s, m);
+  if (limit === undefined || draftPrice <= limit) return null;
+  return (
+    <p className="small tone-warn">
+      {t('Bu, lansmandan beri en yüksek fiyatına göre {limit}’den büyük bir zam (enflasyon hariç). Fiyat {n} haftadan uzun böyle kalırsa basın fark eder: dergiler puanı yeniden yazar, lansman heyecanı söner, itibar düşer.', {
+        limit: pct(A.HIKE_TOLERANCE, 0),
+        n: HIKE_WEEKS,
+      })}
+    </p>
+  );
+}
 
 function Competition({ modelId }: { modelId: string }) {
   const s = useGameState();

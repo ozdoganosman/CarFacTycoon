@@ -9,7 +9,8 @@ import { lineOffline, lineReport, nextLineName, paybackYears, reservedLines, sta
 import { credit, finalScore, materialUnitCost, newGame, tick } from '../src/core/game';
 import { racingOutlook, racingPaused, setRacingLevel } from '../src/core/racing';
 import { pctWith, withSuffix } from '../src/core/turkish';
-import { budgetVerdict, launchBudget } from '../src/core/budget';
+import { SHORT_CASH_WEEKS, budgetVerdict, cashWeeks, launchBudget } from '../src/core/budget';
+import { timeLocked } from '../src/core/guide';
 import { acquisitionTargets } from '../src/core/acquisitions';
 import { classShare, datedPenalty, demandAtPrice, lastingDemandAtPrice, modelAgeYears, modelDemand, priceNow, segmentMarket, withoutHype } from '../src/core/market';
 import { makeRng } from '../src/core/rng';
@@ -25,7 +26,7 @@ import { inYear } from '../src/ui/format';
 import { FOCUS_KEYS, bonusFromPoints, presetFocus, teamOutput } from '../src/core/development';
 import { experienceFactor } from '../src/core/estimate';
 import { SMALL_LINES, autoCapacity, autoReserve, lastingDemand, newLineSize, weeklyDemand } from '../src/core/autocap';
-import { buildLaunchReport } from '../src/core/feedback';
+import { HIKE_WEEKS, buildLaunchReport, judgePriceHikes } from '../src/core/feedback';
 import { ledSegments } from '../src/core/rivalMoves';
 import { MAX_SLOTS } from '../src/data/economy';
 import { stationDef } from '../src/data/stations';
@@ -425,6 +426,11 @@ describe('factory tools', () => {
 describe('clock', () => {
   it('pauses for a decision, resumes by itself afterwards, and runs through the year report', () => {
     store.start({ companyName: 'Test', hq: 'usa', seed: 8 });
+    // Time waits for the first project; asking for it shows where to open one.
+    store.setSpeed(3);
+    expect(store.speed).toBe(0);
+    expect(store.screen.id).toBe('projects');
+    store.act((st) => A.startProject(st, { name: 'T', segment: 'family', targetPrice: 0 }));
     store.setSpeed(3);
     const s = store.state!;
     s.modals = [{ kind: 'unlock', title: 'x', body: 'y' }];
@@ -640,17 +646,85 @@ describe('market pressure', () => {
     expect(faced).toBeLessThan(aged / 2);
   });
 
-  it('a big price rise soon after launch costs reviews, buzz and reputation', () => {
+  it('a big price rise soon after launch costs reviews, buzz and reputation once it has lasted, and going back undoes the reviews', () => {
     const s = newGame({ companyName: 'Test', hq: 'usa', seed: 13 });
     runBot(s, 52 * 2, { segments: ['family'] });
     const m = s.models.find((x) => x.status === 'active' && (s.week - x.launchWeek) / 52 < 2)!;
     m.hype = 5;
     const rep = s.company.reputation;
-    A.setModelPrice(s, m.id, priceNow(m, s.week) * 1.03);
+    const price = Math.round(priceNow(m, s.week));
+    const reviews = m.reviews;
+    const score = m.reviewScore;
+    A.setModelPrice(s, m.id, price * 1.03);
+    expect(m.hike).toBeUndefined();
+    // A price tried for less than the press waits costs nothing (players kept 1/10 reviews for this).
+    A.setModelPrice(s, m.id, price * 1.3);
+    expect(m.hike?.judged).toBeFalsy();
+    s.week += HIKE_WEEKS - 1;
+    judgePriceHikes(s);
     expect(m.hype).toBe(5);
-    A.setModelPrice(s, m.id, priceNow(m, s.week) * 1.3);
+    A.setModelPrice(s, m.id, price);
+    expect(m.hike).toBeUndefined();
+    expect(m.reviews).toBe(reviews);
+    // A hike that stays is judged.
+    A.setModelPrice(s, m.id, price * 1.3);
+    s.week += HIKE_WEEKS;
+    judgePriceHikes(s);
+    expect(m.hike?.judged).toBe(true);
     expect(m.hype).toBe(0);
     expect(s.company.reputation).toBeLessThan(rep);
+    // Changing the price again above the old level is not judged twice.
+    const after = m.reviews;
+    A.setModelPrice(s, m.id, price * 1.25);
+    s.week += HIKE_WEEKS;
+    judgePriceHikes(s);
+    expect(m.reviews).toBe(after);
+    // Back to the old price: the reviews from before the hike count again.
+    A.setModelPrice(s, m.id, price);
+    expect(m.hike).toBeUndefined();
+    expect(m.reviews).toBe(reviews);
+    expect(m.reviewScore).toBe(score);
+    // A hike brought down meanwhile without a new price of the player's (a price war matched) is not judged.
+    A.setModelPrice(s, m.id, price * 1.3);
+    m.price = price;
+    s.week += HIKE_WEEKS;
+    judgePriceHikes(s);
+    expect(m.hike).toBeUndefined();
+    expect(m.reviews).toBe(reviews);
+  });
+
+  it('a class starts from its own sketch, not from the last car of another class', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 15 });
+    // A luxury car drawn on a family car's lines got 1/10 from every magazine (players' games).
+    const lux = A.defaultDesign(s, 'luxury');
+    const fam = A.defaultDesign(s, 'family');
+    expect(lux.interior).toBeGreaterThan(fam.interior + 0.3);
+    expect(lux.size).toBeGreaterThan(fam.size);
+    runBot(s, 52 * 2, { segments: ['family'] });
+    const family = s.models.find((m) => m.segment === 'family')!;
+    expect(A.defaultDesign(s, 'family').size).toBe(family.design.size);
+    expect(A.defaultDesign(s, 'luxury').interior).toBe(lux.interior);
+  });
+
+  it('time waits for the first project', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 16 });
+    expect(timeLocked(s)).toBe(true);
+    const r = A.startProject(s, { name: 'T', segment: 'family', targetPrice: 0 });
+    if (!r.ok) throw new Error(r.error);
+    expect(timeLocked(s)).toBe(false);
+  });
+
+  it('says how long the cash lasts after a hire', () => {
+    const s = newGame({ companyName: 'Test', hq: 'usa', seed: 17 });
+    const idle = cashWeeks(s);
+    A.startProject(s, { name: 'T', segment: 'family', targetPrice: 0 });
+    // The car under way is paid for first.
+    const now = cashWeeks(s);
+    expect(now).toBeLessThan(idle);
+    expect(cashWeeks(s, 5)).toBeLessThan(now);
+    expect(cashWeeks(s, 5)).toBeGreaterThan(SHORT_CASH_WEEKS);
+    // A hire players made with no car on sale: the cash would not last a year.
+    expect(cashWeeks(s, 38)).toBeLessThan(SHORT_CASH_WEEKS);
   });
 
   it('every engineer works on the projects in development', () => {
